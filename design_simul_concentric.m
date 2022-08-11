@@ -91,7 +91,7 @@ uiwait(msgfig);
 
 %% Tool Edge Simulation
 
-toolNorm = [0,0,1];
+toolNorm = [0,1,0];
 surfPt = reshape(surfMesh,[],3);
 surfNorm = reshape(surfNorm,[],3);
 ptNum = size(surfPt,1);

@@ -13,7 +13,7 @@ switch debug
         r0 = 0.1;
         noise = 0.05;
         zNoise = 0.01;
-        theta = transpose(linspace(0,2*pi/3,50)); % need debug!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        theta = transpose(linspace(0,2*pi/3,100)); % need debug!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         r = r0*(1 - noise + 2*noise*rand(length(theta),1));
         toolOri(:,1) = r.*cos(theta) + cx0;
         toolOri(:,2) = r.*sin(theta) + cy0;
@@ -30,7 +30,7 @@ switch debug
         r0 = 0.1; % unit:um
         noise = 0.05;
         zNoise = 0.01;
-        theta = transpose(linspace(0,2*pi/3,50));
+        theta = transpose(linspace(0,2*pi/3,100));
         r = r0*(1 - noise + 2*noise*rand(length(theta),1));
         toolOri(:,1) = cx0 + r.*cos(theta);
         toolOri(:,2) = cy0 + r.*sin(theta);
@@ -86,22 +86,26 @@ figure('name','tool curve');
 subplot(2,1,1); plot(toolTheta*180/pi,toolR); title('tool curve');
 subplot(2,1,2); plot(toolTheta*180/pi,toolR - radius); title('tool waviness');
 
-[toolCpts,U] = bSplineCpts(toolFit,3,'chord'); 
+k = 3; % order of the B-spline
+[toolCpts,U] = bSplineCpts(toolFit,k,'chord'); 
 u = 0:0.002:1;
 nPts = length(u);
 toolDim = size(toolCpts,2);
 toolPt = zeros(nPts,toolDim);
 for i = 1:nPts
-    toolPt(i,:) = bSplinePt(toolCpts,3,u(i),U);
+    toolPt(i,:) = bSplinePt(toolCpts,k,u(i),U);
 end
 
 % plot the interpolation results
 figure('Name','Tool Interpolation Results');
-plot(toolFit(:,1),toolFit(:,2),'Color',[0,0.45,0.74]); hold on;
+plot(toolFit(:,1),toolFit(:,2),'--.', ...
+    'MarkerSize',8,'Color',[0.32,0.55,0.19]); hold on;
 plot(toolCpts(:,1),toolCpts(:,2),'x','Color',[0.85,0.33,0.10]);
+plot(toolPt(:,1),toolPt(:,2),'Color',[0,0.45,0.74]);
 axis equal
-legend('Measured Pts','Interpolation Cpts','Location','best');
+legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 
+%% save the tool interpolation results
 toolEdgeNorm = [0,1,0];
 center(1,3) = 0;
 [toolFileName,toolDirName,toolFileType] = uiputfile({ ...
@@ -120,7 +124,7 @@ switch toolFileType
         Comments = cell2mat(inputdlg('Enter Comment of the tool model:', ...
             'Input Saving Comments',[5 60],string(datestr(now))));
         save(toolFile,"center","radius","Comments","includedAngle", ...
-            "toolPt","toolEdgeNorm","toolCpts");
+            "toolPt","toolEdgeNorm");
     otherwise
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);

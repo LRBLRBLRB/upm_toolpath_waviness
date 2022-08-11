@@ -15,14 +15,14 @@ if u == U(n+1)
 end
 low = p+1;
 high = n+1;
-mid = floor((low+high)/2);
-while u<U(mid) || u>=U(mid+1)
-    if u<U(mid)
+mid = floor((low + high)/2);
+while u < U(mid) || u >= U(mid + 1)
+    if u < U(mid)
         high = mid;
     else
         low = mid;
     end
-    mid = floor((low+high)/2);
+    mid = floor((low + high)/2);
 end
 end
 
