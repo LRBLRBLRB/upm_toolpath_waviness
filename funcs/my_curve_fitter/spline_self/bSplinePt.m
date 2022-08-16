@@ -1,5 +1,5 @@
-function pt = bSplinePt(cpt,k,u,U)
-% usage: pt = bSplinePt(cpt,k,u,U)
+function pt = bSplinePt(cpts,k,u,U)
+% usage: pt = bSplinePt(cpts,k,u,U)
 % solve the point of B-spline curve with parameter u
 % Input：
 %   order of B-spline: k
@@ -9,7 +9,7 @@ function pt = bSplinePt(cpt,k,u,U)
 % Output:
 %   B-spline curve point: pt
 
-[n,dim] = size(cpt); % n: the number of control pts
+[n,dim] = size(cpts); % n: the number of control pts
 % dim: dimension of the spline curve
 ii = findSpan(n,k,u,U);
 N = bBasisFuns(ii,k,u,U);
@@ -18,7 +18,7 @@ pt = zeros(1,dim);
 % calculate the spline coordinate based on the definition
 for jj = 1:k+1
     % indices of non-zero basis functions are "(i-p):(i)"
-    pt = pt + N(jj).*cpt(jj+ii-1-k,:);
+    pt = pt + N(jj).*cpts(jj+ii-1-k,:);
 end
 
 end

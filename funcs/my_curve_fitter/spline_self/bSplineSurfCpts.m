@@ -24,42 +24,11 @@ if m-k-1<0 || n-l-1<0
     error("control points are not enough, or the required order is too large");
 end
 
-%% global interpolation: solve node params corresponding to Q
-if strcmp(options.InterpMethod,'uniform') % uniform parameterization
+%% global interpolation
+% solve node params corresponding to Q
+[uQ,vQ] = interpParamSurf(Q,option.InterpMethod);
 
-else
-    if strcmp(options.InterpMethod,'concentric') % concentric parameterization
-        % sqrt of dist of adjacent Q, size(n-1,1)
-        uDist = sum((Q(2:end,:,:)-Q(1:end-1,:,:)).^2,3).^(1/4); % (m-1,n)
-        vDist = sum((Q(:,2:end,:)-Q(:,1:end-1,:)).^2,3).^(1/4); % (m,n-1)
-    else % chord parameterization
-        % dist of adjacent Q, size(n-1,1)
-        uDist = sum((Q(2:end,:,:)-Q(1:end-1,:,:)).^2,3).^(1/2); % (m-1,n)
-        vDist = sum((Q(:,2:end,:)-Q(:,1:end-1,:)).^2,3).^(1/2); % (m,n-1)
-    end
-    uSum = sum(uDist,1); % (1,n)
-    vSum = sum(vDist,2); % (m,1)
-    % 1st param of Q
-    uQp = zeros(m,n);
-    for ii = 2:m
-        uQp(ii,:) = uQp(ii-1,:) + uDist(ii-1,:);
-    end
-    uQp = uQp./uSum;
-    uQp(isnan(uQp)) = 0; 
-    uQ = mean(uQp,2);
-    uQ(end) = 1; % elliminate calcuation error
-    % 2nd param of Q
-    vQq = zeros(m,n);
-    for jj = 2:n
-        vQq(:,jj) = vQq(:,jj-1) + vDist(:,jj-1);
-    end
-    vQq = vQq./vSum;
-    vQq(isnan(vQq)) = 0;
-    vQ = transpose(mean(vQq,1));
-    vQ(end) = 1;
-end
-
-%% node vector U & V generation
+% node vector U & V generation
 U = nodeVector(k,m,'uQ',uQ,'nodeMethod','Interpolation');
 V = nodeVector(l,n,'uQ',vQ,'nodeMethod','Interpolation');
 

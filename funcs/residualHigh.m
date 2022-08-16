@@ -1,23 +1,32 @@
+function [res,interPt] = residualHigh(x1,vec1,s1,x2,vec2,s2)
 % 计算两个刀位间的残高
 % 输入两个刀位的位置x、方向vec、刀尖轮廓s
 % 假设残高就是两个刀位的刀尖轮廓交点到两个刀位的刀尖点连线的距离
-function [res,interPt] = residualHigh(x1,vec1,s1,x2,vec2,s2)
+% Inputs:
+%   x1 (2,1) 1st postion of the tool edge
+%   vec1 (2,1) 1st normal vector of the tool edge
+%   s1 (2,:) 1st scatters of the tool edge
+%   ...
+% Outputs:
+%   res (1,1) the residual within the two position
+%   interPt (2,1)
+
 % 求两个刀位的轮廓交点
 % [interPt,~] = bsplineCross(s1,s2);
-[interPt,~] = bsplineCrossDN(s1,s2);
+[interPt,~] = bsplineCrossDN(s1,s2,2);
 
 % 求刀尖点：刀尖方向上最远点
-[~,cutPtIndex1] = min(dot((s1-x1),meshgrid(vec1,s1(:,1)))/norm(vec1));
-[~,cutPtIndex2] = min(dot((s2-x2),meshgrid(vec2,s2(:,1)))/norm(vec2));
-cutPt1 = s1(cutPtIndex1,:);
-cutPt2 = s2(cutPtIndex2,:);
+[~,cutPtIndex1] = min(dot((s1-x1),ndgrid(vec1,s1(1,:)))/norm(vec1));
+[~,cutPtIndex2] = min(dot((s2-x2),ndgrid(vec2,s2(1,:)))/norm(vec2));
+cutPt1 = s1(:,cutPtIndex1);
+cutPt2 = s2(:,cutPtIndex2);
 % 求刀尖点：两个刀尖的公切线
 
 
-if size(interPt,2) == 2
-    interPt = [interPt,0];
-    cutPt1 = [cutPt1,0];
-    cutPt2 = [cutPt2,0];
+if size(interPt,1) == 2
+    interPt = [interPt;0];
+    cutPt1 = [cutPt1;0];
+    cutPt2 = [cutPt2;0];
 end
 res = 2*abs(cross(interPt-cutPt1,interPt-cutPt2))/norm(cutPt1-cutPt2);
 end
@@ -54,9 +63,11 @@ end
 end
 
 %% MATLAB自带的求距离函数
-function [interPt,eps] = bsplineCrossDN(s1,s2)
-[index,dist]=dsearchn(s1,s2);
-[eps,I2]=min(dist);
+function [interPt,eps] = bsplineCrossDN(s1,s2,dim)
+s1 = s1';
+s2 = s2';
+[index,dist] = dsearchn(s1,s2);
+[eps,I2] = min(dist);
 I1 = index(I2);
-interPt = 0.5*(s1(I1,:)+s2(I2,:));
+interPt = (0.5*(s1(I1,:) + s2(I2,:)))';
 end

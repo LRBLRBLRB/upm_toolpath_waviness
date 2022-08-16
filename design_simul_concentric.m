@@ -3,6 +3,11 @@ clear;
 clc;
 addpath(genpath('funcs'));
 
+% global variables
+% global textFontSize textFontType;
+textFontSize = 14;
+textFontType = 'Times New Roman';
+
 %% concentric circles
 % [fileName,dirName] = uigetfile({ ...
 %     '*.mat','MAT-files(*.mat)'; ...
@@ -16,7 +21,7 @@ toolData = load(toolName);
 
 default = false;
 if default
-    load('Simulation/ellipsoidAnay.mat');
+    load('output_data/simulation/ellipsoidAnay.mat');
 else % ellipsoid
     R = 1;
     A = .3;
@@ -90,14 +95,12 @@ uiwait(msgfig);
 
 
 %% Tool Edge Simulation
-
-toolNorm = [0,1,0];
 surfPt = reshape(surfMesh,[],3);
 surfNorm = reshape(surfNorm,[],3);
 ptNum = size(surfPt,1);
 toolCenPt = zeros(ptNum,3);
 for ii = 1:ptNum
-    toolCenPt(ii,:) = toolPos(toolData,surfPt(ii,:),surfNorm(ii,:),toolNorm);
+    toolCenPt(ii,:) = toolPos(toolData,surfPt(ii,:),surfNorm(ii,:));
 end
 
 figure('Name','tool center position & tool normal vector');

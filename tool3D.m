@@ -4,23 +4,28 @@ close all;
 clear; clc;
 addpath(genpath('funcs'));
 
+% global variables
+% global textFontSize textFontType;
+textFontSize = 14;
+textFontType = 'Times New Roman';
+
 %% simulation initialization
 debug = 3;
 switch debug
     case 2 % 2D tool profile simulation
-        cx0 = 0; % unit: nm
+        cx0 = 0; % unit: mu m
         cy0 = 0;
         r0 = 0.1;
         noise = 0.05;
         zNoise = 0.01;
-        theta = transpose(linspace(0,2*pi/3,100)); % need debug!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        r = r0*(1 - noise + 2*noise*rand(length(theta),1));
-        toolOri(:,1) = r.*cos(theta) + cx0;
-        toolOri(:,2) = r.*sin(theta) + cy0;
-        toolOri(:,3) = zeros(length(theta),1);
+        theta = linspace(0,pi/3,100);
+        r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
+        toolOri(1,:) = r.*cos(theta) + cx0;
+        toolOri(2,:) = r.*sin(theta) + cy0;
+        toolOri(3,:) = zeros(1,length(theta));
         rmse0 = sqrt(...
                     sum(...
-                        ((toolOri(:,1) - cx0).^2 + (toolOri(:,2) - cy0).^2 - r0^2).^2) ...
+                        ((toolOri(1,:) - cx0).^2 + (toolOri(2,:) - cy0).^2 - r0^2).^2) ...
                 /length(theta));
         clear theta r;
     case 3 % 3D tool profile simulation
@@ -30,13 +35,13 @@ switch debug
         r0 = 0.1; % unit:um
         noise = 0.05;
         zNoise = 0.01;
-        theta = transpose(linspace(0,2*pi/3,100));
-        r = r0*(1 - noise + 2*noise*rand(length(theta),1));
-        toolOri(:,1) = cx0 + r.*cos(theta);
-        toolOri(:,2) = cy0 + r.*sin(theta);
-        toolOri(:,3) = cz0 + r0*(1 - zNoise + 2*zNoise*rand(length(theta),1));
+        theta = linspace(0,2*pi/3,100);
+        r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
+        toolOri(1,:) = cx0 + r.*cos(theta);
+        toolOri(2,:) = cy0 + r.*sin(theta);
+        toolOri(3,:) = cz0 + r0*(1 - zNoise + 2*zNoise*rand(1,length(theta)));
         rmse0 = sqrt( ...
-            sum((toolOri - meshgrid([cx0,cy0,cz0],1:length(theta)).^2),2) ...
+            sum((toolOri - ndgrid([cx0;cy0;cz0],1:length(theta)).^2),2) ...
             /length(theta));
         clear theta r;
     otherwise
@@ -55,66 +60,98 @@ switch debug
 end
 
 f1 = figure('Name','original scatters of the tool');
-plot3(toolOri(:,1),toolOri(:,2),toolOri(:,3));
-hold on;
+scatter3(toolOri(1,:),toolOri(2,:),toolOri(3,:));
+hold on; grid on;
 % axis equal;
-xlabel('x(nm)');
-ylabel('y(nm)');
+xlabel('x(\mum)','FontSize',textFontSize,'FontName',textFontType);
+ylabel('y(\mum)','FontSize',textFontSize,'FontName',textFontType);
+zlabel('z(\mum)','FontSize',textFontSize,'FontName',textFontType);
+view(-45,60);
 clear theta theta1 theta2;
 
 %% 由(x,y)图获得刃口圆心半径以及波纹度函数
 [center,radius,includedAngle,toolFit,rmseLsc] = toolFit3D(toolOri,'Levenberg-Marquardt');
+% plot the fitting results
 f2 = figure('Name','tool sharpness fitting result');
-plot(toolFit(:,1),toolFit(:,2));
+xLim = 1.1*max(toolFit(1,:));
+quiver(-xLim,0,2*xLim,0,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % X axis
 hold on;
+text(0.9*xLim,-.05*radius,'x','FontSize',textFontSize,'FontName',textFontType);
+quiver(0,-0.2*radius,0,1.3*radius,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % Y axis
+text(0.05*xLim,1.2*radius,'y','FontSize',textFontSize,'FontName',textFontType);
+plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74]); % tool edge scatters
 theta = (pi/2 - includedAngle/2):0.01:(pi/2 + includedAngle/2);
 xtmp = radius*cos(theta);
 ytmp = radius*sin(theta);
-plot(xtmp,ytmp,'black');
-scatter(0,0,'black');
+plot(xtmp,ytmp,'Color',[0.85,0.33,0.10]); % tool edge circle
+scatter(0,0,'MarkerFaceColor',[0.85,0.33,0.10],'MarkerEdgeColor',[0.85,0.33,0.10]); % tool edge center
+quiver(0,0,0,0.5*radius,'AutoScale','off','Color',[0.93,0.69,0.13], ...
+    'LineWidth',2.5,'MaxHeadSize',0.3); % tool edge normal
+line([0,xtmp(1)],[0,ytmp(1)],'LineStyle','--','Color',[0.85,0.33,0.10]);
+line([0,xtmp(end)],[0,ytmp(end)],'LineStyle','--','Color',[0.85,0.33,0.10]);
+% xlim([-1.1*xLim,1.1*xLim]);
 axis equal;
-xlabel('x(nm)');
-ylabel('y(nm)');
-clear xtmp ytmp theta; % 删除画图的临时变量
-
-% Cartesian coordinate to cylindrical coordinate？？？？？？？？？？？？？？？？？？？？？？？？？？？？？
-toolTheta = atan2(toolFit(:,2),toolFit(:,1));
-toolR = vecnorm(toolFit,2,2);
+% set(gca,'TickLabelInterpreter','tex');
+xlabel('x({\mu}m)','FontSize',textFontSize,'FontName',textFontType);
+ylabel('y({\mu}m)','FontSize',textFontSize,'FontName',textFontType);
+legend('','','tool edge','tool fitting arc','tool center', ...
+    'tool normal vector','Location','northeast');
+clear xtmp ytmp theta xLim; % 删除画图的临时变量
 
 %% 车刀轮廓插值
+% Cartesian coordinate to cylindrical coordinate
+toolTheta = atan2(toolFit(2,:),toolFit(1,:));
+toolR = vecnorm(toolFit,2,1);
 figure('name','tool curve');
-subplot(2,1,1); plot(toolTheta*180/pi,toolR); title('tool curve');
-subplot(2,1,2); plot(toolTheta*180/pi,toolR - radius); title('tool waviness');
+subplot(2,1,1); plot(toolTheta*180/pi,toolR); title('tool curve','FontSize',textFontSize,'FontName',textFontType);
+subplot(2,1,2); plot(toolTheta*180/pi,toolR - radius); title('tool waviness','FontSize',textFontSize,'FontName',textFontType);
+xlabel('central angle\theta(°)','FontSize',textFontSize,'FontName',textFontType);
 
+% two methods to interpolate
 k = 3; % order of the B-spline
-[toolCpts,U] = bSplineCpts(toolFit,k,'chord'); 
+[toolCpts,U] = bSplineCpts(toolFit',k,'chord'); 
 u = 0:0.002:1;
 nPts = length(u);
 toolDim = size(toolCpts,2);
-toolPt = zeros(nPts,toolDim);
+toolPt2 = zeros(nPts,toolDim);
 for i = 1:nPts
-    toolPt(i,:) = bSplinePt(toolCpts,k,u(i),U);
+    toolPt2(i,:) = bSplinePt(toolCpts,k,u(i),U);
 end
+toolPt2 = toolPt2';
+
+[toolPt,sp] = bsplinePts_spapi(toolFit,k,u);
+
+% plot the difference between the two
+figure('Name','Comparison between the self function and the Mathworks ons');
+tiledlayout(2,1,"TileSpacing","tight","Padding","tight");
+nexttile;
+plot(u',toolPt2(1,:) - toolPt(1,:)); hold on;
+
+nexttile;
+plot(u',toolPt2(2,:) - toolPt(2,:)); hold on;
+xlabel('u');
 
 % plot the interpolation results
 figure('Name','Tool Interpolation Results');
-plot(toolFit(:,1),toolFit(:,2),'--.', ...
+plot(toolFit(1,:),toolFit(2,:),'--.', ...
     'MarkerSize',8,'Color',[0.32,0.55,0.19]); hold on;
 plot(toolCpts(:,1),toolCpts(:,2),'x','Color',[0.85,0.33,0.10]);
-plot(toolPt(:,1),toolPt(:,2),'Color',[0,0.45,0.74]);
+plot(toolPt(1,:),toolPt(2,:),'Color',[0,0.45,0.74]);
 axis equal
 legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 
 %% save the tool interpolation results
-toolEdgeNorm = [0,1,0];
-center(1,3) = 0;
+center = [center(1);0;center(2)];
+toolPt = [toolPt(1,:);zeros(1,nPts);toolPt(2,:)]; % get
+toolEdgeNorm = [0;0;1];
+toolDirect = [0;1;0];
 [toolFileName,toolDirName,toolFileType] = uiputfile({ ...
         '*.mat','MAT-file(*.mat)'; ...
         '*.txt','text-file(.txt)';...
         '*.*','all file(*.*)';...
         }, ...
         'Select the directory and filename to save the tool model', ...
-        ['Tool/toolTheo',datestr(now,'yyyymmddTHHMMSS'),'.mat']);
+        ['output_data/tool/toolTheo',datestr(now,'yyyymmddTHHMMSS'),'.mat']);
 toolFile = fullfile(toolDirName,toolFileName);
 switch toolFileType
     case 0
@@ -124,29 +161,30 @@ switch toolFileType
         Comments = cell2mat(inputdlg('Enter Comment of the tool model:', ...
             'Input Saving Comments',[5 60],string(datestr(now))));
         save(toolFile,"center","radius","Comments","includedAngle", ...
-            "toolPt","toolEdgeNorm");
+            "toolPt","toolEdgeNorm","toolDirect");
     otherwise
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);
 end
 
 %% 相邻刀位点的残高
-x1 = [0,0]; vec1 = [0,1];
-x2 = [r0,r0/30]; vec2 = [cosd(90+8),sind(90+8)];
+x1 = [0;0]; vec1 = [0;1];
+x2 = [r0;r0/30]; vec2 = [cosd(90+8);sind(90+8)];
 R = rotz(5,'deg'); % rotation matrix about z axis
-tool1 = toolPt + x1;
-tool2 = toolPt*(R(1:2,1:2)') + x2;
+tool1 = toolPt(1:2:end,:) + x1;
+tool2 = R(1:2,1:2)*toolPt(1:2:end,:) + x2;
 
-[res,interPt] = residualHigh(x1(:,1:2),vec1,tool1(:,1:2),x2(:,1:2),vec2,tool2(:,1:2));
+[res,interPt] = residualHigh(x1,vec1,tool1,x2,vec2,tool2);
 
 figure('Name','Residual of the adjacent tool');
-plot(tool1(:,1),tool1(:,2),'Color',[0,0.45,0.74]); hold on;
-plot(tool2(:,1),tool2(:,2),'Color',[0.85,0.33,0.10]);
+plot(tool1(1,:),tool1(2,:),'Color',[0,0.45,0.74]); hold on;
+plot(tool2(1,:),tool2(2,:),'Color',[0.85,0.33,0.10]);
 plot(interPt(1),interPt(2),'*','Color',[0.49,0.18,0.56]);
-plot(x1(1),x1(2),'o','Color',[0,0.45,0.74],'MarkerFaceColor',[0,0.45,0.74]);
-line([x1(1),x1(1)+radius*vec1(1)],[x1(2),x1(2)+radius*vec1(2)],'LineWidth',2,'Color',[0,0.45,0.74]);
-plot(x2(1),x2(2),'o','Color',[0.85,0.33,0.10],'MarkerFaceColor',[0.85,0.33,0.10]);
-line([x2(1),x2(1)+radius*vec2(1)],[x2(2),x2(2)+radius*vec2(2)],'LineWidth',2,'Color',[0.85,0.33,0.10]);
+plot(x1(1)+radius*vec1(1),x1(2)+radius*vec1(2),'o','Color',[0,0.45,0.74],'MarkerFaceColor',[0,0.45,0.74]);
+quiver(x1(1),x1(2),radius*vec1(1),radius*vec1(2),'LineWidth',2,'Color',[0,0.45,0.74],'AutoScale','off');
+plot(x2(1)+radius*vec2(1),x2(2)+radius*vec2(2),'o','Color',[0.85,0.33,0.10],'MarkerFaceColor',[0.85,0.33,0.10]);
+quiver(x2(1),x2(2),radius*vec2(1),radius*vec2(2),'LineWidth',2,'Color',[0.85,0.33,0.10],'AutoScale','off');
 axis equal
 
+%%
 rmpath(genpath('funcs'));

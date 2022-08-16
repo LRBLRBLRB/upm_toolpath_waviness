@@ -4,27 +4,27 @@ function [c,r,ang,RMSE,startV,endV] = circleFit2D(scatterOri,fitMethod)
 % fit the circle from a cluster of 2D points
 %
 % Inputs: 
-%   scatterMat: original 2D points (n,2)
+%   scatterMat: original 2D points (2,n)
 %   options: 
 %       fitMethod: the method of curve fitting
 % Outputs: 
 %   r: radius of the arc (1,1)
 %   ang: the open angle of the tool (1,1)
-%   c: center of the arc (1,2)
+%   c: center of the arc (2,1)
 %   RMSE: the square-mean-root error of curve fitting
 %
 % method:
 %   least square method by normal equation solving
 
 arguments
-    scatterOri (:,2) {mustBeFinite}
+    scatterOri (2,:) {mustBeFinite}
     fitMethod {mustBeMember(fitMethod, ...
         ['Gradient-decent','Normal-equation','Levenberg-Marquardt'])} ...
         = 'Levenberg-Marquardt'
 end
 
-x = scatterOri(:,1);
-y = scatterOri(:,2);
+x = (scatterOri(1,:))';
+y = (scatterOri(2,:))';
 n = length(x);
 
 %% circle fitting
@@ -51,7 +51,7 @@ switch fitMethod
             'Algorithm','levenberg-marquardt','MaxIterations',2000);
         lb = [];
         ub = [];
-        param = lsqcurvefit(F,param0,scatterOri,zeros(n,1),lb,ub,options);
+        param = lsqcurvefit(F,param0,scatterOri',zeros(n,1),lb,ub,options);
         % lsqnonlin lsqcurvefit
 
         %% accuracy
@@ -61,7 +61,7 @@ switch fitMethod
 end
 
 %% params of the arc
-c = zeros(1,2);
+c = zeros(2,1);
 c(1) = -param(1)/2;
 c(2) = -param(2)/2;
 r = 0.5*sqrt(param(1)^2 + param(2)^2 - 4*param(3));
@@ -69,8 +69,8 @@ if imag(r) ~= 0
     error('Error: cannot fit a circle!');
 end
 
-startV = scatterOri(1,:) - c;
-endV = scatterOri(end,:) - c;
-ang = vecAng(startV,endV,2);
+startV = scatterOri(:,1) - c;
+endV = scatterOri(:,end) - c;
+ang = vecAng(startV,endV,1);
 
 end

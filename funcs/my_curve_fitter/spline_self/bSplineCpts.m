@@ -2,12 +2,13 @@ function [cpts,U] = bSplineCpts(Q,k,interpMethod)
 % [cpts,U] = bSplineCpts(Q,k,option)
 % To solve the k-order B-spline control pts 'cpts' with data points Q
 % Input:
-%   matrix of data points: Q (n,3)
-%   order of B spline: k
-%   interpolation method: option.InterpMethod
+%   Q (n,3) matrix of data points
+%   k (1,1) order of B spline
+%   option
+%       InterpMethod interpolation method
 % Output:
-%   matrix of control points：cpts(n,3)
-%   node vector: U (n+k+1,1)
+%   cpts (n,3) matrix of control points
+%   U (n+k+1,1) node vector
 % E.g. Q = [0 0 0;3 4 0;-1 4 0;-4 0 0;-4 -3 0;0 -3 0]; k = 3;
 
 arguments
@@ -24,25 +25,11 @@ if n-k-1<0
     error("control points are not enough, or the required order is too large");
 end
 
-%% global interpolation: solve node params corresponding to Q
-if strcmp(interpMethod,'uniform') % uniform parameterization
+%% global interpolation
+% solve node params corresponding to Q
+uQ = interpParam(Q,interpMethod);
 
-else
-    if strcmp(interpMethod,'concentric') % concentric parameterization
-        l = sum((Q(1:end-1,:)-Q(2:end,:)).^2,2).^(1/4); % sqrt of dist of adjacent Q, size(n-1,1)
-    else % chord parameterization
-        l = sum((Q(1:end-1,:)-Q(2:end,:)).^2,2).^(1/2); % dist of adjacent Q, size(n-1,1)
-    end
-    L = sum(l);
-    uQ = zeros(n,1);
-    for ii = 2:n-1
-        uQ(ii) = uQ(ii-1) + l(ii-1);
-    end
-    uQ = uQ/L; % control points are on the spline curve
-    uQ(end) = 1;
-end
-
-%% node vector U generation
+% node vector U generation
 U = nodeVector(k,n,'nodeMethod','Interpolation','uQ',uQ);
 
 %% equations to solve the cpts
