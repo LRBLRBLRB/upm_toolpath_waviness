@@ -35,7 +35,7 @@ switch debug
         r0 = 0.1; % unit:um
         noise = 0.05;
         zNoise = 0.01;
-        theta = linspace(0,2*pi/3,50);
+        theta = linspace(0,2*pi/3,300);
         r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
         toolOri(1,:) = cx0 + r.*cos(theta);
         toolOri(2,:) = cy0 + r.*sin(theta);
@@ -109,12 +109,12 @@ xlabel('central angle\theta(°)','FontSize',textFontSize,'FontName',textFontType
 
 % two methods to interpolate
 k = 3; % order of the B-spline
-u = 0:0.001:1;
+u = 0:0.0002:1;
+nPts = length(u);
 
-[toolPt,sp] = bsplinePts_spapi(toolFit,k,u);
+[toolPt,toolCpts] = bsplinePts_spapi(toolFit,k,u,'interpMethod','uniform');
 
-% [toolCpts,U] = bSplineCpts(toolFit',k,'chord'); 
-% nPts = length(u);
+% [toolCpts,U] = bSplineCpts(toolFit',k,'chord');
 % toolDim = size(toolCpts,2);
 % toolPt2 = zeros(nPts,toolDim);
 % for i = 1:nPts
@@ -136,13 +136,13 @@ u = 0:0.001:1;
 figure('Name','Tool Interpolation Results');
 plot(toolFit(1,:),toolFit(2,:),'--.', ...
     'MarkerSize',8,'Color',[0,0.447,0.741]); hold on;
-plot(toolCpts(:,1),toolCpts(:,2),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
+plot(toolCpts(1,:),toolCpts(2,:),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
 plot(toolPt(1,:),toolPt(2,:),'Color',[0.635,0.078,0.184]);
 axis equal
 legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 
 % plot the interpolation error
-figure('Name','Tool interpolation Results');
+% figure('Name','Tool interpolation Error');
 
 %% save the tool interpolation results
 center = [center(1);0;center(2)];
@@ -165,30 +165,11 @@ switch toolFileType
         Comments = cell2mat(inputdlg('Enter Comment of the tool model:', ...
             'Input Saving Comments',[5 60],string(datestr(now))));
         save(toolFile,"center","radius","Comments","includedAngle", ...
-            "toolPt","toolEdgeNorm","toolDirect","toolCpts");
+            "toolPt","toolEdgeNorm","toolDirect","toolCpts","toolFit");
     otherwise
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);
 end
 
-%% 相邻刀位点的残高
-x1 = [0;0]; vec1 = [0;1];
-x2 = [r0;r0/30]; vec2 = [cosd(90+8);sind(90+8)];
-R = rotz(5,'deg'); % rotation matrix about z axis
-tool1 = toolPt(1:2:end,:) + x1;
-tool2 = R(1:2,1:2)*toolPt(1:2:end,:) + x2;
-
-[res,interPt] = residualHigh(x1,vec1,tool1,x2,vec2,tool2);
-
-figure('Name','Residual of the adjacent tool');
-plot(tool1(1,:),tool1(2,:),'Color',[0,0.45,0.74]); hold on;
-plot(tool2(1,:),tool2(2,:),'Color',[0.85,0.33,0.10]);
-plot(interPt(1),interPt(2),'*','Color',[0.49,0.18,0.56]);
-plot(x1(1)+radius*vec1(1),x1(2)+radius*vec1(2),'o','Color',[0,0.45,0.74],'MarkerFaceColor',[0,0.45,0.74]);
-quiver(x1(1),x1(2),radius*vec1(1),radius*vec1(2),'LineWidth',2,'Color',[0,0.45,0.74],'AutoScale','off');
-plot(x2(1)+radius*vec2(1),x2(2)+radius*vec2(2),'o','Color',[0.85,0.33,0.10],'MarkerFaceColor',[0.85,0.33,0.10]);
-quiver(x2(1),x2(2),radius*vec2(1),radius*vec2(2),'LineWidth',2,'Color',[0.85,0.33,0.10],'AutoScale','off');
-axis equal
-
 %%
-rmpath(genpath('funcs'));
+% rmpath(genpath('funcs'));

@@ -1,4 +1,4 @@
-function uQ = interpParam(Q,interpMethod)
+function uQ = interpParam(Q,options)
 % usage: 
 % The function is used to process the parameterization during
 % interpolation. 
@@ -10,15 +10,15 @@ function uQ = interpParam(Q,interpMethod)
 
 arguments
     Q {mustBeFinite}
-    interpMethod {mustBeMember(interpMethod, ...
+    options.interpMethod {mustBeMember(options.interpMethod, ...
         ['uniform','concentric','chord',''])} = 'chord'
 end
 
 n = size(Q,1);
-if strcmp(interpMethod,'uniform') % uniform parameterization
+if strcmp(options.interpMethod,'uniform') % uniform parameterization
     uQ = transpose(linspace(0,1,n));
 else
-    if strcmp(interpMethod,'concentric') % concentric parameterization
+    if strcmp(options.interpMethod,'concentric') % concentric parameterization
         l = sum((Q(1:end-1,:)-Q(2:end,:)).^2,2).^(1/4); % sqrt of dist of adjacent Q, size(n-1,1)
     else % chord parameterization
         l = sum((Q(1:end-1,:)-Q(2:end,:)).^2,2).^(1/2); % dist of adjacent Q, size(n-1,1)
