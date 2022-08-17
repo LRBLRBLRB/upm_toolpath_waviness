@@ -16,6 +16,8 @@ end
 
 % chord parameterization
 uQ = interpParam(Q','chord');
+
+% node vector U generation
 U = nodeVector(k,n,'nodeMethod','Interpolation','uQ',uQ);
 
 sp = spapi(U,uQ,Q); % spline interpolation

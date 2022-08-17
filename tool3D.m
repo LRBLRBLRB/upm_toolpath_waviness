@@ -18,7 +18,7 @@ switch debug
         r0 = 0.1;
         noise = 0.05;
         zNoise = 0.01;
-        theta = linspace(0,pi/3,100);
+        theta = linspace(0,2*pi/3,200);
         r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
         toolOri(1,:) = r.*cos(theta) + cx0;
         toolOri(2,:) = r.*sin(theta) + cy0;
@@ -35,7 +35,7 @@ switch debug
         r0 = 0.1; % unit:um
         noise = 0.05;
         zNoise = 0.01;
-        theta = linspace(0,2*pi/3,100);
+        theta = linspace(0,2*pi/3,50);
         r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
         toolOri(1,:) = cx0 + r.*cos(theta);
         toolOri(2,:) = cy0 + r.*sin(theta);
@@ -109,36 +109,40 @@ xlabel('central angle\theta(°)','FontSize',textFontSize,'FontName',textFontType
 
 % two methods to interpolate
 k = 3; % order of the B-spline
-[toolCpts,U] = bSplineCpts(toolFit',k,'chord'); 
-u = 0:0.002:1;
-nPts = length(u);
-toolDim = size(toolCpts,2);
-toolPt2 = zeros(nPts,toolDim);
-for i = 1:nPts
-    toolPt2(i,:) = bSplinePt(toolCpts,k,u(i),U);
-end
-toolPt2 = toolPt2';
+u = 0:0.001:1;
 
 [toolPt,sp] = bsplinePts_spapi(toolFit,k,u);
 
-% plot the difference between the two
-figure('Name','Comparison between the self function and the Mathworks ons');
-tiledlayout(2,1,"TileSpacing","tight","Padding","tight");
-nexttile;
-plot(u',toolPt2(1,:) - toolPt(1,:)); hold on;
-
-nexttile;
-plot(u',toolPt2(2,:) - toolPt(2,:)); hold on;
-xlabel('u');
+% [toolCpts,U] = bSplineCpts(toolFit',k,'chord'); 
+% nPts = length(u);
+% toolDim = size(toolCpts,2);
+% toolPt2 = zeros(nPts,toolDim);
+% for i = 1:nPts
+%     toolPt2(i,:) = bSplinePt(toolCpts,k,u(i),U);
+% end
+% toolPt2 = toolPt2';
+% 
+% % plot the difference between the two
+% figure('Name','Comparison between the self function and the Mathworks ons');
+% tiledlayout(2,1,"TileSpacing","tight","Padding","tight");
+% nexttile;
+% plot(u',toolPt2(1,:) - toolPt(1,:)); hold on;
+% 
+% nexttile;
+% plot(u',toolPt2(2,:) - toolPt(2,:)); hold on;
+% xlabel('u');
 
 % plot the interpolation results
 figure('Name','Tool Interpolation Results');
 plot(toolFit(1,:),toolFit(2,:),'--.', ...
-    'MarkerSize',8,'Color',[0.32,0.55,0.19]); hold on;
-plot(toolCpts(:,1),toolCpts(:,2),'x','Color',[0.85,0.33,0.10]);
-plot(toolPt(1,:),toolPt(2,:),'Color',[0,0.45,0.74]);
+    'MarkerSize',8,'Color',[0,0.447,0.741]); hold on;
+plot(toolCpts(:,1),toolCpts(:,2),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
+plot(toolPt(1,:),toolPt(2,:),'Color',[0.635,0.078,0.184]);
 axis equal
 legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
+
+% plot the interpolation error
+figure('Name','Tool interpolation Results');
 
 %% save the tool interpolation results
 center = [center(1);0;center(2)];
@@ -161,7 +165,7 @@ switch toolFileType
         Comments = cell2mat(inputdlg('Enter Comment of the tool model:', ...
             'Input Saving Comments',[5 60],string(datestr(now))));
         save(toolFile,"center","radius","Comments","includedAngle", ...
-            "toolPt","toolEdgeNorm","toolDirect");
+            "toolPt","toolEdgeNorm","toolDirect","toolCpts");
     otherwise
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);
