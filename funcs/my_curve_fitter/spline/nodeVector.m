@@ -14,7 +14,7 @@ arguments
     k (1,1) {mustBeInteger,mustBePositive}
     n (1,1) {mustBeInteger,mustBeGreaterThanOrEqual(n,k)}
     options.nodeMethod {mustBeMember(options.nodeMethod, ...
-        ['Riesenfeld','Hartley-Judd','Interpolation',''])} = 'Interpolation'
+        ['Riesenfeld','Hartley-Judd','Interpolation','Approximation',''])} = 'Interpolation'
     options.cpts {mustBeFloat} = []
     options.uQ (:,1) {mustBeInRange(options.uQ,0,1,'inclusive')} = []
 end
@@ -58,13 +58,14 @@ switch options.nodeMethod
         end
         % normalized node vector
         U = [zeros(k+1,1); UTemp; ones(k+1,1)];
-    otherwise % interpolation node vector generation
+    case 'Interpolation' % interpolation node vector generation
         U = [zeros(n,1); ones(k+1,1)]; % normalized node vector
         for ii = k+2:n
             for j = 1:k
                 U(ii) = U(ii) + options.uQ(ii-k+j-1)/k;
             end
         end
+    case 'Approximation'
 end
 
 end

@@ -120,4 +120,4 @@ plot3(surfPt(1:100:end,1), ...
 
 
 %% 
-rmpath(genpath('funcs'));
+% rmpath(genpath('funcs'));

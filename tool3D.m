@@ -5,7 +5,10 @@ clear; clc;
 addpath(genpath('funcs'));
 
 % global variables
-% global textFontSize textFontType;
+% global textFontSize textFontType unit fitMethod paramMethod;
+fitMethod = 'Levenberg-Marquardt';
+paramMethod = 'centripetal';
+unit = '\mu m';
 textFontSize = 14;
 textFontType = 'Times New Roman';
 
@@ -13,9 +16,9 @@ textFontType = 'Times New Roman';
 debug = 3;
 switch debug
     case 2 % 2D tool profile simulation
-        cx0 = 0; % unit: mu m
-        cy0 = 0;
-        r0 = 0.1;
+        cx0 = 0; % unit: mm
+        cy0 = 0; % unit: mm
+        r0 = 0.1; % unit: mm
         noise = 0.05;
         zNoise = 0.01;
         theta = linspace(0,2*pi/3,200);
@@ -29,10 +32,10 @@ switch debug
                 /length(theta));
         clear theta r;
     case 3 % 3D tool profile simulation
-        cx0 = 1;
-        cy0 = 2;
-        cz0 = 3;
-        r0 = 0.1; % unit:um
+        cx0 = 1000; % unit:um
+        cy0 = 2000; % unit:um
+        cz0 = 3000; % unit:um
+        r0 = 100; % unit:um
         noise = 0.05;
         zNoise = 0.01;
         theta = linspace(0,2*pi/3,300);
@@ -45,6 +48,18 @@ switch debug
             /length(theta));
         clear theta r;
     otherwise
+        toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
+            'Unit','Font type in figure','Font size in figure'}, ...
+            'Tool Processing Input', ...
+            [1 20; 1 20; 1 20; 1 20; 1 20], ...
+            {'Levenberg-Marquardt','centripetal','\mu m','Times New Roman','14'}, ...
+            'WindowStyle');
+        fitMethod = toolInput{1};
+        paramMethod = toolInput{2};
+        unit = toolInput{3};
+        textFontType = toolInput{4};
+        textFontSize = str2double(toolInput{5});
+        % tool measurement file loading
         [fileName,dirName] = uigetfile({ ...
             '*.mat','MAT-files(*.mat)'; ...
             '*.txt','text-files(*.txt)'; ...
@@ -63,14 +78,14 @@ f1 = figure('Name','original scatters of the tool');
 scatter3(toolOri(1,:),toolOri(2,:),toolOri(3,:));
 hold on; grid on;
 % axis equal;
-xlabel('x(\mum)','FontSize',textFontSize,'FontName',textFontType);
-ylabel('y(\mum)','FontSize',textFontSize,'FontName',textFontType);
-zlabel('z(\mum)','FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
+ylabel(['y(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
+zlabel(['z(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
 view(-45,60);
 clear theta theta1 theta2;
 
 %% 由(x,y)图获得刃口圆心半径以及波纹度函数
-[center,radius,includedAngle,toolFit,rmseLsc] = toolFit3D(toolOri,'Levenberg-Marquardt');
+[center,radius,includedAngle,toolFit,rmseLsc] = toolFit3D(toolOri,fitMethod);
 % plot the fitting results
 f2 = figure('Name','tool sharpness fitting result');
 xLim = 1.1*max(toolFit(1,:));
@@ -92,8 +107,8 @@ line([0,xtmp(end)],[0,ytmp(end)],'LineStyle','--','Color',[0.85,0.33,0.10]);
 % xlim([-1.1*xLim,1.1*xLim]);
 axis equal;
 % set(gca,'TickLabelInterpreter','tex');
-xlabel('x({\mu}m)','FontSize',textFontSize,'FontName',textFontType);
-ylabel('y({\mu}m)','FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
+ylabel(['y(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
 legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
 clear xtmp ytmp theta xLim; % 删除画图的临时变量
@@ -103,16 +118,24 @@ clear xtmp ytmp theta xLim; % 删除画图的临时变量
 toolTheta = atan2(toolFit(2,:),toolFit(1,:));
 toolR = vecnorm(toolFit,2,1);
 figure('name','tool curve');
-subplot(2,1,1); plot(toolTheta*180/pi,toolR); title('tool curve','FontSize',textFontSize,'FontName',textFontType);
-subplot(2,1,2); plot(toolTheta*180/pi,toolR - radius); title('tool waviness','FontSize',textFontSize,'FontName',textFontType);
+tiledlayout(2,1);
+nexttile;
+plot(toolTheta*180/pi,toolR); hold on;
+title('tool curve','FontSize',textFontSize,'FontName',textFontType);
+ylabel({'polar diameter',['(',unit,'m)']},'FontSize',textFontSize,'FontName',textFontType);
+nexttile;
+plot(toolTheta*180/pi,toolR - radius); hold on;
+title('tool waviness','FontSize',textFontSize,'FontName',textFontType);
+ylabel({'polar diameter error',['(',unit,'m)']},'FontSize',textFontSize,'FontName',textFontType);
 xlabel('central angle\theta(°)','FontSize',textFontSize,'FontName',textFontType);
 
 % two methods to interpolate
-k = 3; % order of the B-spline
+k = 3; % degree of the B-spline
 u = 0:0.0002:1;
 nPts = length(u);
 
-[toolPt,toolCpts] = bsplinePts_spapi(toolFit,k,u,'interpMethod','uniform');
+[toolPt,sp] = bsplinePts_spapi(toolFit,k,u,'paramMethod',paramMethod);
+toolCpts = sp.coefs;
 
 % [toolCpts,U] = bSplineCpts(toolFit',k,'chord');
 % toolDim = size(toolCpts,2);
@@ -122,14 +145,15 @@ nPts = length(u);
 % end
 % toolPt2 = toolPt2';
 % 
-% % plot the difference between the two
+% plot the difference between the two
 % figure('Name','Comparison between the self function and the Mathworks ons');
 % tiledlayout(2,1,"TileSpacing","tight","Padding","tight");
 % nexttile;
 % plot(u',toolPt2(1,:) - toolPt(1,:)); hold on;
-% 
+% ylabel('\Delta x');
 % nexttile;
 % plot(u',toolPt2(2,:) - toolPt(2,:)); hold on;
+% ylabel('\Delta y');
 % xlabel('u');
 
 % plot the interpolation results
@@ -158,14 +182,19 @@ toolDirect = [0;1;0];
         ['output_data/tool/toolTheo',datestr(now,'yyyymmddTHHMMSS'),'.mat']);
 toolFile = fullfile(toolDirName,toolFileName);
 switch toolFileType
-    case 0
+    case 0 % no saving files
         msgfig = msgbox("No tool model saved","Warning","warn","modal");
         uiwait(msgfig);
-    case 1
-        Comments = cell2mat(inputdlg('Enter Comment of the tool model:', ...
-            'Input Saving Comments',[5 60],string(datestr(now))));
-        save(toolFile,"center","radius","Comments","includedAngle", ...
-            "toolPt","toolEdgeNorm","toolDirect","toolCpts","toolFit");
+    case 1 % *.mat
+        Comments = cell2mat(inputdlg( ...
+            'Enter Comment of the tool model:', ...
+            'Saving Comments', ...
+            [5 60], ...
+            string(datestr(now))));
+        save(toolFile,"Comments","unit","fitMethod","paramMethod", ... % comments and notes
+            "center","radius","includedAngle", ... % tool fitting results
+            "toolPt","toolEdgeNorm","toolDirect", ... % tool interpolation results
+            "toolCpts","toolFit"); % auxiliary data
     otherwise
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);

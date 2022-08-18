@@ -4,21 +4,21 @@ function uQ = interpParam(Q,options)
 % interpolation. 
 % Inputs:
 %   Q (n,3) matrix of data points
-%   interpMethod interpolation method
+%   paramMethod {'uniform','centripetal','chord'} parameterization method
 % Outputs:
 %   uQ (n,1) node parameters corresponding to Q
 
 arguments
     Q {mustBeFinite}
-    options.interpMethod {mustBeMember(options.interpMethod, ...
-        ['uniform','concentric','chord',''])} = 'chord'
+    options.paramMethod {mustBeMember(options.paramMethod, ...
+        ['uniform','centripetal','chord',''])} = 'chord'
 end
 
 n = size(Q,1);
-if strcmp(options.interpMethod,'uniform') % uniform parameterization
+if strcmp(options.paramMethod,'uniform') % uniform parameterization
     uQ = transpose(linspace(0,1,n));
 else
-    if strcmp(options.interpMethod,'concentric') % concentric parameterization
+    if strcmp(options.paramMethod,'centripetal') % concentric parameterization
         l = sum((Q(1:end-1,:)-Q(2:end,:)).^2,2).^(1/4); % sqrt of dist of adjacent Q, size(n-1,1)
     else % chord parameterization
         l = sum((Q(1:end-1,:)-Q(2:end,:)).^2,2).^(1/2); % dist of adjacent Q, size(n-1,1)
