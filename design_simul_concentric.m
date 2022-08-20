@@ -1,4 +1,4 @@
-close all;
+% close all;
 clear;
 clc;
 addpath(genpath('funcs'));
@@ -23,15 +23,15 @@ default = false;
 if default
     load('output_data/simulation/ellipsoidAnay.mat');
 else % ellipsoid
-    R = 1;
-    A = .3;
-    B = .4;
-    C = .5;
+    R = 1000;
+    A = 300;
+    B = 400;
+    C = 500;
     
     % sampling density
     r = [0,3*R/4]; % concentric radius range
-    densTheta = 101; % 问题：r和theta的离散度不同会不会有影响？
-    conCenter = [0,0,sqrt(C^2*(R.^2-r(2).^2))]; % concentric circle center
+    densTheta = 101;
+    surfCenter = [0,0,sqrt(C^2*(R.^2-r(2).^2))]; % concentric circle center
     conR = (toolData.center/2):(toolData.center):r(2); % concentric radius vector
     densR = length(conR);
     conTheta = linspace(0,2*pi,densTheta);
@@ -44,6 +44,7 @@ else % ellipsoid
     % z = reshape(surfMesh(:,:,3),[],1);
     % surfXYZ = [x,y,z];
     
+    % calculate the normal vector of the analytic surface
     % syms X Y Z(X,Y);
     % Z(X,Y) = sqrt(C^2*(R^2 - X.^2/A^2 - Y.^2/B^2));
     % ZDX = diff(Z,X);
@@ -53,8 +54,8 @@ else % ellipsoid
     % surfNorm(:,3) = -ones(densTheta*densR,1);
     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
-
-    % save('Simulation/ellipsoidAnay.mat',"conCenter","conR","surfMesh","surfNorm");
+%     save('Simulation/ellipsoidAnay.mat', ...
+%         "conCenter","conR","surfMesh","surfNorm","surfCenter");
 end
 
 %% plot the freeform surface
@@ -97,10 +98,12 @@ uiwait(msgfig);
 %% Tool Edge Simulation
 surfPt = reshape(surfMesh,[],3);
 surfNorm = reshape(surfNorm,[],3);
+surfDirect = toolDirection(surfPt,surfCenter);
 ptNum = size(surfPt,1);
 toolCenPt = zeros(ptNum,3);
-for ii = 1:ptNum
-    toolCenPt(ii,:) = toolPos(toolData,surfPt(ii,:),surfNorm(ii,:));
+parpool(6);
+parfor ii = 1:ptNum
+    toolCenPt(ii,:) = toolPos(toolData,surfPt(ii,:),surfNorm(ii,:),surfDirect(ii,:));
 end
 
 figure('Name','tool center position & tool normal vector');

@@ -8,7 +8,7 @@ addpath(genpath('funcs'));
 % global textFontSize textFontType unit fitMethod paramMethod;
 fitMethod = 'Levenberg-Marquardt';
 paramMethod = 'centripetal';
-unit = '\mu m';
+unit = 'mm';
 textFontSize = 14;
 textFontType = 'Times New Roman';
 
@@ -32,10 +32,10 @@ switch debug
                 /length(theta));
         clear theta r;
     case 3 % 3D tool profile simulation
-        cx0 = 1000; % unit:um
-        cy0 = 2000; % unit:um
-        cz0 = 3000; % unit:um
-        r0 = 100; % unit:um
+        cx0 = 1; % unit:mm
+        cy0 = 2; % unit:mm
+        cz0 = 3; % unit:mm
+        r0 = 0.1; % unit:mm
         noise = 0.05;
         zNoise = 0.01;
         theta = linspace(0,2*pi/3,300);
@@ -134,8 +134,8 @@ k = 3; % degree of the B-spline
 u = 0:0.0002:1;
 nPts = length(u);
 
-[toolPt,sp] = bsplinePts_spapi(toolFit,k,u,'paramMethod',paramMethod);
-toolCpts = sp.coefs;
+[toolPt,toolBform] = bsplinePts_spapi(toolFit,k,u,'paramMethod',paramMethod);
+toolCpts = toolBform.coefs;
 
 % [toolCpts,U] = bSplineCpts(toolFit',k,'chord');
 % toolDim = size(toolCpts,2);
@@ -193,8 +193,9 @@ switch toolFileType
             string(datestr(now))));
         save(toolFile,"Comments","unit","fitMethod","paramMethod", ... % comments and notes
             "center","radius","includedAngle", ... % tool fitting results
-            "toolPt","toolEdgeNorm","toolDirect", ... % tool interpolation results
+            "toolPt","toolEdgeNorm","toolDirect","toolBform", ... % tool interpolation results
             "toolCpts","toolFit"); % auxiliary data
+        % toolPt, toolCpts, toolFit are useless in the following process at present
     otherwise
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);
