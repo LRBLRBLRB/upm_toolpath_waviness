@@ -13,9 +13,9 @@ function U = nodeVector(k,n,options)
 arguments
     k (1,1) {mustBeInteger,mustBePositive}
     n (1,1) {mustBeInteger,mustBeGreaterThanOrEqual(n,k)}
-    options.nodeMethod {mustBeMember(options.nodeMethod, ...
+    options.NodeMethod {mustBeMember(options.NodeMethod, ...
         ['Riesenfeld','Hartley-Judd','Interpolation','Approximation',''])} = 'Interpolation'
-    options.cpts {mustBeFloat} = []
+    options.Cpts {mustBeFloat} = []
     options.uQ (:,1) {mustBeInRange(options.uQ,0,1,'inclusive')} = []
 end
 
@@ -23,9 +23,9 @@ if n-k-1<0
     error('control points are not enough, or the required order is too large');
 end
 
-switch options.nodeMethod
+switch options.NodeMethod
     case 'Riesenfeld'
-        l = sum((options.cpts(1:end-1,:)-options.cpts(2:end,:)).^2,2).^(1/2);
+        l = sum((options.Cpts(1:end-1,:)-options.Cpts(2:end,:)).^2,2).^(1/2);
         L = sum(l);
         UTemp = zeros(n-k-1,1);
         if mod(k,2) == 0
@@ -44,7 +44,7 @@ switch options.nodeMethod
         end
         U = [zeros(k+1,1); UTemp; ones(k+1,1)];
     case 'Hartley-Judd'
-        l = sum((options.cpts(1:end-1,:)-options.cpts(2:end,:)).^2,2).^(1/2);
+        l = sum((options.Cpts(1:end-1,:)-options.Cpts(2:end,:)).^2,2).^(1/2);
         UTemp = zeros(n-k-1,1);
         deltaU = zeros(n-k,1);
         for ii = 1:k

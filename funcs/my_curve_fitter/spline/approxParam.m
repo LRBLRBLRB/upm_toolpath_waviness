@@ -11,7 +11,7 @@ function approxParam(Q,options)
 arguments
     Q {mustBeFinite}
     options.paramMethod {mustBeMember(options.paramMethod, ...
-        [''])} = ''
+        ['','Least-Square'])} = ''
 end
 
 n = size(Q,1);

@@ -3,6 +3,7 @@ function [toolPos] = toolPos(toolEdge,surfPt,surfNorm,surfDirect)
 %   Solve the tool pose using the tangent relationship of tool tip and
 %   surface, with the tool axis unchanged.
 % Notice: now the tool has not been tilted
+% Notice: 刀具现在是固定住朝向的，即认为刀轴方形恒为[0;0;1]不变。
 % Input:
 %   toolEdge (structure) the edge model of the tool
 %   surfPt (3,1) pose of the tool tip (the surface as well)
@@ -18,35 +19,31 @@ arguments
 end
 
 %% method: rotation transform
-c = toolEdge.center;
-% r = toolEdge.radius;
-toolPt = toolEdge.toolPt; % (3,:) position of tool edge
-toolNorm = toolEdge.toolEdgeNorm; % (3,:) normal vector of the tool edge
-
 % adjust the normal vector of the tool
-if nnz(toolNorm - [0;0;1])
-    toolRot = vecRot(toolNorm,[0;0;1]);
-    toolPt = toolRot*toolPt;
+if nnz(toolEdge.toolEdgeNorm - [0;0;1])
+    toolRot = vecRot(toolEdge.toolEdgeNorm,[0;0;1]);
+    toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
 end
 
-surfToolAng = vecAng(surfNorm,toolNorm,1);
+% rotate the cutting direction and orientation of the tool
+toolRot = vecRot(toolDirect,surfDirect);
+toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
+
+% find the contact point on the tool edge
+surfToolAng = vecAng(surfNorm,toolEdge.toolEdgeNorm,1);
 if abs(surfToolAng) > toolEdge.includedAngle/2
     log = find(abs(surfToolAng) > toolEdge.includedAngle/2);
     error("tool path error: collision between tool and workpiece will happen at point %d",log);
 end
-surfRot = vecRot(surfNorm,toolNorm);
-toolNorm = surfRot*toolNorm;
-tmpC = toolRot*c;
-[~,minInd] = min(toolPt(:,3));
-tranVec = surfPt - toolPt(minInd,:);
-toolPos = tmpC + tranVec;
-% toolPos = tmpC/toolR; % tmpC*inv(R)
+
+% calculate the actual contact point on the tool edge
+toolContactPt = 
+
+toolEdge = toolRigid(toolEdge,eye(3),surfPt - toolContactPt);
 
 %% method
 
 % a faster method to calculate the angle of two rigid is needed.
-
-
 
 
 end

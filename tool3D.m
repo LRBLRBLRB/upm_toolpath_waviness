@@ -6,8 +6,8 @@ addpath(genpath('funcs'));
 
 % global variables
 % global textFontSize textFontType unit fitMethod paramMethod;
-fitMethod = 'Levenberg-Marquardt';
-paramMethod = 'centripetal';
+FitMethod = 'Levenberg-Marquardt';
+ParamMethod = 'centripetal';
 unit = 'mm';
 textFontSize = 14;
 textFontType = 'Times New Roman';
@@ -54,8 +54,8 @@ switch debug
             [1 20; 1 20; 1 20; 1 20; 1 20], ...
             {'Levenberg-Marquardt','centripetal','\mu m','Times New Roman','14'}, ...
             'WindowStyle');
-        fitMethod = toolInput{1};
-        paramMethod = toolInput{2};
+        FitMethod = toolInput{1};
+        ParamMethod = toolInput{2};
         unit = toolInput{3};
         textFontType = toolInput{4};
         textFontSize = str2double(toolInput{5});
@@ -85,7 +85,7 @@ view(-45,60);
 clear theta theta1 theta2;
 
 %% 由(x,y)图获得刃口圆心半径以及波纹度函数
-[center,radius,includedAngle,toolFit,rmseLsc] = toolFit3D(toolOri,fitMethod);
+[~,radius,includedAngle,toolFit,rmseLsc] = toolFit3D(toolOri,FitMethod);
 % plot the fitting results
 f2 = figure('Name','tool sharpness fitting result');
 xLim = 1.1*max(toolFit(1,:));
@@ -113,7 +113,6 @@ legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
 clear xtmp ytmp theta xLim; % 删除画图的临时变量
 
-%% 车刀轮廓插值
 % Cartesian coordinate to cylindrical coordinate
 toolTheta = atan2(toolFit(2,:),toolFit(1,:));
 toolR = vecnorm(toolFit,2,1);
@@ -129,12 +128,14 @@ title('tool waviness','FontSize',textFontSize,'FontName',textFontType);
 ylabel({'polar diameter error',['(',unit,'m)']},'FontSize',textFontSize,'FontName',textFontType);
 xlabel('central angle\theta(°)','FontSize',textFontSize,'FontName',textFontType);
 
-% two methods to interpolate
+%% 车刀轮廓插值 two methods to interpolate
 k = 3; % degree of the B-spline
 u = 0:0.0002:1;
 nPts = length(u);
 
-[toolPt,toolBform] = bsplinePts_spapi(toolFit,k,u,'paramMethod',paramMethod);
+% B-spline interpolate in the polar coordinate
+[toolPt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...
+    'ParamMethod',ParamMethod,'CoordinateType','Cartesian'); 
 toolCpts = toolBform.coefs;
 
 % [toolCpts,U] = bSplineCpts(toolFit',k,'chord');
@@ -169,7 +170,7 @@ legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 % figure('Name','Tool interpolation Error');
 
 %% save the tool interpolation results
-center = [center(1);0;center(2)];
+center = [0;0;0];
 toolPt = [toolPt(1,:);zeros(1,nPts);toolPt(2,:)]; % get
 toolEdgeNorm = [0;0;1];
 toolDirect = [0;1;0];
@@ -191,10 +192,10 @@ switch toolFileType
             'Saving Comments', ...
             [5 60], ...
             string(datestr(now))));
-        save(toolFile,"Comments","unit","fitMethod","paramMethod", ... % comments and notes
+        save(toolFile,"Comments","unit","FitMethod","ParamMethod", ... % comments and notes
             "center","radius","includedAngle", ... % tool fitting results
-            "toolPt","toolEdgeNorm","toolDirect","toolBform", ... % tool interpolation results
-            "toolCpts","toolFit"); % auxiliary data
+            "toolEdgeNorm","toolDirect","toolBform", ... % tool interpolation results
+            "toolPt","toolFit"); % auxiliary data
         % toolPt, toolCpts, toolFit are useless in the following process at present
     otherwise
         msgfig = msgbox("File type error","Error","error","modal");
