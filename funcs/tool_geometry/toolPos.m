@@ -1,4 +1,4 @@
-function [toolPos] = toolPos(toolEdge,surfPt,surfNorm,surfDirect)
+function [toolPos,toolCutDirect] = toolPos(toolEdge,surfPt,surfNorm,surfDirect)
 % usage: [toolPos,toolNorm] = toolPos(toolEdge,surfPt,surfNorm)
 %   Solve the tool pose using the tangent relationship of tool tip and
 %   surface, with the tool axis unchanged.
@@ -12,7 +12,7 @@ function [toolPos] = toolPos(toolEdge,surfPt,surfNorm,surfDirect)
 %   toolPos (3,1) the position of the tool center
 
 arguments
-    toolEdge 
+    toolEdge
     surfPt (3,:)
     surfNorm (3,:)
     surfDirect (3,:)
@@ -26,7 +26,7 @@ if nnz(toolEdge.toolEdgeNorm - [0;0;1])
 end
 
 % rotate the cutting direction and orientation of the tool
-toolRot = vecRot(toolDirect,surfDirect);
+toolRot = vecRot(toolEdge.toolDirect,surfDirect);
 toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
 
 % find the contact point on the tool edge
@@ -37,9 +37,10 @@ if abs(surfToolAng) > toolEdge.includedAngle/2
 end
 
 % calculate the actual contact point on the tool edge
-toolContactPt = 
-
-toolEdge = toolRigid(toolEdge,eye(3),surfPt - toolContactPt);
+[~,toolContactPt] = bSplineParam(toolEdge.toolBform,surfToolAng,1e-3, ...
+    "Type",'OpenAngle',"IncludedAng",toolEdge.includedAngle);
+toolPos = toolEdge.center + surfPt - toolContactPt;
+toolCutDirect = toolEdge.toolDirect;
 
 %% method
 

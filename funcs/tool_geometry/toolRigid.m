@@ -8,6 +8,7 @@ arguments
 end
 
 % H = [Rot,Vec;0,0,0,1];
+tool2 = tool1;
 tool2.center = Rot*tool1.center + Vec;
 tool2.toolEdgeNorm = Rot*tool1.toolEdgeNorm; % (3,:) normal vector of the tool edge
 tool2.toolDirect = Rot*tool1.toolDirect; % (3,1) cutting direction of the tool edge

@@ -101,23 +101,27 @@ surfNorm = transpose(reshape(surfNorm,[],3));
 surfDirect = cutDirection(surfPt,surfCenter);
 ptNum = size(surfPt,2);
 toolCenPt = zeros(3,ptNum);
+% parpool(6);
+% addAttachedFiles(gcp,'funcs/');
 tic
-parpool(6);
-parfor ii = 1:ptNum
+for ii = 1:ptNum
     toolCenPt(:,ii) = toolPos(toolData,surfPt(:,ii),surfNorm(:,ii),surfDirect(:,ii));
 end
 toc;
 
 figure('Name','tool center position & tool normal vector');
-plot3(toolCenPt(1,:),toolCenPt(2,:),toolCenPt(3,:), ...
+plot3(toolCenPt(1,1:100:end), ...
+    toolCenPt(2,1:100:end), ...
+    toolCenPt(3,1:100:end), ...
     '.','Color',[0.85,0.33,0.10]);
 hold on; axis equal; grid on;
 xlabel('x'); ylabel('y'); zlabel('z');
-
 plot3(surfPt(1,1:100:end), ...
     surfPt(2,1:100:end), ...
     surfPt(3,1:100:end), ...
     '.','Color',[0,0.45,0.74]);
+
+
 
 
 
