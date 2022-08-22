@@ -13,7 +13,7 @@ function [res,interPt] = residualHigh(x1,vec1,s1,x2,vec2,s2)
 
 % 求两个刀位的轮廓交点
 % [interPt,~] = bsplineCross(s1,s2);
-[interPt,~] = bsplineCrossDN(s1,s2,2);
+[interPt,~] = curveCrossDN(s1,s2,2);
 
 % 求刀尖点：刀尖方向上最远点
 [~,cutPtIndex1] = min(dot((s1-x1),ndgrid(vec1,s1(1,:)))/norm(vec1));
@@ -33,7 +33,7 @@ end
 
 %% 计算两端B样条曲线s1、s2的交点 interPt
 % 最简单的算法：包围盒法
-function interPt = bsplineCross(s1,s2)
+function interPt = curveCross(s1,s2)
 if size(s1,1) <= 2 || size(s2,1) <= 2
     interPt = s1(1,:); % 这是比较粗略的处理，就把s1的最初一个输出，这里的递归终止条件还要深入讨论以提高精度
     return;
@@ -48,7 +48,7 @@ end
 n1 = length(s1);
 n2 = length(s2);
 
-interPt = bsplineCross(s1(),s2());
+interPt = curveCross(s1(),s2());
 end
 
 function isinter = recInter(min1,max1,min2,max2)
@@ -63,7 +63,7 @@ end
 end
 
 %% MATLAB自带的求距离函数
-function [interPt,eps] = bsplineCrossDN(s1,s2,dim)
+function [interPt,eps] = curveCrossDN(s1,s2)
 s1 = s1';
 s2 = s2';
 [index,dist] = dsearchn(s1,s2);
