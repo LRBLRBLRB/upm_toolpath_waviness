@@ -24,8 +24,15 @@ switch options.Type
             u = u - delta/options.IncludedAng;
         end
     case 'OpenAngle'
-        u = 
+        u = 0.5 + known/options.IncludedAng;
+        while true
+            Q = fnval(sp,u);
+            delta = atan2(Q(2),Q(1)) - known;
+            if  abs(delta) < eps 
+                break;
+            end
+            u = u - delta/options.IncludedAng;
+        end
 end
-
 
 end

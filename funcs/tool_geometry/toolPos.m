@@ -26,21 +26,21 @@ if nnz(toolEdge.toolEdgeNorm - [0;0;1])
 end
 
 % rotate the cutting direction and orientation of the tool
-toolRot = vecRot(toolEdge.toolDirect,surfDirect);
+toolRot = vecRot(toolEdge.cutDirect,surfDirect);
 toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
 
 % find the contact point on the tool edge
-surfToolAng = vecAng(surfNorm,toolEdge.toolEdgeNorm,1);
-if abs(surfToolAng) > toolEdge.includedAngle/2
-    log = find(abs(surfToolAng) > toolEdge.includedAngle/2);
+surfToolAng = vecAng(surfNorm,toolEdge.toolDirect,1);
+if abs(surfToolAng - pi/2) > toolEdge.includedAngle/2
+    log = find(abs(surfToolAng - pi/2) > toolEdge.includedAngle/2);
     error("tool path error: collision between tool and workpiece will happen at point %d",log);
 end
 
 % calculate the actual contact point on the tool edge
 [~,toolContactPt] = bSplineParam(toolEdge.toolBform,surfToolAng,1e-3, ...
-    "Type",'OpenAngle',"IncludedAng",toolEdge.includedAngle);
+    "Type",'PolarAngle',"IncludedAng",toolEdge.includedAngle);
 toolPos = toolEdge.center + surfPt - toolContactPt;
-toolCutDirect = toolEdge.toolDirect;
+toolCutDirect = toolEdge.cutDirect;
 
 %% method
 

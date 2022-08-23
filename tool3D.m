@@ -173,7 +173,8 @@ legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 center = [0;0;0];
 toolPt = [toolPt(1,:);zeros(1,nPts);toolPt(2,:)]; % get
 toolEdgeNorm = [0;0;1];
-toolDirect = [0;1;0];
+cutDirect = [0;1;0];
+toolDirect = [0;0;1];
 [toolFileName,toolDirName,toolFileType] = uiputfile({ ...
         '*.mat','MAT-file(*.mat)'; ...
         '*.txt','text-file(.txt)';...
@@ -194,7 +195,7 @@ switch toolFileType
             string(datestr(now))));
         save(toolFile,"Comments","unit","FitMethod","ParamMethod", ... % comments and notes
             "center","radius","includedAngle", ... % tool fitting results
-            "toolEdgeNorm","toolDirect","toolBform", ... % tool interpolation results
+            "toolEdgeNorm","toolDirect","cutDirect","toolBform", ... % tool interpolation results
             "toolPt","toolFit"); % auxiliary data
         % toolPt, toolCpts, toolFit are useless in the following process at present
     otherwise

@@ -8,7 +8,6 @@ arguments
     dim {mustBeInteger}
 end
 
-
 ang = acos( ...
     dot(vec1,vec2,dim)./vecnorm(vec1,2,dim)./vecnorm(vec2,2,dim) ...
     );
