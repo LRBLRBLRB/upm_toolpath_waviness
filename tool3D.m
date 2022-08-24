@@ -19,7 +19,7 @@ switch debug
         cx0 = 0; % unit: mm
         cy0 = 0; % unit: mm
         r0 = 0.1; % unit: mm
-        noise = 0.05;
+        noise = 0.03;
         zNoise = 0.01;
         theta = linspace(0,2*pi/3,200);
         r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
@@ -85,6 +85,7 @@ view(-45,60);
 clear theta theta1 theta2;
 
 %% 由(x,y)图获得刃口圆心半径以及波纹度函数
+nCPts = size(toolOri,2);
 [~,radius,includedAngle,toolFit,rmseLsc] = toolFit3D(toolOri,FitMethod);
 % plot the fitting results
 f2 = figure('Name','tool sharpness fitting result');
@@ -171,10 +172,12 @@ legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 
 %% save the tool interpolation results
 center = [0;0;0];
+toolFit = [toolFit(1,:);zeros(1,nCPts);toolFit(2,:)];
+toolBform.coefs = [toolBform.coefs(1,:);zeros(1,nCPts);toolBform.coefs(2,:)];
 toolPt = [toolPt(1,:);zeros(1,nPts);toolPt(2,:)]; % get
 toolEdgeNorm = [0;0;1];
 cutDirect = [0;1;0];
-toolDirect = [0;0;1];
+toolDirect = [1;0;0];
 [toolFileName,toolDirName,toolFileType] = uiputfile({ ...
         '*.mat','MAT-file(*.mat)'; ...
         '*.txt','text-file(.txt)';...

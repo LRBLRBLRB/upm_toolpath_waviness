@@ -1,4 +1,4 @@
-function [toolPos,toolCutDirect] = toolPos(toolEdge,surfPt,surfNorm,surfDirect)
+function [toolPos,toolCutDirect,log] = toolPos(toolEdge,surfPt,surfNorm,surfDirect)
 % usage: [toolPos,toolNorm] = toolPos(toolEdge,surfPt,surfNorm)
 %   Solve the tool pose using the tangent relationship of tool tip and
 %   surface, with the tool axis unchanged.
@@ -20,6 +20,7 @@ end
 
 %% method: rotation transform
 % adjust the normal vector of the tool
+log = 0;
 if nnz(toolEdge.toolEdgeNorm - [0;0;1])
     toolRot = vecRot(toolEdge.toolEdgeNorm,[0;0;1]);
     toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
@@ -32,14 +33,19 @@ toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
 % find the contact point on the tool edge
 surfToolAng = vecAng(surfNorm,toolEdge.toolDirect,1);
 if abs(surfToolAng - pi/2) > toolEdge.includedAngle/2
-    log = find(abs(surfToolAng - pi/2) > toolEdge.includedAngle/2);
-    error("tool path error: collision between tool and workpiece will happen at point %d",log);
+    warning("tool path error: collision between tool and workpiece will happen at the point");
+    log = 1;
+    toolPos = nan(3,1);
+    toolCutDirect = nan(3,1);
+    return;
 end
 
 % calculate the actual contact point on the tool edge
-[~,toolContactPt] = bSplineParam(toolEdge.toolBform,surfToolAng,1e-3, ...
+[~,toolContactPt] = bSplinePtInv(toolEdge.toolBform,surfToolAng,1e-3, ...
     "Type",'PolarAngle',"IncludedAng",toolEdge.includedAngle);
-toolPos = toolEdge.center + surfPt - toolContactPt;
+toolContactPt = [toolContactPt(1);0;toolContactPt(2)];
+toolContactPt = toolRot*toolContactPt;
+toolPos = toolEdge.center + surfPt - toolContactPt;% 检查！！！！！！！！！！！！！！！！！！！！！
 toolCutDirect = toolEdge.cutDirect;
 
 %% method
