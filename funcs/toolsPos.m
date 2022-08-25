@@ -5,7 +5,7 @@ R = rotz(5,'deg'); % rotation matrix about z axis
 tool1 = toolPt(1:2:end,:) + x1;
 tool2 = R(1:2,1:2)*toolPt(1:2:end,:) + x2;
 
-[res,interPt] = residualHigh(x1,vec1,tool1,x2,vec2,tool2);
+[res,interPt] = residual2D(x1,vec1,tool1,x2,vec2,tool2);
 
 figure('Name','Residual of the adjacent tool');
 plot(tool1(1,:),tool1(2,:),'Color',[0,0.45,0.74]); hold on;
