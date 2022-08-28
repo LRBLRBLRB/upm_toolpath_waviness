@@ -176,7 +176,7 @@ toolFit = [toolFit(1,:);zeros(1,nCPts);toolFit(2,:)];
 toolBform.coefs = [toolBform.coefs(1,:);zeros(1,nCPts);toolBform.coefs(2,:)];
 toolPt = [toolPt(1,:);zeros(1,nPts);toolPt(2,:)]; % get
 toolEdgeNorm = [0;0;1];
-cutDirect = [0;1;0];
+cutDirect = [0;-1;0]; % Caution!!!
 toolDirect = [1;0;0];
 [toolFileName,toolDirName,toolFileType] = uiputfile({ ...
         '*.mat','MAT-file(*.mat)'; ...

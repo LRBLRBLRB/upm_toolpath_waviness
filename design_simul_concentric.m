@@ -124,8 +124,6 @@ parfor ii = 1:ptNum
 end
 toc;
 
-
-%% 
 figure('Name','tool center position & tool normal vector');
 plot3(toolCenPt(1,1:1:end), ...
     toolCenPt(2,1:1:end), ...

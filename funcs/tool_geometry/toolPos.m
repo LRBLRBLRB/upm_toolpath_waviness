@@ -30,6 +30,7 @@ end
 toolRot = vecRot(toolEdge.cutDirect,surfDirect);
 toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
 
+
 % find the contact point on the tool edge
 surfToolAng = vecAng(surfNorm,toolEdge.toolDirect,1);
 if abs(surfToolAng - pi/2) > toolEdge.includedAngle/2
@@ -45,12 +46,10 @@ end
     "Type",'PolarAngle',"IncludedAng",toolEdge.includedAngle);
 toolContactPt = [toolContactPt(1);0;toolContactPt(2)];
 toolContactPt = toolRot*toolContactPt;
-toolPos = toolEdge.center + surfPt - toolContactPt;% 检查！！！！！！！！！！！！！！！！！！！！！
+toolPos = toolEdge.center + surfPt - toolContactPt;
 toolCutDirect = toolEdge.cutDirect;
 
 %% method
-
-% a faster method to calculate the angle of two rigid is needed.
-
+% a faster method to calculate the angle of two rigid is probably needed.
 
 end
