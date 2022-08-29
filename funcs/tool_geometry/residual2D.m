@@ -1,42 +1,42 @@
-function [res,interPt] = residual2D(x1,vec1,sp1,x2,vec2,sp2)
-% 计算两个刀位间的残高
-% 输入两个刀位的位置x、方向vec、刀尖轮廓s
-% 假设残高就是两个刀位的刀尖轮廓交点到两个刀位的刀尖点连线的距离
+function [res,interPt,varargout] = residual2D(c1,c2,vec1,vec2,sp1,sp2)
+% Solve the residual height between two adjacent points on the tool path in
+% 2-dimension plane, supposing that the residual height is the distance
+% between the intersection point of tool edges.
+% 
 % Usage:
-% [res,interPt] = residual2D(x1,vec1,s1,x2,vec2,s2)
-%   [res,interPt] = residual2D(x1,vec1,s1,x2,vec2,s2)
+% [res,interPt] = residual2D(c1,c2,vec1,vec2,s1,s2)
 %   vec1 (2,1) 1st normal vector of the tool edge
 %   s1 (2,:) 1st scatters of the tool edge
-%   x,vec2,s2 are parameters of the other tool edge
+%   c2,vec2,s2 are parameters of the other tool edge
 %   res (1,1) the residual within the two position
 %   interPt (2,1)
 %
-% [res,interPt] = residual2D(x1,vec1,sp1,x2,vec2,sp2)
-%   [res,interPt] = residual2D(x1,vec1,s1,x2,vec2,sp2)
-%   vec1 (2,1) 1st normal vector of the tool edge
-%   sp1 (2,:) 1st B-form spline structure of the tool edge
-%   x,vec2,s2 are parameters of the other tool edge
-%   res (1,1) the residual within the two position
-%   interPt (2,1)
+% [res,interPt] = residual2D(c1,c2,vec1,vec2,sp1,sp2)
+%   all the same except that the sp1 and sp2 remain the B-form spline
+%   struct pf the tool edge
 
-% 求两个刀位的轮廓交点
-% [interPt,~] = bsplineCross(sp1,sp2);
-[interPt,~] = curveCrossDN(sp1,sp2,2);
-
-% 求刀尖点：刀尖方向上最远点
-[~,cutPtIndex1] = min(dot((sp1-x1),ndgrid(vec1,sp1(1,:)))/norm(vec1));
-[~,cutPtIndex2] = min(dot((sp2-x2),ndgrid(vec2,sp2(1,:)))/norm(vec2));
-cutPt1 = sp1(:,cutPtIndex1);
-cutPt2 = sp2(:,cutPtIndex2);
-% 求刀尖点：两个刀尖的公切线
-
-
-if size(interPt,1) == 2
-    interPt = [interPt;0];
-    cutPt1 = [cutPt1;0];
-    cutPt2 = [cutPt2;0];
+if nargin == 5 % or isstruct(sp1)
+    % 继续写这个！！！！
+else
+    % 求两个刀位的轮廓交点
+    % [interPt,~] = bsplineCross(sp1,sp2);
+    [interPt,~] = curveCrossDN(sp1,sp2,2);
+    
+    % 求刀尖点：刀尖方向上最远点
+    [~,cutPtIndex1] = min(dot((sp1-c1),ndgrid(vec1,sp1(1,:)))/norm(vec1));
+    [~,cutPtIndex2] = min(dot((sp2-c2),ndgrid(vec2,sp2(1,:)))/norm(vec2));
+    cutPt1 = sp1(:,cutPtIndex1);
+    cutPt2 = sp2(:,cutPtIndex2);
+    % 求刀尖点：两个刀尖的公切线
+    
+    if size(interPt,1) == 2
+        interPt = [interPt;0];
+        cutPt1 = [cutPt1;0];
+        cutPt2 = [cutPt2;0];
+    end
+    res = 2*abs(cross(interPt-cutPt1,interPt-cutPt2))/norm(cutPt1-cutPt2);
 end
-res = 2*abs(cross(interPt-cutPt1,interPt-cutPt2))/norm(cutPt1-cutPt2);
+
 end
 
 %% 计算两端B样条曲线s1、s2的交点 interPt

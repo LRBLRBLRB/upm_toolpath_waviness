@@ -78,9 +78,10 @@ f1 = figure('Name','original scatters of the tool');
 scatter3(toolOri(1,:),toolOri(2,:),toolOri(3,:));
 hold on; grid on;
 % axis equal;
-xlabel(['x(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
-ylabel(['y(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
-zlabel(['z(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,')']);
+ylabel(['y(',unit,')']);
+zlabel(['z(',unit,')']);
 view(-45,60);
 clear theta theta1 theta2;
 
@@ -92,9 +93,9 @@ f2 = figure('Name','tool sharpness fitting result');
 xLim = 1.1*max(toolFit(1,:));
 quiver(-xLim,0,2*xLim,0,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % X axis
 hold on;
-text(0.9*xLim,-.05*radius,'x','FontSize',textFontSize,'FontName',textFontType);
+text(0.9*xLim,-.05*radius,'x');
 quiver(0,-0.2*radius,0,1.3*radius,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % Y axis
-text(0.05*xLim,1.2*radius,'y','FontSize',textFontSize,'FontName',textFontType);
+text(0.05*xLim,1.2*radius,'y');
 plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74]); % tool edge scatters
 theta = (pi/2 - includedAngle/2):0.01:(pi/2 + includedAngle/2);
 xtmp = radius*cos(theta);
@@ -108,12 +109,12 @@ line([0,xtmp(end)],[0,ytmp(end)],'LineStyle','--','Color',[0.85,0.33,0.10]);
 % xlim([-1.1*xLim,1.1*xLim]);
 axis equal;
 % set(gca,'TickLabelInterpreter','tex');
-xlabel(['x(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
-ylabel(['y(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,')']);
+ylabel(['y(',unit,')']);
 legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
 clear xtmp ytmp theta xLim; % 删除画图的临时变量
-
 % Cartesian coordinate to cylindrical coordinate
 toolTheta = atan2(toolFit(2,:),toolFit(1,:));
 toolR = vecnorm(toolFit,2,1);
@@ -121,13 +122,15 @@ figure('name','tool curve');
 tiledlayout(2,1);
 nexttile;
 plot(toolTheta*180/pi,toolR); hold on;
-title('tool curve','FontSize',textFontSize,'FontName',textFontType);
-ylabel({'polar diameter',['(',unit,'m)']},'FontSize',textFontSize,'FontName',textFontType);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+title('tool curve');
+ylabel({'polar diameter',['(',unit,'m)']});
 nexttile;
 plot(toolTheta*180/pi,toolR - radius); hold on;
-title('tool waviness','FontSize',textFontSize,'FontName',textFontType);
-ylabel({'polar diameter error',['(',unit,'m)']},'FontSize',textFontSize,'FontName',textFontType);
-xlabel('central angle \theta(°)','FontSize',textFontSize,'FontName',textFontType);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+title('tool waviness');
+ylabel({'polar diameter error',['(',unit,'m)']});
+xlabel('central angle \theta(°)');
 
 %% 车刀轮廓插值 two methods to interpolate
 k = 3; % degree of the B-spline
@@ -136,7 +139,7 @@ nPts = length(u);
 
 % toolFit = [zeros(1,nCPts);toolFit];
 % B-spline interpolate in the polar coordinate
-[toolPt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...
+[toolEdgePt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...
     'ParamMethod',ParamMethod,'CoordinateType','Cartesian'); 
 toolCpts = toolBform.coefs;
 
@@ -164,10 +167,11 @@ figure('Name','Tool Interpolation Results');
 plot(toolFit(1,:),toolFit(2,:),'--.', ...
     'MarkerSize',8,'Color',[0,0.447,0.741]); hold on;
 plot(toolCpts(1,:),toolCpts(2,:),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
-plot(toolPt(1,:),toolPt(2,:),'Color',[0.635,0.078,0.184]);
+plot(toolEdgePt(1,:),toolEdgePt(2,:),'Color',[0.635,0.078,0.184]);
 axis equal
-xlabel(['y(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
-ylabel(['z(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['y(',unit,')']);
+ylabel(['z(',unit,')']);
 legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 
 % plot the interpolation error
@@ -199,8 +203,8 @@ switch toolFileType
         save(toolFile,"Comments","unit","FitMethod","ParamMethod", ... % comments and notes
             "center","radius","includedAngle", ... % tool fitting results
             "toolEdgeNorm","toolDirect","cutDirect","toolBform", ... % tool interpolation results
-            "toolPt","toolFit"); % auxiliary data
-        % toolPt, toolCpts, toolFit are useless in the following process at present
+            "toolEdgePt","toolFit"); % auxiliary data
+        % toolEdgePt, toolCpts, toolFit are useless in the following process at present
     otherwise
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);

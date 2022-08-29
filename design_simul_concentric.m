@@ -88,9 +88,10 @@ quiver3( ...
     surfNorm(1:theSpar:end,1:rSpar:end,2), ...
     surfNorm(1:theSpar:end,1:rSpar:end,3), ...
     'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
-xlabel(['x(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-ylabel(['y(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-zlabel(['z(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,'m)']);
+ylabel(['y(',unit,'m)']);
+zlabel(['z(',unit,'m)']);
 axis equal; grid on;
 % title({'Radially & circunferentially sparse','by 50 and 2 times, respectively'}, ...
 %     'FontSize',textFontSize,'FontName',textFontType);
@@ -99,10 +100,11 @@ surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
 hold on; axis equal;
-xlabel(['x(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-ylabel(['y(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-zlabel(['z(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-cb2 = colorbar;
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,'m)']);
+ylabel(['y(',unit,'m)']);
+zlabel(['z(',unit,'m)']);
+% cb2 = colorbar;
 msgfig = msgbox('Surface was generated successfully!', ...
     'Surface Generation','warn','non-modal');
 uiwait(msgfig);
@@ -136,7 +138,7 @@ toc;
 
 % still need procedures to deal with the invalid points, which will cause
 % interference between the tool edge and the designed surface. 
-
+%% 
 figure('Name','tool center position & tool normal vector');
 plotSpar = 1;
 plot3(toolPath(1,1:plotSpar:end), ...
@@ -167,10 +169,12 @@ surf( ...
     'FaceColor','flat','FaceAlpha',0.6,'LineStyle','none');
 colormap('summer');
 cb = colorbar;
+cb.Label.String = 'Height (mm)';
 axis equal; grid on;
-xlabel(['x(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-ylabel(['y(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-zlabel(['z(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,'m)']);
+ylabel(['y(',unit,'m)']);
+zlabel(['z(',unit,'m)']);
 legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','Location','best');
 
