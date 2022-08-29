@@ -78,9 +78,9 @@ f1 = figure('Name','original scatters of the tool');
 scatter3(toolOri(1,:),toolOri(2,:),toolOri(3,:));
 hold on; grid on;
 % axis equal;
-xlabel(['x(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-ylabel(['y(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-zlabel(['z(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
+ylabel(['y(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
+zlabel(['z(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
 view(-45,60);
 clear theta theta1 theta2;
 
@@ -108,8 +108,8 @@ line([0,xtmp(end)],[0,ytmp(end)],'LineStyle','--','Color',[0.85,0.33,0.10]);
 % xlim([-1.1*xLim,1.1*xLim]);
 axis equal;
 % set(gca,'TickLabelInterpreter','tex');
-xlabel(['x(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
-ylabel(['y(',unit,'m)'],'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
+ylabel(['y(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
 legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
 clear xtmp ytmp theta xLim; % 删除画图的临时变量
@@ -127,13 +127,14 @@ nexttile;
 plot(toolTheta*180/pi,toolR - radius); hold on;
 title('tool waviness','FontSize',textFontSize,'FontName',textFontType);
 ylabel({'polar diameter error',['(',unit,'m)']},'FontSize',textFontSize,'FontName',textFontType);
-xlabel('central angle\theta(°)','FontSize',textFontSize,'FontName',textFontType);
+xlabel('central angle \theta(°)','FontSize',textFontSize,'FontName',textFontType);
 
 %% 车刀轮廓插值 two methods to interpolate
 k = 3; % degree of the B-spline
 u = 0:0.0002:1;
 nPts = length(u);
 
+% toolFit = [zeros(1,nCPts);toolFit];
 % B-spline interpolate in the polar coordinate
 [toolPt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...
     'ParamMethod',ParamMethod,'CoordinateType','Cartesian'); 
@@ -165,6 +166,8 @@ plot(toolFit(1,:),toolFit(2,:),'--.', ...
 plot(toolCpts(1,:),toolCpts(2,:),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
 plot(toolPt(1,:),toolPt(2,:),'Color',[0.635,0.078,0.184]);
 axis equal
+xlabel(['y(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
+ylabel(['z(',unit,')'],'FontSize',textFontSize,'FontName',textFontType);
 legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 
 % plot the interpolation error
@@ -172,12 +175,9 @@ legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 
 %% save the tool interpolation results
 center = [0;0;0];
-toolFit = [toolFit(1,:);zeros(1,nCPts);toolFit(2,:)];
-toolBform.coefs = [toolBform.coefs(1,:);zeros(1,nCPts);toolBform.coefs(2,:)];
-toolPt = [toolPt(1,:);zeros(1,nPts);toolPt(2,:)]; % get
 toolEdgeNorm = [0;0;1];
-cutDirect = [0;-1;0]; % Caution!!!
-toolDirect = [1;0;0];
+cutDirect = [1;0;0];
+toolDirect = [0;1;0];
 [toolFileName,toolDirName,toolFileType] = uiputfile({ ...
         '*.mat','MAT-file(*.mat)'; ...
         '*.txt','text-file(.txt)';...

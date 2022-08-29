@@ -1,25 +1,33 @@
-function [res,interPt] = residualHigh(x1,vec1,s1,x2,vec2,s2)
+function [res,interPt] = residual2D(x1,vec1,sp1,x2,vec2,sp2)
 % 计算两个刀位间的残高
 % 输入两个刀位的位置x、方向vec、刀尖轮廓s
 % 假设残高就是两个刀位的刀尖轮廓交点到两个刀位的刀尖点连线的距离
-% Inputs:
-%   x1 (2,1) 1st postion of the tool edge
+% Usage:
+% [res,interPt] = residual2D(x1,vec1,s1,x2,vec2,s2)
+%   [res,interPt] = residual2D(x1,vec1,s1,x2,vec2,s2)
 %   vec1 (2,1) 1st normal vector of the tool edge
 %   s1 (2,:) 1st scatters of the tool edge
-%   ...
-% Outputs:
+%   x,vec2,s2 are parameters of the other tool edge
+%   res (1,1) the residual within the two position
+%   interPt (2,1)
+%
+% [res,interPt] = residual2D(x1,vec1,sp1,x2,vec2,sp2)
+%   [res,interPt] = residual2D(x1,vec1,s1,x2,vec2,sp2)
+%   vec1 (2,1) 1st normal vector of the tool edge
+%   sp1 (2,:) 1st B-form spline structure of the tool edge
+%   x,vec2,s2 are parameters of the other tool edge
 %   res (1,1) the residual within the two position
 %   interPt (2,1)
 
 % 求两个刀位的轮廓交点
-% [interPt,~] = bsplineCross(s1,s2);
-[interPt,~] = curveCrossDN(s1,s2,2);
+% [interPt,~] = bsplineCross(sp1,sp2);
+[interPt,~] = curveCrossDN(sp1,sp2,2);
 
 % 求刀尖点：刀尖方向上最远点
-[~,cutPtIndex1] = min(dot((s1-x1),ndgrid(vec1,s1(1,:)))/norm(vec1));
-[~,cutPtIndex2] = min(dot((s2-x2),ndgrid(vec2,s2(1,:)))/norm(vec2));
-cutPt1 = s1(:,cutPtIndex1);
-cutPt2 = s2(:,cutPtIndex2);
+[~,cutPtIndex1] = min(dot((sp1-x1),ndgrid(vec1,sp1(1,:)))/norm(vec1));
+[~,cutPtIndex2] = min(dot((sp2-x2),ndgrid(vec2,sp2(1,:)))/norm(vec2));
+cutPt1 = sp1(:,cutPtIndex1);
+cutPt2 = sp2(:,cutPtIndex2);
 % 求刀尖点：两个刀尖的公切线
 
 

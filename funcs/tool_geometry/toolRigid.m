@@ -1,10 +1,16 @@
-function tool2 = toolRigid(tool1,Rot,Vec)
+function tool2 = toolRigid(tool1,varargin)
 % solve the rigid transform of the tool struct
+%
+% usage: 
+% tool2 = toolRigid(tool1,Rot,Vec)
+%   solve the rigid transform of the tool edge, satisfying the fomula
+%   tool2 = Rot*tool1 + Vec;
+% tool2 = toolRigid(tool1,……
 
-arguments
-    tool1
-    Rot (3,3) {mustBeFinite}
-    Vec (3,1) {mustBeFinite}
+Rot = varargin{1};
+Vec = varargin{2};
+if any(size(Rot) - [3,3]) || any(size(Vec) - [3,1])
+    error('Incorrect dimension of the rotation matrix or the traslation vector.');
 end
 
 % H = [Rot,Vec;0,0,0,1];

@@ -52,7 +52,7 @@ switch options.Type
         % The input known is the normal vector of a plane that lies outside
         % the tool edge, and the point closest to the plane will be worked
         % out.
-        u = 
+        u = 0.5 + known/options.IncludedAng;
         iter = 0;
         while iter <= maxIter
             Q = fnval(sp,u);
