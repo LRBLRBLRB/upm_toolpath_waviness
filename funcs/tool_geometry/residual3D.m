@@ -27,12 +27,13 @@ ptNum = size(toolPath,2);
 
 % to find those in the tool path which is cloest to the current tool point
 % 有问题：需要把两边的最近点都分别找到！！不然会出现找漏
-toolPathProj = toolPath - ...
-    dot(toolPath - ndgrid(toolPt,1:ptNum),ndgrid(toolCutDirect,1:ptNum),1) ...
-    ./norm(toolCutDirect).*toolCutDirect;
+toolPathProj = projectionOnPlane(toolPt,toolPath,toolCutDirect);
 dist = vecnorm(toolPathProj - ndgrid(toolPt,1:ptNum),2,1);
 [~,distInd] = min(dist);
 
-[res,~,uLim1,uLim2] = residual2D(toolPt,toolPath(distInd,:),toolNorm,toolPathNorm(distInd,:),sp);
+
+
+[res,~,uLim1,uLim2] = residual2D( ...
+    toolPt,toolPath(distInd,:),toolNorm,toolPathNorm(distInd,:),sp);
 
 end
