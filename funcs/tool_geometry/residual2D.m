@@ -16,6 +16,7 @@ function [res,interPt,varargout] = residual2D(c1,c2,vec1,vec2,sp1,sp2)
 %   struct pf the tool edge
 
 if nargin == 5 % or isstruct(sp1)
+    splineTrav
     % 继续写这个！！！！
 else
     % 求两个刀位的轮廓交点

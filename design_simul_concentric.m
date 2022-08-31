@@ -30,6 +30,9 @@ if default
         'MultiSelect','off');
     surfName = fullfile(dirName,fileName);
     load(surfName);
+% % % % % % % % % % % % % % % % % % % % % % % % %     sparTheta
+% % % % % % % % % % % % % % % % % % % % % % % % %     surfMesh
+% % % % % % % % % % % % % % % % % % % % % % % % %     surfNorm
 else % ellipsoid
     R = 10*2;
     A = 3.5*2;
@@ -37,11 +40,11 @@ else % ellipsoid
     C = 5*2;
     % sampling density
     r = [0,3*R/4]; % concentric radius range
-    densTheta = 101;
+    sparTheta = 101;
     surfCenter = [0,0,sqrt(C^2*(R.^2-r(2).^2))]; % concentric circle center
     conR = (toolData.radius/2):(toolData.radius):r(2); % concentric radius vector
     densR = length(conR);
-    conTheta = linspace(0,2*pi,densTheta);
+    conTheta = linspace(0,2*pi,sparTheta);
     
     [rMesh,thetaMesh] = meshgrid(conR,conTheta);
     surfMesh(:,:,1) = A*rMesh.*cos(thetaMesh);
@@ -110,52 +113,52 @@ msgfig = msgbox('Surface was generated successfully!', ...
 uiwait(msgfig);
 
 
-%% Tool 
+%% Calculation of Tool Path & Spindle Drection
 surfPt = transpose(reshape(surfMesh,[],3));
 surfNorm = transpose(reshape(surfNorm,[],3));
 surfDirect = cutDirection(surfPt,surfCenter);
 ptNum = size(surfPt,2);
-toolQuad = zeros(ptNum,4);
+toolQuat = zeros(ptNum,4);
 toolVec = zeros(3,ptNum);
-toolPath = zeros(3,ptNum);
+toolPathPt = zeros(3,ptNum);
 toolCutDirect = zeros(3,ptNum);
 toolNormDirect = zeros(3,ptNum);
 isCollision = false(1,ptNum);
 % parpool(6);
 tic
 parfor ii = 1:ptNum
-    [toolQuad(ii,:),toolVec(:,ii),isCollision(ii)] = toolPos( ...
+    [toolQuat(ii,:),toolVec(:,ii),isCollision(ii)] = toolPos( ...
         toolData,surfPt(:,ii),surfNorm(:,ii),surfDirect(:,ii),[0;0;1]);
     if isCollision(ii) == true
         pause('on');
     else
-        toolPath(:,ii) = quat2rotm(toolQuad(ii,:))*toolData.center + toolVec(:,ii);
-        toolCutDirect(:,ii) = quat2rotm(toolQuad(ii,:))*toolData.cutDirect;
-        toolNormDirect(:,ii) = quat2rotm(toolQuad(ii,:))*toolData.toolEdgeNorm;
+        toolPathPt(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.center + toolVec(:,ii);
+        toolCutDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
+        toolNormDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
     end
 end
 toc;
 
 % still need procedures to deal with the invalid points, which will cause
 % interference between the tool edge and the designed surface. 
-%% 
+
 figure('Name','tool center position & tool normal vector');
 plotSpar = 1;
-plot3(toolPath(1,1:plotSpar:end), ...
-    toolPath(2,1:plotSpar:end), ...
-    toolPath(3,1:plotSpar:end), ...
+plot3(toolPathPt(1,1:plotSpar:end), ...
+    toolPathPt(2,1:plotSpar:end), ...
+    toolPathPt(3,1:plotSpar:end), ...
     '.','Color',[0.6350,0.0780,0.1840]);
 hold on;
-quiver3(toolPath(1,1:plotSpar:end), ...
-    toolPath(2,1:plotSpar:end), ...
-    toolPath(3,1:plotSpar:end), ...
+quiver3(toolPathPt(1,1:plotSpar:end), ...
+    toolPathPt(2,1:plotSpar:end), ...
+    toolPathPt(3,1:plotSpar:end), ...
     toolCutDirect(1,1:plotSpar:end), ...
     toolCutDirect(2,1:plotSpar:end), ...
     toolCutDirect(3,1:plotSpar:end), ...
     'AutoScale','on','Color',[0,0.4470,0.7410]);
-quiver3(toolPath(1,1:plotSpar:end), ...
-    toolPath(2,1:plotSpar:end), ...
-    toolPath(3,1:plotSpar:end), ...
+quiver3(toolPathPt(1,1:plotSpar:end), ...
+    toolPathPt(2,1:plotSpar:end), ...
+    toolPathPt(3,1:plotSpar:end), ...
     toolNormDirect(1,1:plotSpar:end), ...
     toolNormDirect(2,1:plotSpar:end), ...
     toolNormDirect(3,1:plotSpar:end), ...
@@ -177,6 +180,26 @@ ylabel(['y(',unit,'m)']);
 zlabel(['z(',unit,'m)']);
 legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','Location','best');
+
+%% Calculation of Residual Height & Cutting Surface
+toolSp = toolData.toolBform;
+res = zeros(1,ptNum);
+tmpInd = linspace(1,ptNum);
+uLim = [zeros(1,ptNum);ones(1,ptNum)];
+tmpULim = [zeros(1,ptNum);ones(1,ptNum)];
+angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
+parfor ii = 1:ptNum
+    nLoop = ceil(ii/sparTheta);
+    closest = find(abs(angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1)) - angle(ii)),3);
+    ind2 = sparTheta*nLoop + closest(2);
+    ind3 = sparTheta*nLoop + closest(2);
+    [res(ii),tmpInd(ii),uLim(:,ii),tmpULim(:,ii)] = residual3DPar( ...
+        toolPathPt,toolNormDirect,toolCutDirect,toolSp,ii,ind2,ind3);
+end
+clear angle;
+
+
+
 
 %% Visualization & Simulation
 
