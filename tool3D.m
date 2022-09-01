@@ -137,7 +137,7 @@ k = 3; % degree of the B-spline
 u = 0:0.0002:1;
 nPts = length(u);
 
-% toolFit = [zeros(1,nCPts);toolFit];
+toolFit = [zeros(1,nCPts);toolFit];
 % B-spline interpolate in the polar coordinate
 [toolEdgePt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...
     'ParamMethod',ParamMethod,'CoordinateType','Cartesian'); 
@@ -164,10 +164,10 @@ toolCpts = toolBform.coefs;
 
 % plot the interpolation results
 figure('Name','Tool Interpolation Results');
-plot(toolFit(1,:),toolFit(2,:),'--.', ...
+plot(toolFit(2,:),toolFit(3,:),'--.', ...
     'MarkerSize',8,'Color',[0,0.447,0.741]); hold on;
-plot(toolCpts(1,:),toolCpts(2,:),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
-plot(toolEdgePt(1,:),toolEdgePt(2,:),'Color',[0.635,0.078,0.184]);
+plot(toolCpts(2,:),toolCpts(3,:),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
+plot(toolEdgePt(2,:),toolEdgePt(3,:),'Color',[0.635,0.078,0.184]);
 axis equal
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['y(',unit,')']);

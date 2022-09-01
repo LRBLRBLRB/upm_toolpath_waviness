@@ -30,10 +30,16 @@ if nnz(toolEdge.toolEdgeNorm - [0;0;1])
 end
 
 % rotate the cutting direction and orientation of the tool
-toolRot1 = vecRot(toolEdge.cutDirect,designDirect);
-toolEdge = toolRigid(toolEdge,toolRot1,[0;0;0]);
-toolRot2 = vecRot(toolEdge.toolEdgeNorm,designNorm);
-toolEdge = toolRigid(toolEdge,toolRot2,[0;0;0]);
+% toolRot1 = vecRot(toolEdge.cutDirect,designDirect);
+% toolEdge = toolRigid(toolEdge,toolRot1,[0;0;0]);
+% toolRot2 = vecRot(toolEdge.toolEdgeNorm,designNorm);
+% toolEdge = toolRigid(toolEdge,toolRot2,[0;0;0]);
+% toolRot = toolRot2*toolRot1;
+
+% Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+toolRot = axesRot(toolEdge.toolEdgeNorm,toolEdge.cutDirect, ...
+    designNorm,designDirect,'');
+toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
 
 % find the contact point on the tool edge
 surfToolAng = vecAng(surfNorm,toolEdge.toolDirect,1);
@@ -44,7 +50,6 @@ if abs(surfToolAng - pi/2) > toolEdge.includedAngle/2
     toolQuad = nan(4,1);
     return;
 end
-toolRot = toolRot2*toolRot1;
 toolQuad = rotm2quat(toolRot);
 
 % calculate the actual contact point on the tool edge
@@ -52,7 +57,6 @@ toolQuad = rotm2quat(toolRot);
     "Type",'PolarAngle',"IncludedAng",toolEdge.includedAngle);
 % [~,toolContactPt] = toolPtInv(toolEdge.toolBform,surfNorm,1e-3, ...
 %     "Type",'TangentPlane',"IncludedAng",toolEdge.includedAngle);
-toolContactPt = [0;toolContactPt(1);toolContactPt(2)]; % the tool plane remains the yOz plane
 toolVec = surfPt - toolRot*toolContactPt;
 
 %% method

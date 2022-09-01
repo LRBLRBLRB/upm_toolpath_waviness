@@ -29,7 +29,7 @@ switch options.Type
         iter = 0;
         while iter <= maxIter
             Q = fnval(sp,u);
-            delta = atan2(Q(2),Q(1)) - known;
+            delta = atan2(Q(3),Q(2)) - known;
             if  abs(delta) < eps 
                 break;
             end
@@ -41,7 +41,7 @@ switch options.Type
         iter = 0;
         while iter <= maxIter
             Q = fnval(sp,u);
-            delta = atan2(Q(2),Q(1)) - known;
+            delta = atan2(Q(3),Q(2)) - known;
             if  abs(delta) < eps 
                 break;
             end
@@ -56,7 +56,7 @@ switch options.Type
         iter = 0;
         while iter <= maxIter
             Q = fnval(sp,u);
-            delta = atan2(Q(2),Q(1)) - known;
+            delta = atan2(Q(3),Q(2)) - known;
             if  abs(delta) < eps 
                 break;
             end

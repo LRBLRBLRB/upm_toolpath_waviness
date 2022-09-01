@@ -1,4 +1,4 @@
-function [res,interPt,varargout] = residual2D(c1,c2,vec1,vec2,sp1,sp2)
+function [res,interPt,varargout] = residual2D(c1,c2,vec1,vec2,varargin)
 % Solve the residual height between two adjacent points on the tool path in
 % 2-dimension plane, supposing that the residual height is the distance
 % between the intersection point of tool edges.
@@ -11,14 +11,15 @@ function [res,interPt,varargout] = residual2D(c1,c2,vec1,vec2,sp1,sp2)
 %   res (1,1) the residual within the two position
 %   interPt (2,1)
 %
-% [res,interPt] = residual2D(c1,c2,vec1,vec2,sp1,sp2)
+% [res,interPt] = residual2D(c1,c2,vec1,vec2,sp)
 %   all the same except that the sp1 and sp2 remain the B-form spline
 %   struct pf the tool edge
 
 if nargin == 5 % or isstruct(sp1)
-    splineTrav
     % 继续写这个！！！！
 else
+    sp1 = varargin{1};
+    sp2 = varargin{2};
     % 求两个刀位的轮廓交点
     % [interPt,~] = bsplineCross(sp1,sp2);
     [interPt,~] = curveCrossDN(sp1,sp2,2);

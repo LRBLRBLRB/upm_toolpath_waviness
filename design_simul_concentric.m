@@ -17,16 +17,16 @@ textFontType = 'Times New Roman';
 %     'output_data\tool\tooltheo.mat', ...
 %     'MultiSelect','off');
 % toolName = fullfile(dirName,fileName);
-toolName = 'output_data\tool\toolTheo.mat';
+toolName = 'output_data\tool\toolTheo_3D.mat';
 toolData = load(toolName);
 
-default = false;
+default = true;
 if default
     [fileName,dirName] = uigetfile({ ...
         '*.mat','MAT-files(*.mat)'; ...
         '*,*','all files(*.*)'}, ...
         'Select the surface edge data file', ...
-        'input_data\surface\ellipsoidAnay.mat', ...
+        'input_data\surface\ellipsoidAray.mat', ...
         'MultiSelect','off');
     surfName = fullfile(dirName,fileName);
     load(surfName);
@@ -34,10 +34,10 @@ if default
 % % % % % % % % % % % % % % % % % % % % % % % % %     surfMesh
 % % % % % % % % % % % % % % % % % % % % % % % % %     surfNorm
 else % ellipsoid
-    R = 10*2;
-    A = 3.5*2;
-    B = 4*2;
-    C = 5*2;
+    R = 2*1;
+    A = 2*0.35;
+    B = 2*0.4;
+    C = 2*0.5;
     % sampling density
     r = [0,3*R/4]; % concentric radius range
     sparTheta = 101;
@@ -64,8 +64,8 @@ else % ellipsoid
     % surfNorm(:,3) = -ones(densTheta*densR,1);
     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
-%     save('Simulation/ellipsoidAnay.mat', ...
-%         "conCenter","conR","surfMesh","surfNorm","surfCenter");
+    save('input_data/surface/ellipsoidAray.mat', ...
+        "surfMesh","surfNorm","surfCenter");
 end
 
 %% plot the freeform surface
@@ -82,7 +82,7 @@ plot3( ...
     surfMesh(1:theSpar:end,1:rSpar:end,3), ...
     '.','Color',[0,0.45,0.74]);
 hold on;
-legend('Original Points','Location','best');
+legend('Original Points','Location','northeast');
 quiver3( ...
     surfMesh(1:theSpar:end,1:rSpar:end,1), ...
     surfMesh(1:theSpar:end,1:rSpar:end,2), ...
@@ -91,10 +91,10 @@ quiver3( ...
     surfNorm(1:theSpar:end,1:rSpar:end,2), ...
     surfNorm(1:theSpar:end,1:rSpar:end,3), ...
     'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel(['x(',unit,'m)']);
-ylabel(['y(',unit,'m)']);
-zlabel(['z(',unit,'m)']);
+set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
+xlabel(['x(',unit,')']);
+ylabel(['y(',unit,')']);
+zlabel(['z(',unit,')']);
 axis equal; grid on;
 % title({'Radially & circunferentially sparse','by 50 and 2 times, respectively'}, ...
 %     'FontSize',textFontSize,'FontName',textFontType);
@@ -103,20 +103,19 @@ surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
 hold on; axis equal;
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel(['x(',unit,'m)']);
-ylabel(['y(',unit,'m)']);
-zlabel(['z(',unit,'m)']);
+set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
+xlabel(['x(',unit,')']);
+ylabel(['y(',unit,')']);
+zlabel(['z(',unit,')']);
 % cb2 = colorbar;
 msgfig = msgbox('Surface was generated successfully!', ...
     'Surface Generation','warn','non-modal');
 uiwait(msgfig);
-
-
-%% Calculation of Tool Path & Spindle Drection
 surfPt = transpose(reshape(surfMesh,[],3));
 surfNorm = transpose(reshape(surfNorm,[],3));
 surfDirect = cutDirection(surfPt,surfCenter);
+
+%% Calculation of Tool Path & Spindle Drection
 ptNum = size(surfPt,2);
 toolQuat = zeros(ptNum,4);
 toolVec = zeros(3,ptNum);
@@ -174,12 +173,12 @@ colormap('summer');
 cb = colorbar;
 cb.Label.String = 'Height (mm)';
 axis equal; grid on;
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel(['x(',unit,'m)']);
-ylabel(['y(',unit,'m)']);
-zlabel(['z(',unit,'m)']);
+set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
+xlabel(['x(',unit,')']);
+ylabel(['y(',unit,')']);
+zlabel(['z(',unit,')']);
 legend('tool center point','tool cutting direction', ...
-    'tool spindle direction','','Location','best');
+    'tool spindle direction','','Location','northeast');
 
 %% Calculation of Residual Height & Cutting Surface
 toolSp = toolData.toolBform;
@@ -193,8 +192,8 @@ parfor ii = 1:ptNum
     closest = find(abs(angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1)) - angle(ii)),3);
     ind2 = sparTheta*nLoop + closest(2);
     ind3 = sparTheta*nLoop + closest(2);
-    [res(ii),tmpInd(ii),uLim(:,ii),tmpULim(:,ii)] = residual3DPar( ...
-        toolPathPt,toolNormDirect,toolCutDirect,toolSp,ii,ind2,ind3);
+    [res(ii),tmpInd(ii),uLim(:,ii),tmpULim(:,ii)] = residual3D( ...
+        toolPathPt,toolNormDirect,toolCutDirect(:,ii),toolSp,ii,ind2,ind3);
 end
 clear angle;
 
