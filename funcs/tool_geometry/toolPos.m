@@ -1,4 +1,4 @@
-function [toolQuad,toolVec,isCollision] = toolPos(toolEdge,surfPt,surfNorm,designDirect,designNorm)
+function [toolQuad,toolVec,toolContactU,isCollision] = toolPos(toolEdge,surfPt,surfNorm,designDirect,designNorm)
 % usage: [toolPos,toolCutDirect,log] = toolPos(toolEdge,surfPt,surfNorm,designDirect,designNorm)
 %   Solve the tool pose using the tangent relationship of tool tip and
 %   surface, with the tool axis unchanged.
@@ -53,10 +53,12 @@ end
 toolQuad = rotm2quat(toolRot);
 
 % calculate the actual contact point on the tool edge
-[~,toolContactPt] = toolPtInv(toolEdge.toolBform,surfToolAng,1e-3, ...
-    "Type",'PolarAngle',"IncludedAng",toolEdge.includedAngle);
-% [~,toolContactPt] = toolPtInv(toolEdge.toolBform,surfNorm,1e-3, ...
-%     "Type",'TangentPlane',"IncludedAng",toolEdge.includedAngle);
+% [~,toolContactPt] = toolPtInv(toolEdge.toolBform,surfToolAng,1e-3, ...
+%     "Type",'PolarAngle',"IncludedAng",toolEdge.includedAngle);
+surfNorm = toolRot'*surfNorm;
+surfNorm(1) = 0;
+[toolContactU,toolContactPt,~] = toolPtInv(toolEdge.toolBform,surfNorm,1e-3, ...
+    "Type",'TangentPlane',"Radius",toolEdge.radius);
 toolVec = surfPt - toolRot*toolContactPt;
 
 %% method

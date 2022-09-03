@@ -1,10 +1,11 @@
-function [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDir,toolSp,varargin)
+function [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDir,toolContactU,toolSp,uLim1,uLim2,varargin)
 % to calculate the residual height among the adjacent tool points.
 %
 % Usage:
 %
-% [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDirect,sp,
-%   toolPt2,toolNorm2,toolCutDir2,toolPt3,toolNorm3,toolCut3)
+% [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDirect,
+%   toolContactU,sp,uLim1,uLim2,toolPt2,toolNorm2,toolCutDir2,toolPt3,
+%   toolContactU2,toolNorm3,toolCut3,toolContactU3)
 % Inputs:
 %   toolPt          (3,1) double    the current point on the tool path
 %   toolNorm        (3,1) double    the spindle direction of the current point
@@ -24,12 +25,12 @@ function [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDir,toolSp
 %   uLim2           (1,2) double    the interval of the parameter for the
 %                                   cloest tool point
 %
-% [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDirect,sp,
-%   ind1,ind2,ind3)
+% [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDirect,
+%   toolContactU,sp,uLim1,uLim2,ind1,ind2,ind3)
 % Inputs:
 %   toolPt          (3,:) double    the current point on the tool path
 %   toolNorm        (3,:) double    the spindle direction of the current point
-%   toolCutDirect   (3,:) double    the cutting direction of the current point
+%   toolCutDir      (3,:) double    the cutting direction of the current point
 %   sp              (1,1) struct    the B-form spline struct of the tool edge
 %   ind1
 %   ind2
@@ -37,7 +38,7 @@ function [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDir,toolSp
 % Outputs: same as the above
 
 switch nargin
-    case 7
+    case 10
         toolPt1 = toolPt(:,varargin{1});
         toolPt2 = toolPt(:,varargin{2});
         toolPt3 = toolPt(:,varargin{3});
@@ -47,7 +48,10 @@ switch nargin
         toolCutDir1 = toolCutDir(:,varargin{1});
         toolCutDir2 = toolCutDir(:,varargin{2});
         toolCutDir3 = toolCutDir(:,varargin{3});
-    case 10
+        toolContactU1 = toolContactU(varargin{1});
+        toolContactUProj =0.5*( ...
+            toolContactU(varargin{2}) + toolContactU(varargin{3}));
+    case 15
         toolPt1 = toolPt;
         toolPt2 = varargin{1};
         toolPt3 = varargin{4};
@@ -57,6 +61,8 @@ switch nargin
         toolCutDir1 = toolCutDir;
         toolCutDir2 = varargin{3};
         toolCutDir3 = varargin{6};
+        toolContactU1 = toolContactU;
+        toolContactUProj =0.5*(toolContactU2 + toolContactU3);
     otherwise
         error('Invalid input. Not enough or tool many input parameters');
 end
@@ -71,32 +77,33 @@ toolNormProj = (1 - t)*toolNorm2 + t*toolNorm3;
 toolCutDirProj = (1 - t)*toolCutDir2 + t*toolCutDir3;
 
 % rigid transform of tool edge from the standard place to the corresponding
-R1 = axesRot(toolNorm1,toolCutDir1,[0;0;1],[1;0;0]);
+R1 = axesRot(toolNorm1,toolCutDir1,[0;0;1],[1;0;0],'zx');
 toolSp1 = toolSp;
 toolSp1.coefs = R1*toolSp.coefs + toolPt1;
-RProj = axesRot(toolNormProj,toolCutDirProj,[0;0;1],[1;0;0]);
+RProj = axesRot(toolNormProj,toolCutDirProj,[0;0;1],[1;0;0],'zx');
 toolSpProj = toolSp;
 toolSpProj.coefs = RProj*toolSp.coefs + toolPtProj;
 
-% 
+% to solve the residual height between toolSp1 and toolSpProj
+eps = 1e-3;
+u = 0:eps:1;
+Pt1 = fnval(toolSp1,u);
+PtProj = fnval(toolSpProj,u);
+[peakPt,ind1,indProj,~] = pcCrossDN(Pt1,PtProj);
+toolContactPt1 = fnval(toolSp1,toolContactU1);
+toolContactPtProj = fnval(toolSpProj,toolContactUProj);
+res = norm(cross(toolContactPt1 - peakPt,toolContactPtProj - peakPt)) ...
+    /norm(toolContactPtProj - toolContactPt1);
 
-
-iterSolveSp(toolSp1);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+% to update the valid U range of the two toolpath
+u1 = u(ind1);
+uProj = u(indProj);
+if u1 > uProj
+    uLim1(2) = min(u1,uLim1(2));
+    uLim2(1) = max(uProj,uLim2(1));
+else
+    uLim1(1) = max(u1,uLim1(1));
+    uLim2(2) = min(uProj,uLim2(2));
+end
 
 end

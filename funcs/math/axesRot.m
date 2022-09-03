@@ -5,7 +5,8 @@ function R = axesRot(varargin)
 % R = axesRot(x1,y1,x2,y2,'xy');
 % R = axesRot(x1,y1,x2,y2,'xy');
 
-switch varargin{end}
+option = varargin{end};
+switch option
     case 'xy'
         x1 = varargin{1}./norm(varargin{1});
         y1 = varargin{2}./norm(varargin{2});

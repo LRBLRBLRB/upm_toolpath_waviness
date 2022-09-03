@@ -1,4 +1,4 @@
-function x0 = iterSolveSp(sp,f,x0,eps,maxIter)
+function x0 = spSolveIter(sp,x0,eps,maxIter,f)
 % traverse the spline based on to find out the particular parameter 'u' to 
 % saatisfy the given equation 'eqs = 0'
 %
@@ -6,8 +6,11 @@ function x0 = iterSolveSp(sp,f,x0,eps,maxIter)
 %   u = splineTrav(
 
 iterNum = zeros(1,length(x0));
+
 % case Newton
-f = @(x) x - fnval(sp,x)./fnval(fnder(sp,1),x);
+if nargin == 4
+    f = @(x) x - fnval(sp,x)./fnval(fnder(sp,1),x);
+end
 
 while max(iterNum) < maxIter
     logi = (abs(fnval(sp,x0)) <= eps);

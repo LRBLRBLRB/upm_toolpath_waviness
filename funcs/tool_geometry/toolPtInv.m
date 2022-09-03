@@ -1,4 +1,4 @@
-function [u,Q] = toolPtInv(sp,known,eps,maxIter,options)
+function [u,Q,varargout] = toolPtInv(sp,known,eps,maxIter,options)
 % usage 
 % to solve the parameter of the B-spline curve with various types of
 % inputs
@@ -19,6 +19,7 @@ arguments
     options.Type {mustBeMember(options.Type, ...
         ['OpenAngle','PolarAngle','Cartesian','TangentPlane',''])} = 'PolarAngle'
     options.IncludedAng {mustBeFinite}
+    options.Radius {mustBeFinite}
 end
 
 switch options.Type
@@ -52,23 +53,21 @@ switch options.Type
         % The input known is the normal vector of a plane that lies outside
         % the tool edge, and the point closest to the plane will be worked
         % out.
-        u = 0.5 + known/options.IncludedAng;
-        iter = 0;
-        while iter <= maxIter
-            Q = fnval(sp,u);
-            delta = atan2(Q(3),Q(2)) - known;
-            if  abs(delta) < eps 
-                break;
-            end
-            u = u - delta/options.IncludedAng;
-            iter = iter + 1;
-        end
+        % simply traverse the parameter throughout all the interval
+        surfPt = 2*options.Radius*known/norm(known);
+        u = 0:eps:1;
+        Pt = fnval(sp,u);
+        dist = abs(dist2Plane(Pt,surfPt,known));
+        [varargout{1},minI] = min(dist);
+        u = u(minI);
+        Q = fnval(sp,u);
     case 'Cartesian' % solve the parameter of the given point coordinate
         % use the algorithm that stated in the ob
         u = bSplinePtInv(sp,known,eps,maxIter);
 end
 
 end
+
 
 %% 
 function theta = funPolar(u,sp)

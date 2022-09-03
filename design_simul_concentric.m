@@ -20,7 +20,7 @@ textFontType = 'Times New Roman';
 toolName = 'output_data\tool\toolTheo_3D.mat';
 toolData = load(toolName);
 
-default = true;
+default = false;
 if default
     [fileName,dirName] = uigetfile({ ...
         '*.mat','MAT-files(*.mat)'; ...
@@ -34,15 +34,15 @@ if default
 % % % % % % % % % % % % % % % % % % % % % % % % %     surfMesh
 % % % % % % % % % % % % % % % % % % % % % % % % %     surfNorm
 else % ellipsoid
-    R = 2*1;
-    A = 2*0.35;
-    B = 2*0.4;
-    C = 2*0.5;
+    R = 10/2;
+    A = 3.5/2;
+    B = 4/2;
+    C = 5/2;
     % sampling density
-    r = [0,3*R/4]; % concentric radius range
+    r = [0,R/4]; % concentric radius range
     sparTheta = 101;
     surfCenter = [0,0,sqrt(C^2*(R.^2-r(2).^2))]; % concentric circle center
-    conR = (toolData.radius/2):(toolData.radius):r(2); % concentric radius vector
+    conR = (toolData.radius/2):(toolData.radius/2):r(2); % concentric radius vector
     densR = length(conR);
     conTheta = linspace(0,2*pi,sparTheta);
     
@@ -64,8 +64,8 @@ else % ellipsoid
     % surfNorm(:,3) = -ones(densTheta*densR,1);
     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
-    save('input_data/surface/ellipsoidAray.mat', ...
-        "surfMesh","surfNorm","surfCenter");
+%     save('input_data/surface/ellipsoidAray.mat', ...
+%         "surfMesh","surfNorm","surfCenter");
 end
 
 %% plot the freeform surface
@@ -122,11 +122,12 @@ toolVec = zeros(3,ptNum);
 toolPathPt = zeros(3,ptNum);
 toolCutDirect = zeros(3,ptNum);
 toolNormDirect = zeros(3,ptNum);
+toolContactU = zeros(1,ptNum);
 isCollision = false(1,ptNum);
 % parpool(6);
 tic
 parfor ii = 1:ptNum
-    [toolQuat(ii,:),toolVec(:,ii),isCollision(ii)] = toolPos( ...
+    [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
         toolData,surfPt(:,ii),surfNorm(:,ii),surfDirect(:,ii),[0;0;1]);
     if isCollision(ii) == true
         pause('on');
@@ -179,29 +180,90 @@ ylabel(['y(',unit,')']);
 zlabel(['z(',unit,')']);
 legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','Location','northeast');
+msgfig = msgbox('Tool Path was calculated successfully!', ...
+    'Tool Path Simulation','warn','non-modal');
+uiwait(msgfig);
 
 %% Calculation of Residual Height & Cutting Surface
 toolSp = toolData.toolBform;
 res = zeros(1,ptNum);
-tmpInd = linspace(1,ptNum);
-uLim = [zeros(1,ptNum);ones(1,ptNum)];
-tmpULim = [zeros(1,ptNum);ones(1,ptNum)];
+peakPt = zeros(3,ptNum);
+uLim = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of each toolpath
+tmpULim = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of the projective toolpath
+ind2 = linspace(1,ptNum,ptNum);
+ind3 = linspace(1,ptNum,ptNum);
 angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
-parfor ii = 1:ptNum
+resNum = ptNum - sparTheta;
+tic
+parfor ii = 1:resNum
     nLoop = ceil(ii/sparTheta);
     closest = find(abs(angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1)) - angle(ii)),3);
-    ind2 = sparTheta*nLoop + closest(2);
-    ind3 = sparTheta*nLoop + closest(2);
-    [res(ii),tmpInd(ii),uLim(:,ii),tmpULim(:,ii)] = residual3D( ...
-        toolPathPt,toolNormDirect,toolCutDirect(:,ii),toolSp,ii,ind2,ind3);
+    ind2(ii) = sparTheta*nLoop + closest(2);
+    ind3(ii) = sparTheta*nLoop + closest(3);
+    [res(ii),peakPt(:,ii),uLim(:,ii),tmpULim(:,ii)] = residual3D( ...
+        toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp, ...
+        uLim(:,ii),tmpULim(:,ii),ii,ind2(ii),ind3(ii));
 end
+toc;
 clear angle;
+for ii = 1:ptNum
+    uLim(1,ii) = max([uLim(1,ii),tmpULim(1,ind2(ii))]);
+    uLim(2,ii) = min([uLim(2,ii),tmpULim(2,ind2(ii))]);
+end
+clear ind2 ind3 tmpULim;
 
-
+figure;
+plotSpar = 1;
+plot3(toolPathPt(1,1:plotSpar:end), ...
+    toolPathPt(2,1:plotSpar:end), ...
+    toolPathPt(3,1:plotSpar:end), ...
+    '.','Color',[0.6350,0.0780,0.1840]);
+hold on;
+quiver3(toolPathPt(1,1:plotSpar:end), ...
+    toolPathPt(2,1:plotSpar:end), ...
+    toolPathPt(3,1:plotSpar:end), ...
+    toolCutDirect(1,1:plotSpar:end), ...
+    toolCutDirect(2,1:plotSpar:end), ...
+    toolCutDirect(3,1:plotSpar:end), ...
+    'AutoScale','on','Color',[0,0.4470,0.7410]);
+quiver3(toolPathPt(1,1:plotSpar:end), ...
+    toolPathPt(2,1:plotSpar:end), ...
+    toolPathPt(3,1:plotSpar:end), ...
+    toolNormDirect(1,1:plotSpar:end), ...
+    toolNormDirect(2,1:plotSpar:end), ...
+    toolNormDirect(3,1:plotSpar:end), ...
+    'AutoScale','on','Color',[0.85,0.33,0.10]);
+toolCoefs = toolData.toolBform.coefs;
+for ii = 1:ptNum
+    toolSp = toolData.toolBform;
+    toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
+    Q = fnval(toolSp,uLim(1,ii):0.01:uLim(2,ii));
+    plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+end
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.6,'LineStyle','none');
+colormap('summer');
+cb = colorbar;
+cb.Label.String = 'Height (mm)';
+axis equal; grid on;
+set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
+xlabel(['x(',unit,')']);
+ylabel(['y(',unit,')']);
+zlabel(['z(',unit,')']);
+legend('tool center point','tool cutting direction', ...
+    'tool spindle direction','','','Location','northeast');
 
 
 %% Visualization & Simulation
+figure;
+for ii = 1:ptNum
+    toolSp = toolData.toolBform;
+    toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
+    Q = fnval(toolSp,uLim(1,ii):0.01:uLim(2,ii));
+    plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0,0.4450,0.7410],'LineWidth',0.5);
 
+end
 
 
 

@@ -22,19 +22,19 @@ else
     sp2 = varargin{2};
     % 求两个刀位的轮廓交点
     % [interPt,~] = bsplineCross(sp1,sp2);
-    [interPt,~] = curveCrossDN(sp1,sp2,2);
+    [interPt,~] = pcCrossDN(sp1,sp2,2);
     
     % 求刀尖点：刀尖方向上最远点
-    [~,cutPtIndex1] = min(dot((sp1-c1),ndgrid(vec1,sp1(1,:)))/norm(vec1));
-    [~,cutPtIndex2] = min(dot((sp2-c2),ndgrid(vec2,sp2(1,:)))/norm(vec2));
+    [~,cutPtIndex1] = max(abs(dot((sp1-c1),ndgrid(vec1,sp1(1,:)))/norm(vec1)));
+    [~,cutPtIndex2] = max(abs(dot((sp2-c2),ndgrid(vec2,sp2(1,:)))/norm(vec2)));
     cutPt1 = sp1(:,cutPtIndex1);
     cutPt2 = sp2(:,cutPtIndex2);
     % 求刀尖点：两个刀尖的公切线
     
     if size(interPt,1) == 2
-        interPt = [interPt;0];
-        cutPt1 = [cutPt1;0];
-        cutPt2 = [cutPt2;0];
+        interPt = [0;interPt];
+        cutPt1 = [0;cutPt1];
+        cutPt2 = [0;cutPt2];
     end
     res = 2*abs(cross(interPt-cutPt1,interPt-cutPt2))/norm(cutPt1-cutPt2);
 end
@@ -70,14 +70,4 @@ if mid-edge>0 %包围盒不相交，交点为空
 else
     isinter = 1;
 end
-end
-
-%% MATLAB自带的求距离函数
-function [interPt,eps] = curveCrossDN(s1,s2)
-s1 = s1';
-s2 = s2';
-[index,dist] = dsearchn(s1,s2);
-[eps,I2] = min(dist);
-I1 = index(I2);
-interPt = (0.5*(s1(I1,:) + s2(I2,:)))';
 end
