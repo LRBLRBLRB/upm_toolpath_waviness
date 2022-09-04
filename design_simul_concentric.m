@@ -253,16 +253,33 @@ ylabel(['y(',unit,')']);
 zlabel(['z(',unit,')']);
 legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','','Location','northeast');
-
+msgfig = questdlg({'Tool Path was calculated successfully!', ...
+    'Ready for machining simulation?'}, ...
+    'Tool Path Simulation','warn','non-modal');
+uiwait(msgfig);
 
 %% Visualization & Simulation
 figure;
-for ii = 1:ptNum
-    toolSp = toolData.toolBform;
-    toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
-    Q = fnval(toolSp,uLim(1,ii):0.01:uLim(2,ii));
-    plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0,0.4450,0.7410],'LineWidth',0.5);
-
+stepLength = 0.01;
+nLoop = ceil(ptNum/sparTheta);
+uLimRound = round(uLim,2);
+toolPathMesh = [];
+for ii = 1:nLoop % each loop
+    for jj = 1:sparTheta
+        toolSp = toolData.toolBform;
+        toolSp.coefs = quat2rotm(toolQuat(ii*(nLoop-1)+jj,:))*toolCoefs + toolVec(:,ii*(nLoop-1)+jj);
+        Q{jj} = fnval(toolSp,uLimRound(1,ii*(nLoop-1)+jj):stepLength:uLimRound(2,ii*(nLoop-1)+jj));
+    end
+    for u = 0:stepLength:1
+        for jj = 1:sparTheta
+            if u >= uLimRound(1,ii*(nLoop-1)+jj) && u <= uLimRound(2,ii*(nLoop-1)+jj)
+                tmp(1,1) = Q{jj}(1,(u - uLimRound(1,ii*(nLoop-1)+jj))/stepLength);
+                tmp(2,1) = Q{jj}(2,(u - uLimRound(1,ii*(nLoop-1)+jj))/stepLength);
+                tmp(3,1) = Q{jj}(3,(u - uLimRound(1,ii*(nLoop-1)+jj))/stepLength);
+                toolPathMesh = [toolPathMesh,tmp];
+            end
+        end
+    end
 end
 
 
