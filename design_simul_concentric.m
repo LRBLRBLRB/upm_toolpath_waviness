@@ -1,3 +1,8 @@
+% simulation of the designed tool path of a concentric surface
+% Step one: tool and surface data import
+% Step two: tool path calculation
+% Step three: residual height calculation and correction
+% Step four: simulation of the machining surface
 close all;
 clear;
 clc;
@@ -14,7 +19,7 @@ msgOpts.Interpreter = 'tex';
 profile on
 parObj = gcp;
 
-%% concentric circles
+%% concentric surface generation / import
 % [fileName,dirName] = uigetfile({ ...
 %     '*.mat','MAT-files(*.mat)'; ...
 %     '*,*','all files(*.*)'}, ...
@@ -133,9 +138,7 @@ tic
 parfor ii = 1:ptNum
     [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
         toolData,surfPt(:,ii),surfNorm(:,ii),surfDirect(:,ii),[0;0;1]);
-    if isCollision(ii) == true
-        pause('on');
-    else
+    if isCollision(ii) == false
         toolPathPt(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.center + toolVec(:,ii);
         toolCutDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
         toolNormDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
