@@ -8,6 +8,11 @@ addpath(genpath('funcs'));
 unit = 'mm';
 textFontSize = 14;
 textFontType = 'Times New Roman';
+msgOpts.Default = 'Cancel';
+msgOpts.Interpreter = 'tex';
+% msgOpts.modal = 'non-modal';
+profile on
+parObj = gcp;
 
 %% concentric circles
 % [fileName,dirName] = uigetfile({ ...
@@ -124,7 +129,6 @@ toolCutDirect = zeros(3,ptNum);
 toolNormDirect = zeros(3,ptNum);
 toolContactU = zeros(1,ptNum);
 isCollision = false(1,ptNum);
-% parpool(6);
 tic
 parfor ii = 1:ptNum
     [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
@@ -137,7 +141,8 @@ parfor ii = 1:ptNum
         toolNormDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
     end
 end
-toc;
+tToolpath = toc;
+fprintf('The time spent in the tool path generating process is %fs.\n',tToolpath);
 
 % still need procedures to deal with the invalid points, which will cause
 % interference between the tool edge and the designed surface. 
@@ -204,16 +209,18 @@ parfor ii = 1:resNum
         toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp, ...
         uLim(:,ii),tmpULim(:,ii),ii,ind2(ii),ind3(ii));
 end
-toc;
-clear angle;
+tRes = toc;
+fprintf('The time spent in the residual height calculation process is %fs.\n',tRes);
+
 for ii = 1:ptNum
     uLim(1,ii) = max([uLim(1,ii),tmpULim(1,ind2(ii))]);
     uLim(2,ii) = min([uLim(2,ii),tmpULim(2,ind2(ii))]);
 end
-clear ind2 ind3 tmpULim;
+clear angle ind2 ind3 tmpULim;
 
 figure;
 plotSpar = 1;
+tic
 plot3(toolPathPt(1,1:plotSpar:end), ...
     toolPathPt(2,1:plotSpar:end), ...
     toolPathPt(3,1:plotSpar:end), ...
@@ -253,10 +260,17 @@ ylabel(['y(',unit,')']);
 zlabel(['z(',unit,')']);
 legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','','Location','northeast');
-msgfig = questdlg({'Tool Path was calculated successfully!', ...
+tPlot = toc;
+fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
+msgfig = questdlg({'Residual Height was calculated successfully!', ...
     'Ready for machining simulation?'}, ...
-    'Tool Path Simulation','warn','non-modal');
-uiwait(msgfig);
+    'Tool Path Simulation','OK','Cancel',msgOpts);
+if strcmp(msgfig,'Cancel')
+    % delete(parObj);
+    profile off
+    % profsave(profile("info"),"profile_data");
+    return; 
+end
 
 %% Visualization & Simulation
 figure;
@@ -265,25 +279,28 @@ nLoop = ceil(ptNum/sparTheta);
 uLimRound = round(uLim,2);
 toolPathMesh = [];
 for ii = 1:nLoop % each loop
+    Q = cell(sparTheta,1);
     for jj = 1:sparTheta
         toolSp = toolData.toolBform;
-        toolSp.coefs = quat2rotm(toolQuat(ii*(nLoop-1)+jj,:))*toolCoefs + toolVec(:,ii*(nLoop-1)+jj);
-        Q{jj} = fnval(toolSp,uLimRound(1,ii*(nLoop-1)+jj):stepLength:uLimRound(2,ii*(nLoop-1)+jj));
+        toolSp.coefs = quat2rotm(toolQuat((ii-1)*nLoop+jj,:))*toolCoefs + toolVec(:,(ii-1)*nLoop+jj);
+        Q{jj} = fnval(toolSp,uLimRound(1,(ii-1)*nLoop+jj):stepLength:uLimRound(2,(ii-1)*nLoop+jj));
+%         Q{jj} = tmp;
     end
     for u = 0:stepLength:1
         for jj = 1:sparTheta
-            if u >= uLimRound(1,ii*(nLoop-1)+jj) && u <= uLimRound(2,ii*(nLoop-1)+jj)
-                tmp(1,1) = Q{jj}(1,(u - uLimRound(1,ii*(nLoop-1)+jj))/stepLength);
-                tmp(2,1) = Q{jj}(2,(u - uLimRound(1,ii*(nLoop-1)+jj))/stepLength);
-                tmp(3,1) = Q{jj}(3,(u - uLimRound(1,ii*(nLoop-1)+jj))/stepLength);
+            if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
+                tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
                 toolPathMesh = [toolPathMesh,tmp];
             end
         end
     end
 end
-
-
-
+plot3(toolPathMesh(1,:),toolPathMesh(2,:),toolPathMesh(3,:),'.','Color',[0,0.4450,0.7410]);
+hold on;
+grid on;
 
 %% 
+% delete(parObj);
+profile viewer
+% profsave(profile("info"),"profile_data");
 % rmpath(genpath('funcs'));
