@@ -74,7 +74,9 @@ toolPtProj = projectionOnPlane(toolPt1,toolPt2,toolCutDir1);
 % 这里的问题：对于螺旋线，这种投影方式是否失效？
 t = norm(toolPtProj - toolPt2)/norm(toolPt3 - toolPt2);
 toolNormProj = (1 - t)*toolNorm2 + t*toolNorm3;
+toolNormProj = toolNormProj + toolCutDir1*(dot(toolNormProj,toolCutDir1) - 1);
 toolCutDirProj = (1 - t)*toolCutDir2 + t*toolCutDir3;
+toolCutDirProj = toolCutDirProj + toolCutDir1*(dot(toolCutDirProj,toolCutDir1) - 1); %?????????????????????????????????????????????????????????
 
 % rigid transform of tool edge from the standard place to the corresponding
 R1 = axesRot(toolNorm1,toolCutDir1,[0;0;1],[1;0;0],'zx');
@@ -94,6 +96,9 @@ toolContactPt1 = fnval(toolSp1,toolContactU1);
 toolContactPtProj = fnval(toolSpProj,toolContactUProj);
 res = norm(cross(toolContactPt1 - peakPt,toolContactPtProj - peakPt)) ...
     /norm(toolContactPtProj - toolContactPt1);
+if res >= norm(Pt1(:,1)-Pt1(:,2)) % no intersection
+    res = nan;
+end
 
 % to update the valid U range of the two toolpath
 u1 = u(ind1);
