@@ -203,11 +203,22 @@ ind3 = linspace(1,ptNum,ptNum);
 angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 resNum = ptNum - sparTheta;
 tic
-parfor ii = 1:resNum
-    nLoop = ceil(ii/sparTheta);
-    closest = find(abs(angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1)) - angle(ii)),3);
-    ind2(ii) = sparTheta*nLoop + closest(1);
-    ind3(ii) = sparTheta*nLoop + closest(2);
+for ii = 1:resNum
+    % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
+    nLoop = floor(ii/sparTheta) + 1;
+    angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
+    if isempty(angleN - angle(ii) >= 0) % to avoid angle(ii) is cloesd to -pi, and smaller than each elements
+        tmp = angleN - angle(ii) >= 0;
+    else
+        tmp = angleN - angle(ii) >= 0;
+    end
+    ind2(ii) = sparTheta*nLoop + find(angleN == min(angleN(tmp)));
+    if isempty(angleN - angle(ii) < 0)
+        tmp = angleN - angle(ii) < 0;
+    else
+        tmp = angleN - angle(ii) < 0;
+    end
+    ind3(ii) = sparTheta*nLoop + find(angleN == max(angleN(tmp)));
     [res(ii),peakPt(:,ii),uLim(:,ii),tmpULim(:,ii)] = residual3D( ...
         toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp, ...
         uLim(:,ii),tmpULim(:,ii),ii,ind2(ii),ind3(ii));
@@ -243,13 +254,13 @@ quiver3(toolPathPt(1,1:plotSpar:end), ...
     toolNormDirect(2,1:plotSpar:end), ...
     toolNormDirect(3,1:plotSpar:end), ...
     'AutoScale','on','Color',[0.85,0.33,0.10]);
-toolCoefs = toolData.toolBform.coefs;
-for ii = 1:ptNum
-    toolSp = toolData.toolBform;
-    toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
-    Q = fnval(toolSp,uLim(1,ii):0.01:uLim(2,ii));
-    plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
-end
+% for ii = 1:ptNum
+%     toolSp = toolData.toolBform;
+%     toolCoefs = toolData.toolBform.coefs;
+%     toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
+%     Q = fnval(toolSp,uLim(1,ii):0.01:uLim(2,ii));
+%     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+% end
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.6,'LineStyle','none');
@@ -262,17 +273,31 @@ xlabel(['x(',unit,')']);
 ylabel(['y(',unit,')']);
 zlabel(['z(',unit,')']);
 legend('tool center point','tool cutting direction', ...
-    'tool spindle direction','','','Location','northeast');
+    'tool spindle direction','','tool edge','Location','northeast');
 tPlot = toc;
 fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
 msgfig = questdlg({'Residual Height was calculated successfully!', ...
     'Ready for machining simulation?'}, ...
     'Tool Path Simulation','OK','Cancel',msgOpts);
 if strcmp(msgfig,'Cancel')
+    figure;
+    for ii = 1:ptNum
+        toolSp = toolData.toolBform;
+        toolCoefs = toolData.toolBform.coefs;
+        toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
+        Q = fnval(toolSp,uLim(1,ii):0.01:uLim(2,ii));
+        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+        hold on;
+    end
+    surf( ...
+        surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+        'FaceColor','flat','FaceAlpha',0.6,'LineStyle','none');
+    colormap('summer');
+    cb = colorbar;
     % delete(parObj);
     profile off
     % profsave(profile("info"),"profile_data");
-    return; 
+    return;
 end
 
 %% Visualization & Simulation

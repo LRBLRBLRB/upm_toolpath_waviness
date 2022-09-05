@@ -1,16 +1,16 @@
-function projPt = projectionOnPlane(Pt,varargin)
+function projPt = ptOnPlane(Pt,varargin)
 % to figure out the projection of the given point on the given plane
 %
 % usage:
 %
-% projPt = projectionOnPlane(Pt,param)
+% projPt = ptOnPlane(Pt,param)
 %   the plane is described with parameters of the general equation
 %   Pt          (3,:)   the point that will be projected
 %   param       (4,1)   the parameters of the equation, i.e., A, B, C & D,
 %                       respectively
 %   projPt      (3,:)   the projection of the point Pt
 %
-% projPt = projectionOnPlane(Pt,surfPt,surfNorm)
+% projPt = ptOnPlane(Pt,surfPt,surfNorm)
 %   the plane is described with a point on it and its normal vector
 %   Pt          (3,:)   the point that will be projected
 %   surfPt      (3,1)   the point on the plane
@@ -33,14 +33,14 @@ switch nargin
         ptNum = size(Pt,2);
         if ptNum == 1
             projPt = Pt ...
-                - dot(Pt - surfPt,surfNorm)./norm(surfNorm).*surfNorm;
+                - (dot(Pt - surfPt,surfNorm)./norm(surfNorm)).*surfNorm;
         else
             projPt = Pt - ...
-                dot(Pt - ndgrid(surfPt,1:ptNum),ndgrid(surfNorm,1:ptNum),1) ...
-                ./norm(surfNorm).*surfNorm;
+                (dot(Pt - ndgrid(surfPt,1:ptNum),ndgrid(surfNorm,1:ptNum),1) ...
+                ./norm(surfNorm)).*surfNorm;
         end
     otherwise
-        error('invalid input format. Only 2 or 3 inputs are allowed.');
+        error('Invalid input format. Only 2 or 3 inputs are allowed.');
 end
 
 end

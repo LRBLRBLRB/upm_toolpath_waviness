@@ -49,7 +49,7 @@ switch nargin
         toolCutDir2 = toolCutDir(:,varargin{2});
         toolCutDir3 = toolCutDir(:,varargin{3});
         toolContactU1 = toolContactU(varargin{1});
-        toolContactUProj =0.5*( ...
+        toolContactUProj = 0.5*( ...
             toolContactU(varargin{2}) + toolContactU(varargin{3}));
     case 15
         toolPt1 = toolPt;
@@ -62,21 +62,25 @@ switch nargin
         toolCutDir2 = varargin{3};
         toolCutDir3 = varargin{6};
         toolContactU1 = toolContactU;
-        toolContactUProj =0.5*(toolContactU2 + toolContactU3);
+        toolContactUProj = 0.5*(toolContactU2 + toolContactU3);
     otherwise
         error('Invalid input. Not enough or tool many input parameters');
 end
 
 % to project the closest point and its tool edge to the current one
-toolPtProj = projectionOnPlane(toolPt1,toolPt2,toolCutDir1);
+toolPtProj = ptOnPlane(toolPt1,toolPt2,toolCutDir1);
 % Van der Waals: 主流的做法是对位置插补 然后刀轴是跟随运动；位置已经运动的长度/总长度=已经转过的角度/总角度
 % 是否可以直接用向量插值、或者四元数来代替上述公式里的角度？
 % 这里的问题：对于螺旋线，这种投影方式是否失效？
 t = norm(toolPtProj - toolPt2)/norm(toolPt3 - toolPt2);
 toolNormProj = (1 - t)*toolNorm2 + t*toolNorm3;
-toolNormProj = toolNormProj + toolCutDir1*(dot(toolNormProj,toolCutDir1) - 1);
-toolCutDirProj = (1 - t)*toolCutDir2 + t*toolCutDir3;
-toolCutDirProj = toolCutDirProj + toolCutDir1*(dot(toolCutDirProj,toolCutDir1) - 1); %?????????????????????????????????????????????????????????
+toolNormProj = vecOnPlane(toolNormProj,toolPtProj,toolCutDir1);
+toolNormProj = toolNormProj./norm(toolNormProj);
+% toolCutDirProj = (1 - t)*toolCutDir2 + t*toolCutDir3;
+% toolCutDirProj = toolCutDirProj + toolCutDir1*(dot(toolCutDirProj,toolCutDir1) - 1);
+toolCutDirProj1 = toolCutDir1; % 讲道理应该是同向的
+R = vecRot(toolNorm2,toolNormProj);
+toolCutDirProj = R*toolCutDir2; % 讲道理两个应该是相等的但是并不等，是否意味着我的刃口并不在对应平面内？
 
 % rigid transform of tool edge from the standard place to the corresponding
 R1 = axesRot(toolNorm1,toolCutDir1,[0;0;1],[1;0;0],'zx');

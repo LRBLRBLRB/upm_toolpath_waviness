@@ -22,7 +22,7 @@ else
     sp2 = varargin{2};
     % 求两个刀位的轮廓交点
     % [interPt,~] = bsplineCross(sp1,sp2);
-    [interPt,~] = pcCrossDN(sp1,sp2,2);
+    [interPt,~] = pcCrossDN(sp1,sp2);
     
     % 求刀尖点：刀尖方向上最远点
     [~,cutPtIndex1] = max(abs(dot((sp1-c1),ndgrid(vec1,sp1(1,:)))/norm(vec1)));

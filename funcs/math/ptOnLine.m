@@ -1,4 +1,4 @@
-function projPt = projectionOnLine(Pt,varargin)
+function projPt = ptOnLine(Pt,varargin)
 % to figure out the projection of the given point on the given straight
 % line
 %
