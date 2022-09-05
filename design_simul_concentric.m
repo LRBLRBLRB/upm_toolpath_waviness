@@ -203,8 +203,8 @@ tic
 parfor ii = 1:resNum
     nLoop = ceil(ii/sparTheta);
     closest = find(abs(angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1)) - angle(ii)),3);
-    ind2(ii) = sparTheta*nLoop + closest(2);
-    ind3(ii) = sparTheta*nLoop + closest(3);
+    ind2(ii) = sparTheta*nLoop + closest(1);
+    ind3(ii) = sparTheta*nLoop + closest(2);
     [res(ii),peakPt(:,ii),uLim(:,ii),tmpULim(:,ii)] = residual3D( ...
         toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp, ...
         uLim(:,ii),tmpULim(:,ii),ii,ind2(ii),ind3(ii));
@@ -278,6 +278,7 @@ stepLength = 0.01;
 nLoop = ceil(ptNum/sparTheta);
 uLimRound = round(uLim,2);
 toolPathMesh = [];
+tic
 for ii = 1:nLoop % each loop
     Q = cell(sparTheta,1);
     for jj = 1:sparTheta
@@ -295,6 +296,8 @@ for ii = 1:nLoop % each loop
         end
     end
 end
+tSimul = toc;
+fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
 plot3(toolPathMesh(1,:),toolPathMesh(2,:),toolPathMesh(3,:),'.','Color',[0,0.4450,0.7410]);
 hold on;
 grid on;
