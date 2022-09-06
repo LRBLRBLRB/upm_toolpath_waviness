@@ -205,16 +205,16 @@ resNum = ptNum - sparTheta;
 tic
 for ii = 1:resNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
-    nLoop = floor(ii/sparTheta) + 1;
+    nLoop = floor(ii/sparTheta);
     angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
-    if isempty(angleN - angle(ii) >= 0) % to avoid angle(ii) is cloesd to -pi, and smaller than each elements
-        tmp = angleN - angle(ii) >= 0;
+    if isempty(angleN(angleN - angle(ii) >= 0)) % to avoid angle(ii) is cloesd to -pi, and smaller than each elements
+        tmp = angleN - angle(ii) + 2*pi >= 0;
     else
         tmp = angleN - angle(ii) >= 0;
     end
     ind2(ii) = sparTheta*nLoop + find(angleN == min(angleN(tmp)));
-    if isempty(angleN - angle(ii) < 0)
-        tmp = angleN - angle(ii) < 0;
+    if isempty(angleN(angleN - angle(ii) < 0))
+        tmp = angleN - angle(ii) - 2*pi < 0;
     else
         tmp = angleN - angle(ii) < 0;
     end
