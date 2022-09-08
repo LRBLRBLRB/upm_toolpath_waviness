@@ -1,45 +1,68 @@
-function [res,interPt,varargout] = residual2D(c1,c2,vec1,vec2,varargin)
+function [res,peakPt,varargout] = residual2D_numeric(c1,c2,vec1,vec2,s1,s2,options)
 % Solve the residual height between two adjacent points on the tool path in
 % 2-dimension plane, supposing that the residual height is the distance
 % between the intersection point of tool edges.
 % 
 % Usage:
-% [res,interPt] = residual2D(c1,c2,vec1,vec2,s1,s2)
+% [res,peakPt,ind1,ind2] = residual2D_numeric(c1,c2,vec1,vec2,s1,s2,method)
 %   vec1 (2,1) 1st normal vector of the tool edge
 %   s1 (2,:) 1st scatters of the tool edge
 %   c2,vec2,s2 are parameters of the other tool edge
 %   res (1,1) the residual within the two position
 %   interPt (2,1)
 %
-% [res,interPt] = residual2D(c1,c2,vec1,vec2,sp)
+% [res,peakPt,ind1,ind2] = residual2D_numeric(c1,c2,vec1,vec2,sp1,sp2,method)
 %   all the same except that the sp1 and sp2 remain the B-form spline
 %   struct pf the tool edge
 
-if nargin == 5 % or isstruct(sp1)
-    % 继续写这个！！！！
-else
-    sp1 = varargin{1};
-    sp2 = varargin{2};
-    % 求两个刀位的轮廓交点
-    % [interPt,~] = bsplineCross(sp1,sp2);
-    [interPt,~] = pcCrossDN(sp1,sp2);
-    
-    % 求刀尖点：刀尖方向上最远点
-    [~,cutPtIndex1] = max(abs(dot((sp1-c1),ndgrid(vec1,sp1(1,:)))/norm(vec1)));
-    [~,cutPtIndex2] = max(abs(dot((sp2-c2),ndgrid(vec2,sp2(1,:)))/norm(vec2)));
-    cutPt1 = sp1(:,cutPtIndex1);
-    cutPt2 = sp2(:,cutPtIndex2);
-    % 求刀尖点：两个刀尖的公切线
-    
-    if size(interPt,1) == 2
-        interPt = [0;interPt];
-        cutPt1 = [0;cutPt1];
-        cutPt2 = [0;cutPt2];
-    end
-    res = 2*abs(cross(interPt-cutPt1,interPt-cutPt2))/norm(cutPt1-cutPt2);
+arguments
+    c1 {mustBeFinite}
+    c2 {mustBeFinite}
+    vec1 {mustBeFinite}
+    vec2 {mustBeFinite}
+    s1
+    s2
+    options.method {mustBeMember(options.method,['DSearchn','BoundingBox'])}
+    options.eps {mustBePositive} = 1e-3
+end
+
+if size(c1,1) ~= 1
+    c1 = c1';
+    c2 = c2';
+    vec1 = vec1';
+    vec2 = vec2';
+end
+
+if isstruct(s1)
+    u = 0:options.eps:1;
+    sp1 = s1;
+    s1 = (fnval(sp1,u))';
+    sp2 = s2;
+    s2 = (fnval(sp2,u))';
+elseif size(s1,1) ~= 1
+    s1 = s1';
+    s2 = s2';
+end
+
+% solve the intersection point of the two spline curve
+switch options.method
+    case 'DSearchn'
+        [peakPt,ind1,ind2,epsCross] = pcCrossDN(s1,s2);
+    case 'BoundingBox'
+        [peakPt,ind1,ind2,epsCross] = curveCross(s1,s2);
+end
+
+res = norm(cross(cutPt1 - peakPt,cutPt2 - peakPt)) ...
+    /norm(cutPt2 - cutPt1); % ?????
+varargout{1} = ind1;
+varargout{2} = ind2;
+if epsCross >= norm(s1(:,1) - s1(:,2))
+    % no intersection
+    res = nan;
 end
 
 end
+
 
 %% 计算两端B样条曲线s1、s2的交点 interPt
 % 最简单的算法：包围盒法
