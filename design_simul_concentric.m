@@ -171,10 +171,6 @@ quiver3(toolPathPt(1,1:plotSpar:end), ...
     toolNormDirect(2,1:plotSpar:end), ...
     toolNormDirect(3,1:plotSpar:end), ...
     'AutoScale','on','Color',[0.85,0.33,0.10]);
-% plot3(surfPt(1,1:100:end), ...
-%     surfPt(2,1:100:end), ...
-%     surfPt(3,1:100:end), ...
-%     '.','Color',[0,0.45,0.74]);
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.6,'LineStyle','none');
@@ -194,106 +190,126 @@ uiwait(msgfig);
 
 %% Calculation of Residual Height & Cutting Surface
 toolSp = toolData.toolBform;
+toolRadius = toolData.radius;
 res = zeros(1,ptNum);
 peakPt = zeros(3,ptNum);
 uLim = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of each toolpath
-tmpULim = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of the projective toolpath
-ind2 = linspace(1,ptNum,ptNum);
-ind3 = linspace(1,ptNum,ptNum);
+% uLimTmp = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of the projective toolpath
 angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 resNum = ptNum - sparTheta;
 tic
-for ii = 1:resNum
+% outer side of each point in the tool path
+parfor ii = 1:resNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
-    nLoop = floor(ii/sparTheta);
+    nLoop = floor((ii - 1)/sparTheta) + 1;
     angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
-    if isempty(angleN(angleN - angle(ii) >= 0)) % to avoid angle(ii) is cloesd to -pi, and smaller than each elements
+    % ind2(ii) remains the index of angle nearest to angle(ii) within 
+    % those which is larger than the angle(ii) and in angleN
+    if isempty(angleN(angleN - angle(ii) >= 0))
+        % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
         tmp = angleN - angle(ii) + 2*pi >= 0;
     else
         tmp = angleN - angle(ii) >= 0;
     end
-    ind2(ii) = sparTheta*nLoop + find(angleN == min(angleN(tmp)));
+    ind2 = sparTheta*nLoop + find(angleN == min(angleN(tmp)));
+    % ind3(ii) remains the index of angle nearest to angle(ii) within 
+    % those which is smaller than the angle(ii) and in angleN
     if isempty(angleN(angleN - angle(ii) < 0))
         tmp = angleN - angle(ii) - 2*pi < 0;
     else
         tmp = angleN - angle(ii) < 0;
     end
-    ind3(ii) = sparTheta*nLoop + find(angleN == max(angleN(tmp)));
-    [res(ii),peakPt(:,ii),uLim(:,ii),tmpULim(:,ii)] = residual3D( ...
-        toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp, ...
-        uLim(:,ii),tmpULim(:,ii),ii,ind2(ii),ind3(ii));
+    ind3 = sparTheta*nLoop + find(angleN == max(angleN(tmp)));
+    [res(ii),peakPt(:,ii),uLim(:,ii)] = residual3D( ...
+        toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp,toolRadius, ...
+        uLim(:,ii),ii,ind2,ind3);
+end
+% inner side of each point on the tool path
+parfor ii = (sparTheta + 1):ptNum
+    % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
+    nLoop = floor((ii - 1)/sparTheta) - 1;
+    angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
+    % ind2(ii) remains the index of angle nearest to angle(ii) within 
+    % those which is larger than the angle(ii) and in angleN
+    if isempty(angleN(angleN - angle(ii) >= 0))
+        % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
+        tmp = angleN - angle(ii) + 2*pi >= 0;
+    else
+        tmp = angleN - angle(ii) >= 0;
+    end
+    ind2 = sparTheta*nLoop + find(angleN == min(angleN(tmp)));
+    % ind3(ii) remains the index of angle nearest to angle(ii) within 
+    % those which is smaller than the angle(ii) and in angleN
+    if isempty(angleN(angleN - angle(ii) < 0))
+        tmp = angleN - angle(ii) - 2*pi < 0;
+    else
+        tmp = angleN - angle(ii) < 0;
+    end
+    ind3 = sparTheta*nLoop + find(angleN == max(angleN(tmp)));
+    [res(ii),peakPt(:,ii),uLim(:,ii)] = residual3D( ...
+        toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp,toolRadius, ...
+        uLim(:,ii),ii,ind2,ind3);
 end
 tRes = toc;
 fprintf('The time spent in the residual height calculation process is %fs.\n',tRes);
 
-for ii = 1:ptNum
-    uLim(1,ii) = max([uLim(1,ii),tmpULim(1,ind2(ii))]);
-    uLim(2,ii) = min([uLim(2,ii),tmpULim(2,ind2(ii))]);
-end
-clear angle ind2 ind3 tmpULim;
+% for ii = 1:ptNum
+%     uLim(1,ii) = max([uLim(1,ii),uLimTmp(1,ind2 == ii)]);
+%     uLim(2,ii) = min([uLim(2,ii),uLimTmp(2,ind2 == ii)]);
+% end
+clear angle ind2 ind3 uLimTmp;
 
-figure;
+figure('Name','residual height calculation');
 plotSpar = 1;
 tic
 plot3(toolPathPt(1,1:plotSpar:end), ...
     toolPathPt(2,1:plotSpar:end), ...
     toolPathPt(3,1:plotSpar:end), ...
-    '.','Color',[0.6350,0.0780,0.1840]);
+    '.','Color',[0,0.4470,0.7410]);
 hold on;
-quiver3(toolPathPt(1,1:plotSpar:end), ...
-    toolPathPt(2,1:plotSpar:end), ...
-    toolPathPt(3,1:plotSpar:end), ...
-    toolCutDirect(1,1:plotSpar:end), ...
-    toolCutDirect(2,1:plotSpar:end), ...
-    toolCutDirect(3,1:plotSpar:end), ...
-    'AutoScale','on','Color',[0,0.4470,0.7410]);
-quiver3(toolPathPt(1,1:plotSpar:end), ...
-    toolPathPt(2,1:plotSpar:end), ...
-    toolPathPt(3,1:plotSpar:end), ...
-    toolNormDirect(1,1:plotSpar:end), ...
-    toolNormDirect(2,1:plotSpar:end), ...
-    toolNormDirect(3,1:plotSpar:end), ...
-    'AutoScale','on','Color',[0.85,0.33,0.10]);
-% for ii = 1:ptNum
-%     toolSp = toolData.toolBform;
-%     toolCoefs = toolData.toolBform.coefs;
-%     toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
-%     Q = fnval(toolSp,uLim(1,ii):0.01:uLim(2,ii));
-%     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
-% end
+% quiver3(toolPathPt(1,1:plotSpar:end), ...
+%     toolPathPt(2,1:plotSpar:end), ...
+%     toolPathPt(3,1:plotSpar:end), ...
+%     toolCutDirect(1,1:plotSpar:end), ...
+%     toolCutDirect(2,1:plotSpar:end), ...
+%     toolCutDirect(3,1:plotSpar:end), ...
+%     'AutoScale','on','Color',[0.6350,0.0780,0.1840]);
+% quiver3(toolPathPt(1,1:plotSpar:end), ...
+%     toolPathPt(2,1:plotSpar:end), ...
+%     toolPathPt(3,1:plotSpar:end), ...
+%     toolNormDirect(1,1:plotSpar:end), ...
+%     toolNormDirect(2,1:plotSpar:end), ...
+%     toolNormDirect(3,1:plotSpar:end), ...
+%     'AutoScale','on','Color',[0.85,0.33,0.10]);
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',0.6,'LineStyle','none');
+    'FaceColor','flat','FaceAlpha',1,'LineStyle','none');
 colormap('summer');
 cb = colorbar;
 cb.Label.String = 'Height (mm)';
+for ii = 1:ptNum
+    toolSp = toolData.toolBform;
+    toolCoefs = toolData.toolBform.coefs;
+    toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
+    Q = fnval(toolSp,uLim(1,ii):0.01:uLim(2,ii));
+    plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+end
 axis equal; grid on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
 xlabel(['x(',unit,')']);
 ylabel(['y(',unit,')']);
 zlabel(['z(',unit,')']);
-legend('tool center point','tool cutting direction', ...
-    'tool spindle direction','','tool edge','Location','northeast');
+% legend('tool center point','tool cutting direction', ...
+%     'tool spindle direction','','tool edge','Location','northeast');
+legend('tool center point','','tool edge','Location','northeast');
 tPlot = toc;
 fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
+
+
 msgfig = questdlg({'Residual Height was calculated successfully!', ...
     'Ready for machining simulation?'}, ...
     'Tool Path Simulation','OK','Cancel',msgOpts);
 if strcmp(msgfig,'Cancel')
-    figure;
-    for ii = 1:ptNum
-        toolSp = toolData.toolBform;
-        toolCoefs = toolData.toolBform.coefs;
-        toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
-        Q = fnval(toolSp,uLim(1,ii):0.01:uLim(2,ii));
-        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
-        hold on;
-    end
-    surf( ...
-        surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-        'FaceColor','flat','FaceAlpha',0.6,'LineStyle','none');
-    colormap('summer');
-    cb = colorbar;
     % delete(parObj);
     profile off
     % profsave(profile("info"),"profile_data");

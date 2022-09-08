@@ -18,7 +18,7 @@ switch option
         z2 = z2./norm(z2);
         R = [x2'*x1, y2'*x1, z2'*x1;
             x2'*y1, y2'*y1, z2'*y1;
-            x2'*x1, y2'*z1, z2'*z1];
+            x2'*z1, y2'*z1, z2'*z1];
     case 'yz'
         y1 = varargin{1}./norm(varargin{1});
         z1 = varargin{2}./norm(varargin{2});
@@ -30,7 +30,7 @@ switch option
         x2 = x2./norm(x2);
         R = [x2'*x1, y2'*x1, z2'*x1;
             x2'*y1, y2'*y1, z2'*y1;
-            x2'*x1, y2'*z1, z2'*z1];
+            x2'*z1, y2'*z1, z2'*z1];
     case 'zx'
         z1 = varargin{1}./norm(varargin{1});
         x1 = varargin{2}./norm(varargin{2});
@@ -42,7 +42,7 @@ switch option
         y2 = y2./norm(y2);
         R = [x2'*x1, y2'*x1, z2'*x1;
             x2'*y1, y2'*y1, z2'*y1;
-            x2'*x1, y2'*z1, z2'*z1];
+            x2'*z1, y2'*z1, z2'*z1];
     case 'xyz'
         x1 = varargin{1}./norm(varargin{1});
         y1 = varargin{2}./norm(varargin{2});
@@ -52,7 +52,7 @@ switch option
         z2 = varargin{6}./norm(varargin{6});
         R = [x2'*x1, y2'*x1, z2'*x1;
             x2'*y1, y2'*y1, z2'*y1;
-            x2'*x1, y2'*z1, z2'*z1];
+            x2'*z1, y2'*z1, z2'*z1];
     otherwise
         R1 = vecRot(varargin{1},varargin{3});
         varargin{1} = R1*varargin{1};
