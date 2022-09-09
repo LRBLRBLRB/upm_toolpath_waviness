@@ -318,34 +318,53 @@ if strcmp(msgfig,'Cancel')
 end
 
 %% Visualization & Simulation
-figure;
-stepLength = 0.01;
-nLoop = ceil(ptNum/sparTheta);
-uLimRound = round(uLim,2);
-toolPathMesh = [];
-tic
-for ii = 1:nLoop % each loop
-    Q = cell(sparTheta,1);
-    for jj = 1:sparTheta
-        toolSp = toolData.toolBform;
-        toolSp.coefs = quat2rotm(toolQuat((ii-1)*nLoop+jj,:))*toolCoefs + toolVec(:,(ii-1)*nLoop+jj);
-        Q{jj} = fnval(toolSp,uLimRound(1,(ii-1)*nLoop+jj):stepLength:uLimRound(2,(ii-1)*nLoop+jj));
-%         Q{jj} = tmp;
-    end
-    for u = 0:stepLength:1
+
+if true
+    figure('Name','Residual height');
+    tiledlayout(1,2);
+    nexttile;
+    plot3(peakPt(1,:),peakPt(2,:),res,'.'); hold on;
+    axie equal; gridd on;
+    set(gca,'FontSize',textFontSize,'FontName',textFontType);
+    xlabel(['x(',unit,')']);
+    ylabel(['y(',unit,')']);
+    zlabel(['z(',unit,')']);
+    nexttile;
+    plotNum = 1000;
+    plotX = linspace(min(peakPt(1,:)),max(peakPt(1,:)),plotNum);
+    plotY = linspace(min(peakPt(2,:)),max(peakPt(2,:)),plotNum);
+    [meshX,meshY] = meshgrid(plotX,plotY);
+    meshZ = griddata()
+else
+    figure('Name','Machining surface simulation');
+    stepLength = 0.01;
+    nLoop = ceil(ptNum/sparTheta);
+    uLimRound = round(uLim,2);
+    toolPathMesh = [];
+    tic
+    for ii = 1:nLoop % each loop
+        Q = cell(sparTheta,1);
         for jj = 1:sparTheta
-            if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
-                tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
-                toolPathMesh = [toolPathMesh,tmp];
+            toolSp = toolData.toolBform;
+            toolSp.coefs = quat2rotm(toolQuat((ii-1)*nLoop+jj,:))*toolCoefs + toolVec(:,(ii-1)*nLoop+jj);
+            Q{jj} = fnval(toolSp,uLimRound(1,(ii-1)*nLoop+jj):stepLength:uLimRound(2,(ii-1)*nLoop+jj));
+    %         Q{jj} = tmp;
+        end
+        for u = 0:stepLength:1
+            for jj = 1:sparTheta
+                if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
+                    tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
+                    toolPathMesh = [toolPathMesh,tmp];
+                end
             end
         end
     end
+    tSimul = toc;
+    fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
+    plot3(toolPathMesh(1,:),toolPathMesh(2,:),toolPathMesh(3,:),'.','Color',[0,0.4450,0.7410]);
+    hold on;
+    grid on;
 end
-tSimul = toc;
-fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
-plot3(toolPathMesh(1,:),toolPathMesh(2,:),toolPathMesh(3,:),'.','Color',[0,0.4450,0.7410]);
-hold on;
-grid on;
 
 %% 
 % delete(parObj);
