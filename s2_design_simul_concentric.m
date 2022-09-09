@@ -65,8 +65,8 @@ else % ellipsoid
     % surfXYZ = [x,y,z];
     
     % calculate the normal vector of the analytic surface
-    % syms X Y Z(X,Y);
-    % Z(X,Y) = sqrt(C^2*(R^2 - X.^2/A^2 - Y.^2/B^2));
+    % syms X Y z (X,Y);
+    % z (X,Y) = sqrt(C^2*(R^2 - X.^2/A^2 - Y.^2/B^2));
     % ZDX = diff(Z,X);
     % ZDY = diff(Z,Y);
     % surfNorm(:,1) = eval(subs(ZDX,{X,Y},{surfXYZ(:,1),surfXYZ(:,2)}));
@@ -102,9 +102,9 @@ quiver3( ...
     surfNorm(1:theSpar:end,1:rSpar:end,3), ...
     'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
-xlabel(['x(',unit,')']);
-ylabel(['y(',unit,')']);
-zlabel(['z(',unit,')']);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
 axis equal; grid on;
 % title({'Radially & circunferentially sparse','by 50 and 2 times, respectively'}, ...
 %     'FontSize',textFontSize,'FontName',textFontType);
@@ -114,9 +114,9 @@ surf( ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
 hold on; axis equal;
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
-xlabel(['x(',unit,')']);
-ylabel(['y(',unit,')']);
-zlabel(['z(',unit,')']);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
 % cb2 = colorbar;
 msgfig = msgbox('Surface was generated successfully!', ...
     'Surface Generation','warn','non-modal');
@@ -179,9 +179,9 @@ cb = colorbar;
 cb.Label.String = 'Height (mm)';
 axis equal; grid on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
-xlabel(['x(',unit,')']);
-ylabel(['y(',unit,')']);
-zlabel(['z(',unit,')']);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
 legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','Location','northeast');
 msgfig = msgbox('Tool Path was calculated successfully!', ...
@@ -297,9 +297,9 @@ for ii = 1:ptNum
 end
 axis equal; grid on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
-xlabel(['x(',unit,')']);
-ylabel(['y(',unit,')']);
-zlabel(['z(',unit,')']);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
 % legend('tool center point','tool cutting direction', ...
 %     'tool spindle direction','','tool edge','Location','northeast');
 legend('tool center point','','tool edge','Location','northeast');
@@ -307,63 +307,71 @@ tPlot = toc;
 fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
 
 
-msgfig = questdlg({'Residual Height was calculated successfully!', ...
-    'Ready for machining simulation?'}, ...
-    'Tool Path Simulation','OK','Cancel',msgOpts);
-if strcmp(msgfig,'Cancel')
-    % delete(parObj);
-    profile off
-    % profsave(profile("info"),"profile_data");
-    return;
-end
-
 %% Visualization & Simulation
-
-if true
-    figure('Name','Residual height');
-    tiledlayout(1,2);
-    nexttile;
-    plot3(peakPt(1,:),peakPt(2,:),res,'.'); hold on;
-    axie equal; gridd on;
-    set(gca,'FontSize',textFontSize,'FontName',textFontType);
-    xlabel(['x(',unit,')']);
-    ylabel(['y(',unit,')']);
-    zlabel(['z(',unit,')']);
-    nexttile;
-    plotNum = 1000;
-    plotX = linspace(min(peakPt(1,:)),max(peakPt(1,:)),plotNum);
-    plotY = linspace(min(peakPt(2,:)),max(peakPt(2,:)),plotNum);
-    [meshX,meshY] = meshgrid(plotX,plotY);
-    meshZ = griddata()
-else
-    figure('Name','Machining surface simulation');
-    stepLength = 0.01;
-    nLoop = ceil(ptNum/sparTheta);
-    uLimRound = round(uLim,2);
-    toolPathMesh = [];
-    tic
-    for ii = 1:nLoop % each loop
-        Q = cell(sparTheta,1);
-        for jj = 1:sparTheta
-            toolSp = toolData.toolBform;
-            toolSp.coefs = quat2rotm(toolQuat((ii-1)*nLoop+jj,:))*toolCoefs + toolVec(:,(ii-1)*nLoop+jj);
-            Q{jj} = fnval(toolSp,uLimRound(1,(ii-1)*nLoop+jj):stepLength:uLimRound(2,(ii-1)*nLoop+jj));
-    %         Q{jj} = tmp;
-        end
-        for u = 0:stepLength:1
+msgfig = questdlg({'Residual Height was calculated successfully!', ...
+    'Ready for residual height visualization or machining simulation?'}, ...
+    'Tool Path Simulation','Residual height','Machining simulation', ...
+    'Cancel',msgOpts);
+switch msgfig
+    case 'Cancel'
+        % delete(parObj);
+        profile off
+        % profsave(profile("info"),"profile_data");
+        return;
+    case 'Residual height'
+        plotNum = 1000;
+        xPlot = linspace(min(peakPt(1,:)),max(peakPt(1,:)),plotNum);
+        yPlot = linspace(min(peakPt(2,:)),max(peakPt(2,:)),plotNum);
+        [xMesh,yMesh] = meshgrid(xPlot,yPlot);
+        resMesh = griddata(peakPt(1,:),peakPt(2,:),res,xMesh,yMesh);
+        figure('Name','Residual height');
+        pos = get(gcf,'position');
+        set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
+        tiledlayout(1,2);
+        nexttile;
+        plot3(peakPt(1,:),peakPt(2,:),res,'mo'); hold on;
+        grid on;
+        mesh(xMesh,yMesh,resMesh,'EdgeColor','interp');
+        cb1 = colorbar;
+        set(gca,'FontSize',textFontSize,'FontName',textFontType);
+        xlabel(['x (',unit,')']);
+        ylabel(['y (',unit,')']);
+        zlabel(['residual height (',unit,')']);
+        nexttile;
+        contourf(xMesh,yMesh,resMesh); hold on;
+        cb2 = colorbar;
+        set(gca,'FontSize',textFontSize,'FontName',textFontType);
+        xlabel(['x (',unit,')']);
+        ylabel(['y (',unit,')']);
+    case 'Machining simulation'
+        figure('Name','Machining surface simulation');
+        stepLength = 0.01;
+        nLoop = ceil(ptNum/sparTheta);
+        uLimRound = round(uLim,2);
+        toolPathMesh = [];
+        tic
+        for ii = 1:nLoop % each loop
+            Q = cell(sparTheta,1);
             for jj = 1:sparTheta
-                if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
-                    tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
-                    toolPathMesh = [toolPathMesh,tmp];
+                toolSp = toolData.toolBform;
+                toolSp.coefs = quat2rotm(toolQuat((ii-1)*nLoop+jj,:))*toolCoefs + toolVec(:,(ii-1)*nLoop+jj);
+                Q{jj} = fnval(toolSp,uLimRound(1,(ii-1)*nLoop+jj):stepLength:uLimRound(2,(ii-1)*nLoop+jj));
+        %         Q{jj} = tmp;
+            end
+            for u = 0:stepLength:1
+                for jj = 1:sparTheta
+                    if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
+                        tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
+                        toolPathMesh = [toolPathMesh,tmp];
+                    end
                 end
             end
         end
-    end
-    tSimul = toc;
-    fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
-    plot3(toolPathMesh(1,:),toolPathMesh(2,:),toolPathMesh(3,:),'.','Color',[0,0.4450,0.7410]);
-    hold on;
-    grid on;
+        tSimul = toc;
+        fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
+        plot3(toolPathMesh(1,:),toolPathMesh(2,:),toolPathMesh(3,:),'.','Color',[0,0.4450,0.7410]);
+        hold on;
+        grid on;
 end
 
 %% 
