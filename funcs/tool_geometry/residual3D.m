@@ -93,22 +93,12 @@ toolSpProj = toolSp;
 toolSpProj.coefs = RProj*toolSp.coefs + toolPtProj;
 
 %% to solve the residual height between toolSp1 and toolSpProj
-eps = 1e-3;
-u = 0:eps:1;
-Pt1 = fnval(toolSp1,u);
-PtProj = fnval(toolSpProj,u);
-[peakPt,ind1,~,epsCross] = pcCrossDN(Pt1,PtProj);
 toolContactPt1 = fnval(toolSp1,toolContactU1);
 toolContactPtProj = fnval(toolSpProj,toolContactUProj);
-res = norm(cross(toolContactPt1 - peakPt,toolContactPtProj - peakPt)) ...
-    /norm(toolContactPtProj - toolContactPt1);
-if epsCross >= norm(Pt1(:,1)-Pt1(:,2)) % no intersection
-    res = nan;
-end
+[res,peakPt,u1] = residual2D_numeric(toolSp1,toolSpProj, ...
+    toolContactPt1,toolContactPtProj,'method','DSearchn');
 
 %% to update the valid U range of the two toolpath
-u1 = u(ind1);
-% uProj = u(indProj);
 if norm(toolPtProj - fnval(toolSp1,0)) > toolRadius
     % the projection point stays outside the current point
     uLim1(2) = min(u1,uLim1(2));

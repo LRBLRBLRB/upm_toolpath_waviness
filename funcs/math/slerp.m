@@ -2,8 +2,8 @@ function q = slerp(q1,q2,t)
 % To solve the interpolation process of vectors / quaternion based on 
 % spherical linear interpolation, short for slerp.
 
-q1 = q1./vecnorm(q1,2,1);
-q2 = q2./vecnorm(q2,2,1);
+q1 = q1./vecnorm(q1,2,2);
+q2 = q2./vecnorm(q2,2,2);
 if size(q1,1) == 1
     cosa = dot(q1,q2);
     if cosa < 0

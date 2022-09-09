@@ -199,7 +199,7 @@ angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 resNum = ptNum - sparTheta;
 tic
 % outer side of each point in the tool path
-parfor ii = 1:resNum
+for ii = 1:resNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
     nLoop = floor((ii - 1)/sparTheta) + 1;
     angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
@@ -259,13 +259,14 @@ fprintf('The time spent in the residual height calculation process is %fs.\n',tR
 % end
 clear angle ind2 ind3 uLimTmp;
 
+%%
 figure('Name','residual height calculation');
 plotSpar = 1;
 tic
 plot3(toolPathPt(1,1:plotSpar:end), ...
     toolPathPt(2,1:plotSpar:end), ...
     toolPathPt(3,1:plotSpar:end), ...
-    '.','Color',[0,0.4470,0.7410]);
+    '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 hold on;
 % quiver3(toolPathPt(1,1:plotSpar:end), ...
 %     toolPathPt(2,1:plotSpar:end), ...
