@@ -197,15 +197,16 @@ uiwait(msgfig);
 %% Calculation of Residual Height & Cutting Surface
 toolSp = toolData.toolBform;
 toolRadius = toolData.radius;
-res = zeros(1,ptNum);
-peakPt = zeros(3,ptNum);
+resNum = ptNum - sparTheta;
+res = zeros(1,2*resNum);
+peakPt = zeros(3,2*resNum);
 uLim = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of each toolpath
 % uLimTmp = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of the projective toolpath
 angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
-resNum = ptNum - sparTheta;
+
 tic
 % outer side of each point in the tool path
-for ii = 1:resNum
+parfor ii = 1:resNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
     nLoop = floor((ii - 1)/sparTheta) + 1;
     angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
@@ -230,7 +231,6 @@ for ii = 1:resNum
         toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp,toolRadius, ...
         uLim(:,ii),ii,ind2,ind3);
 end
-这里的残高有问题！！！！算了两遍，但是只留下了一遍的数值！！！
 % inner side of each point on the tool path
 parfor ii = (sparTheta + 1):ptNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
@@ -253,12 +253,15 @@ parfor ii = (sparTheta + 1):ptNum
         tmp = angleN - angle(ii) < 0;
     end
     ind3 = sparTheta*nLoop + find(angleN == max(angleN(tmp)));
-    [res(ii),peakPt(:,ii),uLim(:,ii)] = residual3D( ...
+    [res(ii + resNum),peakPt(:,ii + resNum),uLim(:,ii)] = residual3D( ...
         toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp,toolRadius, ...
         uLim(:,ii),ii,ind2,ind3);
 end
 tRes = toc;
 fprintf('The time spent in the residual height calculation process is %fs.\n',tRes);
+
+% post-processing of the residual height data
+% ( this process is in the visualization part now)
 
 % for ii = 1:ptNum
 %     uLim(1,ii) = max([uLim(1,ii),uLimTmp(1,ind2 == ii)]);
@@ -329,21 +332,23 @@ while true
             % rmpath(genpath('funcs'));
             return;
         case 'Residual height'
+            tic
             plotNum = 1000;
             xPlot = linspace(min(peakPt(1,:)),max(peakPt(1,:)),plotNum);
             yPlot = linspace(min(peakPt(2,:)),max(peakPt(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
-            ？？？？？？？？？？？？？？？？？？？？？？？？？？？
-            resMesh = griddata(peakPt(1,:),peakPt(2,:),res,xMesh,yMesh);
+            % elliminate the smaller residual height at the same peak
+            [resUnique,peakPtUnique] = groupsummary(res',peakPt(1:2,:)',@max);
+            resMesh = griddata(peakPtUnique{1},peakPtUnique{2},resUnique,xMesh,yMesh);
             figure('Name','Residual height');
             pos = get(gcf,'position');
             set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
             tiledlayout(1,2);
             nexttile;
-            plot3(peakPt(1,:),peakPt(2,:),res,'o', ...
-                'MarkerEdgeColor',[0.8500,0.3250,0.0980]); hold on;
+            surf(xMesh,yMesh,resMesh,'EdgeColor','interp'); hold on;
             grid on;
-            mesh(xMesh,yMesh,resMesh,'EdgeColor','interp');
+            plot3(peakPt(1,:),peakPt(2,:),res,'o', ...
+                'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
             % cb1 = colorbar;
             set(gca,'FontSize',textFontSize,'FontName',textFontType);
             xlabel(['x (',unit,')']);
@@ -353,18 +358,21 @@ while true
                 'Location','best');
             nexttile;
             contourf(xMesh,yMesh,resMesh); hold on;
+            axis equal; grid on;
             cb2 = colorbar;
             cb2.Label.String = ['Residual Height (',unit,')'];
             cb2.Layout.Tile = 'east';
             set(gca,'FontSize',textFontSize,'FontName',textFontType);
             xlabel(['x (',unit,')']);
             ylabel(['y (',unit,')']);
+            tRes = toc;
+            fprintf('The time spent in the residual map process is %fs.\n',tSimul);
         case 'Machining simulation'
             figure('Name','Machining surface simulation');
             stepLength = 0.01;
             nLoop = ceil(ptNum/sparTheta);
             uLimRound = round(uLim,2);
-            toolPathMesh = [];
+            toolPathList = [];
             tic
             for ii = 1:nLoop % each loop
                 Q = cell(sparTheta,1);
@@ -378,15 +386,26 @@ while true
                     for jj = 1:sparTheta
                         if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
                             tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
-                            toolPathMesh = [toolPathMesh,tmp];
+                            toolPathList = [toolPathList,tmp];
                         end
                     end
                 end
             end
+            % plot3(toolPathList(1,:),toolPathList(2,:),toolPathList(3,:),'.','Color',[0,0.4450,0.7410]);
+            plotNum = 1000;
+            xPlot = linspace(min(toolPathList(1,:)),max(toolPathList(1,:)),plotNum);
+            yPlot = linspace(min(toolPathList(2,:)),max(toolPathList(2,:)),plotNum);
+            [xMesh,yMesh] = meshgrid(xPlot,yPlot);
+            % elliminate the smaller residual height at the same peak
+            [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@max);
+            zMesh = griddata(toolPathXYUnique{1},toolPathXYUnique{2},toolPathZUnique,xMesh,yMesh);
+            mesh(xMesh,yMesh,zMesh,'EdgeColor','interp'); hold on;
+            set(gca,'FontSize',textFontSize,'FontName',textFontType);
+            xlabel(['x (',unit,')']);
+            ylabel(['y (',unit,')']);
+            zlabel(['z (',unit,')']);
+            grid on;
             tSimul = toc;
             fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
-            plot3(toolPathMesh(1,:),toolPathMesh(2,:),toolPathMesh(3,:),'.','Color',[0,0.4450,0.7410]);
-            hold on;
-            grid on;
     end
-end
+end 
