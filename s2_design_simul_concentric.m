@@ -10,10 +10,11 @@ addpath(genpath('funcs'));
 
 % global variables
 % global textFontSize textFontType;
-unit = 'mm';
-textFontSize = 14;
+unit = '\mum';
+textFontSize = 12;
 textFontType = 'Times New Roman';
-msgOpts.Default = 'Cancel';
+
+msgOpts.Default = 'Cancel and quit';
 msgOpts.Interpreter = 'tex';
 % msgOpts.modal = 'non-modal';
 profile on
@@ -44,7 +45,7 @@ if default
 % % % % % % % % % % % % % % % % % % % % % % % % %     surfMesh
 % % % % % % % % % % % % % % % % % % % % % % % % %     surfNorm
 else % ellipsoid
-    R = 10/2;
+    R = 10/2*1000;
     A = 3.5/2;
     B = 4/2;
     C = 5/2;
@@ -118,9 +119,14 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 % cb2 = colorbar;
-msgfig = msgbox('Surface was generated successfully!', ...
-    'Surface Generation','warn','non-modal');
-uiwait(msgfig);
+msgfig = questdlg({'Surface was generated successfully!', ...
+    'Ready to continue?'}, ...
+    'Surface Generation','OK & continue','Cancel & quit','OK & continue');
+if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    msgbox('Exit for the program','Exit','error','modal');
+    uiwait(msgbox);
+    return;
+end
 surfPt = transpose(reshape(surfMesh,[],3));
 surfNorm = transpose(reshape(surfNorm,[],3));
 surfDirect = cutDirection(surfPt,surfCenter);
@@ -224,6 +230,7 @@ for ii = 1:resNum
         toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp,toolRadius, ...
         uLim(:,ii),ii,ind2,ind3);
 end
+这里的残高有问题！！！！算了两遍，但是只留下了一遍的数值！！！
 % inner side of each point on the tool path
 parfor ii = (sparTheta + 1):ptNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
@@ -287,7 +294,7 @@ surf( ...
     'FaceColor','flat','FaceAlpha',1,'LineStyle','none');
 colormap('summer');
 cb = colorbar;
-cb.Label.String = 'Height (mm)';
+cb.Label.String = ['Height (',unit,')'];
 for ii = 1:ptNum
     toolSp = toolData.toolBform;
     toolCoefs = toolData.toolBform.coefs;
@@ -308,74 +315,78 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 
 
 %% Visualization & Simulation
-msgfig = questdlg({'Residual Height was calculated successfully!', ...
-    'Ready for residual height visualization or machining simulation?'}, ...
-    'Tool Path Simulation','Residual height','Machining simulation', ...
-    'Cancel',msgOpts);
-switch msgfig
-    case 'Cancel'
-        % delete(parObj);
-        profile off
-        % profsave(profile("info"),"profile_data");
-        return;
-    case 'Residual height'
-        plotNum = 1000;
-        xPlot = linspace(min(peakPt(1,:)),max(peakPt(1,:)),plotNum);
-        yPlot = linspace(min(peakPt(2,:)),max(peakPt(2,:)),plotNum);
-        [xMesh,yMesh] = meshgrid(xPlot,yPlot);
-        resMesh = griddata(peakPt(1,:),peakPt(2,:),res,xMesh,yMesh);
-        figure('Name','Residual height');
-        pos = get(gcf,'position');
-        set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
-        tiledlayout(1,2);
-        nexttile;
-        plot3(peakPt(1,:),peakPt(2,:),res,'mo'); hold on;
-        grid on;
-        mesh(xMesh,yMesh,resMesh,'EdgeColor','interp');
-        cb1 = colorbar;
-        set(gca,'FontSize',textFontSize,'FontName',textFontType);
-        xlabel(['x (',unit,')']);
-        ylabel(['y (',unit,')']);
-        zlabel(['residual height (',unit,')']);
-        nexttile;
-        contourf(xMesh,yMesh,resMesh); hold on;
-        cb2 = colorbar;
-        set(gca,'FontSize',textFontSize,'FontName',textFontType);
-        xlabel(['x (',unit,')']);
-        ylabel(['y (',unit,')']);
-    case 'Machining simulation'
-        figure('Name','Machining surface simulation');
-        stepLength = 0.01;
-        nLoop = ceil(ptNum/sparTheta);
-        uLimRound = round(uLim,2);
-        toolPathMesh = [];
-        tic
-        for ii = 1:nLoop % each loop
-            Q = cell(sparTheta,1);
-            for jj = 1:sparTheta
-                toolSp = toolData.toolBform;
-                toolSp.coefs = quat2rotm(toolQuat((ii-1)*nLoop+jj,:))*toolCoefs + toolVec(:,(ii-1)*nLoop+jj);
-                Q{jj} = fnval(toolSp,uLimRound(1,(ii-1)*nLoop+jj):stepLength:uLimRound(2,(ii-1)*nLoop+jj));
-        %         Q{jj} = tmp;
-            end
-            for u = 0:stepLength:1
+while true
+    msgfig = questdlg({'Residual Height was calculated successfully!', ...
+        'Ready for residual height visualization or machining simulation?'}, ...
+        'Tool Path Simulation','Residual height','Machining simulation', ...
+        'Cancel and quit',msgOpts);
+    switch msgfig
+        case 'Cancel and quit'
+            % delete(parObj);
+            profile off
+            % profile viewer
+            % profsave(profile("info"),"profile_data");
+            % rmpath(genpath('funcs'));
+            return;
+        case 'Residual height'
+            plotNum = 1000;
+            xPlot = linspace(min(peakPt(1,:)),max(peakPt(1,:)),plotNum);
+            yPlot = linspace(min(peakPt(2,:)),max(peakPt(2,:)),plotNum);
+            [xMesh,yMesh] = meshgrid(xPlot,yPlot);
+            ？？？？？？？？？？？？？？？？？？？？？？？？？？？
+            resMesh = griddata(peakPt(1,:),peakPt(2,:),res,xMesh,yMesh);
+            figure('Name','Residual height');
+            pos = get(gcf,'position');
+            set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
+            tiledlayout(1,2);
+            nexttile;
+            plot3(peakPt(1,:),peakPt(2,:),res,'o', ...
+                'MarkerEdgeColor',[0.8500,0.3250,0.0980]); hold on;
+            grid on;
+            mesh(xMesh,yMesh,resMesh,'EdgeColor','interp');
+            % cb1 = colorbar;
+            set(gca,'FontSize',textFontSize,'FontName',textFontType);
+            xlabel(['x (',unit,')']);
+            ylabel(['y (',unit,')']);
+            zlabel(['residual height (',unit,')']);
+            legend('residual height in each peakPt','residual height map', ...
+                'Location','best');
+            nexttile;
+            contourf(xMesh,yMesh,resMesh); hold on;
+            cb2 = colorbar;
+            cb2.Label.String = ['Residual Height (',unit,')'];
+            cb2.Layout.Tile = 'east';
+            set(gca,'FontSize',textFontSize,'FontName',textFontType);
+            xlabel(['x (',unit,')']);
+            ylabel(['y (',unit,')']);
+        case 'Machining simulation'
+            figure('Name','Machining surface simulation');
+            stepLength = 0.01;
+            nLoop = ceil(ptNum/sparTheta);
+            uLimRound = round(uLim,2);
+            toolPathMesh = [];
+            tic
+            for ii = 1:nLoop % each loop
+                Q = cell(sparTheta,1);
                 for jj = 1:sparTheta
-                    if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
-                        tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
-                        toolPathMesh = [toolPathMesh,tmp];
+                    toolSp = toolData.toolBform;
+                    toolSp.coefs = quat2rotm(toolQuat((ii-1)*nLoop+jj,:))*toolCoefs + toolVec(:,(ii-1)*nLoop+jj);
+                    Q{jj} = fnval(toolSp,uLimRound(1,(ii-1)*nLoop+jj):stepLength:uLimRound(2,(ii-1)*nLoop+jj));
+            %         Q{jj} = tmp;
+                end
+                for u = 0:stepLength:1
+                    for jj = 1:sparTheta
+                        if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
+                            tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
+                            toolPathMesh = [toolPathMesh,tmp];
+                        end
                     end
                 end
             end
-        end
-        tSimul = toc;
-        fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
-        plot3(toolPathMesh(1,:),toolPathMesh(2,:),toolPathMesh(3,:),'.','Color',[0,0.4450,0.7410]);
-        hold on;
-        grid on;
+            tSimul = toc;
+            fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
+            plot3(toolPathMesh(1,:),toolPathMesh(2,:),toolPathMesh(3,:),'.','Color',[0,0.4450,0.7410]);
+            hold on;
+            grid on;
+    end
 end
-
-%% 
-% delete(parObj);
-profile viewer
-% profsave(profile("info"),"profile_data");
-% rmpath(genpath('funcs'));
