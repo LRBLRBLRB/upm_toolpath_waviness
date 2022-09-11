@@ -1,5 +1,3 @@
-
-
 close all;
 clear;
 clc;
@@ -22,6 +20,6 @@ parObj = gcp;
 
 %% 
 % delete(parObj);
-profile viewer
+% profile viewer
 % profsave(profile("info"),"profile_data");
 % rmpath(genpath('funcs'));

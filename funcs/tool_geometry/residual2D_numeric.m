@@ -1,4 +1,4 @@
-function [res,peakPt,varargout] = residual2D_numeric(s1,s2,cutPt1,cutPt2,options)
+function [res,peakPt,varargout] = residual2D_numeric(s1,s2,eps,varargin)
 % Solve the residual height between two adjacent points on the tool path in
 % 2-dimension plane, supposing that the residual height is the distance
 % between the intersection point of tool edges.
@@ -15,40 +15,64 @@ function [res,peakPt,varargout] = residual2D_numeric(s1,s2,cutPt1,cutPt2,options
 %   all the same except that the sp1 and sp2 remain the B-form spline
 %   struct pf the tool edge
 
-arguments
-    s1
-    s2
-    cutPt1
-    cutPt2
-    options.method {mustBeMember(options.method,['DSearchn','BoundingBox'])}
-    options.eps {mustBePositive} = 1e-3
+%% input pre-processing
+switch nargin
+    case {5,7}
+        method = 'DSearchn';
+    case 6
+        method = varargin{3};
+    case 8
+        method = varargin{5};
+    otherwise
+        error('Too many parameters input!');
 end
 
 %% to ensure that the form of the input point remains the 3*1 vector
 if isstruct(s1)
-    u = 0:options.eps:1;
+    u = 0:eps:1;
     sp1 = fnval(s1,u);
     sp2 = fnval(s2,u);
-elseif size(cutPt1,1) == 1
+elseif size(s1,1) == 1
     sp1 = s1';
     sp2 = s2';
 end
 
-if size(cutPt1,1) == 1
-    cutPt1 = cutPt1';
-    cutPt2 = cutPt2';
-end
-
-% solve the intersection point of the two spline curve
-switch options.method
+%% solve the intersection point of the two spline curve
+switch method
     case 'DSearchn'
         [peakPt,ind1,ind2,epsCross] = pcCrossDN(sp1,sp2);
     case 'BoundingBox'
         [peakPt,ind1,ind2,epsCross] = boundingBox(sp1,sp2);
+    otherwise
+        warning('Invalid method input! default method ''dsearchn'' will be used');
+        [peakPt,ind1,ind2,epsCross] = pcCrossDN(sp1,sp2);
 end
 
-res = norm(cross(cutPt1 - peakPt,cutPt2 - peakPt)) ...
-    /norm(cutPt2 - cutPt1); % ?????
+%% calculate the residual height on the 2-D plane
+switch narigin
+    case {5,6}
+        cutPt1 = varargin{1};
+        cutPt2 = varargin{2};
+        if size(cutPt1,1) == 1
+            cutPt1 = cutPt1';
+            cutPt2 = cutPt2';
+        end
+        res = norm(cross(cutPt1 - peakPt,cutPt2 - peakPt)) ...
+            /norm(cutPt2 - cutPt1); % ?????
+    case {7,8}
+        cen1 = varargin{1};
+        cen2 = varargin{2};
+        vec1 = varargin{3};
+        vec2 = varargin{4};
+        if size(cen1,1) == 1
+            cen1 = cen1';
+            cen2 = cen2';
+            vec1 = vec1';
+            vec2 = vec2';
+        end
+        res = 
+end
+
 varargout{1} = u(ind1);
 varargout{2} = u(ind2);
 if epsCross >= norm(sp1(:,1) - sp1(:,2))

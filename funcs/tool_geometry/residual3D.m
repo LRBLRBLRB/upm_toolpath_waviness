@@ -95,8 +95,8 @@ toolSpProj.coefs = RProj*toolSp.coefs + toolPtProj;
 %% to solve the residual height between toolSp1 and toolSpProj
 toolContactPt1 = fnval(toolSp1,toolContactU1);
 toolContactPtProj = fnval(toolSpProj,toolContactUProj);
-[res,peakPt,u1] = residual2D_numeric(toolSp1,toolSpProj, ...
-    toolContactPt1,toolContactPtProj,'method','DSearchn');
+[res,peakPt,u1] = residual2D_numeric(toolSp1,toolSpProj,1e-3, ...
+    toolContactPt1,toolContactPtProj,'DSearchn');
 
 %% to update the valid U range of the two toolpath
 if norm(toolPtProj - fnval(toolSp1,0)) > toolRadius
