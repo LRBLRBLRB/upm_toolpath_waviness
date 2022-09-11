@@ -53,7 +53,7 @@ else % ellipsoid
     r = [0,R/4]; % concentric radius range
     sparTheta = 101;
     surfCenter = [0,0,sqrt(C^2*(R.^2-r(2).^2))]; % concentric circle center
-    conR = (toolData.radius/2):(toolData.radius/2):r(2); % concentric radius vector
+    conR = (toolData.radius/8):(toolData.radius/2):r(2); % concentric radius vector
     densR = length(conR);
     conTheta = linspace(0,2*pi,sparTheta);
     
@@ -346,6 +346,7 @@ while true
             tiledlayout(1,2);
             nexttile;
             surf(xMesh,yMesh,resMesh,'EdgeColor','interp'); hold on;
+            colormap("parula");
             grid on;
             plot3(peakPt(1,:),peakPt(2,:),res,'o', ...
                 'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
@@ -358,6 +359,7 @@ while true
                 'Location','best');
             nexttile;
             contourf(xMesh,yMesh,resMesh); hold on;
+            colormap("parula");
             axis equal; grid on;
             cb2 = colorbar;
             cb2.Label.String = ['Residual Height (',unit,')'];
@@ -366,9 +368,8 @@ while true
             xlabel(['x (',unit,')']);
             ylabel(['y (',unit,')']);
             tRes = toc;
-            fprintf('The time spent in the residual map process is %fs.\n',tSimul);
+            fprintf('The time spent in the residual map process is %fs.\n',tRes);
         case 'Machining simulation'
-            figure('Name','Machining surface simulation');
             stepLength = 0.01;
             nLoop = ceil(ptNum/sparTheta);
             uLimRound = round(uLim,2);
@@ -379,17 +380,18 @@ while true
                 for jj = 1:sparTheta
                     toolSp = toolData.toolBform;
                     toolSp.coefs = quat2rotm(toolQuat((ii-1)*nLoop+jj,:))*toolCoefs + toolVec(:,(ii-1)*nLoop+jj);
-                    Q{jj} = fnval(toolSp,uLimRound(1,(ii-1)*nLoop+jj):stepLength:uLimRound(2,(ii-1)*nLoop+jj));
-            %         Q{jj} = tmp;
+                    tmp = fnval(toolSp,uLimRound(1,(ii-1)*nLoop+jj):stepLength:uLimRound(2,(ii-1)*nLoop+jj));
+                    % Q{jj} = tmp;
+                    toolPathList = [toolPathList,tmp];
                 end
-                for u = 0:stepLength:1
-                    for jj = 1:sparTheta
-                        if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
-                            tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
-                            toolPathList = [toolPathList,tmp];
-                        end
-                    end
-                end
+%                 for u = 0:stepLength:1
+%                     for jj = 1:sparTheta
+%                         if u >= uLimRound(1,(ii-1)*nLoop+jj) && u <= uLimRound(2,(ii-1)*nLoop+jj)
+%                             tmp = Q{jj}(:,round((u - uLimRound(1,(ii-1)*nLoop+jj))/stepLength + 1));
+%                             toolPathList = [toolPathList,tmp];
+%                         end
+%                     end
+%                 end
             end
             % plot3(toolPathList(1,:),toolPathList(2,:),toolPathList(3,:),'.','Color',[0,0.4450,0.7410]);
             plotNum = 1000;
@@ -399,11 +401,28 @@ while true
             % elliminate the smaller residual height at the same peak
             [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@max);
             zMesh = griddata(toolPathXYUnique{1},toolPathXYUnique{2},toolPathZUnique,xMesh,yMesh);
+            % calculate the error based on the designed surface
+            z0Mesh = griddata(surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3),xMesh,yMesh);
+            % 这里有更好的仿真方式：每个点都计算到设计曲面的距离，而不是沿z方向的距离！！！！
+            figure('Name','Machining surface simulation');
+            pos = get(gcf,'position');
+            set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
+            tiledlayout(1,2);
+            nexttile;
             mesh(xMesh,yMesh,zMesh,'EdgeColor','interp'); hold on;
+            colormap("jet");
             set(gca,'FontSize',textFontSize,'FontName',textFontType);
             xlabel(['x (',unit,')']);
             ylabel(['y (',unit,')']);
             zlabel(['z (',unit,')']);
+            grid on;
+            nexttile;
+            mesh(xMesh,yMesh,zMesh - z0Mesh,'EdgeColor','interp'); hold on;
+            colormap("jet");
+            set(gca,'FontSize',textFontSize,'FontName',textFontType);
+            xlabel(['x (',unit,')']);
+            ylabel(['y (',unit,')']);
+            zlabel(['z error (',unit,')']);
             grid on;
             tSimul = toc;
             fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
