@@ -4,7 +4,7 @@ function [res,peakPt,varargout] = residual2D_numeric(s1,s2,eps,varargin)
 % between the intersection point of tool edges.
 % 
 % Usage:
-% [res,peakPt,ind1,ind2] = residual2D_numeric(c1,c2,vec1,vec2,s1,s2,method)
+% [res,peakPt,ind1,ind2] = residual2D_numeric(s1,s2,eps,c1,c2,vec1,vec2,r,method)
 %   vec1 (2,1) 1st normal vector of the tool edge
 %   s1 (2,:) 1st scatters of the tool edge
 %   c2,vec2,s2 are parameters of the other tool edge
@@ -17,12 +17,12 @@ function [res,peakPt,varargout] = residual2D_numeric(s1,s2,eps,varargin)
 
 %% input pre-processing
 switch nargin
-    case {5,7}
+    case {5,8}
         method = 'DSearchn';
     case 6
         method = varargin{3};
-    case 8
-        method = varargin{5};
+    case 9
+        method = varargin{6};
     otherwise
         error('Too many parameters input!');
 end
@@ -49,7 +49,7 @@ switch method
 end
 
 %% calculate the residual height on the 2-D plane
-switch narigin
+switch nargin
     case {5,6}
         cutPt1 = varargin{1};
         cutPt2 = varargin{2};
@@ -59,18 +59,25 @@ switch narigin
         end
         res = norm(cross(cutPt1 - peakPt,cutPt2 - peakPt)) ...
             /norm(cutPt2 - cutPt1); % ?????
-    case {7,8}
+    case {8,9}
         cen1 = varargin{1};
         cen2 = varargin{2};
         vec1 = varargin{3};
         vec2 = varargin{4};
+        r = varargin{5};
         if size(cen1,1) == 1
             cen1 = cen1';
             cen2 = cen2';
             vec1 = vec1';
             vec2 = vec2';
         end
-        res = 
+        vec = (vec1 + vec2)/norm(vec1 + vec2);
+        cen1 = cen1 + r*vec;
+        cen2 = cen2 + r*vec;
+        line(1) = cen2(2) - cen1(2);
+        line(2) = cen1(1) - cen2(1);
+        line(3) = cen2(1)*cen1(2) - cen1(1)*cen2(2);
+        res = pt2Line(peakPt,line);
 end
 
 varargout{1} = u(ind1);
