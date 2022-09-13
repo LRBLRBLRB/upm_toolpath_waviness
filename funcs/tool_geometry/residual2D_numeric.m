@@ -85,6 +85,7 @@ varargout{2} = u(ind2);
 if epsCross >= norm(sp1(:,1) - sp1(:,2))
     % no intersection
     res = nan;
+    peakPt = nan(size(sp1,1),1);
 end
 
 end
