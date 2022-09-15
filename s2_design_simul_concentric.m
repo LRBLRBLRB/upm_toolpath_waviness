@@ -330,7 +330,7 @@ while true
             % profile viewer
             % profsave(profile("info"),"profile_data");
             % rmpath(genpath('funcs'));
-            return;
+            return; 
         case 'Residual height'
             tic
             plotNum = 1000;

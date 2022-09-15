@@ -31,14 +31,14 @@ tool2D.coefs(1,:) = [];
 tool2D.dim = 2;
 r = toolData.radius;
 
-widthAvi = VideoWriter("cutWidth.mp4",'MPEG-4');
+widthAvi = VideoWriter("videos/cutWidth.mp4",'MPEG-4');
 widthAvi.FrameRate = 60;
-open(widthAvi);
+% open(widthAvi);
 figure('Name','Video of cut width - residual height funciton');
 
 travNum = 1000;
-c1 = [0;0];
-c2 = [linspace(0.5*r,2*r,travNum);zeros(1,travNum)];
+c1 = 0;
+c2 = linspace(0.5*r,2*r,travNum);
 vec1 = [0;-1];
 vec2 = [0;-1];
 R1 = rotz(pi);
@@ -49,34 +49,34 @@ R2 = R2(1:2,1:2);
 res = zeros(1,travNum);
 for ii = 1:travNum
     s2 = tool2D;
-    s2.coefs = R2*s2.coefs + c2(:,ii);
+    s2.coefs = R2*s2.coefs + [c2(ii);0];
     [res(ii),peakPt,ind1,ind2] = residual2D_numeric(s1,s2,1e-3, ...
-        c1,c2(:,ii),vec1,vec2,r,'DSearchn');
-    scatter(c1(1),c1(2),'MarkerEdgeColor',[0,0.4470,0.7410]); hold on;
-    scatter(c2(1,ii),c2(2,ii),'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
-    scatter(peakPt(1),peakPt(2),'MarkerFaceColor',[0.4940,0.1840,0.5560]);
-    pt1 = fnval(s1,0:1e-3:1);
-    % pt1 = fnval(s1,ind1:1e-3:1);
-    % pt1Shade = fnval(s1,0:1e-3:ind1);
-    pt2 = fnval(s2,0:1e-3:1);
-    % pt2 = fnval(s2,0:1e-3:ind2);
-    % pt2Shade = fnval(s2,ind2:1e-3:1);
-    plot(pt1(1,:),pt1(2,:),'Color',[0,0.4470,0.7410]);
-    % plot(pt1Shade(1,:),pt1Shade(2,:),'Color',[0,0.4470,0.7410]*0.5);
-    plot(pt2(1,:),pt2(2,:),'Color',[0.8500,0.3250,0.0980]);
-    % plot(pt2Shade(1,:),pt2Shade(2,:),'Color',[0.8500,0.3250,0.0980]*0.5);
-    grid on;
-    axis equal;
-    xlabel(['x (',unit,')']);
-    ylabel(['y (',unit,')']);
-    set(gca,'FontSize',textFontSize,'FontName',textFontType);
-    hold off;
-    drawnow;
-    frame = getframe(gcf);
-    writeVideo(widthAvi,frame);
-    disp(ii);
+        [c1;0],[c2(ii);0],vec1,vec2,r,'DSearchn');
+%     scatter(c1,0,'MarkerEdgeColor',[0,0.4470,0.7410]); hold on;
+%     scatter(c2(ii),0,'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
+%     scatter(peakPt(1),peakPt(2),'MarkerFaceColor',[0.4940,0.1840,0.5560]);
+%     pt1 = fnval(s1,0:1e-3:1);
+%     % pt1 = fnval(s1,ind1:1e-3:1);
+%     % pt1Shade = fnval(s1,0:1e-3:ind1);
+%     pt2 = fnval(s2,0:1e-3:1);
+%     % pt2 = fnval(s2,0:1e-3:ind2);
+%     % pt2Shade = fnval(s2,ind2:1e-3:1);
+%     plot(pt1(1,:),pt1(2,:),'Color',[0,0.4470,0.7410]);
+%     % plot(pt1Shade(1,:),pt1Shade(2,:),'Color',[0,0.4470,0.7410]*0.5);
+%     plot(pt2(1,:),pt2(2,:),'Color',[0.8500,0.3250,0.0980]);
+%     % plot(pt2Shade(1,:),pt2Shade(2,:),'Color',[0.8500,0.3250,0.0980]*0.5);
+%     grid on;
+%     axis equal;
+%     xlabel(['x (',unit,')']);
+%     ylabel(['y (',unit,')']);
+%     set(gca,'FontSize',textFontSize,'FontName',textFontType);
+%     hold off;
+%     drawnow;
+%     frame = getframe(gcf);
+%     writeVideo(widthAvi,frame);
+%     disp(ii);
 end
-close(widthAvi);
+% close(widthAvi);
 
 figure('Name','Cut width - residual height function');
 plot(c2(1,:),res);
@@ -89,14 +89,14 @@ tool2D.coefs(1,:) = [];
 tool2D.dim = 2;
 r = toolData.radius;
 
-spindleAvi = VideoWriter("spindleDir.mp4",'MPEG-4');
+spindleAvi = VideoWriter("videos/spindleDir.mp4",'MPEG-4');
 spindleAvi.FrameRate = 60;
 open(spindleAvi);
 figure('Name','Video of spindle direction - residual height funciton');
 
 travNum = 1000;
-c1 = [0;0];
-c2 = [r*ones(1,travNum);zeros(1,travNum)];
+c1 = 0;
+c2 = r*ones(1,travNum);
 vec1 = [0;-1];
 vec2Ref = [0;-1];
 R1 = rotz(pi);
@@ -108,33 +108,33 @@ for ii = 1:travNum
     s2 = tool2D;
     R2 = rotz(theta(ii));
     R2 = R2(1:2,1:2);
-    s2.coefs = R2*s2.coefs + c2(:,ii);
+    s2.coefs = R2*s2.coefs + [c2(ii);0];
     vec2 = R2*vec2Ref;
     [res(ii),peakPt,ind1,ind2] = residual2D_numeric(s1,s2,1e-3, ...
-        c1,c2(:,ii),vec1,vec2,r,'DSearchn');
-    scatter(c1(1),c1(2),'MarkerEdgeColor',[0,0.4470,0.7410]); hold on;
-    scatter(c2(1,ii),c2(2,ii),'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
-    scatter(peakPt(1),peakPt(2),'MarkerFaceColor',[0.4940,0.1840,0.5560]);
-    pt1 = fnval(s1,0:1e-3:1);
-    % pt1 = fnval(s1,ind1:1e-3:1);
-    % pt1Shade = fnval(s1,0:1e-3:ind1);
-    pt2 = fnval(s2,0:1e-3:1);
-    % pt2 = fnval(s2,0:1e-3:ind2);
-    % pt2Shade = fnval(s2,ind2:1e-3:1);
-    plot(pt1(1,:),pt1(2,:),'Color',[0,0.4470,0.7410]);
-    % plot(pt1Shade(1,:),pt1Shade(2,:),'Color',[0,0.4470,0.7410]*0.5);
-    plot(pt2(1,:),pt2(2,:),'Color',[0.8500,0.3250,0.0980]);
-    % plot(pt2Shade(1,:),pt2Shade(2,:),'Color',[0.8500,0.3250,0.0980]*0.5);
-    grid on;
-    axis equal;
-    xlabel(['x (',unit,')']);
-    ylabel(['y (',unit,')']);
-    set(gca,'FontSize',textFontSize,'FontName',textFontType);
-    hold off;
-    drawnow;
-    frame = getframe(gcf);
-    writeVideo(spindleAvi,frame);
-    disp(ii);
+        [c1;0],[c2(ii);0],vec1,vec2,r,'DSearchn');
+%     scatter(c1,0,'MarkerEdgeColor',[0,0.4470,0.7410]); hold on;
+%     scatter(c2(ii),0,'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
+%     scatter(peakPt(1),peakPt(2),'MarkerFaceColor',[0.4940,0.1840,0.5560]);
+%     pt1 = fnval(s1,0:1e-3:1);
+%     % pt1 = fnval(s1,ind1:1e-3:1);
+%     % pt1Shade = fnval(s1,0:1e-3:ind1);
+%     pt2 = fnval(s2,0:1e-3:1);
+%     % pt2 = fnval(s2,0:1e-3:ind2);
+%     % pt2Shade = fnval(s2,ind2:1e-3:1);
+%     plot(pt1(1,:),pt1(2,:),'Color',[0,0.4470,0.7410]);
+%     % plot(pt1Shade(1,:),pt1Shade(2,:),'Color',[0,0.4470,0.7410]*0.5);
+%     plot(pt2(1,:),pt2(2,:),'Color',[0.8500,0.3250,0.0980]);
+%     % plot(pt2Shade(1,:),pt2Shade(2,:),'Color',[0.8500,0.3250,0.0980]*0.5);
+%     grid on;
+%     axis equal;
+%     xlabel(['x (',unit,')']);
+%     ylabel(['y (',unit,')']);
+%     set(gca,'FontSize',textFontSize,'FontName',textFontType);
+%     hold off;
+%     drawnow;
+%     frame = getframe(gcf);
+%     writeVideo(spindleAvi,frame);
+%     disp(ii);
 end
 close(spindleAvi);
 
@@ -142,6 +142,72 @@ figure('Name','Spindel direction - residual height function');
 plot(theta - pi,res);
 xlabel(['Spindle Angle (',unit,')']);
 ylabel(['Residual Height (',unit,')']);
+
+%% the influence of both spindle direction and cut width
+tool2D = toolData.toolBform;
+tool2D.coefs(1,:) = [];
+tool2D.dim = 2;
+r = toolData.radius;
+
+bothAvi = VideoWriter("videos/both.mp4",'MPEG-4');
+bothAvi.FrameRate = 60;
+open(bothAvi);
+figure('Name','Video of residual height funciton');
+
+travNum = 100;
+c1 = 0;
+c2 = linspace(0.5*r,2*r,travNum);
+vec1 = [0;-1];
+vec2Ref = [0;-1];
+R1 = rotz(pi);
+s1 = tool2D;
+s1.coefs = R1(1:2,1:2)*s1.coefs;
+res = zeros(travNum,travNum);
+theta = linspace(pi - 10*pi/180,pi + 10*pi/180,travNum);
+for ii = 1:travNum
+    for jj = 1:travNum
+        s2 = tool2D;
+        R2 = rotz(theta(jj));
+        R2 = R2(1:2,1:2);
+        s2.coefs = R2*s2.coefs + [c2(ii);0];
+        vec2 = R2*vec2Ref;
+        [res(ii,jj),peakPt,ind1,ind2] = residual2D_numeric(s1,s2,1e-3, ...
+            [c1;0],[c2(ii);0],vec1,vec2,r,'DSearchn');
+        scatter(c1,0,'MarkerEdgeColor',[0,0.4470,0.7410]); hold on;
+        scatter(c2(ii),0,'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
+        scatter(peakPt(1),peakPt(2),'MarkerFaceColor',[0.4940,0.1840,0.5560]);
+        pt1 = fnval(s1,0:1e-3:1);
+        % pt1 = fnval(s1,ind1:1e-3:1);
+        % pt1Shade = fnval(s1,0:1e-3:ind1);
+        pt2 = fnval(s2,0:1e-3:1);
+        % pt2 = fnval(s2,0:1e-3:ind2);
+        % pt2Shade = fnval(s2,ind2:1e-3:1);
+        plot(pt1(1,:),pt1(2,:),'Color',[0,0.4470,0.7410]);
+        % plot(pt1Shade(1,:),pt1Shade(2,:),'Color',[0,0.4470,0.7410]*0.5);
+        plot(pt2(1,:),pt2(2,:),'Color',[0.8500,0.3250,0.0980]);
+        % plot(pt2Shade(1,:),pt2Shade(2,:),'Color',[0.8500,0.3250,0.0980]*0.5);
+        grid on;
+        axis equal;
+        xlabel(['x (',unit,')']);
+        ylabel(['y (',unit,')']);
+        set(gca,'FontSize',textFontSize,'FontName',textFontType);
+        hold off;
+        drawnow;
+        frame = getframe(gcf);
+        writeVideo(bothAvi,frame);
+        disp((ii - 1)*travNum + jj);
+    end
+end
+close(bothAvi);
+
+%%
+figure('Name','Residual height function');
+[xMesh,yMesh] = meshgrid(c2,theta);
+surf(xMesh,(yMesh - pi)/pi*180,res,'FaceColor','interp'); hold on;
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['Cut Width (',unit,')']);
+ylabel('Spindle Angle (\circ)');
+zlabel(['Residual Height (',unit,')']);
 
 
 %% 
