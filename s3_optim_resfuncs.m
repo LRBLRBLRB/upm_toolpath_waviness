@@ -47,7 +47,7 @@ s1.coefs = R1(1:2,1:2)*s1.coefs;
 R2 = rotz(pi);
 R2 = R2(1:2,1:2);
 res = zeros(1,travNum);
-for ii = 1:travNum
+parfor ii = 1:travNum
     s2 = tool2D;
     s2.coefs = R2*s2.coefs + [c2(ii);0];
     [res(ii),peakPt,ind1,ind2] = residual2D_numeric(s1,s2,1e-3, ...
@@ -82,6 +82,9 @@ figure('Name','Cut width - residual height function');
 plot(c2(1,:),res);
 xlabel(['Cut Width (',unit,')']);
 ylabel(['Residual Height (',unit,')']);
+widthRes(1,:) = c2(1,:);
+widthRes(2,:) = res;
+save output_data/cutWidth-residual.mat widthRes;
 
 %% the influence of spindle direction
 tool2D = toolData.toolBform;

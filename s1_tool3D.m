@@ -9,7 +9,7 @@ addpath(genpath('funcs'));
 FitMethod = 'Levenberg-Marquardt';
 ParamMethod = 'centripetal';
 unit = '\mum';
-textFontSize = 14;
+textFontSize = 12;
 textFontType = 'Times New Roman';
 
 %% simulation initialization
@@ -75,6 +75,12 @@ switch debug
 end
 
 f1 = figure('Name','original scatters of the tool');
+% set(0,"Units","centimeters");
+% winSize = get(0,"ScreenSize");
+% set(gcf,"Units","centimeters");
+% figSize = get(gcf,"Position");
+% set(gcf,"Position",[(winSize(3) - figSize(3))/2,(winSize(4) - figSize(4))/2, ...
+%     8.3,figSize(4)/figSize(3)*8.3]);
 scatter3(toolOri(1,:),toolOri(2,:),toolOri(3,:));
 hold on; grid on;
 % axis equal;

@@ -7,6 +7,7 @@ close all;
 clear;
 clc;
 addpath(genpath('funcs'));
+t0 = tic;
 
 % global variables
 % global textFontSize textFontType;
@@ -18,7 +19,10 @@ msgOpts.Default = 'Cancel and quit';
 msgOpts.Interpreter = 'tex';
 % msgOpts.modal = 'non-modal';
 profile on
+tPar0 = tic;
 parObj = gcp;
+tPar = toc(tPar0);
+fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
 
 %% concentric surface generation / import
 % [fileName,dirName] = uigetfile({ ...
@@ -75,8 +79,9 @@ else % ellipsoid
     % surfNorm(:,3) = -ones(densTheta*densR,1);
     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
-%     save('input_data/surface/ellipsoidAray.mat', ...
-%         "surfMesh","surfNorm","surfCenter");
+    save('input_data/surface/ellipsoidAray.mat', ...
+        "surfMesh","surfNorm","surfCenter");
+%     sparTheta = sparTheta*ones(length(conR),1);
 end
 
 %% plot the freeform surface
@@ -140,7 +145,7 @@ toolCutDirect = zeros(3,ptNum);
 toolNormDirect = zeros(3,ptNum);
 toolContactU = zeros(1,ptNum);
 isCollision = false(1,ptNum);
-tic
+tToolpath0 = tic;
 parfor ii = 1:ptNum
     [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
         toolData,surfPt(:,ii),surfNorm(:,ii),surfDirect(:,ii),[0;0;1]);
@@ -150,7 +155,7 @@ parfor ii = 1:ptNum
         toolNormDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
     end
 end
-tToolpath = toc;
+tToolpath = toc(tToolpath0);
 fprintf('The time spent in the tool path generating process is %fs.\n',tToolpath);
 
 % still need procedures to deal with the invalid points, which will cause
@@ -204,29 +209,26 @@ uLim = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of each toolpath
 % uLimTmp = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of the projective toolpath
 angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 
-tic
+tTip0 = tic;
 % outer side of each point in the tool path
 parfor ii = 1:resNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
     nLoop = floor((ii - 1)/sparTheta) + 1;
     angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
+    angleDel = angleN - angle(ii);
     % ind2(ii) remains the index of angle nearest to angle(ii) within 
     % those which is larger than the angle(ii) and in angleN
-    if isempty(angleN(angleN - angle(ii) >= 0))
+    if isempty(angleN(angleDel >= 0))
         % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
-        tmp = angleN - angle(ii) + 2*pi >= 0;
-    else
-        tmp = angleN - angle(ii) >= 0;
+        angleDel = angleDel + 2*pi;
     end
-    ind2 = sparTheta*nLoop + find(angleN == min(angleN(tmp)));
+    ind2 = sparTheta*nLoop + find(angleN == min(angleN(angleDel >= 0)));
     % ind3(ii) remains the index of angle nearest to angle(ii) within 
     % those which is smaller than the angle(ii) and in angleN
-    if isempty(angleN(angleN - angle(ii) < 0))
-        tmp = angleN - angle(ii) - 2*pi < 0;
-    else
-        tmp = angleN - angle(ii) < 0;
+    if isempty(angleN(angleDel < 0))
+        angleDel = angleDel - 2*pi;
     end
-    ind3 = sparTheta*nLoop + find(angleN == max(angleN(tmp)));
+    ind3 = sparTheta*nLoop + find(angleN == max(angleN(angleDel < 0)));
     [res(ii),peakPt(:,ii),uLim(:,ii)] = residual3D( ...
         toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp,toolRadius, ...
         uLim(:,ii),ii,ind2,ind3);
@@ -236,29 +238,29 @@ parfor ii = (sparTheta + 1):ptNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
     nLoop = floor((ii - 1)/sparTheta) - 1;
     angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
+    angleDel = angleN - angle(ii);
     % ind2(ii) remains the index of angle nearest to angle(ii) within 
     % those which is larger than the angle(ii) and in angleN
-    if isempty(angleN(angleN - angle(ii) >= 0))
+    if isempty(angleN(angleDel >= 0))
         % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
-        tmp = angleN - angle(ii) + 2*pi >= 0;
-    else
-        tmp = angleN - angle(ii) >= 0;
+        angleDel = angleDel + 2*pi;
     end
-    ind2 = sparTheta*nLoop + find(angleN == min(angleN(tmp)));
+    ind2 = sparTheta*nLoop + find(angleN == min(angleN(angleDel >= 0)));
     % ind3(ii) remains the index of angle nearest to angle(ii) within 
     % those which is smaller than the angle(ii) and in angleN
-    if isempty(angleN(angleN - angle(ii) < 0))
-        tmp = angleN - angle(ii) - 2*pi < 0;
-    else
-        tmp = angleN - angle(ii) < 0;
+    if isempty(angleN(angleDel < 0))
+        angleDel = angleDel - 2*pi;
     end
-    ind3 = sparTheta*nLoop + find(angleN == max(angleN(tmp)));
-    [res(ii + resNum),peakPt(:,ii + resNum),uLim(:,ii)] = residual3D( ...
+    ind3 = sparTheta*nLoop + find(angleN == max(angleN(angleDel < 0)));
+    [res(resNum + ii),peakPt(:,resNum + ii),uLim(:,ii)] = residual3D( ...
         toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp,toolRadius, ...
         uLim(:,ii),ii,ind2,ind3);
 end
-tRes = toc;
-fprintf('The time spent in the residual height calculation process is %fs.\n',tRes);
+tTip = toc(tTip0);
+fprintf('The time spent in the tool tip calculation process is %fs.\n',tTip);
+
+res(resNum + 1:ptNum) = [];
+peakPt(:,resNum + 1:ptNum) = [];
 
 % post-processing of the residual height data
 % ( this process is in the visualization part now)
@@ -269,10 +271,9 @@ fprintf('The time spent in the residual height calculation process is %fs.\n',tR
 % end
 clear angle ind2 ind3 uLimTmp;
 
-%%
 figure('Name','residual height calculation');
 plotSpar = 1;
-tic
+tPlot0 = tic;
 plot3(toolPathPt(1,1:plotSpar:end), ...
     toolPathPt(2,1:plotSpar:end), ...
     toolPathPt(3,1:plotSpar:end), ...
@@ -313,7 +314,7 @@ zlabel(['z (',unit,')']);
 % legend('tool center point','tool cutting direction', ...
 %     'tool spindle direction','','tool edge','Location','northeast');
 legend('tool center point','','tool edge','Location','northeast');
-tPlot = toc;
+tPlot = toc(tPlot0);
 fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
 
 
@@ -322,17 +323,40 @@ while true
     msgfig = questdlg({'Residual Height was calculated successfully!', ...
         'Ready for residual height visualization or machining simulation?'}, ...
         'Tool Path Simulation','Residual height','Machining simulation', ...
-        'Cancel and quit',msgOpts);
+        'Save and quit','Save and quit');
     switch msgfig
-        case 'Cancel and quit'
+        case 'Save and quit'
+            [pathFileName,pathDirName,pathFileType] = uiputfile({ ...
+                '*.mat','MAT-file(*.mat)'; ...
+                '*.txt','text-file(.txt)';...
+                '*.*','all file(*.*)';...
+                }, ...
+                'Select the directory and filename to save the surface tool path', ...
+                ['output_data/simulation/toolPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']);
+            pathName = fullfile(pathDirName,pathFileName);
+            switch pathFileType
+                case 0
+                    msgfig = msgbox("No tool path saved","Warning","warn","non-modal");
+                    uiwait(msgfig);
+                case 1
+                    Comments = cell2mat(inputdlg( ...
+                        'Enter Comment of the tool path:', ...
+                        'Saving Comments', ...
+                        [5 60], ...
+                        string(datestr(now))));
+                    save(pathName,"Comments","toolPathPt","toolNormDirect","toolCutDirect", ...
+                        "toolSp","toolQuat","toolVec",'uLim',"res");
+            end
             % delete(parObj);
             profile off
+            tTol = toc(t0);
+            fprintf("The time spent in the whole process is %fs.\n",tTol);
             % profile viewer
             % profsave(profile("info"),"profile_data");
             % rmpath(genpath('funcs'));
             return; 
         case 'Residual height'
-            tic
+            tRes0 = tic;
             plotNum = 1000;
             xPlot = linspace(min(peakPt(1,:)),max(peakPt(1,:)),plotNum);
             yPlot = linspace(min(peakPt(2,:)),max(peakPt(2,:)),plotNum);
@@ -367,14 +391,14 @@ while true
             set(gca,'FontSize',textFontSize,'FontName',textFontType);
             xlabel(['x (',unit,')']);
             ylabel(['y (',unit,')']);
-            tRes = toc;
+            tRes = toc(tRes0);
             fprintf('The time spent in the residual map process is %fs.\n',tRes);
         case 'Machining simulation'
             stepLength = 0.01;
             nLoop = ceil(ptNum/sparTheta);
             uLimRound = round(uLim,2);
             toolPathList = [];
-            tic
+            tSimul0 = tic;
             for ii = 1:nLoop % each loop
                 Q = cell(sparTheta,1);
                 for jj = 1:sparTheta
@@ -424,7 +448,7 @@ while true
             ylabel(['y (',unit,')']);
             zlabel(['z error (',unit,')']);
             grid on;
-            tSimul = toc;
+            tSimul = toc(tSimul0);
             fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
     end
 end
