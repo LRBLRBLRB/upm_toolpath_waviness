@@ -166,7 +166,7 @@ if max(res(1,:)) > aimRes
 end
 peakPt = [peakPtIn;zeros(3,loopPtNum)];
 r = r + rStep;
-toc(t1)
+fprintf('No.1\tElapsed time is %f seconds.\n',toc(t1));
 
 %% Tool path adjusting for the rest
 while true
@@ -186,7 +186,7 @@ while true
     surfNormTmp(1,:) = surfFx(surfPtTmp(1,:),surfPtTmp(2,:));
     surfNormTmp(2,:) = surfFy(surfPtTmp(1,:),surfPtTmp(2,:));
     surfNormTmp(3,:) = -1*ones(1,loopPtNumTmp);
-    surfNormTmp = surfNormTmp./vecnorm(surfNormTmp,2,1);
+    surfNormTmp = -1*(surfNormTmp./vecnorm(surfNormTmp,2,1));
     surfDirectTmp = cutDirection(surfPtTmp,[0;0;0]);
     
     % calculate the tool path and residual height
@@ -205,60 +205,60 @@ while true
         toolNormDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.toolEdgeNorm;
     end
 
-%     % restore the data that will be used in the residual height calculation
-%     toolPathPtRes = [toolPathPt(:,end - loopPtNumLast + 1:end),toolPathPtTmp];
-%     toolNormDirectRes = [toolNormDirect(:,end + 1 - loopPtNumLast:end),toolNormDirectTmp];
-%     toolCutDirectRes = [toolCutDirect(:,end + 1 - loopPtNumLast:end),toolCutDirectTmp];
-%     toolContactURes = [toolContactU(end + 1 - loopPtNumLast:end),toolContactUTmp];
-%     uLimTmp = [uLim(:,end - loopPtNumLast + 1:end), ...
-%         [zeros(1,loopPtNumTmp);ones(1,loopPtNumTmp)]]; % the interval of each toolpath
-%     resTmp = [res(:,end - loopPtNumLast + 1:end), ...
-%         5*aimRes*ones(2,loopPtNumTmp)];
-%     peakPtTmpIn = [peakPt(1:3,end - loopPtNumLast + 1:end), ...
-%         zeros(3,loopPtNumTmp)];
-%     peakPtTmpOut = zeros(3,loopPtNumLast + loopPtNumTmp);
-% 
-%     % calculate the residual height of the loop and the inner nearest loop
-%     angle = atan2(toolPathPtRes(2,:),toolPathPtRes(1,:));
-%     % inner side of each point on the tool path
-%     angleN = angle(1:loopPtNumLast);
-%     for ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
-%         angleDel = angleN - angle(ii);
-%         if isempty(angleN(angleDel >= 0))
-%             % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
-%             angleDel = angleDel + 2*pi;
-%         end
-%         ind2 = find(angleN == min(angleN(angleDel >= 0)));
-%         if isempty(angleN(angleDel < 0))
-%             angleDel = angleDel - 2*pi;
-%         end
-%         ind3 = find(angleN == max(angleN(angleDel < 0)));
-%         [resTmp(1,ii),peakPtTmpIn(:,ii),uLimTmp(:,ii)] = residual3D( ...
-%             toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
-%             toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
-%     end
-% 
-%     % if residual height satisfies the reqiurement,
-%     if max(resTmp,[],"all") > aimRes
-%         warning('The residual height of No.%d is beyond the expected range.',length(loopPtNum) + 1);
-%     end
-%     % outer side of each point in the tool path
-%     angleN = angle(loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp);
-%     for ii = 1:loopPtNumLast
-%         angleDel = angleN - angle(ii);
-%         if isempty(angleN(angleDel >= 0))
-%             % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
-%             angleDel = angleDel + 2*pi;
-%         end
-%         ind2 = loopPtNumLast + find(angleN == min(angleN(angleDel >= 0)));
-%         if isempty(angleN(angleDel < 0))
-%             angleDel = angleDel - 2*pi;
-%         end
-%         ind3 = loopPtNumLast + find(angleN == max(angleN(angleDel < 0)));
-%         [resTmp(2,ii),peakPtTmpOut(:,ii),uLimTmp(:,ii)] = residual3D( ...
-%             toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
-%             toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
-%     end
+    % restore the data that will be used in the residual height calculation
+    toolPathPtRes = [toolPathPt(:,end - loopPtNumLast + 1:end),toolPathPtTmp];
+    toolNormDirectRes = [toolNormDirect(:,end + 1 - loopPtNumLast:end),toolNormDirectTmp];
+    toolCutDirectRes = [toolCutDirect(:,end + 1 - loopPtNumLast:end),toolCutDirectTmp];
+    toolContactURes = [toolContactU(end + 1 - loopPtNumLast:end),toolContactUTmp];
+    uLimTmp = [uLim(:,end - loopPtNumLast + 1:end), ...
+        [zeros(1,loopPtNumTmp);ones(1,loopPtNumTmp)]]; % the interval of each toolpath
+    resTmp = [res(:,end - loopPtNumLast + 1:end), ...
+        5*aimRes*ones(2,loopPtNumTmp)];
+    peakPtTmpIn = [peakPt(1:3,end - loopPtNumLast + 1:end), ...
+        zeros(3,loopPtNumTmp)];
+    peakPtTmpOut = zeros(3,loopPtNumLast + loopPtNumTmp);
+
+    % calculate the residual height of the loop and the inner nearest loop
+    angle = atan2(toolPathPtRes(2,:),toolPathPtRes(1,:));
+    % inner side of each point on the tool path
+    angleN = angle(1:loopPtNumLast);
+    for ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
+        angleDel = angleN - angle(ii);
+        if isempty(angleN(angleDel >= 0))
+            % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
+            angleDel = angleDel + 2*pi;
+        end
+        ind2 = find(angleN == min(angleN(angleDel >= 0)));
+        if isempty(angleN(angleDel < 0))
+            angleDel = angleDel - 2*pi;
+        end
+        ind3 = find(angleN == max(angleN(angleDel < 0)));
+        [resTmp(1,ii),peakPtTmpIn(:,ii),uLimTmp(:,ii)] = residual3D( ...
+            toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
+            toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
+    end
+
+    % if residual height satisfies the reqiurement,
+    if max(resTmp,[],"all") > aimRes
+        warning('The residual height of No.%d is beyond the expected range.',length(loopPtNum) + 1);
+    end
+    % outer side of each point in the tool path
+    angleN = angle(loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp);
+    for ii = 1:loopPtNumLast
+        angleDel = angleN - angle(ii);
+        if isempty(angleN(angleDel >= 0))
+            % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
+            angleDel = angleDel + 2*pi;
+        end
+        ind2 = loopPtNumLast + find(angleN == min(angleN(angleDel >= 0)));
+        if isempty(angleN(angleDel < 0))
+            angleDel = angleDel - 2*pi;
+        end
+        ind3 = loopPtNumLast + find(angleN == max(angleN(angleDel < 0)));
+        [resTmp(2,ii),peakPtTmpOut(:,ii),uLimTmp(:,ii)] = residual3D( ...
+            toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
+            toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
+    end
     
     % then store the data of this loop
     loopPtNum = [loopPtNum,loopPtNumTmp];
@@ -274,18 +274,18 @@ while true
     toolNormDirect = [toolNormDirect,toolNormDirectTmp];
     toolCutDirect = [toolCutDirect,toolCutDirectTmp];
 
-%     uLim(:,end - loopPtNumLast + 1:end) = [];
-%     uLim = [uLim,uLimTmp]; % the interval of each toolpath
-%     peakPt(:,end - loopPtNumLast + 1:end) = [];
-%     peakPt = [peakPt,[peakPtTmpIn;peakPtTmpOut]];
-%     res(:,end - loopPtNumLast + 1:end) = [];
-%     res = [res,resTmp];
+    uLim(:,end - loopPtNumLast + 1:end) = [];
+    uLim = [uLim,uLimTmp]; % the interval of each toolpath
+    peakPt(:,end - loopPtNumLast + 1:end) = [];
+    peakPt = [peakPt,[peakPtTmpIn;peakPtTmpOut]];
+    res(:,end - loopPtNumLast + 1:end) = [];
+    res = [res,resTmp];
     
     clear surfPtTmp surfNormTmp surfDirectTmp toolQuatTmp toolVecTmp ...
         toolContactUTmp isCollisionTmp toolPathPtTmp toolNormDirectTmp ...
         toolCutDirectTmp;
-%     clear uLimTmp peakPtTmpOut resTmp loopPtNumLast;
-    toc
+    clear uLimTmp peakPtTmpOut resTmp loopPtNumLast;
+    fprintf('No.%d\tElapsed time is %f seconds.\n',length(loopPtNum),toc);
     if r > rMax, break; end
     r = r + rStep;
 end
@@ -307,7 +307,7 @@ colormap('summer');
 cb = colorbar;
 cb.Label.String = ['Height (',unit,')'];
 ptNum = sum(loopPtNum);
-for ii = 1:loopPtNum(1)
+for ii = 1:ptNum
     toolSp = toolData.toolBform;
     toolCoefs = toolData.toolBform.coefs;
     toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
