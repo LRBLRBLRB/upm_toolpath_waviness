@@ -60,6 +60,7 @@ else % ellipsoid
     conR = (toolData.radius/8):(toolData.radius/2):r(2); % concentric radius vector
     densR = length(conR);
     conTheta = linspace(0,2*pi,sparTheta);
+    % conTheta(end) = [];
     
     [rMesh,thetaMesh] = meshgrid(conR,conTheta);
     surfMesh(:,:,1) = A*rMesh.*cos(thetaMesh);
@@ -81,8 +82,16 @@ else % ellipsoid
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
     save('input_data/surface/ellipsoidAray.mat', ...
         "surfMesh","surfNorm","surfCenter");
-%     sparTheta = sparTheta*ones(length(conR),1);
 end
+surfPt = transpose(reshape(surfMesh,[],3));
+surfNorm = transpose(reshape(surfNorm,[],3));
+ptNum = size(surfPt,2);
+surfDirect = cutDirection(surfPt,[0;0;0]);
+% surfDirect = zeros(3,ptNum);
+% for ii = 1:densR
+%     surfDirect(:,(ii - 1)*sparTheta + 1:ii*sparTheta) = ...
+%         cutDirection(surfPt(:,(ii - 1)*sparTheta + 1:ii*sparTheta));
+% end
 
 %% plot the freeform surface
 figure('Name','original xyz scatters of the surface (sparsely)');
@@ -90,23 +99,15 @@ pos = get(gcf,'position');
 set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
 tiledlayout(1,2);
 nexttile;
-rSpar = 1;
-theSpar = 1;
-plot3( ...
-    surfMesh(1:theSpar:end,1:rSpar:end,1), ...
-    surfMesh(1:theSpar:end,1:rSpar:end,2), ...
-    surfMesh(1:theSpar:end,1:rSpar:end,3), ...
-    '.','Color',[0,0.45,0.74]);
+plot3(surfPt(1,:),surfPt(2,:),surfPt(3,:),'.','Color',[0,0.45,0.74]);
 hold on;
-legend('Original Points','Location','northeast');
-quiver3( ...
-    surfMesh(1:theSpar:end,1:rSpar:end,1), ...
-    surfMesh(1:theSpar:end,1:rSpar:end,2), ...
-    surfMesh(1:theSpar:end,1:rSpar:end,3), ...
-    surfNorm(1:theSpar:end,1:rSpar:end,1), ...
-    surfNorm(1:theSpar:end,1:rSpar:end,2), ...
-    surfNorm(1:theSpar:end,1:rSpar:end,3), ...
+quiver3(surfPt(1,:),surfPt(2,:),surfPt(3,:), ...
+    surfNorm(1,:),surfNorm(2,:),surfNorm(3,:), ...
     'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
+quiver3(surfPt(1,:),surfPt(2,:),surfPt(3,:), ...
+    surfDirect(1,:),surfDirect(2,:),surfDirect(3,:), ...
+    'AutoScale','on','Color',[0.4660,0.6740,0.1880],'DisplayName','Normal Vectors');
+legend('Original Points','Orthogonal direction','Cutting direction','Location','northeast');
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
@@ -128,16 +129,15 @@ msgfig = questdlg({'Surface was generated successfully!', ...
     'Ready to continue?'}, ...
     'Surface Generation','OK & continue','Cancel & quit','OK & continue');
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    msgbox('Exit for the program','Exit','error','modal');
+    msgbox('Exit for the program','Exit','help','modal');
     uiwait(msgbox);
+    profile off;
+    tTol = toc(t0);
+    fprintf("The time spent in the whole process is %fs.\n",tTol);
     return;
 end
-surfPt = transpose(reshape(surfMesh,[],3));
-surfNorm = transpose(reshape(surfNorm,[],3));
-surfDirect = cutDirection(surfPt,surfCenter);
 
 %% Calculation of Tool Path & Spindle Drection
-ptNum = size(surfPt,2);
 toolQuat = zeros(ptNum,4);
 toolVec = zeros(3,ptNum);
 toolPathPt = zeros(3,ptNum);
@@ -195,9 +195,19 @@ ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','Location','northeast');
-msgfig = msgbox('Tool Path was calculated successfully!', ...
-    'Tool Path Simulation','warn','non-modal');
-uiwait(msgfig);
+msgfig = questdlg({'Tool Path was calculated successfully!', ...
+    'Ready to continue?'}, ...
+    'Tool Path Simulation','OK & continue','Cancel & quit','OK & continue');
+if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    msgbox('Exit for the program','Exit','help','modal');
+    uiwait(msgbox);
+    profile off;
+    tTol = toc(t0);
+    fprintf("The time spent in the whole process is %fs.\n",tTol);
+    return;
+end
+
+
 
 %% Calculation of Residual Height & Cutting Surface
 toolSp = toolData.toolBform;
@@ -364,7 +374,7 @@ while true
             % elliminate the smaller residual height at the same peak
             [resUnique,peakPtUnique] = groupsummary(res',peakPt(1:2,:)',@max);
             resMesh = griddata(peakPtUnique{1},peakPtUnique{2},resUnique,xMesh,yMesh);
-            figure('Name','Residual height');
+            figure('Name','Residual height map');
             pos = get(gcf,'position');
             set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
             tiledlayout(1,2);

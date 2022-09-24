@@ -24,7 +24,8 @@ switch nargin
         surfPt = varargin{1};
         % 思路二：直接拿surfMesh中的下一个点和上一个点的坐标，然后算方向：
         surfPt = [surfPt(:,1),surfPt,surfPt(:,1)];
-        toolDirect = 0.5*(surfPt(:,3:end) + surfPt(:,1:end-2) - 2*surfPt(:,2:end-1));
+        toolDirect = 0.5*(surfPt(:,3:end) - surfPt(:,1:end-2));
+        toolDirect = toolDirect ./ vecnorm(toolDirect,2,1);
     otherwise
         error("Invalid input");
 end

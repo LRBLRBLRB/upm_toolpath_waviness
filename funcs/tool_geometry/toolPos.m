@@ -1,4 +1,5 @@
-function [toolQuad,toolVec,toolContactU,isCollision] = toolPos(toolEdge,surfPt,surfNorm,designDirect,designNorm)
+function [toolQuad,toolVec,toolContactU,varargout] = toolPos( ...
+    toolEdge,surfPt,surfNorm,designDirect,designNorm)
 % usage: [toolPos,toolCutDirect,log] = toolPos(toolEdge,surfPt,surfNorm,designDirect,designNorm)
 %   Solve the tool pose using the tangent relationship of tool tip and
 %   surface, with the tool axis unchanged.
@@ -23,7 +24,7 @@ end
 
 %% method: rotation transform
 % adjust the normal vector of the tool
-isCollision = false;
+varargout{1} = false;
 if nnz(toolEdge.toolEdgeNorm - [0;0;1])
     toolRot1 = vecRot(toolEdge.toolEdgeNorm,[0;0;1]);
     toolEdge = toolRigid(toolEdge,toolRot1,[0;0;0]);
@@ -44,11 +45,10 @@ toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
 % find the contact point on the tool edge
 surfToolAng = vecAng(surfNorm,toolEdge.toolDirect,1);
 if abs(surfToolAng - pi/2) > toolEdge.includedAngle/2
-    warning("tool path error: collision between tool and workpiece will happen at the point");
-    isCollision = true;
-    toolVec = nan(3,1);
-    toolQuad = nan(4,1);
-    return;
+%     varargout{1} = true;
+%     toolVec = nan(3,1);
+%     toolQuad = nan(4,1);
+    error("tool path error: collision between tool and workpiece will happen at the point");
 end
 toolQuad = rotm2quat(toolRot);
 
