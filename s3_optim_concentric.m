@@ -49,7 +49,7 @@ else % ellipsoid
     C = 5/2;
     % sampling density
     sparTheta = 101;
-    surfCenter = [0,0,sqrt(C^2*(R.^2-R/4.^2))]; % concentric circle center
+    surfCenter = [0;0;sqrt(C^2*(R.^2-R/4.^2))]; % concentric circle center
     conR = (toolData.radius/8):(toolData.radius/2):R/4; % concentric radius vector
     conTheta = linspace(0,2*pi,sparTheta);
     [rMesh,thetaMesh] = meshgrid(conR,conTheta);
@@ -117,7 +117,7 @@ surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:));
 surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:));
 surfNorm(3,:) = -1*ones(1,loopPtNum);
 surfNorm = surfNorm./vecnorm(surfNorm,2,1);
-surfDirect = cutDirection(surfPt,surfCenter);
+surfDirect = cutDirection(surfPt);
 
 % tool path initialization
 toolSp = toolData.toolBform;
@@ -187,7 +187,7 @@ while true
     surfNormTmp(2,:) = surfFy(surfPtTmp(1,:),surfPtTmp(2,:));
     surfNormTmp(3,:) = -1*ones(1,loopPtNumTmp);
     surfNormTmp = surfNormTmp./vecnorm(surfNormTmp,2,1);
-    surfDirectTmp = cutDirection(surfPtTmp,surfCenter);
+    surfDirectTmp = cutDirection(surfPtTmp);
     
     % calculate the tool path and residual height
     toolQuatTmp = zeros(loopPtNumTmp,4);
