@@ -36,13 +36,16 @@ switch debug
         cy0 = 2*1000; % unit:mu m
         cz0 = 3*1000; % unit:mu m
         r0 = 0.1*1000; % unit:mu m
-        noise = 0.05;
-        zNoise = 0.01; % unit: mu m
-        theta = linspace(0,2*pi/3,300);
-        r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
+        openAng = pi/3; % unit: rad
+        edgePV = 200; % low-frequency error
+        k = -edgePV/openAng;
+        noise = r0*1e-4; % mid-frequency error
+        zNoise = 0; % data pre-processing error
+        theta = linspace(0,openAng,300);
+        r = r0 + edgePV/2 + k*theta + (noise*rand(1,length(theta)) - 0.5*noise);
         toolOri(1,:) = cx0 + r.*cos(theta);
         toolOri(2,:) = cy0 + r.*sin(theta);
-        toolOri(3,:) = cz0 + r0*(1 - zNoise + 2*zNoise*rand(1,length(theta)));
+        toolOri(3,:) = cz0 + r0*(zNoise*rand(1,length(theta)) - 0.5*zNoise);
         rmse0 = sqrt( ...
             sum((toolOri - ndgrid([cx0;cy0;cz0],1:length(theta)).^2),2) ...
             /length(theta));
@@ -93,20 +96,21 @@ clear theta theta1 theta2;
 
 %% 由(x,y)图获得刃口圆心半径以及波纹度函数
 nCPts = size(toolOri,2);
-[~,radius,includedAngle,toolFit,rmseLsc] = toolFit3D(toolOri,FitMethod);
+[radius,openAngle,toolFit] = toolFit3D(toolOri,FitMethod);
+
 % plot the fitting results
-f2 = figure('Name','tool sharpness fitting result');
-plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74]); % tool edge scatters
-hold on;
+f2 = figure('Name','Tool Sharpness Fitting Result');
 xLim = 1.1*max(toolFit(1,:));
 quiver(-xLim,0,2*xLim,0,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % X axis
+hold on;
 text(0.9*xLim,-.05*radius,'x');
 quiver(0,-0.2*radius,0,1.3*radius,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % Y axis
-text(0.05*xLim,1.2*radius,'y');
-theta = (pi/2 - includedAngle/2):0.01:(pi/2 + includedAngle/2);
+text(0.05*xLim,1.05*radius,'y');
+plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.75); % tool edge scatters
+theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
 xtmp = radius*cos(theta);
 ytmp = radius*sin(theta);
-plot(xtmp,ytmp,'Color',[0.85,0.33,0.10]); % tool edge circle
+plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
 scatter(0,0,'MarkerFaceColor',[0.85,0.33,0.10],'MarkerEdgeColor',[0.85,0.33,0.10]); % tool edge center
 quiver(0,0,0,0.5*radius,'AutoScale','off','Color',[0.93,0.69,0.13], ...
     'LineWidth',2.5,'MaxHeadSize',0.3); % tool edge normal
@@ -118,25 +122,60 @@ axis equal;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['x(',unit,')']);
 ylabel(['y(',unit,')']);
+title('Tool fitting result');
 legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
-clear xtmp ytmp theta xLim; % 删除画图的临时变量
+
+
+%% 分离轮廓误差和波纹度误差
 % Cartesian coordinate to cylindrical coordinate
 toolTheta = atan2(toolFit(2,:),toolFit(1,:));
 toolR = vecnorm(toolFit,2,1);
-figure('name','tool curve');
-tiledlayout(2,1);
+
+% plot the geometric error
+figure('name','Tool Geometric Error');
+tiledlayout(1,2);
 nexttile;
-plot(toolTheta*180/pi,toolR); hold on;
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-title('tool curve');
-ylabel({'polar diameter',['(',unit,'m)']});
+plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.5); % tool edge scatters
+hold on;
+plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
+xlabel(['x(',unit,')']);
+ylabel(['y(',unit,')']);
+title('Tool contour');
+legend('tool edge','tool fitting arc','Location','northeast');
+
 nexttile;
-plot(toolTheta*180/pi,toolR - radius); hold on;
+plot(toolTheta*180/pi - 90,toolR - radius); hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
-title('tool waviness');
-ylabel({'polar diameter error',['(',unit,'m)']});
+xlim([-openAngle*180/pi/2,openAngle*180/pi/2]);
+title('Tool geometric error');
+ylabel({'polar diameter error',['(',unit,')']});
 xlabel('central angle \theta(°)');
+grid on;
+
+
+% fft to filter different geometric error 
+
+
+
+% plot the sharness and waviness, respectively
+% nexttile;
+% plot(toolTheta*180/pi,toolR); hold on;
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% title('Tool contour error');
+% xlabel('central angle \theta(°)');
+% ylabel({'polar diameter',['(',unit,')']});
+
+% nexttile;
+% plot(toolTheta*180/pi - 90,toolR - radius); hold on;
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% xlim([-openAngle*180/pi/2,openAngle*180/pi/2]);
+% title('Tool waviness error');
+% ylabel({'polar diameter error',['(',unit,')']});
+% xlabel('central angle \theta(°)');
+% grid on;
+
+clear xtmp ytmp theta xLim; % 删除画图的临时变量
 
 %% 车刀轮廓插值 two methods to interpolate
 k = 3; % degree of the B-spline
@@ -207,7 +246,7 @@ switch toolFileType
             [5 60], ...
             string(datestr(now))));
         save(toolFile,"Comments","unit","FitMethod","ParamMethod", ... % comments and notes
-            "center","radius","includedAngle", ... % tool fitting results
+            "center","radius","openAngle", ... % tool fitting results
             "toolEdgeNorm","toolDirect","cutDirect","toolBform", ... % tool interpolation results
             "toolEdgePt","toolFit"); % auxiliary data
         % toolEdgePt, toolCpts, toolFit are useless in the following process at present

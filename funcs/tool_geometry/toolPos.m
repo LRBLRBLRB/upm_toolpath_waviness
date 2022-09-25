@@ -44,7 +44,7 @@ toolEdge = toolRigid(toolEdge,toolRot,[0;0;0]);
 
 % find the contact point on the tool edge
 surfToolAng = vecAng(surfNorm,toolEdge.toolDirect,1);
-if abs(surfToolAng - pi/2) > toolEdge.includedAngle/2
+if abs(surfToolAng - pi/2) > toolEdge.openAngle/2
 %     varargout{1} = true;
 %     toolVec = nan(3,1);
 %     toolQuad = nan(4,1);
@@ -54,7 +54,7 @@ toolQuad = rotm2quat(toolRot);
 
 % calculate the actual contact point on the tool edge
 % [~,toolContactPt] = toolPtInv(toolEdge.toolBform,surfToolAng,1e-3, ...
-%     "Type",'PolarAngle',"IncludedAng",toolEdge.includedAngle);
+%     "Type",'PolarAngle',"IncludedAng",toolEdge.openAngle);
 surfNorm = toolRot'*surfNorm;
 surfNorm(1) = 0;
 [toolContactU,toolContactPt,~] = toolPtInv(toolEdge.toolBform,surfNorm,1e-3, ...

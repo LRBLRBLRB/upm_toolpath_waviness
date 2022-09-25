@@ -1,4 +1,4 @@
-function [c,r,ang,scatterDst,RMSE] = toolFit3D(scatterOri,fitMethod)
+function [r,ang,scatterDst,varargout] = toolFit3D(scatterOri,fitMethod)
 % usage: [c,r,ang,scatterDst,RMSE] = toolFit3D(scatterOri,options)
 %
 % solve the edge sharpness of a arc turning tool: 
@@ -74,6 +74,8 @@ mid = 0.5*(startV + endV);
 rotAng = pi/2 - atan2(mid(2),mid(1));
 rotMat = rotz(rotAng);
 rotMat = rotMat(1:2,1:2);
-scatterDst = rotMat*scatterPlane(1:2,:) - rotMat*ndgrid(c,1:n);
+scatterDst = rotMat*(scatterPlane(1:2,:) - ndgrid(c,1:n));
 
+% optional output
+varargout{1} = RMSE;
 end
