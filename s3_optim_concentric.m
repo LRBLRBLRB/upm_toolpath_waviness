@@ -239,7 +239,7 @@ while true
     end
 
     % if residual height satisfies the reqiurement,
-    if max(resTmp,[],"all") > aimRes
+    if max(resTmp(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp),[],"all") > aimRes
         warning('The residual height of No.%d is beyond the expected range.',length(loopPtNum) + 1);
     end
     % outer side of each point in the tool path
@@ -295,17 +295,16 @@ tRes = toc(tRes0);
 figure('Name','tool path optimization');
 plotSpar = 1;
 tPlot0 = tic;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
+colormap('summer');
+cb = colorbar;
+cb.Label.String = ['Height (',unit,')'];
 plot3(toolPathPt(1,1:plotSpar:end), ...
     toolPathPt(2,1:plotSpar:end), ...
     toolPathPt(3,1:plotSpar:end), ...
     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-hold on;
-surf( ...
-    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',1,'LineStyle','none');
-colormap('summer');
-cb = colorbar;
-cb.Label.String = ['Height (',unit,')'];
 ptNum = sum(loopPtNum);
 for ii = 1:ptNum
     toolSp = toolData.toolBform;
@@ -327,8 +326,10 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 
 
 %% Feed rate smoothing
+% to smooth the loopR to get the real tool path
 
 
+% bspline approximation 
 
 
 %%
