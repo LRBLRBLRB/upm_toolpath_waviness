@@ -6,6 +6,7 @@ addpath(genpath('funcs'));
 
 % global variables
 % global textFontSize textFontType unit fitMethod paramMethod;
+workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
 FitMethod = 'Levenberg-Marquardt';
 ParamMethod = 'centripetal';
 unit = '\mum';
@@ -233,7 +234,7 @@ toolDirect = [0;1;0];
         '*.*','all file(*.*)';...
         }, ...
         'Select the directory and filename to save the tool model', ...
-        ['output_data/tool/toolTheo',datestr(now,'yyyymmddTHHMMSS'),'.mat']);
+        fullfile(workspaceDir,['toolTheo',datestr(now,'yyyymmddTHHMMSS'),'.mat']);
 toolFile = fullfile(toolDirName,toolFileName);
 switch toolFileType
     case 0 % no saving files
