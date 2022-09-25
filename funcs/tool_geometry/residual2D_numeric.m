@@ -11,7 +11,10 @@ function [res,peakPt,varargout] = residual2D_numeric(s1,s2,eps,varargin)
 %   res (1,1) the residual within the two position
 %   interPt (2,1)
 %
-% [res,peakPt,ind1,ind2] = residual2D_numeric(c1,c2,vec1,vec2,sp1,sp2,method)
+% [res,peakPt,ind1,ind2] = residual2D_numeric(s1,s2,eps,p1,p2,method)
+%
+%
+% [res,peakPt,ind1,ind2] = residual2D_numeric(sp1,sp2,...)
 %   all the same except that the sp1 and sp2 remain the B-form spline
 %   struct pf the tool edge
 

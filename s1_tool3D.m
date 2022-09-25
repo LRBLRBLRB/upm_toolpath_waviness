@@ -40,8 +40,8 @@ switch debug
         openAng = pi/3; % unit: rad
         edgePV = 200; % low-frequency error
         k = -edgePV/openAng;
-        noise = r0*1e-4; % mid-frequency error
-        zNoise = 0; % data pre-processing error
+        noise = r0*5e-3; % mid-frequency error
+        zNoise = 0.05; % data pre-processing error
         theta = linspace(0,openAng,300);
         r = r0 + edgePV/2 + k*theta + (noise*rand(1,length(theta)) - 0.5*noise);
         toolOri(1,:) = cx0 + r.*cos(theta);
@@ -234,7 +234,7 @@ toolDirect = [0;1;0];
         '*.*','all file(*.*)';...
         }, ...
         'Select the directory and filename to save the tool model', ...
-        fullfile(workspaceDir,['toolTheo',datestr(now,'yyyymmddTHHMMSS'),'.mat']);
+        fullfile(workspaceDir,['toolTheo',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
 toolFile = fullfile(toolDirName,toolFileName);
 switch toolFileType
     case 0 % no saving files
