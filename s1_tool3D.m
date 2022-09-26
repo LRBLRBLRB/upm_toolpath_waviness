@@ -41,12 +41,12 @@ switch debug
         edgePV = 200; % low-frequency error
         k = -edgePV/openAng;
         noise = r0*5e-3; % mid-frequency error
-        zNoise = 0.05; % data pre-processing error
+        zNoise = r0*0.05; % data pre-processing error
         theta = linspace(0,openAng,300);
         r = r0 + edgePV/2 + k*theta + (noise*rand(1,length(theta)) - 0.5*noise);
         toolOri(1,:) = cx0 + r.*cos(theta);
         toolOri(2,:) = cy0 + r.*sin(theta);
-        toolOri(3,:) = cz0 + r0*(zNoise*rand(1,length(theta)) - 0.5*zNoise);
+        toolOri(3,:) = cz0 + (zNoise*rand(1,length(theta)) - 0.5*zNoise);
         rmse0 = sqrt( ...
             sum((toolOri - ndgrid([cx0;cy0;cz0],1:length(theta)).^2),2) ...
             /length(theta));
@@ -78,7 +78,7 @@ switch debug
         toolOri = dataOri;
 end
 
-f1 = figure('Name','original scatters of the tool');
+f1 = figure('Name','Original Scatters of the Tool');
 % set(0,"Units","centimeters");
 % winSize = get(0,"ScreenSize");
 % set(gcf,"Units","centimeters");
@@ -92,6 +92,7 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['x(',unit,')']);
 ylabel(['y(',unit,')']);
 zlabel(['z(',unit,')']);
+title('Original scatters of the tool');
 view(-45,60);
 clear theta theta1 theta2;
 
@@ -135,7 +136,7 @@ toolR = vecnorm(toolFit,2,1);
 
 % plot the geometric error
 figure('name','Tool Geometric Error');
-tiledlayout(1,2);
+t = tiledlayout(2,1);
 nexttile;
 plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.5); % tool edge scatters
 hold on;
@@ -154,6 +155,7 @@ ylabel({'polar diameter error',['(',unit,')']});
 xlabel('central angle \theta(°)');
 grid on;
 
+title(t,'Tool Geometric Error');
 
 % fft to filter different geometric error 
 
@@ -218,7 +220,18 @@ axis equal
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['y(',unit,')']);
 ylabel(['z(',unit,')']);
+title('Tool interpolation results')
 legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
+
+% h4 = axes('Position',[0.3,0,0.4,0.4]);
+% plot(toolFit(2,:),toolFit(3,:),'--.', ...
+%     'MarkerSize',8,'Color',[0,0.447,0.741]); hold on;
+% plot(toolCpts(2,:),toolCpts(3,:),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
+% plot(toolEdgePt(2,:),toolEdgePt(3,:),'Color',[0.635,0.078,0.184]);
+% set(h4,'xtick',[],'xticklabel',[],'ytick',[],'yticklabel',[],'XColor','w','YColor','w');
+% annotation('rectangle',[0.51+(l1MaxPrec-0.00025)/2/l1Prec(end),(l2MaxPrec-0.00025)/l2Prec(end),...
+%     0.006/l1Prec(end),0.01/l2Prec(end)],'LineStyle','-','Color','w','LineWidth',1);
+
 
 % plot the interpolation error
 % figure('Name','Tool interpolation Error');

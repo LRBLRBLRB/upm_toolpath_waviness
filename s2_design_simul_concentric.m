@@ -81,18 +81,53 @@ else % ellipsoid
     % surfNorm(:,3) = -ones(densTheta*densR,1);
     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
-    save('workspace/input_data/surface/ellipsoidAray.mat', ...
-        "surfMesh","surfNorm","surfCenter");
+%     save('workspace/input_data/surface/ellipsoidAray.mat', ...
+%         "surfMesh","surfNorm","surfCenter");
 end
-surfPt = transpose(reshape(surfMesh,[],3));
-surfNorm = transpose(reshape(surfNorm,[],3));
-ptNum = size(surfPt,2);
-surfDirect = cutDirection(surfPt,[0;0;0]);
-% surfDirect = zeros(3,ptNum);
-% for ii = 1:densR
-%     surfDirect(:,(ii - 1)*sparTheta + 1:ii*sparTheta) = ...
-%         cutDirection(surfPt(:,(ii - 1)*sparTheta + 1:ii*sparTheta));
-% end
+
+sparMode = 'angle';
+if strcmp(sparMode,'angle')
+    surfPt = transpose(reshape(surfMesh,[],3));
+    surfNorm = transpose(reshape(surfNorm,[],3));
+    ptNum = size(surfPt,2);
+    surfDirect = cutDirection(surfPt,[0;0;0]);
+    % surfDirect = zeros(3,ptNum);
+    % for ii = 1:densR
+    %     surfDirect(:,(ii - 1)*sparTheta + 1:ii*sparTheta) = ...
+    %         cutDirection(surfPt(:,(ii - 1)*sparTheta + 1:ii*sparTheta));
+    % end
+else
+    syms x y;
+    surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
+    surfFunc = matlabFunction(surfSym);
+    surfFx = matlabFunction(diff(surfFunc,x));
+    surfFy = matlabFunction(diff(surfFunc,y));
+    load("workspace\20220925-contrast\nagayama_concentric\loopR.mat");
+    % r = loopR;
+    r = (toolData.radius/2):(toolData.radius/2):R/2;
+    arcLength = 30;
+    maxAngPtDist = 6*pi/180;
+
+    surfX = [];
+    surfY = [];
+    surfNorm = [];
+    for ii = 1:length(r)
+        conTheta = linspace(0,2*pi, ...
+            ceil(2*pi/min(maxAngPtDist,arcLength/r(ii))) + 1);
+        conTheta(end) = [];
+        sparTheta(ii) = length(conTheta);
+        surfX = [surfX,r(ii)*cos(conTheta)];
+        surfY = [surfY,r(ii)*sin(conTheta)];
+    end
+    ptNum = length(surfX);
+    surfPt(1:2,:) = [surfX;surfY];
+    surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:));
+    surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:));
+    surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:));
+    surfNorm(3,:) = -1*ones(1,ptNum);
+    surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1));
+    surfDirect = cutDirection(surfPt,[0;0;0]);
+end
 
 %% plot the freeform surface
 figure('Name','original xyz scatters of the surface (sparsely)');
@@ -222,7 +257,7 @@ angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 
 tTip0 = tic;
 % outer side of each point in the tool path
-parfor ii = 1:resNum
+for ii = 1:resNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
     nLoop = floor((ii - 1)/sparTheta) + 1;
     angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
