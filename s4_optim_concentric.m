@@ -95,7 +95,7 @@ surfFy = matlabFunction(diff(surfFunc,y));
 rMax = R/2;
 
 % machining paramters
-aimRes = 100;
+aimRes = 10;
 rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
 arcLength = 30;
 maxAngPtDist = 6*pi/180;
@@ -396,8 +396,8 @@ while true
             plotNum = 1000;
             peakPtTol = [peakPt(1:3,:),peakPt(4:6,:)];
             resTol = [res(1,:),res(2,:)];
-            peakPtTol(resTol == 500,:) = [];
-            resTol(resTol == 500) = [];
+            peakPtTol(:,resTol == 5*aimRes) = [];
+            resTol(resTol == 5*aimRes) = [];
             xPlot = linspace(min(peakPt(1,:)),max(peakPt(1,:)),plotNum);
             yPlot = linspace(min(peakPt(2,:)),max(peakPt(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
