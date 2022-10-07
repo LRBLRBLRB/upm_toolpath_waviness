@@ -1,17 +1,19 @@
 % 给定刀具波纹度拟合曲线和已加工曲面拟合曲线，给定残高，求各个刀位点的切宽
 % 方案：先求切宽和残高的定量关系；然后考虑如何移动各个刀位点，微调来获得所要求的残高
-close all;
-clear; clc;
-addpath(genpath('funcs'));
-
-% global variables
-% global textFontSize textFontType unit fitMethod paramMethod;
-workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
-FitMethod = 'Levenberg-Marquardt';
-ParamMethod = 'centripetal';
-unit = '\mum';
-textFontSize = 12;
-textFontType = 'Times New Roman';
+if true
+    close all;
+    clear; clc;
+    addpath(genpath('funcs'));
+    
+    % global variables
+    % global textFontSize textFontType unit fitMethod paramMethod;
+    workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
+    FitMethod = 'Levenberg-Marquardt';
+    ParamMethod = 'centripetal';
+    unit = '\mum';
+    textFontSize = 12;
+    textFontType = 'Times New Roman';
+end
 
 %% simulation initialization
 debug = 3;
