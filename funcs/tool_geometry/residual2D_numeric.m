@@ -60,8 +60,11 @@ switch nargin
             cutPt1 = cutPt1';
             cutPt2 = cutPt2';
         end
+        % use the formula of calculating the area of triangle to calculate
+        % the height of the triangle, the vertices of which are cutPt1,
+        % cutPt2, peakPt.
         res = norm(cross(cutPt1 - peakPt,cutPt2 - peakPt)) ...
-            /norm(cutPt2 - cutPt1); % ?????
+            /norm(cutPt2 - cutPt1); 
     case {8,9}
         cen1 = varargin{1};
         cen2 = varargin{2};

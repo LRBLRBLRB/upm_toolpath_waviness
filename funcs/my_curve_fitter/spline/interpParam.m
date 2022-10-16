@@ -10,15 +10,15 @@ function uQ = interpParam(Q,options)
 
 arguments
     Q {mustBeFinite}
-    options.ParamMethod {mustBeMember(options.ParamMethod, ...
+    options.paramMethod {mustBeMember(options.paramMethod, ...
         ['uniform','centripetal','chord',''])} = 'chord'
 end
 
 n = size(Q,1);
-if strcmp(options.ParamMethod,'uniform') % uniform parameterization
+if strcmp(options.paramMethod,'uniform') % uniform parameterization
     uQ = transpose(linspace(0,1,n));
 else
-    switch options.ParamMethod
+    switch options.paramMethod
         case 'centripetal' % concentric parameterization
             l = sum((Q(1:end-1,:)-Q(2:end,:)).^2,2).^(1/4); % sqrt of dist of adjacent Q, size(n-1,1)
         otherwise % chord parameterization

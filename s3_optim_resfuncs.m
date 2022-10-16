@@ -182,6 +182,8 @@ res = zeros(travNum,travNum);
 theta = linspace(pi - 10*pi/180,pi + 10*pi/180,travNum);
 for ii = 1:travNum
     for jj = 1:travNum
+%         ii = 80;
+%         jj = 100;
         s2 = tool2D;
         R2 = rotz(theta(jj));
         R2 = R2(1:2,1:2);
@@ -217,15 +219,16 @@ end
 % close(bothAvi);
 
 figure('Name','Residual height function');
-[xMesh,yMesh] = meshgrid(c2,theta);
-surf(xMesh,(yMesh - pi)/pi*180,res,'FaceColor','interp'); hold on;
+[thetaMesh,c2Mesh] = meshgrid(theta,c2);
+surf(c2Mesh,(thetaMesh - pi)/pi*180,res, ...
+    'FaceColor','interp','EdgeColor','none'); hold on;
 cb = colorbar;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['Cut Width (',unit,')']);
 ylabel('Spindle Angle (\circ)');
 zlabel(['Residual Height (',unit,')']);
-bothRes(:,:,1) = xMesh;
-bothRes(:,:,2) = yMesh - pi;
+bothRes(:,:,1) = c2Mesh;
+bothRes(:,:,2) = thetaMesh - pi;
 bothRes(:,:,3) = res;
 bothResPath = fullfile(workspaceDir,'bothRes.mat');
 save(bothResPath,"bothRes");

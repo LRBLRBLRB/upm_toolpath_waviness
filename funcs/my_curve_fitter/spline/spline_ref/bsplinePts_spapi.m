@@ -20,9 +20,9 @@ arguments
     Q 
     k {mustBePositive}
     u (:,1)
-    options.ParamMethod {mustBeMember(options.ParamMethod, ...
+    options.paramMethod {mustBeMember(options.paramMethod, ...
         ['uniform','centripetal','chord',''])} = 'chord'
-    options.CoordinateType {mustBeMember(options.CoordinateType, ...
+    options.cptsType {mustBeMember(options.cptsType, ...
         ['Cartesian','Polar','Spherical',''])} = 'Cartesian'
 end
 
@@ -34,25 +34,26 @@ if n-k-1<0
     error("control points are not enough, or the required degree is too large");
 end
 
+switch options.cptsType
+    case 'Cartesian'
+        Qcart = Q;
+    case 'Polar'
+        Qcart = Q;
+        Qcart(1,:) = sqrt(Q(1,:).^2 + Q(2,:).^2);
+        Qcart(2,:) = atan2(Q(2,:),Q(1,:));
+    case 'Spherical'
+        Qcart(1,:) = vecnorm(Q,2,1); % polar radius
+        Qcart(2,:) = atan2(Q(2,:),Q(1,:)); % longitude
+        Qcart(3,:) = atan2(sqrt(Q(2,:).^2 + Q(1,:).^2),Q(3,:)); % latitude
+end
+
 % chord parameterization
-uQ = interpParam(Q','ParamMethod',options.ParamMethod);
+uQ = interpParam(Qcart','paramMethod',options.paramMethod);
 
 % node vector U generation
-U = nodeVector(k,n,'NodeMethod','Interpolation','uQ',uQ);
+U = nodeVector(k,n,'nodeMethod','Interpolation','uQ',uQ);
 
-switch options.CoordinateType
-    case 'Cartesian'
-        sp = spapi(U,uQ,Q);
-    case 'Polar'
-        QR = vecnorm(Q,2,1);
-        QTheta = atan2(Q(2,:),Q(1,:));
-        sp = spapi(U,uQ,[QR;QTheta]); % spline interpolation
-    case 'Spherical'
-        QR = vecnorm(Q,2,1); % polar radius
-        QPhi = atan2(Q(2,:),Q(1,:)); % longitude
-        QTheta = atan2(sqrt(Q(2,:).^2 + Q(1,:).^2),Q(3,:)); % latitude
-        sp = spapi(U,uQ,[QR;QPhi;QTheta]);
-end
+sp = spapi(U,uQ,Q); % B-spline interpolation
 pts = fnval(sp,u); % some questions here
 varargout{1} = sp;
 end

@@ -8,8 +8,8 @@ if true
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
     workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
-    FitMethod = 'Levenberg-Marquardt';
-    ParamMethod = 'centripetal';
+    fitMethod = 'Levenberg-Marquardt';
+    paramMethod = 'centripetal';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -60,8 +60,8 @@ switch debug
             [1 20; 1 20; 1 20; 1 20; 1 20], ...
             {'Levenberg-Marquardt','centripetal','\mu m','Times New Roman','14'}, ...
             'WindowStyle');
-        FitMethod = toolInput{1};
-        ParamMethod = toolInput{2};
+        fitMethod = toolInput{1};
+        paramMethod = toolInput{2};
         unit = toolInput{3};
         textFontType = toolInput{4};
         textFontSize = str2double(toolInput{5});
@@ -100,7 +100,7 @@ clear theta theta1 theta2;
 
 %% 由(x,y)图获得刃口圆心半径以及波纹度函数
 nCPts = size(toolOri,2);
-[radius,openAngle,toolFit] = toolFit3D(toolOri,FitMethod);
+[radius,openAngle,toolFit] = toolFit3D(toolOri,fitMethod);
 
 % plot the fitting results
 f2 = figure('Name','Tool Sharpness Fitting Result');
@@ -190,7 +190,7 @@ nPts = length(u);
 toolFit = [zeros(1,nCPts);toolFit];
 % B-spline interpolate in the polar coordinate
 [toolEdgePt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...
-    'ParamMethod',ParamMethod,'CoordinateType','Cartesian'); 
+    'paramMethod',paramMethod,'cptsType','Cartesian'); 
 toolCpts = toolBform.coefs;
 
 % [toolCpts,U] = bSplineCpts(toolFit',k,'chord');
@@ -261,7 +261,7 @@ switch toolFileType
             'Saving Comments', ...
             [5 60], ...
             string(datestr(now))));
-        save(toolFile,"Comments","unit","FitMethod","ParamMethod", ... % comments and notes
+        save(toolFile,"Comments","unit","fitMethod","paramMethod", ... % comments and notes
             "center","radius","openAngle", ... % tool fitting results
             "toolEdgeNorm","toolDirect","cutDirect","toolBform", ... % tool interpolation results
             "toolEdgePt","toolFit"); % auxiliary data

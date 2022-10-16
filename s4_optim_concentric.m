@@ -147,7 +147,7 @@ while true
     % calculate the tool path and residual height
     parfor ii = 1:loopPtNum
         [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
-            toolData,surfPt(:,ii),surfNorm(:,ii),surfDirect(:,ii),[0;0;1]);
+            toolData,surfPt(:,ii),surfNorm(:,ii),[0;0;1],surfDirect(:,ii));
         if isCollision(ii) == false
             toolPathPt(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.center + toolVec(:,ii);
             toolCutDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
@@ -216,7 +216,7 @@ while true
         toolNormDirectTmp = zeros(3,loopPtNumTmp);
         for ii = 1:loopPtNumTmp
             [toolQuatTmp(ii,:),toolVecTmp(:,ii),toolContactUTmp(ii)] = toolPos( ...
-                toolData,surfPtTmp(:,ii),surfNormTmp(:,ii),surfDirectTmp(:,ii),[0;0;1]);
+                toolData,surfPtTmp(:,ii),surfNormTmp(:,ii),[0;0;1],surfDirectTmp(:,ii));
             toolPathPtTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.center + toolVecTmp(:,ii);
             toolCutDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.cutDirect;
             toolNormDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.toolEdgeNorm;
@@ -354,7 +354,7 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 
 save workspace\20220925-contrast\nagayama_concentric\loopR.mat loopR
 
-
+s5_visualize_process;
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path

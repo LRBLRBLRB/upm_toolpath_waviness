@@ -1,4 +1,4 @@
-function [uQ,vQ] = interpParamSurf(Q,interpMethod)
+function [uQ,vQ] = interpParamSurf(Q,options)
 % usage: 
 % The function is used to process the parameterization during
 % interpolation. 
@@ -10,17 +10,17 @@ function [uQ,vQ] = interpParamSurf(Q,interpMethod)
 
 arguments
     Q {mustBeFinite}
-    interpMethod {mustBeMember(interpMethod, ...
+    options.paramMethod {mustBeMember(options.paramMethod, ...
         ['uniform','concentric','chord',''])} = 'chord'
 end
 
 [m,n,~] = size(Q);
 
-if strcmp(interpMethod,'uniform') % uniform parameterization
+if strcmp(options.paramMethod,'uniform') % uniform parameterization
     uQ = transpose(linspace(0,1,m));
     vQ = transpose(linspace(0,1,n));
 else
-    if strcmp(interpMethod,'concentric') % concentric parameterization
+    if strcmp(options.paramMethod,'concentric') % concentric parameterization
         % sqrt of dist of adjacent Q, size(n-1,1)
         uDist = sum((Q(2:end,:,:)-Q(1:end-1,:,:)).^2,3).^(1/4); % (m-1,n)
         vDist = sum((Q(:,2:end,:)-Q(:,1:end-1,:)).^2,3).^(1/4); % (m,n-1)
