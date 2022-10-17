@@ -26,14 +26,7 @@ while true
                     save(pathName,"Comments","toolPathPt","toolNormDirect","toolCutDirect", ...
                         "toolSp","toolQuat","toolVec",'uLim',"res");
             end
-            % delete(parObj);
-            profile off
-            tTol = toc(t0);
-            fprintf("The time spent in the whole process is %fs.\n",tTol);
-            % profile viewer
-            % profsave(profile("info"),"profile_data");
-            % rmpath(genpath('funcs'));
-            return; 
+            return;
         case 'Residual height'
             tRes0 = tic;
             plotNum = 1000;

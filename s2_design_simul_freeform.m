@@ -39,22 +39,26 @@ toolData = load(toolName);
 %% to load and reconstruct the freeform surface
 % aim: to get the function of the surface ,and its partial derivative
 xlim = 1000*input('x range (unit: mm): \n');
-if ~isequal(size(xlim),[1,2])
-    error('invalid x range: the dimension is wrong');
+if isempty(xlim)
+    xlim = 1000*[-5,5];
+elseif ~isequal(size(xlim),[1,2])
+    error('Invalid x range. A 1*2 array is needed.');
 end
 ylim = 1000*input('y range (unit: mm): \n');
-if ~isequal(size(ylim),[1,2])
-    error('invalid y range: the dimension is wrong');
+if isempty(ylim)
+    ylim = 1000*[-5,5];
+elseif ~isequal(size(ylim),[1,2])
+    error('Invalid y range. A 1*2 array is needed.');
 end
 surfType = 'function';
-if strcmp(surfType,'function')
+if strcmp(surfType,'function') % analytic surface
     syms x y;
     surfSym = input("Type the function expression of the surface," + ...
         "with the independent variables of \'x\' and \'y\': \n");
     if isempty(surfSym) % default: biconic surface
-        rx = 1000*100; % radius in x direction
+        rx = 1000*10; % radius in x direction
         cx = 1/rx; % curvature in x direction
-        ry = 1000*100; % radius in y direction
+        ry = 1000*10; % radius in y direction
         cy = 1/ry; % curvature in y direction
         kx = -1; % conic in x direction
         ky = -1; % conic in y direction
@@ -76,12 +80,22 @@ if strcmp(surfType,'function')
         error('invalid function expression: independent variables must be x & y.');
     end
 
-    surfFunc = matlabFunction(surfSym);
-    surfFx = matlabFunction(diff(surfFunc,x));
-    surfFy = matlabFunction(diff(surfFunc,y));
-        
+    surfFunc = matlabFunction(surfSym,'vars',[x,y]);
+    surfFx = matlabFunction(diff(surfFunc,x),'vars',[x,y]);
+    surfFy = matlabFunction(diff(surfFunc,y),'vars',[x,y]);
+    
+    % surfMesh for drawing surf-mesh pictures
+    R = sqrt(xlim(2)^2 + ylim(2)^2);
+    reconR = linspace(0,R);
+    reconTheta = linspace(0,2*pi);
+    [surfMeshPolar(:,:,1),surfMeshPolar(:,:,2)] = meshgrid(reconR,reconTheta); % 这里的meshgrid，x和y的顺序是不是我想要的？
+    surfMesh(:,:,1) = surfMeshPolar(:,:,1).*cos(surfMeshPolar(:,:,2));
+    surfMesh(:,:,2) = surfMeshPolar(:,:,1).*sin(surfMeshPolar(:,:,2));
+    surfMesh(:,:,3) = surfFunc(surfMeshPolar(:,:,1),surfMeshPolar(:,:,2));
+
     % discretization of the freeform surface (constant arc)
-    r = (toolData.radius/2):(toolData.radius/2):R/2;
+    R = sqrt(xlim(2)^2 + ylim(2)^2);
+    r = (toolData.radius/2):(toolData.radius/2):R;
     arcLength = 30;
     maxAngPtDist = 6*pi/180;
     
@@ -116,33 +130,29 @@ else % point cloud input
         'MultiSelect','off');
     surfName = fullfile(dirName,fileName);
     surfData = load(surfName);
-    dim = size(surfData.xyz,1);
-
-    f1 = figure('Name','original xyz scatters of the surface');
-    plot3(surfData.xyz(:,1),surfData.xyz(:,2),surfData.xyz(:,3),'.');
-    hold on; axis equal; grid on;
-    xlabel('x'); ylabel('y'); zlabel('z');
+    num = size(surfData.xyz,2);
     
     % B-spline interpolation of the freeform surface in polar coordinate
-    xPlot = linspace(xlim(1),xlim(2));
-    yPlot = linspace(ylim(1),ylim(2));
-    [surfMesh(:,:,1),surfMesh(:,:,2)] = meshgrid(); % 这里的meshgrid，x和y的顺序是不是我想要的？
-    griddata(surfData.xyz(:,1),surfData.xyz(:,2),surfData.xyz(:,3))
+    R = sqrt(xlim(2)^2 + ylim(2)^2);
+    reconR = linspace(0,R,ceil(sqrt(num))); % 重建所需的点数值得再考虑
+    reconTheta = linspace(0,2*pi,ceil(sqrt(num)));
+    [surfMeshPolar(:,:,1),surfMeshPolar(:,:,2)] = meshgrid(reconR,reconTheta); % 这里的meshgrid，x和y的顺序是不是我想要的？
+    surfMeshPolar(:,:,3) = griddata(surfData.xyz(:,1),surfData.xyz(:,2),surfData.xyz(:,3), ...
+        surfMeshPolar(:,:,1),surfMeshPolar(:,:,2),'linear');
+    % surfMesh for drawing surf-mesh pictures
+    surfMesh(:,:,1) = surfMeshPolar(:,:,1).*cos(surfMeshPolar(:,:,2));
+    surfMesh(:,:,2) = surfMeshPolar(:,:,1).*sin(surfMeshPolar(:,:,2));
+    surfMesh(:,:,3) = surfFunc(surfMeshPolar(:,:,1),surfMeshPolar(:,:,2));
     % [surfCpts,U,V] = bSplineSurfCpts(surfData.mesh,3,3);
     u = 0:0.002:1;
     v = 0:0.002:1;
     % surfPts = zeros(length(u),length(v),dim);
     % surfPts = bSplineSurfPts(surfCpts,3,u,U,3,v,V);
-% 这里的Q，是用极坐标的还是直角坐标的？
-    [surfPt,surfBform] = bsplineSurfPts_spapi(Q,3,3,u,v,'paramMethod','centripetal');
-    
-    % calculate the derivative and cutting direction of the surface
+    [surfPt,surfBform] = bsplineSurfPts_spapi(surfMeshPolar,3,3,u,v,'paramMethod','centripetal');
     
     figSurfInt = figure('Name','Freeform surface interpolation results');
-    pose = get(gcf,'Position');
-    set(gcf,"Position",[pose(1)-pose(3)/2,pose(2),2*pose(3),pose(4)]);
-    tilSurfInt = tiledlayout(1,2);
-    nexttile;
+    % pose = get(gcf,'Position');
+    % set(gcf,"Position",[pose(1)-pose(3)/2,pose(2),2*pose(3),pose(4)]);
     plot3(surfData.xyz(:,1),surfData.xyz(:,2),surfData.xyz(:,3), ...
         '.','Color',[0,0.45,0.74]); 
     hold on;
@@ -150,60 +160,88 @@ else % point cloud input
         reshape(surfCpts(:,:,2),[],1), ...
         reshape(surfCpts(:,:,3),[],1), ...
         'x','Color',[0.85,0.33,0.10]);
-    xlabel('x'); ylabel('y'); zlabel('z');
-    axis equal
-    grid on
-    legend('Measured Pts','Interpolation Cpts', ...
-        'Orientation','vertical','Location','best');
-    nexttile;
     surf(surfPt(:,:,1),surfPt(:,:,2),surfPt(:,:,3), ...
         'FaceColor','interp','EdgeColor','none');
     cb = colorbar('Location','eastoutside');
-    xlabel('x'); ylabel('y'); zlabel('z');
-    axis equal
+    set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
+    xlabel(['x (',unit,')']);
+    ylabel(['y (',unit,')']);
+    zlabel(['z (',unit,')']);
+    grid on
+    legend('Measured Pts','Interpolation Cpts','Interpolation Results', ...
+        'Orientation','vertical','Location','best');
+
+    % calculate the derivative and cutting direction of the surface
+    surfBform = fnder(surfBform,{1,0});
+    % ???????????????????????????????????????????????????????????????????????????????????????????????????
+
+    % discretization of the freeform surface (constant arc)
+    r = (toolData.radius/2):(toolData.radius/2):R;
+    arcLength = 30;
+    maxAngPtDist = 6*pi/180;
+
+    surfX = [];
+    surfY = [];
+    surfNorm = [];
+    for ii = 1:length(r)
+        conTheta = linspace(0,2*pi, ...
+            ceil(2*pi/min(maxAngPtDist,arcLength/r(ii))) + 1);
+        conTheta(end) = [];
+        sparTheta(ii) = length(conTheta);
+        surfX = [surfX,r(ii)*cos(conTheta)];
+        surfY = [surfY,r(ii)*sin(conTheta)];
+    end
+    ptNum = length(surfX);
+    surfPt(1:2,:) = [surfX;surfY];
+    surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:));
+    surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:));
+    surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:));
+    surfNorm(3,:) = -1*ones(1,ptNum);
+    surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1));
+    surfDirect = cutDirection(surfPt,[0;0;0]);
+    clear surfX surfY;
 end
 
 
-
-
 %% draw the freeform surface
+plotSpar = 20;
 figure('Name','original xyz scatters of the surface (sparsely)');
 pos = get(gcf,'position');
-set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
+set(gcf,'position',[pos(1) + pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
 tiledlayout(1,2);
 nexttile;
-plot3(surfPt(1,:),surfPt(2,:),surfPt(3,:),'.','Color',[0,0.45,0.74]);
+plot3(surfPt(1,1:plotSpar:end),surfPt(2,1:plotSpar:end),surfPt(3,1:plotSpar:end),'.','Color',[0,0.45,0.74]);
 hold on;
-quiver3(surfPt(1,:),surfPt(2,:),surfPt(3,:), ...
-    surfNorm(1,:),surfNorm(2,:),surfNorm(3,:), ...
+quiver3(surfPt(1,1:plotSpar:end),surfPt(2,1:plotSpar:end),surfPt(3,1:plotSpar:end), ...
+    surfNorm(1,1:plotSpar:end),surfNorm(2,1:plotSpar:end),surfNorm(3,1:plotSpar:end), ...
     'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
-quiver3(surfPt(1,:),surfPt(2,:),surfPt(3,:), ...
-    surfDirect(1,:),surfDirect(2,:),surfDirect(3,:), ...
+quiver3(surfPt(1,1:plotSpar:end),surfPt(2,1:plotSpar:end),surfPt(3,1:plotSpar:end), ...
+    surfDirect(1,1:plotSpar:end),surfDirect(2,1:plotSpar:end),surfDirect(3,1:plotSpar:end), ...
     'AutoScale','on','Color',[0.4660,0.6740,0.1880],'DisplayName','Normal Vectors');
 legend('Original Points','Orthogonal direction','Cutting direction','Location','northeast');
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
-axis equal; grid on;
+grid on; axis equal;
 % title({'Radially & circunferentially sparse','by 50 and 2 times, respectively'}, ...
 %     'FontSize',textFontSize,'FontName',textFontType);
 nexttile;
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-hold on; axis equal;
+hold on; grid on; axis equal;
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
-% cb2 = colorbar;
+cb2 = colorbar;
 msgfig = questdlg({'Surface was generated successfully!', ...
     'Ready to continue?'}, ...
     'Surface Generation','OK & continue','Cancel & quit','OK & continue');
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    msgbox('Exit for the program','Exit','help','modal');
-    uiwait(msgbox);
+    msgfig = msgbox('Exit for the program','Exit','help','modal');
+    uiwait(msgfig);
     profile off;
     tTol = toc(t0);
     fprintf("The time spent in the whole process is %fs.\n",tTol);
@@ -235,7 +273,7 @@ fprintf('The time spent in the tool path generating process is %fs.\n',tToolpath
 % interference between the tool edge and the designed surface. 
 
 figure('Name','tool center position & tool normal vector');
-plotSpar = 1;
+plotSpar = 20;
 plot3(toolPathPt(1,1:plotSpar:end), ...
     toolPathPt(2,1:plotSpar:end), ...
     toolPathPt(3,1:plotSpar:end), ...
@@ -272,8 +310,8 @@ msgfig = questdlg({'Tool Path was calculated successfully!', ...
     'Ready to continue?'}, ...
     'Tool Path Simulation','OK & continue','Cancel & quit','OK & continue');
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    msgbox('Exit for the program','Exit','help','modal');
-    uiwait(msgbox);
+    msgfig = msgbox('Exit for the program','Exit','help','modal');
+    uiwait(msgfig);
     profile off;
     tTol = toc(t0);
     fprintf("The time spent in the whole process is %fs.\n",tTol);
@@ -285,7 +323,7 @@ end
 %% Calculation of Residual Height & Cutting Surface
 toolSp = toolData.toolBform;
 toolRadius = toolData.radius;
-resNum = ptNum - sparTheta;
+resNum = ptNum - sparTheta(end);
 res = zeros(1,2*resNum);
 peakPt = zeros(3,2*resNum);
 uLim = [zeros(1,ptNum);ones(1,ptNum)]; % the interval of each toolpath
@@ -403,3 +441,11 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 
 %% Visualization & Simulation
 s5_visualize_process;
+
+% delete(parObj);
+profile off
+tTol = toc(t0);
+fprintf("The time spent in the whole process is %fs.\n",tTol);
+% profile viewer
+% profsave(profile("info"),"profile_data");
+% rmpath(genpath('funcs'));

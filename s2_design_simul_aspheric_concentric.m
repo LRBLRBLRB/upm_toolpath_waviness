@@ -96,7 +96,7 @@ if strcmp(sparMode,'angle')
     %     surfDirect(:,(ii - 1)*sparTheta + 1:ii*sparTheta) = ...
     %         cutDirection(surfPt(:,(ii - 1)*sparTheta + 1:ii*sparTheta));
     % end
-else
+else % still need debugging!
     syms x y;
     surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
     surfFunc = matlabFunction(surfSym);
@@ -366,3 +366,11 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 
 %% Visualization & Simulation
 s5_visualize_process;
+
+% delete(parObj);
+profile off
+tTol = toc(t0);
+fprintf("The time spent in the whole process is %fs.\n",tTol);
+% profile viewer
+% profsave(profile("info"),"profile_data");
+% rmpath(genpath('funcs'));

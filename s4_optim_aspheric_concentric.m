@@ -1,8 +1,9 @@
-
-
-
-
-
+% optimization of the designed tool path of a concentric surface
+% Step one: tool and surface data import
+% Step two: tool path adjusting for the first loop
+% Step three: tool path adjusting for the rest
+% Step four: simulation of the machining surface
+% Step Five: generate the actual toolpath
 % close all;
 clear;
 clc;
@@ -119,23 +120,23 @@ while true
     conTheta(end) = [];
     
     % calculate the cutting pts
-    loopPtNum = length(conTheta);
-    loopR = r;
-    surfPt(1,:) = r*cos(conTheta);
-    surfPt(2,:) = r*sin(conTheta);
-    surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:));
-    surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:));
-    surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:));
-    surfNorm(3,:) = -1*ones(1,loopPtNum);
-    surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1));
-    surfDirect = cutDirection(surfPt,[0;0;0]);
+    loopPtNum = length(conTheta); % the number of points in each loop
+    loopR = r; % the radius R of the current loop
+    surfPt(1,:) = r*cos(conTheta); % x coordinates of surface cutting points
+    surfPt(2,:) = r*sin(conTheta); % y coordinates of surface cutting points
+    surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:)); % z coordinates of surface cutting points
+    surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:)); % x coordinates of the normal vectors on surface points
+    surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:)); % y coordinates of the normal vectors on surface points
+    surfNorm(3,:) = -1*ones(1,loopPtNum); % z coordinates of the normal vectors on surface points
+    surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
+    surfDirect = cutDirection(surfPt,[0;0;0]); % cutting direction of each points
     
     % tool path initialization
-    toolSp = toolData.toolBform;
-    toolRadius = toolData.radius;
-    toolQuat = zeros(loopPtNum,4);
-    toolVec = zeros(3,loopPtNum);
-    toolContactU = zeros(1,loopPtNum);
+    toolSp = toolData.toolBform; % B-form tool tip arc
+    toolRadius = toolData.radius; % fitted tool radius
+    toolQuat = zeros(loopPtNum,4); % the quaternions for each points
+    toolVec = zeros(3,loopPtNum); % the translation vectors for each points
+    toolContactU = zeros(1,loopPtNum); % the parameter u of the contact point on the tool tip
     isCollision = false(1,loopPtNum);
     toolPathPt = zeros(3,loopPtNum);
     toolCutDirect = zeros(3,loopPtNum);
@@ -360,15 +361,39 @@ s5_visualize_process;
 % to smooth the loopR to get the real tool path
 
 % cubic spline approximation
-spindleRpm = 1:length(loopPtNum);
-fr = csape(spindleRpm,loopR);
+accumPtNum = loopPtNum;
+for kk = 2:length(loopPtNum)
+    accumPtNum(kk) = loopPtNum(kk) + accumPtNum(kk - 1);
+end
+accumPtNum = [0,accumPtNum];
+loopRcsape = [0,loopR];
+Fr = csape(accumPtNum,loopRcsape);
 
 figure('Name','Feed Rate Smoothing');
-plot(spindleRpm,loopR);
+scatter(accumPtNum,loopRcsape);
 hold on; grid on;
+fnplt(Fr,'r',[0,accumPtNum(end)]);
+% line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
+%     'Color',[0.929,0.694,0.1250]);
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
-xlabel(['x (',unit,')']);
-ylabel(['y (',unit,')']);
+xlabel('Loop Accumulating Point Number');
+ylabel(['Radius of the Loop (',unit,')']);
+
+% tool path generation with the smoothing result
+spiralPtNum = loopPtNum;
+spiralPath = zeros(3,size(toolPathPt,2)); % the spiral tool path
+spiralNorm = zeros(3,size(toolPathPt,2));
+for kk = 1:length(loopPtNum) % each loop
+    for jj = 1:loopPtNum(kk)
+        tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
+        tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
+        
+        spiralPath(:,accumPtNum(kk) + jj) = tmpSpiral;
+        spiralNorm(:,accumPtNum(kk) + jj) = ;
+    end
+end
+
+
 
 
 %%
