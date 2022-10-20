@@ -387,7 +387,35 @@ for kk = 1:length(loopPtNum) % each loop
     for jj = 1:loopPtNum(kk)
         tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
         tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
-        
+        toolCutDirect
+        toolNormDirect
+
+parfor ii = (sparTheta + 1):ptNum
+    % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
+    nLoop = floor((ii - 1)/sparTheta) - 1;
+    angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
+    angleDel = angleN - angle(ii);
+    % ind2(ii) remains the index of angle nearest to angle(ii) within 
+    % those which is larger than the angle(ii) and in angleN
+    if isempty(angleN(angleDel >= 0))
+        % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
+        angleDel = angleDel + 2*pi;
+    end
+    ind2 = sparTheta*nLoop + find(angleN == min(angleN(angleDel >= 0)));
+    % ind3(ii) remains the index of angle nearest to angle(ii) within 
+    % those which is smaller than the angle(ii) and in angleN
+    if isempty(angleN(angleDel < 0))
+        angleDel = angleDel - 2*pi;
+    end
+    ind3 = sparTheta*nLoop + find(angleN == max(angleN(angleDel < 0)));
+    [res(resNum + ii),peakPt(:,resNum + ii),uLim(:,ii)] = residual3D( ...
+        toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp,toolRadius, ...
+        uLim(:,ii),ii,ind2,ind3);
+end
+
+
+
+
         spiralPath(:,accumPtNum(kk) + jj) = tmpSpiral;
         spiralNorm(:,accumPtNum(kk) + jj) = ;
     end
