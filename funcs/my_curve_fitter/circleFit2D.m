@@ -17,12 +17,15 @@ function [c,r,ang,RMSE,startV,endV] = circleFit2D(scatterOri,fitMethod)
 %   least square method by normal equation solving
 
 arguments
-    scatterOri (2,:) {mustBeFinite}
+    scatterOri {mustBeFinite}
     fitMethod {mustBeMember(fitMethod, ...
         ['Gradient-decent','Normal-equation','Levenberg-Marquardt'])} ...
         = 'Levenberg-Marquardt'
 end
 
+if size(scatterOri,2) == 2
+    scatterOri = scatterOri';
+end
 x = (scatterOri(1,:))';
 y = (scatterOri(2,:))';
 n = length(x);

@@ -7,7 +7,7 @@ if true
     
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
-    workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
+    workspaceDir = 'workspace/20221020-tooltip';
     fitMethod = 'Levenberg-Marquardt';
     paramMethod = 'centripetal';
     unit = '\mum';
