@@ -1,37 +1,37 @@
-function [c,r,ang,RMSE,startV,endV] = circleFit2D(scatterOri,fitMethod)
-% usage: [c,r,ang,RMSE] = circleLSC(scatterOri)
+function [c,r,ang,RMSE,startV,endV] = arcFit2D(scatterOri,options)
+% usage: [c,r,ang,RMSE,startV,endV] = arcFit2D(scatterOri,options)
 %
 % fit the circle from a cluster of 2D points
 %
 % Inputs: 
 %   scatterMat: original 2D points (2,n)
-%   options: 
-%       fitMethod: the method of curve fitting
+%   fitMethod: the method of curve fitting
 % Outputs: 
 %   r: radius of the arc (1,1)
 %   ang: the open angle of the tool (1,1)
 %   c: center of the arc (2,1)
 %   RMSE: the square-mean-root error of curve fitting
+%   startV: start edge vector of the arc
+%   endV: end edge vector of the arc
 %
 % method:
 %   least square method by normal equation solving
 
 arguments
-    scatterOri {mustBeFinite}
-    fitMethod {mustBeMember(fitMethod, ...
+    scatterOri (2,:) {mustBeFinite}
+    options.fitMethod {mustBeMember(options.fitMethod, ...
         ['Gradient-decent','Normal-equation','Levenberg-Marquardt'])} ...
         = 'Levenberg-Marquardt'
+    options.displayType {mustBeMember(options.displayType, ...
+        ['off','none','iter','iter-detailed','final','final-detailed'])} = 'final'
 end
 
-if size(scatterOri,2) == 2
-    scatterOri = scatterOri';
-end
 x = (scatterOri(1,:))';
 y = (scatterOri(2,:))';
 n = length(x);
 
 %% circle fitting
-switch fitMethod
+switch options.fitMethod
     case 'Gradient-decent' %% method one: gradient decent
         M = [sum(x.^2), sum(x.*y), sum(x);
              sum(x.*y), sum(y.^2), sum(y);
@@ -47,11 +47,16 @@ switch fitMethod
         % The above two ways gives the same result.
 
     case 'Levenberg-Marquardt' %% method three: Levenberg-Marquardt
+        if startsWith(options.displayType,'i') || startsWith(options.displayType,'f')
+            fprintf('The arc is fitted with the method [%s].\n',options.fitMethod);
+        end
         F = @(p,x) x(:,1).^2 + x(:,2).^2 + p(1)*x(:,1) + p(2)*x(:,2) + p(3);
         param0 = [1;1;1]; % 初值设置？？？？
         options = optimoptions(...
             'lsqcurvefit',...
-            'Algorithm','levenberg-marquardt','MaxIterations',2000);
+            'Algorithm','levenberg-marquardt', ...
+            'MaxIterations',2000, ...
+            'Display',options.displayType);
         lb = [];
         ub = [];
         param = lsqcurvefit(F,param0,scatterOri',zeros(n,1),lb,ub,options);

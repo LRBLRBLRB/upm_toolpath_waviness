@@ -1,4 +1,4 @@
-function [r,ang,scatterDst,varargout] = toolFit3D(scatterOri,fitMethod)
+function [r,ang,scatterDst,varargout] = toolFit3D(scatterOri,options)
 % usage: [c,r,ang,scatterDst,RMSE] = toolFit3D(scatterOri,options)
 %
 % solve the edge sharpness of a arc turning tool: 
@@ -21,61 +21,27 @@ function [r,ang,scatterDst,varargout] = toolFit3D(scatterOri,fitMethod)
 
 arguments
     scatterOri (3,:) {mustBeFinite}
-    fitMethod {mustBeMember(fitMethod, ...
+    options.fitMethod {mustBeMember(options.fitMethod, ...
         ['Gradient-decent','Normal-equation','Levenberg-Marquardt'])} ...
         = 'Levenberg-Marquardt'
+    options.displayType {mustBeMember(options.displayType, ...
+        ['off','none','iter','iter-detailed','final','final-detailed'])} = 'final'
 end
 
+[circ3D,RMSE,scatterPlane,c,startV,endV] = arcFit3D(scatterOri, ...
+    'fitMethod',options.fitMethod,'displayType',options.displayType);
+r = circ3D{2};
+ang = circ3D{3};
+
+%% rigid transform: to get the standardized tool profile
 n = size(scatterOri,2);
-
-%% Method one: least-square fitting
-% project the scatters to the least square fitting plane
-% B = -1*ones(n,1);
-% flat = lsqminnorm(scatterOri,B);
-% % 投影再坐标转换和直接转换结果一样？
-% k = (flat(1)*scatterOri(:,1) + flat(2)*scatterOri(:,2) + flat(3)*scatterOri(:,3)) ...
-%     ./(flat(1)*flat(1) + flat(2)*flat(2) + flat(3)*flat(3));
-% x = -flat(1)*k + scatterOri(:,1);
-% y = -flat(2)*k + scatterOri(:,2);
-% z = -flat(3)*k + scatterOri(:,3);
-% 
-% % coordinate transform to the plane
-% 
-% 
-% 
-% 
-% % 2D circle fitting
-% [cc,rr,ang,scatterPlaneDst,RMSE] = circleFit2D([xx,yy],options);
-%
-% reverse coordinate transform to 3D
-
-%% Method two: SVD & least square fitting
-% SVD to fit the plane
-scatterCentered = scatterOri' - meshgrid(mean(scatterOri,2),1:n);
-% svd: singular values are nonnegative and returned in decreasing order.
-[~,~,V] = svd(scatterCentered,'vector'); 
-planeNorm = V(:,3); % normVec remains the norm vector of th e fitting plane
-
-% rotNorm = transpose(cross(planeNorm,[0;0;1]));
-% rotNorm = rotNorm/norm(rotNorm);
-% planeAng = vecAng(planeNorm,[0;0;1],1);
-% scatterPlane = Rodrigues(scatterOri,rotNorm,planeAng);
-scatterR = vecRot(planeNorm,[0;0;1]);
-scatterPlane = scatterR*scatterOri;
-
-% 2D circle fitting
-% if any(scatterPlane(3,:))
-%     error('Error: uncorrect projection from plane to xOz.');
-% end
-[c,r,ang,RMSE,startV,endV] = circleFit2D(scatterPlane(1:2,:),fitMethod);
-
-% rigid transform: to get the standardized tool profile
 mid = 0.5*(startV + endV);
 rotAng = pi/2 - atan2(mid(2),mid(1));
 rotMat = rotz(rotAng);
 rotMat = rotMat(1:2,1:2);
 scatterDst = rotMat*(scatterPlane(1:2,:) - ndgrid(c,1:n));
 
-% optional output
+%% optional output
 varargout{1} = RMSE;
+
 end

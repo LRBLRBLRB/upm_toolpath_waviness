@@ -19,6 +19,25 @@ end
 %% 3D curve results
 debug = 2;
 switch debug
+    case 0
+        cx0 = 1*1000; % unit:mu m
+        cy0 = 2*1000; % unit:mu m
+        cz0 = 3*1000; % unit:mu m
+        r0 = 0.1*1000; % unit:mu m
+        openAng = pi/3; % unit: rad
+        edgePV = 200; % low-frequency error
+        k = -edgePV/openAng;
+        noise = r0*5e-3; % mid-frequency error
+        zNoise = r0*0.05; % data pre-processing error
+        theta = linspace(0,openAng,300);
+        r = r0 + edgePV/2 + k*theta + (noise*rand(1,length(theta)) - 0.5*noise);
+        toolOri(1,:) = cx0 + r.*cos(theta);
+        toolOri(2,:) = cy0 + r.*sin(theta);
+        toolOri(3,:) = cz0 + (zNoise*rand(1,length(theta)) - 0.5*zNoise);
+        rmse0 = sqrt( ...
+            sum((toolOri - ndgrid([cx0;cy0;cz0],1:length(theta)).^2),2) ...
+            /length(theta));
+        clear theta r;
     case 1
         pathName = fullfile(workspaceDir,"tooltip result/20221019-strategy-2+40-5.csv");
     case 2
@@ -62,11 +81,12 @@ fclose(tooltipFile);
 oriPts = importdata(pathName,',',numHeader);
 oriPts = oriPts.data;
 figure('Name','Original tool data');
-plot(oriPts(:,1),oriPts(:,2),'.','MarkerSize',2);
+plot3(oriPts(:,1),oriPts(:,2),oriPts(:,3),'.','MarkerSize',2);
 hold on;
 grid on;
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
 
 % outliners removed
 % rmoutliers(oriPts,2,"median");
@@ -74,6 +94,9 @@ ylabel(['y (',unit,')']);
 
 
 %% ransac line fitting
+% it seems to be useless at present, since the tool tip arc can be
+% recognized by directly ransac circle fitting.
+
 % sampleSz = 2; % number of points to sample per trial
 % maxDist = 2; % max allowable distance for inliers
 % 
@@ -95,29 +118,73 @@ ylabel(['y (',unit,')']);
 sampleSz = 3; % number of points to sample per trial
 maxDist = 0.05; % max allowable distance for inliers
 
-fitLineFcn = @(pts) circleFit2D(pts');  % fit function
+fitLineFcn = @(pts) arcFit3D(pts','displayType','off');  % fit function——只能有一个输出？
 evalLineFcn = ...   % distance evaluation function
-  @(mdl, pts) abs((pts(:,1) - x0).^2 + (pts(:,2) - y0).^2 - r^2);
+  @(mdl, pts) sum(abs(vecnorm(pts - (mdl{1})',2,2) - mdl{2}^2));
+
+% test whetger the functions above is true
+cx0 = 1*1000; % unit:mu m
+cy0 = 2*1000; % unit:mu m
+cz0 = 3*1000; % unit:mu m
+r0 = 0.1*1000; % unit:mu m
+openAng = pi/3; % unit: rad
+edgePV = 200; % low-frequency error
+k = -edgePV/openAng;
+noise = r0*5e-3; % mid-frequency error
+zNoise = r0*0.05; % data pre-processing error
+theta = transpose(linspace(0,openAng,300));
+r = r0 + edgePV/2 + k*theta + (noise*rand(length(theta),1) - 0.5*noise);
+toolOri(:,1) = cx0 + r.*cos(theta);
+toolOri(:,2) = cy0 + r.*sin(theta);
+toolOri(:,3) = cz0 + (zNoise*rand(length(theta),1) - 0.5*zNoise);
+fitCirc = fitLineFcn(toolOri);
+figure('Name','Function Testification');
+plot3(toolOri(:,1),toolOri(:,2),toolOri(:,3),'.'); hold on;
+scatter3(fitCirc{1}(1),fitCirc{1}(2),fitCirc{1}(3));
+R = vecRot([0;0;1],fitCirc{4});
+scaThe = linspace(0,2*pi);
+scat(1,:) = fitCirc{2}*cos(scaThe);
+scat(2,:) = fitCirc{2}*sin(scaThe);
+scat(3,:) = zeros(1,length(scaThe));
+circFit = R*scat + fitCirc{1};
+plot3(circFit(1,:),circFit(2,:),circFit(3,:)); hold on;
+
 
 [modelRANSAC,inlierIdx] = ransac(oriPts,fitLineFcn,evalLineFcn, ...
   sampleSz,maxDist);
 
 
 
+%% plot the fitting results
+% f2 = figure('Name','Tool Sharpness Fitting Result');
+% xLim = 1.1*max(toolFit(1,:));
+% quiver(-xLim,0,2*xLim,0,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % X axis
+% hold on;
+% text(0.9*xLim,-.05*radius,'x');
+% quiver(0,-0.2*radius,0,1.3*radius,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % Y axis
+% text(0.05*xLim,1.05*radius,'y');
+% plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.75); % tool edge scatters
+% theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
+% xtmp = radius*cos(theta);
+% ytmp = radius*sin(theta);
+% plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
+% scatter(0,0,'MarkerFaceColor',[0.85,0.33,0.10],'MarkerEdgeColor',[0.85,0.33,0.10]); % tool edge center
+% quiver(0,0,0,0.5*radius,'AutoScale','off','Color',[0.93,0.69,0.13], ...
+%     'LineWidth',2.5,'MaxHeadSize',0.3); % tool edge normal
+% line([0,xtmp(1)],[0,ytmp(1)],'LineStyle','--','Color',[0.85,0.33,0.10]);
+% line([0,xtmp(end)],[0,ytmp(end)],'LineStyle','--','Color',[0.85,0.33,0.10]);
+% % xlim([-1.1*xLim,1.1*xLim]);
+% axis equal;
+% % set(gca,'TickLabelInterpreter','tex');
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% xlabel(['x(',unit,')']);
+% ylabel(['y(',unit,')']);
+% title('Tool fitting result');
+% legend('','','tool edge','tool fitting arc','tool center', ...
+%     'tool normal vector','Location','northeast');
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-%%
+%% tool modelling
+% s1_toolModel
 
 % rmpath(genpath('.')

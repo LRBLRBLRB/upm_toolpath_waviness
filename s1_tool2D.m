@@ -127,75 +127,8 @@ legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
 clear xtmp ytmp theta; % 删除画图的临时变量
 
-%% 分离轮廓误差和波纹度误差
-% 直角坐标系转极坐标系
-toolTheta = atan2(toolFit(:,2),toolFit(:,1));
-toolR = vecnorm(toolFit,2,2);
-
-%% 车刀轮廓插值
-k = 3; % degree of the B-spline
-u = 0:0.0002:1;
-nPts = length(u);
-
-toolFit = [zeros(1,nCPts);toolFit];
-% B-spline interpolate in the polar coordinate
-[toolEdgePt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...
-    'paramMethod',paramMethod,'cptsType','Cartesian'); 
-toolCpts = toolBform.coefs;
-
-% [toolCpts,U] = bSplineCpts(toolFit,3,'chord'); 
-% u = 0:0.002:1;
-% n = length(toolCpts);
-% toolPt = zeros(length(u),2);
-% for i = 1:length(u)
-%     toolPt(i,:) = bSplinePt(toolCpts,3,u(i),U);
-% end
-
-% plot the interpolation results
-figure('Name','Tool Interpolation Results');
-plot(toolFit(2,:),toolFit(3,:),'--.', ...
-    'MarkerSize',8,'Color',[0,0.447,0.741]); hold on;
-plot(toolCpts(2,:),toolCpts(3,:),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
-plot(toolEdgePt(2,:),toolEdgePt(3,:),'Color',[0.635,0.078,0.184]);
-axis equal
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel(['y(',unit,')']);
-ylabel(['z(',unit,')']);
-title('Tool interpolation results')
-legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
-
-%% save the tool interpolation results
-center = [0;0;0];
-toolEdgeNorm = [0;0;1];
-cutDirect = [1;0;0];
-toolDirect = [0;1;0];
-[toolFileName,toolDirName,toolFileType] = uiputfile({ ...
-        '*.mat','MAT-file(*.mat)'; ...
-        '*.txt','text-file(.txt)';...
-        '*.*','all file(*.*)';...
-        }, ...
-        'Select the directory and filename to save the tool model', ...
-        fullfile(workspaceDir,['toolTheo',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
-toolFile = fullfile(toolDirName,toolFileName);
-switch toolFileType
-    case 0 % no saving files
-        msgfig = msgbox("No tool model saved","Warning","warn","modal");
-        uiwait(msgfig);
-    case 1 % *.mat
-        Comments = cell2mat(inputdlg( ...
-            'Enter Comment of the tool model:', ...
-            'Saving Comments', ...
-            [5 60], ...
-            string(datestr(now))));
-        save(toolFile,"Comments","unit","fitMethod","paramMethod", ... % comments and notes
-            "center","radius","openAngle", ... % tool fitting results
-            "toolEdgeNorm","toolDirect","cutDirect","toolBform", ... % tool interpolation results
-            "toolEdgePt","toolFit"); % auxiliary data
-        % toolEdgePt, toolCpts, toolFit are useless in the following process at present
-    otherwise
-        msgfig = msgbox("File type error","Error","error","modal");
-        uiwait(msgfig);
-end
+%% tool modelling
+s1_toolModel
 
 %% 相邻刀位点的残高
 % x1 = [0,0,0]; vec1 = [0,1];
