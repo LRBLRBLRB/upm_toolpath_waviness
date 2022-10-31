@@ -1,4 +1,4 @@
-function [c,r,ang,RMSE,startV,endV] = arcFit2D(scatterOri,options)
+function [circ2D,RMSE] = arcFit2D(scatterOri,options)
 % usage: [c,r,ang,RMSE,startV,endV] = arcFit2D(scatterOri,options)
 %
 % fit the circle from a cluster of 2D points
@@ -69,16 +69,17 @@ switch options.fitMethod
 end
 
 %% params of the arc
-c = zeros(2,1);
-c(1) = -param(1)/2;
-c(2) = -param(2)/2;
-r = 0.5*sqrt(param(1)^2 + param(2)^2 - 4*param(3));
-if imag(r) ~= 0
+circ2D = cell(5,1);
+circ2D{1} = zeros(2,1);
+circ2D{1}(1) = -param(1)/2;
+circ2D{1}(2) = -param(2)/2;
+circ2D{2} = 0.5*sqrt(param(1)^2 + param(2)^2 - 4*param(3));
+if imag(circ2D{2}) ~= 0
     error('Error: cannot fit a circle!');
 end
 
-startV = scatterOri(:,1) - c;
-endV = scatterOri(:,end) - c;
-ang = vecAng(startV,endV,1);
+circ2D{4} = scatterOri(:,1) - circ2D{1};
+circ2D{5} = scatterOri(:,end) - circ2D{1};
+circ2D{3} = vecAng(circ2D{4},circ2D{5},1);
 
 end

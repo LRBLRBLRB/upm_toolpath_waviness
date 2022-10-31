@@ -71,21 +71,21 @@ scatterPlane = scatterR*scatterOri;
 % if any(scatterPlane(3,:))
 %     error('Error: uncorrect projection from plane to xOz.');
 % end
-[center2D,radius,ang,RMSE,startV,endV] = arcFit2D(scatterPlane(1:2,:), ...
+[circ2D,RMSE] = arcFit2D(scatterPlane(1:2,:), ...
     'fitMethod',options.fitMethod,'displayType',options.displayType);
 
 % Inverse rigid transform to find the fitting center of the original data
 scatterPlaneZ = mean(scatterPlane(3,:));
-center3D = [center2D;scatterPlaneZ];
+center3D = [circ2D{1};scatterPlaneZ];
 center3D = scatterR'*center3D;
-arcVec = 0.5*(startV + endV);
+arcVec = 0.5*(circ2D{4} + circ2D{5});
 arcVec = [arcVec;0];
 arcVec = scatterR'*arcVec;
 
 circ3D = cell(5,1);
 circ3D{1} = center3D;
-circ3D{2} = radius;
-circ3D{3} = ang;
+circ3D{2} = circ2D{2};
+circ3D{3} = circ2D{3};
 circ3D{4} = planeNorm/norm(planeNorm);
 circ3D{5} = arcVec/norm(arcVec);
 
@@ -103,8 +103,6 @@ circ3D{5} = arcVec/norm(arcVec);
 
 %% optional output
 varargout{1} = scatterPlane;
-varargout{2} = center2D;
-varargout{3} = startV;
-varargout{4} = endV;
+varargout{2} = circ2D;
 
 end
