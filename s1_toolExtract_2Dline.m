@@ -24,7 +24,6 @@ switch debug
         cy0 = 0*1000; % unit: mu m
         r0 = 0.1*1000; % unit: mu m
         noise = 0.03;
-        zNoise = 0.01;
         theta = linspace(0,2*pi/3,200);
         r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
         toolOri(1,:) = r.*cos(theta) + cx0;
@@ -114,20 +113,19 @@ zlabel(['z (',unit,')']);
 
 % ransac
 sampleSz = 3; % number of points to sample per trial
-maxDist = 2; % max allowable distance for inliers
+maxDist = 0.003; % max allowable distance for inliers
 
 fitLineFcn = @(pts) arcFit2D(pts','displayType','off');  % fit function
 evalLineFcn = ...   % distance evaluation function
-  @(mdl, pts) (abs(vecnorm(pts - (mdl{1})',2,2) - mdl{2}^2));
+  @(mdl, pts) (abs(vecnorm(pts - (mdl{1})',2,2) - mdl{2}));
 
 % test whetger the functions above is true
-isTest = true;
+isTest = false;
 if isTest
     cx0 = 0*1000; % unit: mu m
     cy0 = 0*1000; % unit: mu m
     r0 = 0.1*1000; % unit: mu m
     noise = 0.03;
-    zNoise = 0.01;
     theta = (linspace(0,2*pi/3,200))';
     r = r0*(1 - noise + 2*noise*rand(length(theta),1));
     toolOri(:,1) = r.*cos(theta) + cx0;
@@ -160,41 +158,42 @@ if isTest
     grid on;
     axis equal
     evalPer = evalLineFcn(fitCirc,toolOri);
-    evalSum = sum(evalLineFcn(fitCirc,toolOri));
+%     evalSum = sum(evalLineFcn(fitCirc,toolOri));
 end
 
-[modelRANSAC,inlierIdx] = ransac(oriPts,fitLineFcn,evalLineFcn, ...
+[modelRANSAC,inlierInd] = ransac(oriPts,fitLineFcn,evalLineFcn, ...
   sampleSz,maxDist);
 
+[circ2D,rmse] = arcFit2D(oriPts(inlierInd,:)','displayType','off');
 
 
 %% plot the fitting results
-% f2 = figure('Name','Tool Sharpness Fitting Result');
-% xLim = 1.1*max(toolFit(1,:));
-% quiver(-xLim,0,2*xLim,0,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % X axis
-% hold on;
-% text(0.9*xLim,-.05*radius,'x');
-% quiver(0,-0.2*radius,0,1.3*radius,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % Y axis
-% text(0.05*xLim,1.05*radius,'y');
-% plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.75); % tool edge scatters
-% theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
-% xtmp = radius*cos(theta);
-% ytmp = radius*sin(theta);
-% plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
-% scatter(0,0,'MarkerFaceColor',[0.85,0.33,0.10],'MarkerEdgeColor',[0.85,0.33,0.10]); % tool edge center
-% quiver(0,0,0,0.5*radius,'AutoScale','off','Color',[0.93,0.69,0.13], ...
-%     'LineWidth',2.5,'MaxHeadSize',0.3); % tool edge normal
-% line([0,xtmp(1)],[0,ytmp(1)],'LineStyle','--','Color',[0.85,0.33,0.10]);
-% line([0,xtmp(end)],[0,ytmp(end)],'LineStyle','--','Color',[0.85,0.33,0.10]);
-% % xlim([-1.1*xLim,1.1*xLim]);
-% axis equal;
-% % set(gca,'TickLabelInterpreter','tex');
-% set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% xlabel(['x(',unit,')']);
-% ylabel(['y(',unit,')']);
-% title('Tool fitting result');
-% legend('','','tool edge','tool fitting arc','tool center', ...
-%     'tool normal vector','Location','northeast');
+f2 = figure('Name','Tool Sharpness Fitting Result');
+xLim = 1.1*max(toolFit(1,:));
+quiver(-xLim,0,2*xLim,0,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % X axis
+hold on;
+text(0.9*xLim,-.05*radius,'x');
+quiver(0,-0.2*radius,0,1.3*radius,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % Y axis
+text(0.05*xLim,1.05*radius,'y');
+plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.75); % tool edge scatters
+theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
+xtmp = radius*cos(theta);
+ytmp = radius*sin(theta);
+plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
+scatter(0,0,'MarkerFaceColor',[0.85,0.33,0.10],'MarkerEdgeColor',[0.85,0.33,0.10]); % tool edge center
+quiver(0,0,0,0.5*radius,'AutoScale','off','Color',[0.93,0.69,0.13], ...
+    'LineWidth',2.5,'MaxHeadSize',0.3); % tool edge normal
+line([0,xtmp(1)],[0,ytmp(1)],'LineStyle','--','Color',[0.85,0.33,0.10]);
+line([0,xtmp(end)],[0,ytmp(end)],'LineStyle','--','Color',[0.85,0.33,0.10]);
+% xlim([-1.1*xLim,1.1*xLim]);
+axis equal;
+% set(gca,'TickLabelInterpreter','tex');
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x(',unit,')']);
+ylabel(['y(',unit,')']);
+title('Tool fitting result');
+legend('','','tool edge','tool fitting arc','tool center', ...
+    'tool normal vector','Location','northeast');
 
 
 %% tool modelling
