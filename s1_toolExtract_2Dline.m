@@ -9,7 +9,7 @@ if true
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
     workspaceDir = 'workspace/20221020-tooltip';
-    fitMethod = 'Levenberg-Marquardt';
+    fitOpts.fitMethod = 'Levenberg-Marquardt';
     paramMethod = 'centripetal';
     unit = '\mum';
     textFontSize = 12;
@@ -49,7 +49,7 @@ switch debug
             'Tool Processing Input', ...
             [1 50; 1 50; 1 50; 1 50; 1 50], ...
             {'Levenberg-Marquardt','centripetal','\mu m','Times New Roman','14'},optsInput);
-        fitMethod = toolInput{1};
+        fitOpts.fitMethod = toolInput{1};
         paramMethod = toolInput{2};
         unit = toolInput{3};
         textFontType = toolInput{4};
@@ -116,39 +116,73 @@ zlabel(['z (',unit,')']);
 
 % ransac
 sampleSz = 3; % number of points to sample per trial
-maxDist = 0.05; % max allowable distance for inliers
+maxDist = 1; % max allowable distance for inliers
 
-fitLineFcn = @(pts) arcFit3D(pts','displayType','off');  % fit function——只能有一个输出？
+fitLineFcn = @(pts) arcFit3D(pts','displayType','off');  % fit function
 evalLineFcn = ...   % distance evaluation function
   @(mdl, pts) sum(abs(vecnorm(pts - (mdl{1})',2,2) - mdl{2}^2));
 
 % test whetger the functions above is true
-cx0 = 1*1000; % unit:mu m
-cy0 = 2*1000; % unit:mu m
-cz0 = 3*1000; % unit:mu m
-r0 = 0.1*1000; % unit:mu m
-openAng = pi/3; % unit: rad
-edgePV = 200; % low-frequency error
-k = -edgePV/openAng;
-noise = r0*5e-3; % mid-frequency error
-zNoise = r0*0.05; % data pre-processing error
-theta = transpose(linspace(0,openAng,300));
-r = r0 + edgePV/2 + k*theta + (noise*rand(length(theta),1) - 0.5*noise);
-toolOri(:,1) = cx0 + r.*cos(theta);
-toolOri(:,2) = cy0 + r.*sin(theta);
-toolOri(:,3) = cz0 + (zNoise*rand(length(theta),1) - 0.5*zNoise);
-fitCirc = fitLineFcn(toolOri);
-figure('Name','Function Testification');
-plot3(toolOri(:,1),toolOri(:,2),toolOri(:,3),'.'); hold on;
-scatter3(fitCirc{1}(1),fitCirc{1}(2),fitCirc{1}(3));
-R = vecRot([0;0;1],fitCirc{4});
-scaThe = linspace(0,2*pi);
-scat(1,:) = fitCirc{2}*cos(scaThe);
-scat(2,:) = fitCirc{2}*sin(scaThe);
-scat(3,:) = zeros(1,length(scaThe));
-circFit = R*scat + fitCirc{1};
-plot3(circFit(1,:),circFit(2,:),circFit(3,:)); hold on;
-
+isTest = true;
+if isTest
+    cx0 = 1*1000; % unit:mu m
+    cy0 = 2*1000; % unit:mu m
+    cz0 = 3*1000; % unit:mu m
+    r0 = 0.1*1000; % unit:mu m
+    openAng = pi/3; % unit: rad
+    edgePV = 200; % low-frequency error
+    k = -edgePV/openAng;
+    noise = r0*5e-3; % mid-frequency error
+    zNoise = r0*0.5; % data pre-processing error
+    theta = transpose(linspace(0,openAng,300));
+    r = r0 + edgePV/2 + k*theta + (noise*rand(length(theta),1) - 0.5*noise);
+    toolOri(:,1) = cx0 + r.*cos(theta);
+    toolOri(:,2) = cy0 + r.*sin(theta);
+    toolOri(:,3) = cz0 + (zNoise*rand(length(theta),1) - 0.5*zNoise);
+    toolOri = toolOri*(rotz(pi/3))'*(roty(pi/6))';
+    fitCirc = fitLineFcn(toolOri);
+    figure('Name','Function Testification');
+    plot3(toolOri(:,1),toolOri(:,2),toolOri(:,3),'.','Color',[0,0.45,0.74]); hold on;
+    % plot the fitting center of the circle
+    scatter3(fitCirc{1}(1),fitCirc{1}(2),fitCirc{1}(3),36,[0.6350,0.0780,0.1840],'filled');
+    quiver3(fitCirc{1}(1),fitCirc{1}(2),fitCirc{1}(3),fitCirc{5}(1),fitCirc{5}(2),fitCirc{5}(3), ...
+        0.6*fitCirc{2},'filled','Color',[0.6350,0.0780,0.1840]);
+    % plot the plane of the fitting circle
+    plotOpts.FaceColor = [0.9290,0.6940,0.1250];
+    plotOpts.FaceAlpha = 0.1;
+    plotOpts.EdgeColor = 'none';
+    drawCirclePlane(fitCirc{1},fitCirc{2},fitCirc{4},plotOpts);
+    % plot the fitting circle
+    R = vecRot([0;0;1],fitCirc{4});
+    scaThe = linspace(0,2*pi);
+    scat(1,:) = fitCirc{2}*cos(scaThe);
+    scat(2,:) = fitCirc{2}*sin(scaThe);
+    scat(3,:) = zeros(1,length(scaThe));
+    circFit = R*scat + fitCirc{1};
+    plot3(circFit(1,:),circFit(2,:),circFit(3,:),'k--','LineWidth',1);
+    % plot the fitting arc
+    R = axesRot((rotz(0.5*fitCirc{3}))'*[1;0;0],[0;0;1],fitCirc{5},fitCirc{4},'');
+    scaThe = linspace(0,fitCirc{3});
+    scat(1,:) = fitCirc{2}*cos(scaThe);
+    scat(2,:) = fitCirc{2}*sin(scaThe);
+    scat(3,:) = zeros(1,length(scaThe));
+    circFit = R*scat + fitCirc{1};
+    plot3(circFit(1,:),circFit(2,:),circFit(3,:), ...
+        'Color',[0.8500,0.3250,0.0980],'LineWidth',3);
+    hold off;
+    grid on;
+    % set the x & y axis equal
+    xtick = get(gca,'XTick');
+    ytick = get(gca,'YTick');
+    ztick = get(gca,'ZTick');
+    %ytick间距，并将xtick间距设为与y相同
+    N = (max(xtick) - min(xtick))/(ztick(2)-ztick(1));
+    N_ = (max(ytick) - min(ytick)) / (ztick(2) - ztick(1));
+    xtick = xtick(1) + (0:(N  - 1))*(ztick(2)-ztick(1));
+    ytick = ytick(1) + (0:(N_ - 1)) * (ztick(2) - ztick(1));
+    set(gca,'XTick',xtick');%此时横轴和纵轴坐标刻度一致
+    set(gca,'YTick',ytick');
+end
 
 [modelRANSAC,inlierIdx] = ransac(oriPts,fitLineFcn,evalLineFcn, ...
   sampleSz,maxDist);

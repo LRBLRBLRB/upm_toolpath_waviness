@@ -75,15 +75,19 @@ scatterPlane = scatterR*scatterOri;
     'fitMethod',options.fitMethod,'displayType',options.displayType);
 
 % Inverse rigid transform to find the fitting center of the original data
-center3D = [center2D;0];
-center3D = scatterR'*center3D + scatterMean;
+scatterPlaneZ = mean(scatterPlane(3,:));
+center3D = [center2D;scatterPlaneZ];
+center3D = scatterR'*center3D;
+arcVec = 0.5*(startV + endV);
+arcVec = [arcVec;0];
+arcVec = scatterR'*arcVec;
 
-circ3D = cell(4,1);
+circ3D = cell(5,1);
 circ3D{1} = center3D;
 circ3D{2} = radius;
 circ3D{3} = ang;
-circ3D{4} = planeNorm;
-
+circ3D{4} = planeNorm/norm(planeNorm);
+circ3D{5} = arcVec/norm(arcVec);
 
 %% Method Three: Projection & Least Square Fitting
 % Method From 化春键, 熊雪梅, 陈莹. 基于拉格朗日乘子法的空间圆弧拟合优化方法[J]. 
