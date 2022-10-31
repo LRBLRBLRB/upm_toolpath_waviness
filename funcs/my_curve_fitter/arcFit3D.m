@@ -78,16 +78,15 @@ scatterPlane = scatterR*scatterOri;
 scatterPlaneZ = mean(scatterPlane(3,:));
 center3D = [circ2D{1};scatterPlaneZ];
 center3D = scatterR'*center3D;
-arcVec = 0.5*(circ2D{4} + circ2D{5});
-arcVec = [arcVec;0];
+arcVec = [circ2D{4};0];
 arcVec = scatterR'*arcVec;
 
 circ3D = cell(5,1);
 circ3D{1} = center3D;
 circ3D{2} = circ2D{2};
 circ3D{3} = circ2D{3};
-circ3D{4} = planeNorm/norm(planeNorm);
-circ3D{5} = arcVec/norm(arcVec);
+circ3D{4} = arcVec/norm(arcVec);
+circ3D{5} = planeNorm/norm(planeNorm);
 
 %% Method Three: Projection & Least Square Fitting
 % Method From 化春键, 熊雪梅, 陈莹. 基于拉格朗日乘子法的空间圆弧拟合优化方法[J]. 
@@ -99,7 +98,8 @@ circ3D{5} = arcVec/norm(arcVec);
 % circ3D{1} = center3D;
 % circ3D{2} = radius;
 % circ3D{3} = ang;
-% circ3D{4} = planeParam;
+% circ3D{4} = arcVec/norm(arcVec);
+% circ3D{5} = planeNorm/norm(planeNorm);
 
 %% optional output
 varargout{1} = scatterPlane;

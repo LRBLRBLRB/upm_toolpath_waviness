@@ -8,7 +8,7 @@ if true
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
     workspaceDir = 'workspace/20221020-tooltip';
-    fitMethod = 'Levenberg-Marquardt';
+    fitOpts.fitMethod = 'Levenberg-Marquardt';
     paramMethod = 'centripetal';
     unit = '\mum';
     textFontSize = 12;
@@ -60,7 +60,7 @@ switch debug
             [1 20; 1 20; 1 20; 1 20; 1 20], ...
             {'Levenberg-Marquardt','centripetal','\mu m','Times New Roman','14'}, ...
             'WindowStyle');
-        fitMethod = toolInput{1};
+        fitOpts.fitMethod = toolInput{1};
         paramMethod = toolInput{2};
         unit = toolInput{3};
         textFontType = toolInput{4};
@@ -96,7 +96,11 @@ ylabel('y(nm)');
 clear theta theta1 theta2;
 
 %% 由(x,y)图获得刃口圆心半径以及波纹度函数
-[~,radius,includedAngle,toolFit,rmseLsc] = toolFit2D(toolOri,'Levenberg-Marquardt');
+fitOpts.displayType = 'iter-detailed';
+[circ2D,toolFit,rmseLsc] = toolFit2D(toolOri, ...
+    'fitMethod',fitOpts.fitMethod,'displayType',fitOpts.displayType);
+radius = circ2D{2};
+openAngle = circ2D{3};
 
 % plot the fitting results
 f2 = figure('Name','Tool Sharpness Fitting Result');
@@ -107,7 +111,7 @@ text(0.9*xLim,-.05*radius,'x');
 quiver(0,-0.2*radius,0,1.3*radius,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % Y axis
 text(0.05*xLim,1.05*radius,'y');
 plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.75); % tool edge scatters
-theta = (pi/2 - includedAngle/2):0.01:(pi/2 + includedAngle/2);
+theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
 xtmp = radius*cos(theta);
 ytmp = radius*sin(theta);
 plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle

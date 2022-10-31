@@ -69,7 +69,7 @@ switch options.fitMethod
 end
 
 %% params of the arc
-circ2D = cell(5,1);
+circ2D = cell(4,1);
 circ2D{1} = zeros(2,1);
 circ2D{1}(1) = -param(1)/2;
 circ2D{1}(2) = -param(2)/2;
@@ -77,9 +77,10 @@ circ2D{2} = 0.5*sqrt(param(1)^2 + param(2)^2 - 4*param(3));
 if imag(circ2D{2}) ~= 0
     error('Error: cannot fit a circle!');
 end
-
-circ2D{4} = scatterOri(:,1) - circ2D{1};
-circ2D{5} = scatterOri(:,end) - circ2D{1};
-circ2D{3} = vecAng(circ2D{4},circ2D{5},1);
+startV = scatterOri(:,1) - circ2D{1};
+endV = scatterOri(:,end) - circ2D{1};
+circ2D{3} = vecAng(startV,endV,1);
+circ2D{4} = 0.5*(startV + endV);
+circ2D{4} = circ2D{4}/norm(circ2D{4});
 
 end

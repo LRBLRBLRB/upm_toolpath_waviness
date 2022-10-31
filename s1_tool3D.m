@@ -101,8 +101,10 @@ clear theta theta1 theta2;
 %% 由(x,y)图获得刃口圆心半径以及波纹度函数
 nCPts = size(toolOri,2);
 fitOpts.displayType = 'iter-detailed';
-[radius,openAngle,toolFit] = toolFit3D(toolOri,'fitMethod',fitOpts.fitMethod, ...
+[circ3D,toolFit] = toolFit3D(toolOri,'fitMethod',fitOpts.fitMethod, ...
     'displayType',fitOpts.displayType);
+radius = circ3D{2};
+openAngle = circ3D{3};
 pause(1);
 
 % plot the fitting results

@@ -145,15 +145,15 @@ if isTest
     plot3(toolOri(:,1),toolOri(:,2),toolOri(:,3),'.','Color',[0,0.45,0.74]); hold on;
     % plot the fitting center of the circle
     scatter3(fitCirc{1}(1),fitCirc{1}(2),fitCirc{1}(3),36,[0.6350,0.0780,0.1840],'filled');
-    quiver3(fitCirc{1}(1),fitCirc{1}(2),fitCirc{1}(3),fitCirc{5}(1),fitCirc{5}(2),fitCirc{5}(3), ...
+    quiver3(fitCirc{1}(1),fitCirc{1}(2),fitCirc{1}(3),fitCirc{4}(1),fitCirc{4}(2),fitCirc{4}(3), ...
         0.6*fitCirc{2},'filled','Color',[0.6350,0.0780,0.1840]);
     % plot the plane of the fitting circle
     plotOpts.FaceColor = [0.9290,0.6940,0.1250];
     plotOpts.FaceAlpha = 0.1;
     plotOpts.EdgeColor = 'none';
-    drawCirclePlane(fitCirc{1},fitCirc{2},fitCirc{4},plotOpts);
+    drawCirclePlane(fitCirc{1},fitCirc{2},fitCirc{5},plotOpts);
     % plot the fitting circle
-    R = vecRot([0;0;1],fitCirc{4});
+    R = vecRot([0;0;1],fitCirc{5});
     scaThe = linspace(0,2*pi);
     scat(1,:) = fitCirc{2}*cos(scaThe);
     scat(2,:) = fitCirc{2}*sin(scaThe);
@@ -161,7 +161,7 @@ if isTest
     circFit = R*scat + fitCirc{1};
     plot3(circFit(1,:),circFit(2,:),circFit(3,:),'k--','LineWidth',1);
     % plot the fitting arc
-    R = axesRot((rotz(0.5*fitCirc{3}))'*[1;0;0],[0;0;1],fitCirc{5},fitCirc{4},'');
+    R = axesRot((rotz(0.5*fitCirc{3}))'*[1;0;0],[0;0;1],fitCirc{4},fitCirc{5},'');
     scaThe = linspace(0,fitCirc{3});
     scat(1,:) = fitCirc{2}*cos(scaThe);
     scat(2,:) = fitCirc{2}*sin(scaThe);

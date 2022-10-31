@@ -1,4 +1,4 @@
-function [r,ang,scatterDst,varargout] = toolFit3D(scatterOri,options)
+function [circ3D,scatterDst,varargout] = toolFit3D(scatterOri,options)
 % usage: [c,r,ang,scatterDst,RMSE] = toolFit3D(scatterOri,options)
 %
 % solve the edge sharpness of a arc turning tool: 
@@ -28,18 +28,15 @@ arguments
         ['off','none','iter','iter-detailed','final','final-detailed'])} = 'final'
 end
 
-[circ3D,RMSE,scatterPlane,c,startV,endV] = arcFit3D(scatterOri, ...
+[circ3D,RMSE,scatterPlane,circ2D] = arcFit3D(scatterOri, ...
     'fitMethod',options.fitMethod,'displayType',options.displayType);
-r = circ3D{2};
-ang = circ3D{3};
 
 %% rigid transform: to get the standardized tool profile
 n = size(scatterOri,2);
-mid = 0.5*(startV + endV);
-rotAng = pi/2 - atan2(mid(2),mid(1));
+rotAng = pi/2 - atan2(circ2D{4}(2),circ2D{4}(1));
 rotMat = rotz(rotAng);
 rotMat = rotMat(1:2,1:2);
-scatterDst = rotMat*(scatterPlane(1:2,:) - ndgrid(c,1:n));
+scatterDst = rotMat*(scatterPlane(1:2,:) - ndgrid(circ2D{1},1:n));
 
 %% optional output
 varargout{1} = RMSE;
