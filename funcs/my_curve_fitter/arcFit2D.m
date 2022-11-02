@@ -19,9 +19,9 @@ function [circ2D,RMSE] = arcFit2D(scatterOri,options)
 
 arguments
     scatterOri (2,:) {mustBeFinite}
-    options.fitMethod {mustBeMember(options.fitMethod, ...
-        ['Gradient-decent','Normal-equation','Levenberg-Marquardt'])} ...
-        = 'Levenberg-Marquardt'
+    options.arcFitMethod {mustBeMember(options.arcFitMethod, ...
+        ['gradient-decent','normal-equation','levenberg-marquardt'])} ...
+        = 'levenberg-marquardt'
     options.displayType {mustBeMember(options.displayType, ...
         ['off','none','iter','iter-detailed','final','final-detailed'])} = 'final'
 end
@@ -31,8 +31,8 @@ y = (scatterOri(2,:))';
 n = length(x);
 
 %% circle fitting
-switch options.fitMethod
-    case 'Gradient-decent' %% method one: gradient decent
+switch options.arcFitMethod
+    case 'gradient-decent' %% method one: gradient decent
         M = [sum(x.^2), sum(x.*y), sum(x);
              sum(x.*y), sum(y.^2), sum(y);
              sum(x),    sum(y),    n];
@@ -40,21 +40,21 @@ switch options.fitMethod
              sum(x.*x.*y) + sum(y.*y.*y);
              sum(x.*x)    + sum(y.*y)];
         param = -M\b;
-    case 'Normal-equation' %% method two: nomal equation 
+    case 'normal-equation' %% method two: nomal equation 
         M = [x,y,ones(n,1)];
         b = -x.^2 - y.^2;
         param = (M'*M)\(M'*b);
         % The above two ways gives the same result.
 
-    case 'Levenberg-Marquardt' %% method three: Levenberg-Marquardt
+    case 'levenberg-marquardt' %% method three: Levenberg-Marquardt
         if startsWith(options.displayType,'i') || startsWith(options.displayType,'f')
-            fprintf('The arc is fitted with the method [%s].\n',options.fitMethod);
+            fprintf('The arc is fitted with the method [%s].\n',options.arcFitMethod);
         end
         F = @(p,x) x(:,1).^2 + x(:,2).^2 + p(1)*x(:,1) + p(2)*x(:,2) + p(3);
         param0 = [1;1;1]; % 初值设置？？？？
         options = optimoptions(...
             'lsqcurvefit',...
-            'Algorithm','levenberg-marquardt', ...
+            'Algorithm',options.arcFitMethod, ...
             'MaxIterations',2000, ...
             'Display',options.displayType);
         lb = [];

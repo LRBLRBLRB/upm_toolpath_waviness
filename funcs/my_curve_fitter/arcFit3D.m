@@ -22,9 +22,9 @@ function [circ3D,RMSE,varargout] = arcFit3D(scatterOri,options)
 
 arguments
     scatterOri (3,:) {mustBeFinite}
-    options.fitMethod {mustBeMember(options.fitMethod, ...
-        ['Gradient-decent','Normal-equation','Levenberg-Marquardt'])} ...
-        = 'Levenberg-Marquardt'
+    options.arcFitMethod {mustBeMember(options.arcFitMethod, ...
+        ['gradient-decent','normal-equation','levenberg-marquardt'])} ...
+        = 'levenberg-marquardt'
     options.displayType {mustBeMember(options.displayType, ...
         ['off','none','iter','iter-detailed','final','final-detailed'])} = 'final'
 end
@@ -72,7 +72,7 @@ scatterPlane = scatterR*scatterOri;
 %     error('Error: uncorrect projection from plane to xOz.');
 % end
 [circ2D,RMSE] = arcFit2D(scatterPlane(1:2,:), ...
-    'fitMethod',options.fitMethod,'displayType',options.displayType);
+    'arcFitMethod',options.arcFitMethod,'displayType',options.displayType);
 
 % Inverse rigid transform to find the fitting center of the original data
 scatterPlaneZ = mean(scatterPlane(3,:));

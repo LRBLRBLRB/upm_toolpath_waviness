@@ -21,20 +21,21 @@ function [circ2D,scatterDst,RMSE] = toolFit2D(scatterOri,options)
 
 arguments
     scatterOri (2,:) {mustBeFinite}
-    options.fitMethod {mustBeMember(options.fitMethod, ...
-        ['Gradient-decent','Normal-equation','Levenberg-Marquardt'])} ...
-        = 'Levenberg-Marquardt'
-    options.displayType {mustBeMember(options.displayType, ...
+    options.toolDataType {mustBeMember(options.toolDataType, ...
+        ['onlyArc','lineArcLine'])} = 'onlyArc'
+    options.arcFitMethod {mustBeMember(options.arcFitMethod, ...
+        ['gradient-decent','normal-equation','levenberg-marquardt'])} ...
+        = 'levenberg-marquardt'
+    options.arcFitdisplayType {mustBeMember(options.arcFitdisplayType, ...
         ['off','none','iter','iter-detailed','final','final-detailed'])} = 'final'
 end
 
-n = size(scatterOri,2);
-
 %% circle fitting
 [circ2D,RMSE] = arcFit2D(scatterOri, ...
-    'fitMethod',options.fitMethod,'displayType',options.displayType);
+    'fitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType);
 
 %% rigid transform
+n = size(scatterOri,2);
 rotAng = pi/2 - atan2(circ2D{4}(2),circ2D{4}(1));
 rotMat = rotz(rotAng);
 rotMat = rotMat(1:2,1:2);
