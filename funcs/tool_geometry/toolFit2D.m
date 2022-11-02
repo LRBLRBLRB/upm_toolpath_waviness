@@ -92,36 +92,39 @@ switch options.toolFitType
           sampleSz,arcRansacMaxDist);
         scatterOri = scatterOri(:,inlierInd);
     case 'lineArc'
+        % get the start and end point of the line
+        fprintf(['Please select the points of the two edges of the tool tip: \n' ...
+            'The first is the end point of the left one, ' ...
+            'while the other is the start point of the right.\n']);
+        % we have three methods to get the points
+        % [lineX,lineY] = ginput(2);
+        % [lineX,lineY] = getpts(fig1);
+        % ax1.Children
+        lineMid = ginput(2);
+        leftPts = scatterOri(:,scatterOri(1,:) < lineMid(1,1));
+        rightPts = scatterOri(:,scatterOri(1,:) > lineMid(2,1));
         if strcmp(options.lineFitMethod,'ransac')
             % ------------ransac line fitting to remove outlieres & lsc arc fitting------------
-            % get the start and end point of the line
-            fprintf(['Please select the points of the two edges of the tool tip: \n' ...
-                'The first is the end point of the left one, ' ...
-                'while the other is the start point of the right.\n']);
-            % we have three methods to get the points
-            % [lineX,lineY] = ginput(2);
-            % [lineX,lineY] = getpts(fig1);
-            % ax1.Children
-            lineMid = ginput(2);
-            leftPts = scatterOri(:,scatterOri(1,:) < lineMid(1,1));
-            rightPts = scatterOri(:,scatterOri(1,:) > lineMid(2,1));
-    
             % ransac line fitting
             sampleSz = 2; % number of points to sample per trial
             % maxDist = 0.00001; % max allowable distance for inliers
             fitLineFcn = @(pts) polyfit(pts(:,1),pts(:,2),1); % fit function using polyfit
             evalLineFcn = ...   % distance evaluation function
               @(mdl, pts) sum((pts(:, 2) - polyval(mdl, pts(:,1))).^2,2);
-            [leftLine,leftInlierIdx] = ransac(leftPts',fitLineFcn,evalLineFcn, ...
+            [leftPoly,leftInlierIdx] = ransac(leftPts',fitLineFcn,evalLineFcn, ...
               sampleSz,lineFitMaxDist);
-            [rightLine,rightInlierIdx] = ransac(rightPts',fitLineFcn,evalLineFcn, ...
+            [rightPoly,rightInlierIdx] = ransac(rightPts',fitLineFcn,evalLineFcn, ...
               sampleSz,lineFitMaxDist);
-    
+
+%             leftDist = pt2Line(scatterOri,leftPoly);
+%             leftInlierIdx = leftDist < lineFitMaxDist;
+%             rightDist = pt2Line(scatterOri,rightPoly);
+%             rightInlierIdx = rightDist < lineFitMaxDist;
             % plot the line fitting process
             figure('Name','Line Fitting of the Tool Tip Arc');
-            plot(leftPts(1,leftInlierIdx),leftLine(1)*leftPts(1,leftInlierIdx) + leftLine(2), ...
+            plot(leftPts(1,leftInlierIdx),leftPoly(1)*leftPts(1,leftInlierIdx) + leftPoly(2), ...
                 '.','Color',[0.9290    0.6940    0.1250],'MarkerSize',8); hold on;
-            plot(rightPts(1,rightInlierIdx),rightLine(1)*rightPts(1,rightInlierIdx) + rightLine(2), ...
+            plot(rightPts(1,rightInlierIdx),rightPoly(1)*rightPts(1,rightInlierIdx) + rightPoly(2), ...
                 '.','Color',[0.9290    0.6940    0.1250],'MarkerSize',8);
             plot(scatterOri(1,:),scatterOri(2,:),'LineWidth',0.5,'Color',[0    0.4470    0.7410]);
             grid on; axis equal;
@@ -132,23 +135,13 @@ switch options.toolFitType
             scatterOri = scatterOri(:,circIdx(1):circIdx(2));
         else
             % ------------least-square line fitting to remove outliers & lsc arc fitting------------
-            % get the start and end point of the line
-            fprintf(['Please select the points of the two edges of the tool tip: \n' ...
-                'The first is the end point of the left one, ' ...
-                'while the other is the start point of the right.\n']);
-            lineMid = ginput(2);
-            leftPts = scatterOri(:,scatterOri(1,:) < lineMid(1,1));
-            rightPts = scatterOri(:,scatterOri(1,:) > lineMid(2,1));
-
             % least square line fitting 
             leftPoly = polyfit(leftPts(1,:),leftPts(2,:),1);
-            leftY = polyval(leftPoly,scatterOri(1,:));
-            leftDist = pt2Line([scatterOri(1,:);leftY],leftPoly);
+            leftDist = pt2Line(scatterOri,leftPoly);
             leftInlierIdx = leftDist < lineFitMaxDist;
 
             rightPoly = polyfit(rightPts(1,:),rightPts(2,:),1);
-            rightY = polyval(rightPoly,scatterOri(1,:));
-            rightDist = pt2Line([scatterOri(1,:);rightY],rightPoly);
+            rightDist = pt2Line(scatterOri,rightPoly);
             rightInlierIdx = rightDist < lineFitMaxDist;
 
             % plot the line fitting process
@@ -162,7 +155,7 @@ switch options.toolFitType
 
             % Least Square Fitting Based on the Inliers
             circIdx(1) = find(leftInlierIdx,1,"last");
-            circIdx(2) = size(toolOri,2) - find(flipud(rightInlierIdx),1,"last");
+            circIdx(2) = find(rightInlierIdx,1,"first");
             scatterOri = scatterOri(:,circIdx(1):circIdx(2));
         end
 end
