@@ -21,9 +21,9 @@ arguments
     k {mustBePositive}
     u (:,1)
     options.paramMethod {mustBeMember(options.paramMethod, ...
-        ['uniform','centripetal','chord',''])} = 'chord'
+        {'uniform','centripetal','chord',''})} = 'chord'
     options.cptsType {mustBeMember(options.cptsType, ...
-        ['Cartesian','Polar','Spherical',''])} = 'Cartesian'
+        {'Cartesian','Polar','Spherical',''})} = 'Cartesian'
 end
 
 if size(Q,2) == 2 || size(Q,2) == 3

@@ -1,1 +1,0 @@
-function cutWidth = searchResfunc(res,norm,slope)

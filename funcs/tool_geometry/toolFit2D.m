@@ -25,7 +25,7 @@ arguments
     arcRansacMaxDist {mustBePositive} = 1
     lineFitMaxDist {mustBePositive} = 1
     options.toolFitType {mustBeMember(options.toolFitType, ...
-        ['onlyArc','arcRansac','lineArc'])} = 'onlyArc'
+        {'onlyArc','arcRansac','lineArc'})} = 'onlyArc'
     options.arcFitMethod {mustBeMember(options.arcFitMethod, ...
         ['gradient-decent','normal-equation','levenberg-marquardt'])} ...
         = 'levenberg-marquardt'
@@ -101,6 +101,7 @@ switch options.toolFitType
         % [lineX,lineY] = getpts(fig1);
         % ax1.Children
         lineMid = ginput(2);
+        fprintf('\nSuccessfully selected!\n\n')
         leftPts = scatterOri(:,scatterOri(1,:) < lineMid(1,1));
         rightPts = scatterOri(:,scatterOri(1,:) > lineMid(2,1));
         if strcmp(options.lineFitMethod,'ransac')
@@ -127,8 +128,11 @@ switch options.toolFitType
             plot(rightPts(1,rightInlierIdx),rightPoly(1)*rightPts(1,rightInlierIdx) + rightPoly(2), ...
                 '.','Color',[0.9290    0.6940    0.1250],'MarkerSize',8);
             plot(scatterOri(1,:),scatterOri(2,:),'LineWidth',0.5,'Color',[0    0.4470    0.7410]);
+            scatter(lineMid(:,1),lineMid(:,2),'filled','MarkerEdgeColor',[0.8500    0.3250    0.0980]);
             grid on; axis equal;
             
+            pause();
+
             % Least Square Fitting Based on the Inliers
             circIdx(1) = find(leftInlierIdx,1,"last");
             circIdx(2) = size(scatterOri,2) - find(flipud(rightInlierIdx),1,"last");
@@ -151,7 +155,10 @@ switch options.toolFitType
             plot(scatterOri(1,rightInlierIdx),rightPoly(1)*scatterOri(1,rightInlierIdx) + rightPoly(2), ...
                 '.','Color',[0.9290    0.6940    0.1250],'MarkerSize',8);
             plot(scatterOri(1,:),scatterOri(2,:),'LineWidth',0.5,'Color',[0    0.4470    0.7410]);
+            scatter(lineMid(:,1),lineMid(:,2),'filled','MarkerEdgeColor',[0.8500    0.3250    0.0980]);
             grid on; axis equal;
+
+            pause();
 
             % Least Square Fitting Based on the Inliers
             circIdx(1) = find(leftInlierIdx,1,"last");

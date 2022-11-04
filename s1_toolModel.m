@@ -58,6 +58,7 @@ k = 3; % degree of the B-spline
 u = 0:0.0002:1;
 nPts = length(u);
 
+nCPts = size(toolFit,2);
 toolFit = [zeros(1,nCPts);toolFit];
 % B-spline interpolate in the polar coordinate
 [toolEdgePt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...

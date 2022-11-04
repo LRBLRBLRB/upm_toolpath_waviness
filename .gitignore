@@ -1,2 +1,3 @@
 # 忽略tool_path文件夹下的所有文件（即刀路）
 # tool_path/
+*.asv

@@ -8,7 +8,7 @@ if true
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
     workspaceDir = 'workspace/20221020-tooltip';
-    fitOpts.arcFitMethod = 'Levenberg-Marquardt';
+    fitOpts.arcFitMethod = 'levenberg-marquardt';
     paramMethod = 'centripetal';
     unit = '\mum';
     textFontSize = 12;
@@ -58,7 +58,7 @@ switch debug
             'Unit','Font type in figure','Font size in figure'}, ...
             'Tool Processing Input', ...
             [1 20; 1 20; 1 20; 1 20; 1 20], ...
-            {'Levenberg-Marquardt','centripetal','\mu m','Times New Roman','14'}, ...
+            {'levenberg-marquardt','centripetal','\mu m','Times New Roman','14'}, ...
             'WindowStyle');
         fitOpts.arcFitMethod = toolInput{1};
         paramMethod = toolInput{2};
@@ -99,10 +99,9 @@ view(-45,60);
 clear theta theta1 theta2;
 
 %% 由(x,y)图获得刃口圆心半径以及波纹度函数
-nCPts = size(toolOri,2);
 fitOpts.arcFitdisplayType = 'iter-detailed';
 [circ3D,toolFit] = toolFit3D(toolOri, ...
-    'arcFitMethod',fitOpts.arcFitMethod,'displayType',fitOpts.arcFitdisplayType);
+    'arcFitMethod',fitOpts.arcFitMethod,'arcFitdisplayType',fitOpts.arcFitdisplayType);
 radius = circ3D{2};
 openAngle = circ3D{3};
 pause(1);

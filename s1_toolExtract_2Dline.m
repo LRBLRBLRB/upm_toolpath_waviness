@@ -1,7 +1,15 @@
 % to deal with the tool tip measurement data
 % and to get the 3D point cloud of the tool tip
 
-if true
+isAPP = true;
+if isAPP
+    toolOri = app.toolOri;
+    fitOpts.toolFitType = app.toolFitType;
+    paramMethod = app.paramMethod;
+    unit = app.unit;
+    textFontSize = app.fontSize;
+    textFontType = app.fontName;
+else
     close all;
     clear; clc;
     addpath(genpath('funcs'));
@@ -14,71 +22,71 @@ if true
     unit = 'mm';
     textFontSize = 12;
     textFontType = 'Times New Roman';
-end
 
-%% 3D curve results
-isTest = false;
-isSelf = false;
-if isTest
-    cx0 = 0*1000; % unit: mu m
-    cy0 = 0*1000; % unit: mu m
-    r0 = 0.1*1000; % unit: mu m
-    noise = 0.03;
-    theta = linspace(0,2*pi/3,200);
-    r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
-    toolOri(1,:) = r.*cos(theta) + cx0;
-    toolOri(2,:) = r.*sin(theta) + cy0;
-    toolOri(3,:) = zeros(1,length(theta));
-    rmse0 = sqrt(...
-                sum(...
-                    ((toolOri(1,:) - cx0).^2 + (toolOri(2,:) - cy0).^2 - r0^2).^2) ...
-            /length(theta));
-    clear theta r;
-else
-    if isSelf
-        optsInput.Resize = 'on';
-        optsInput.WindowStyle = 'normal';
-        optsInput.Interpreter = 'tex';
-        toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
-            'Unit','Font type in figure','Font size in figure'}, ...
-            'Tool Processing Input', ...
-            [1 50; 1 50; 1 50; 1 50; 1 50], ...
-            {'lineArc','centripetal','\mu m','Times New Roman','14'},optsInput);
-        fitOpts.toolFitType = toolInput{1};
-        paramMethod = toolInput{2};
-        unit = toolInput{3};
-        textFontType = toolInput{4};
-        textFontSize = str2double(toolInput{5});
-        % tool measurement file loading
-        [fileName,dirName] = uigetfile({ ...
-            '*.csv','Comma-Separated Values-files(*.csv)'; ...
-            '*.mat','MAT-files(*.mat)'; ...
-            '*.txt','text-files(*.txt)'; ...
-            '*.*','all files(*.*)'...
-            }, ...
-            'Select one tool tip measurement data', ...
-            workspaceDir, ...
-            'MultiSelect','off');
-        pathName = fullfile(dirName,fileName);
+    %% 2D curve results
+    isTest = false;
+    isSelf = false;
+    if isTest
+        cx0 = 0*1000; % unit: mu m
+        cy0 = 0*1000; % unit: mu m
+        r0 = 0.1*1000; % unit: mu m
+        noise = 0.03;
+        theta = linspace(0,2*pi/3,200);
+        r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
+        toolOri(1,:) = r.*cos(theta) + cx0;
+        toolOri(2,:) = r.*sin(theta) + cy0;
+        toolOri(3,:) = zeros(1,length(theta));
+        rmse0 = sqrt(...
+                    sum(...
+                        ((toolOri(1,:) - cx0).^2 + (toolOri(2,:) - cy0).^2 - r0^2).^2) ...
+                /length(theta));
+        clear theta r;
     else
-        pathName = fullfile(workspaceDir,"tooltip result/20221019-strategy-2+40-5.csv");
-    end
-    % get rid of the header of the csv file
-    numHeader = 0;
-    tooltipFile = fopen(pathName);
-    while ~feof(tooltipFile)
-        tmpLine = fgets(tooltipFile);
-        % if the line begins with %d%d or -%d, then break
-        if ~isnan(str2double(tmpLine(1:2)))
-            break;
+        if isSelf
+            optsInput.Resize = 'on';
+            optsInput.WindowStyle = 'normal';
+            optsInput.Interpreter = 'tex';
+            toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
+                'Unit','Font type in figure','Font size in figure'}, ...
+                'Tool Processing Input', ...
+                [1 50; 1 50; 1 50; 1 50; 1 50], ...
+                {'lineArc','centripetal','\mu m','Times New Roman','14'},optsInput);
+            fitOpts.toolFitType = toolInput{1};
+            paramMethod = toolInput{2};
+            unit = toolInput{3};
+            textFontType = toolInput{4};
+            textFontSize = str2double(toolInput{5});
+            % tool measurement file loading
+            [fileName,dirName] = uigetfile({ ...
+                '*.csv','Comma-Separated Values-files(*.csv)'; ...
+                '*.mat','MAT-files(*.mat)'; ...
+                '*.txt','text-files(*.txt)'; ...
+                '*.*','all files(*.*)'...
+                }, ...
+                'Select one tool tip measurement data', ...
+                workspaceDir, ...
+                'MultiSelect','off');
+            pathName = fullfile(dirName,fileName);
+        else
+            pathName = fullfile(workspaceDir,"tooltip result/20221019-strategy-2+40-5.csv");
         end
-        numHeader = numHeader + 1;
+        % get rid of the header of the csv file
+        numHeader = 0;
+        tooltipFile = fopen(pathName);
+        while ~feof(tooltipFile)
+            tmpLine = fgets(tooltipFile);
+            % if the line begins with %d%d or -%d, then break
+            if ~isnan(str2double(tmpLine(1:2)))
+                break;
+            end
+            numHeader = numHeader + 1;
+        end
+        fclose(tooltipFile);
+        toolOri = importdata(pathName,',',numHeader);
+        toolOri = toolOri.data;
+        toolOri(:,3) = [];
+        toolOri = toolOri';
     end
-    fclose(tooltipFile);
-    toolOri = importdata(pathName,',',numHeader);
-    toolOri = toolOri.data;
-    toolOri(:,3) = [];
-    toolOri = toolOri';
 end
 
 % plot the importing result
@@ -89,7 +97,7 @@ grid on;
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 
-% outliners removed
+%% outliners removed
 % rmoutliers(oriPts,2,"median");
 % 如果多边形的直线段和圆弧段重合部分的数据差别比较大，说明目前的测量模式有问题。
 
@@ -147,6 +155,6 @@ legend('','','tool edge','tool fitting arc','tool center', ...
 
 
 %% tool modelling
-% s1_toolModel
+s1_toolModel
 
 % rmpath(genpath('.')
