@@ -1,4 +1,4 @@
-classdef upm_toolpath <matlab.apps.AppBase
+classdef upm_toolpath < matlab.apps.AppBase
     % to create a ui figure for tool data & parameters input
 
     % Default properties
@@ -21,6 +21,7 @@ classdef upm_toolpath <matlab.apps.AppBase
         FigureMn                matlab.ui.container.Menu
         FigureToolbar           matlab.ui.container.Toolbar
         CloseAllFigurePushtool  matlab.ui.container.toolbar.PushTool
+        BoldInfoToggletool      matlab.ui.container.toolbar.ToggleTool
         FigureTbGp              matlab.ui.container.TabGroup
         ToolTb                  matlab.ui.container.Tab
         SurfaceTb               matlab.ui.container.Tab
@@ -47,9 +48,10 @@ classdef upm_toolpath <matlab.apps.AppBase
         PlotBtn                 matlab.ui.control.Button
         EnterBtn                matlab.ui.control.Button
         CancelBtn               matlab.ui.control.Button
-        InfoEf                  matlab.ui.control.EditField
+        InfoTa                  matlab.ui.control.TextArea
         MsgState                logical
-        Msg                     string
+        Msg                     char
+        MsgNum                  int16
 
         S1Tool2DBtn                         matlab.ui.control.Button
         S1Tool3DBtn                         matlab.ui.control.Button
@@ -76,32 +78,85 @@ classdef upm_toolpath <matlab.apps.AppBase
         toolOri
     end
     
+    % Functions that is used in the callbacks
+    methods (Access = private)
+        function resetToolfitParams(app)
+            app.UnitDd.Value = app.unitDefault;
+            app.unit = app.UnitDd.Value;
+            app.FontNameDd.Value = app.fontNameDefault;
+            app.fontName = app.FontNameDd.Value;
+            app.FontSizeEf.Value = app.fontSizeDefault;
+            app.fontSize = app.FontSizeEf.Value;
+
+            app.ToolFitTypeDd.Value = app.toolFitTypeDefault;
+            app.toolFitType = app.ToolFitTypeDd.Value;
+            app.ArcFitMethodDd.Value = app.arcFitMethodDefault;
+            app.arcFitMethod = app.ArcFitMethodDd.Value;
+            app.ArcRansacMaxDistEf.Value = app.arcRansacMaxDistDefault;
+            app.arcRansacMaxDist = app.ArcRansacMaxDistEf.Value;
+            app.ArcRansacMaxDistEf.Enable = "off";
+            app.ArcRansacMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+            app.LineFitMethodDd.Value = app.lineFitMethodDefault;
+            app.lineFitMethod = app.LineFitMethodDd.Value;
+            app.LineFitMethodDd.Enable = "off";
+            app.LineFitMethodDd.BackgroundColor = [0.96 0.96 0.96];
+            app.LineFitMaxDistEf.Value = app.lineFitMaxDistDefault;
+            app.lineFitMaxDist = app.LineFitMaxDistEf.Value;
+            app.LineFitMaxDistEf.Enable = "off";
+            app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+
+            app.ParamMethodDd.Value = app.paramMethodDefault;
+            app.paramMethod = app.ParamMethodDd.Value;
+        end
+
+        function resetSurfaceParams(app)
+        end
+
+        function resetOptimParams(app)
+        end
+    end
+
     % Callbacks that handle component events
     methods (Access = private)
         % Code that executes after component creation
         function startupFcn(app)
-            app.InfoEf.Value = 'Initialize Successfully!';
+            app.MsgNum = 1;
+            app.Msg = 'APP is successfully initialized!';
+            InfoTaValueChanged(app,true);
 %             app.WorkspaceDirEf.Value = 'workspace';
 %             [app.MsgState,app.Msg] = mkdir('workspace');
 %             if ~app.MsgState
-%                 InfoEfValueChanged(app,true)
+%                 InfoTaValueChanged(app,true)
 %             end
-            ResetBtnValueChanged(app,true);
+            resetToolfitParams(app);
+            resetSurfaceParams(app);
+            resetOptimParams(app);
             % addpath(genpath('funcs'));
-            pause(1);
+            app.Msg = 'All the parameters have been reset.';
+            InfoTaValueChanged(app,true);
             app.Msg = 'Please choose a directory for the workspace.';
-            InfoEfValueChanged(app,true);
+            InfoTaValueChanged(app,true);
         end
 
-        % Clicked Toolbar: close all the figures
+        % Clicked toolbar pushtool: close all the figures
         function CloseAllFigurePushtoolClicked(app,event)
             close all;
+        end
+
+        % CLicked toolbar toggletool: bold / normalize the infomation font
+        function BoldInfoToggletoolClicked(app,event)
+            switch app.InfoTa.FontWeight
+                case 'normal'
+                    app.InfoTa.FontWeight = 'bold';
+                case 'bold'
+                    app.InfoTa.FontWeight = 'normal';
+            end
         end
 
         % Button down: shift to the toolbar tab, and refresh the message
         function ToolTbButtonDown(app,event)
             app.Msg = 'Please choose a directory for the workspace.';
-            InfoEfValueChanged(app,true);
+            InfoTaValueChanged(app,true);
         end
 
         % Code that workspace directory editfield changed
@@ -109,10 +164,10 @@ classdef upm_toolpath <matlab.apps.AppBase
             app.workspaceDir = app.WorkspaceDirEf.Value;
             [app.MsgState,app.Msg] = mkdir(app.workspaceDir);
             if ~app.MsgState
-                InfoEfValueChanged(app,true)
+                InfoTaValueChanged(app,true)
             end
             app.Msg = 'Please choose a tool file.';
-            InfoEfValueChanged(app,true);
+            InfoTaValueChanged(app,true);
         end
         
         % Code that choose the workspace directory
@@ -126,7 +181,7 @@ classdef upm_toolpath <matlab.apps.AppBase
             end
             app.WorkspaceDirEf.Value = app.workspaceDir;
             app.Msg = 'Please choose a tool file.';
-            InfoEfValueChanged(app,true);
+            InfoTaValueChanged(app,true);
         end
 
         % Code that tool file path editfield changed
@@ -139,7 +194,7 @@ classdef upm_toolpath <matlab.apps.AppBase
             end
             app.toolPathName = app.ToolFileEf.Value;
             app.Msg = 'Please select the parameters and click Update.';
-            InfoEfValueChanged(app,true);
+            InfoTaValueChanged(app,true);
         end
         
         % Value changed function: to choose the tool file path
@@ -162,7 +217,7 @@ classdef upm_toolpath <matlab.apps.AppBase
             app.toolPathName = fullfile(dirName,fileName);
             app.ToolFileEf.Value = app.toolPathName;
             app.Msg = 'Please select the parameters and click ''Update''.';
-            InfoEfValueChanged(app,true);
+            InfoTaValueChanged(app,true);
         end
 
         % Value changed function: DdFontName i.e., font type selection
@@ -250,42 +305,18 @@ classdef upm_toolpath <matlab.apps.AppBase
             app.paramMethod = app.ParamMethodDd.Value;
 
             app.Msg = 'All the parameters are set. Click ''Plot'' to plot the data.';
-            InfoEfValueChanged(app,true);
+            InfoTaValueChanged(app,true);
         end
 
         % Value changed function: reset the parameters
         function ResetBtnValueChanged(app,event)
             % Reset all the values to the default
-            app.UnitDd.Value = app.unitDefault;
-            app.unit = app.UnitDd.Value;
-            app.FontNameDd.Value = app.fontNameDefault;
-            app.fontName = app.FontNameDd.Value;
-            app.FontSizeEf.Value = app.fontSizeDefault;
-            app.fontSize = app.FontSizeEf.Value;
-
-            app.ToolFitTypeDd.Value = app.toolFitTypeDefault;
-            app.toolFitType = app.ToolFitTypeDd.Value;
-            app.ArcFitMethodDd.Value = app.arcFitMethodDefault;
-            app.arcFitMethod = app.ArcFitMethodDd.Value;
-            app.ArcRansacMaxDistEf.Value = app.arcRansacMaxDistDefault;
-            app.arcRansacMaxDist = app.ArcRansacMaxDistEf.Value;
-            app.ArcRansacMaxDistEf.Enable = "off";
-            app.ArcRansacMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
-            app.LineFitMethodDd.Value = app.lineFitMethodDefault;
-            app.lineFitMethod = app.LineFitMethodDd.Value;
-            app.LineFitMethodDd.Enable = "off";
-            app.LineFitMethodDd.BackgroundColor = [0.96 0.96 0.96];
-            app.LineFitMaxDistEf.Value = app.lineFitMaxDistDefault;
-            app.lineFitMaxDist = app.LineFitMaxDistEf.Value;
-            app.LineFitMaxDistEf.Enable = "off";
-            app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
-
-            app.ParamMethodDd.Value = app.paramMethodDefault;
-            app.paramMethod = app.ParamMethodDd.Value;
+            resetToolfitParams(app);
 
             % Report the infomation
-            app.Msg = 'All the parameters are reset. Modify them and click ''Update'' to set.';
-            InfoEfValueChanged(app,true);
+            app.Msg = ['All the parameters in Tool File Processing are reset.', ... 
+                'Modify them and click ''Update'' to set.'];
+            InfoTaValueChanged(app,true);
         end
 
         % Value changed function: plot the tool file data
@@ -322,6 +353,8 @@ classdef upm_toolpath <matlab.apps.AppBase
             grid(app.ToolDataAxes,'on');
             xlabel(app.ToolDataAxes,['x (',app.unit,')']);
             ylabel(app.ToolDataAxes,['y (',app.unit,')']);
+            app.Msg = 'Tool data is successfully loaded.';
+            InfoTaValueChanged(app,true);
         end
 
         % Value changed function: transfer the parameters to the main program
@@ -342,8 +375,10 @@ classdef upm_toolpath <matlab.apps.AppBase
         end
 
         % Code that update the infomation of the EfInfo window
-        function InfoEfValueChanged(app,event)
-            app.InfoEf.Value = app.Msg;
+        function InfoTaValueChanged(app,event)
+            app.MsgNum = app.MsgNum + 1;
+            app.InfoTa.Value{app.MsgNum} = char([num2str(app.MsgNum),' ',app.Msg]);
+            scroll(app.InfoTa,"bottom");
         end
 
         % --------------------------Function Execution--------------------------
@@ -370,13 +405,13 @@ classdef upm_toolpath <matlab.apps.AppBase
         % Button down: shift to the surface tab, and refresh the message
         function SurfaceTbButtonDown(app,event)
             app.Msg = '';
-            InfoEfValueChanged(app,true);
+            InfoTaValueChanged(app,true);
         end
 
         % Button down: shift to the program tab, and refresh the message
         function ProgramTbButtonDown(app,event)
             app.Msg = 'Press the corresponding button to finish the programming process.';
-            InfoEfValueChanged(app,true);
+            InfoTaValueChanged(app,true);
         end
 
         function S2DesignSimulAsphericConcentricBtnValueChanged(app,event)
@@ -418,11 +453,18 @@ classdef upm_toolpath <matlab.apps.AppBase
 
             % Manage toolbar
             app.FigureToolbar = uitoolbar(app.PlotUIFigure);
+
             app.CloseAllFigurePushtool = uipushtool(app.FigureToolbar, ...
-                'Icon','resource/image/CloseAllFigure.png');
+                'Icon','resource/image/CloseAllFigure.svg');
             app.CloseAllFigurePushtool.ClickedCallback = createCallbackFcn( ...
-                app,@CloseAllFigurePushtoolClicked);
+                app,@CloseAllFigurePushtoolClicked,true);
             app.CloseAllFigurePushtool.Tooltip = 'Close all the figures';
+
+            app.BoldInfoToggletool = uitoggletool(app.FigureToolbar, ...
+                'Icon','resource/image/Bold.svg','Separator','on');
+            app.BoldInfoToggletool.ClickedCallback = createCallbackFcn( ...
+                app,@BoldInfoToggletoolClicked,true);
+            app.BoldInfoToggletool.Tooltip = 'Bold/Normalize the infomation.';
 
             % Manage tab groups
             FigureGl = uigridlayout(app.PlotUIFigure,[2,1],'Padding',[5,5,5,5]);
@@ -777,11 +819,14 @@ classdef upm_toolpath <matlab.apps.AppBase
             OptimArrow2.Layout.Column = 4;
 
             % ------------------------Info displaying window------------------------
-            app.InfoEf = uieditfield(FigureGl,'text','Value','Ready to process','Editable','off', ...
-                'BackgroundColor',[0.96 0.96 0.96]);
-            app.InfoEf.Layout.Row = 2;
-            app.InfoEf.Layout.Column = 1;
-            app.InfoEf.ValueChangedFcn = createCallbackFcn(app,@InfoEfValueChanged,true);
+            app.InfoTa = uitextarea(FigureGl,'WordWrap','on', ...
+                'Editable','off','BackgroundColor',[0.96 0.96 0.96]);
+            app.InfoTa.Layout.Row = 2;
+            app.InfoTa.Layout.Column = 1;
+            app.InfoTa.FontSize = 14;
+            app.InfoTa.FontWeight = 'normal';
+            app.InfoTa.Value = {'1 Welcome.'};
+            app.InfoTa.ValueChangedFcn = createCallbackFcn(app,@InfoEfValueChanged,true);
 
             % Show the figure after all components are created
             app.PlotUIFigure.Visible = 'on';
