@@ -1,10 +1,14 @@
-classdef toolDataInput <matlab.apps.AppBase
+classdef upm_toolpath <matlab.apps.AppBase
     % to create a ui figure for tool data & parameters input
 
     % Default properties
     properties (Constant)
         workspaceDirDefault = 'D:\Code\2021-11_ToolWaviness\upm_toolpath_waviness\workspace';
         toolFitTypeDefault = 'lineArc'
+        arcFitMethodDefault = 'levenberg-marquardt'
+        arcRansacMaxDistDefault = 1e-2
+        lineFitMethodDefault = 'polyfit'
+        lineFitMaxDistDefault = 1e-3
         paramMethodDefault = 'centripetal'
         unitDefault        = 'mm'
         fontNameDefault    = 'Times New Roman'
@@ -12,7 +16,7 @@ classdef toolDataInput <matlab.apps.AppBase
     end
 
     % Properties that correspond to app components
-    properties (Access = private)
+    properties (Access = public)
         PlotUIFigure            matlab.ui.Figure
         FigureMn                matlab.ui.container.Menu
         FigureToolbar           matlab.ui.container.Toolbar
@@ -25,11 +29,18 @@ classdef toolDataInput <matlab.apps.AppBase
         WorkspaceDirBtn         matlab.ui.control.Button
         ToolFileEf              matlab.ui.control.EditField
         ToolFileBtn             matlab.ui.control.Button
-        ToolFitTypeDd           matlab.ui.control.DropDown
-        ParamMethodDd           matlab.ui.control.DropDown
+        ParamTabCommon          matlab.ui.container.Tab
         UnitDd                  matlab.ui.control.DropDown
         FontNameDd              matlab.ui.control.DropDown
         FontSizeEf              matlab.ui.control.NumericEditField
+        ParamTabToolfit         matlab.ui.container.Tab
+        ToolFitTypeDd           matlab.ui.control.DropDown
+        LineFitMethodDd         matlab.ui.control.DropDown
+        LineFitMaxDistEf        matlab.ui.control.NumericEditField
+        ArcFitMethodDd          matlab.ui.control.DropDown
+        ArcRansacMaxDistEf      matlab.ui.control.NumericEditField
+        ParamTabToolinterp      matlab.ui.container.Tab
+        ParamMethodDd           matlab.ui.control.DropDown
         ResetBtn                matlab.ui.control.Button
         UpdateBtn               matlab.ui.control.Button
         ToolDataAxes            matlab.ui.control.UIAxes
@@ -51,13 +62,17 @@ classdef toolDataInput <matlab.apps.AppBase
 
     % properties that should be used in the .m program
     properties (Access = public)
-        workspaceDir    string
-        toolPathName    string
-        toolFitType     string
-        paramMethod     string
-        unit            char
-        fontName        string
-        fontSize        double
+        workspaceDir        string
+        toolPathName        string
+        unit                char
+        fontName            string
+        fontSize            double
+        toolFitType         string
+        arcFitMethod        string
+        arcRansacMaxDist    double
+        lineFitMethod       string
+        lineFitMaxDist      double
+        paramMethod         string
         toolOri
     end
     
@@ -72,6 +87,7 @@ classdef toolDataInput <matlab.apps.AppBase
 %                 InfoEfValueChanged(app,true)
 %             end
             ResetBtnValueChanged(app,true);
+            % addpath(genpath('funcs'));
             pause(1);
             app.Msg = 'Please choose a directory for the workspace.';
             InfoEfValueChanged(app,true);
@@ -152,36 +168,122 @@ classdef toolDataInput <matlab.apps.AppBase
         % Value changed function: DdFontName i.e., font type selection
         function FontNameDdValueChanged(app,event)
             app.fontName = app.FontNameDd.Value;
-            set(app.ToolDataAxes,'FontName',fontName);
+            set(app.ToolDataAxes,'FontName',app.fontName);
         end
         
         % Value changed function: font size selection
         function FontSizeEfValueChanged(app,event)
             app.fontSize = app.FontSizeEf.Value;
-            set(app.ToolDataAxes,'FontSize',fontSize);
+            set(app.ToolDataAxes,'FontSize',app.fontSize);
+        end
+
+        % Dropdown opening function: tool fit type
+        function ToolFitTypeDdOpening(app,event)
+            app.toolFitType = app.ToolFitTypeDd.Value;
+            % enable the parameter selection based on the input tool type
+            switch app.toolFitType
+                case 'onlyArc'
+                    app.ArcRansacMaxDistEf.Enable = "off";
+                    app.ArcRansacMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+                    app.LineFitMethodDd.Enable = "off";
+                    app.LineFitMethodDd.BackgroundColor = [0.96 0.96 0.96];
+                    app.LineFitMaxDistEf.Enable = "off";
+                    app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+                case 'arcRansac'
+                    app.ArcRansacMaxDistEf.Enable = "on";
+                    app.ArcRansacMaxDistEf.BackgroundColor = [1 1 1];
+                    app.LineFitMethodDd.Enable = "off";
+                    app.LineFitMethodDd.BackgroundColor = [0.96 0.96 0.96];
+                    app.LineFitMaxDistEf.Enable = "off";
+                    app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+                case 'lineArc'
+                    app.ArcRansacMaxDistEf.Enable = "off";
+                    app.ArcRansacMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+                    app.LineFitMethodDd.Enable = "on";
+                    app.LineFitMethodDd.BackgroundColor = [1 1 1];
+                    app.LineFitMaxDistEf.Enable = "on";
+                    app.LineFitMaxDistEf.BackgroundColor = [1 1 1];
+            end
+        end
+
+        % Value changed function: tool fit type
+        function ToolFitTypeDdValueChanged(app,event)
+            app.toolFitType = app.ToolFitTypeDd.Value;
+            % enable the parameter selection based on the input tool type
+            switch app.toolFitType
+                case 'onlyArc'
+                    app.ArcRansacMaxDistEf.Enable = "off";
+                    app.ArcRansacMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+                    app.LineFitMethodDd.Enable = "off";
+                    app.LineFitMethodDd.BackgroundColor = [0.96 0.96 0.96];
+                    app.LineFitMaxDistEf.Enable = "off";
+                    app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+                case 'arcRansac'
+                    app.ArcRansacMaxDistEf.Enable = "on";
+                    app.ArcRansacMaxDistEf.BackgroundColor = [1 1 1];
+                    app.LineFitMethodDd.Enable = "off";
+                    app.LineFitMethodDd.BackgroundColor = [0.96 0.96 0.96];
+                    app.LineFitMaxDistEf.Enable = "off";
+                    app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+                case 'lineArc'
+                    app.ArcRansacMaxDistEf.Enable = "off";
+                    app.ArcRansacMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+                    app.LineFitMethodDd.Enable = "on";
+                    app.LineFitMethodDd.BackgroundColor = [1 1 1];
+                    app.LineFitMaxDistEf.Enable = "on";
+                    app.LineFitMaxDistEf.BackgroundColor = [1 1 1];
+            end
         end
 
         % Value changed function: update the selection selection
         function UpdateBtnValueChanged(app,event)
-            app.toolFitType = app.ToolFitTypeDd.Value;
-            app.paramMethod = app.ParamMethodDd.Value;
             app.unit = app.UnitDd.Value;
+            app.fontName = app.FontNameDd.Value;
+            app.fontSize = app.FontSizeEf.Value;
+
+            app.toolFitType = app.ToolFitTypeDd.Value;
+            app.arcFitMethod = app.ArcFitMethodDd.Value;
+            app.arcRansacMaxDist = app.ArcRansacMaxDistEf.Value;
+            app.lineFitMethod = app.LineFitMethodDd.Value;
+            app.lineFitMaxDist = app.LineFitMaxDistEf.Value;
+
+            app.paramMethod = app.ParamMethodDd.Value;
+
             app.Msg = 'All the parameters are set. Click ''Plot'' to plot the data.';
             InfoEfValueChanged(app,true);
         end
 
         % Value changed function: reset the parameters
         function ResetBtnValueChanged(app,event)
-            app.ToolFitTypeDd.Value = app.toolFitTypeDefault;
-            app.toolFitType = app.ToolFitTypeDd.Value;
-            app.ParamMethodDd.Value = app.paramMethodDefault;
-            app.paramMethod = app.ParamMethodDd.Value;
+            % Reset all the values to the default
             app.UnitDd.Value = app.unitDefault;
             app.unit = app.UnitDd.Value;
             app.FontNameDd.Value = app.fontNameDefault;
             app.fontName = app.FontNameDd.Value;
             app.FontSizeEf.Value = app.fontSizeDefault;
             app.fontSize = app.FontSizeEf.Value;
+
+            app.ToolFitTypeDd.Value = app.toolFitTypeDefault;
+            app.toolFitType = app.ToolFitTypeDd.Value;
+            app.ArcFitMethodDd.Value = app.arcFitMethodDefault;
+            app.arcFitMethod = app.ArcFitMethodDd.Value;
+            app.ArcRansacMaxDistEf.Value = app.arcRansacMaxDistDefault;
+            app.arcRansacMaxDist = app.ArcRansacMaxDistEf.Value;
+            app.ArcRansacMaxDistEf.Enable = "off";
+            app.ArcRansacMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+            app.LineFitMethodDd.Value = app.lineFitMethodDefault;
+            app.lineFitMethod = app.LineFitMethodDd.Value;
+            app.LineFitMethodDd.Enable = "off";
+            app.LineFitMethodDd.BackgroundColor = [0.96 0.96 0.96];
+            app.LineFitMaxDistEf.Value = app.lineFitMaxDistDefault;
+            app.lineFitMaxDist = app.LineFitMaxDistEf.Value;
+            app.LineFitMaxDistEf.Enable = "off";
+            app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+
+            app.ParamMethodDd.Value = app.paramMethodDefault;
+            app.paramMethod = app.ParamMethodDd.Value;
+
+            % Report the infomation
             app.Msg = 'All the parameters are reset. Modify them and click ''Update'' to set.';
             InfoEfValueChanged(app,true);
         end
@@ -309,13 +411,15 @@ classdef toolDataInput <matlab.apps.AppBase
             app.PlotUIFigure.CloseRequestFcn = createCallbackFcn(app,@UIFigureCloseReq,true);
             app.PlotUIFigure.Resize = "on";
             app.PlotUIFigure.Position = [1000,1000,1000,600];
+            app.PlotUIFigure.Scrollable = "on";
 
             % Manage menu
             app.FigureMn = uimenu(app.PlotUIFigure,'Text','Options');
 
             % Manage toolbar
             app.FigureToolbar = uitoolbar(app.PlotUIFigure);
-            app.CloseAllFigurePushtool = uipushtool(app.FigureToolbar,'Icon','CloseAllFigure.png');
+            app.CloseAllFigurePushtool = uipushtool(app.FigureToolbar, ...
+                'Icon','resource/image/CloseAllFigure.png');
             app.CloseAllFigurePushtool.ClickedCallback = createCallbackFcn( ...
                 app,@CloseAllFigurePushtoolClicked);
             app.CloseAllFigurePushtool.Tooltip = 'Close all the figures';
@@ -388,82 +492,147 @@ classdef toolDataInput <matlab.apps.AppBase
             app.ToolFileBtn.Layout.Column = 3;
             app.ToolFileBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFileBtnValueChanged,true);
 
-            % ------------------------Parameter editing panel------------------------
-            ParamPn = uipanel(ToolTbGl,'Visible','on', ...
-                'Title','Parameters Selection','TitlePosition','centertop');
+            % ------------------------Parameter editing tabgroup------------------------
+            % Create the parameter selection tab group
+            ParamPn = uipanel(ToolTbGl,'Title','Parameters', ...
+                'TitlePosition','centertop','Scrollable','on');
             ParamPn.Layout.Row = [4,5];
             ParamPn.Layout.Column = 1;
             ParamPn.Scrollable = 'on';
-            
-            PnParamGL = uigridlayout(ParamPn,[2,1]);
-            PnParamGL.RowHeight = {'1x','fit'};
-            PnParamGL.ColumnWidth = {'fit'};
-            
-            PnParamDDGl = uigridlayout(PnParamGL,[5,2]);
-            PnParamDDGl.Layout.Row = 1;
-            PnParamDDGl.RowHeight = {'fit','fit','fit','fit','fit'};
-            PnParamDDGl.ColumnWidth = {'fit','1x'};
-            PnParamDDGl.Scrollable = 'on';
-            
-            % Create the tool fitting type label and dropdown box
-            ToolFitTypeLb = uilabel(PnParamDDGl,'Text','Tool fitting type');
-            ToolFitTypeLb.Layout.Row = 1;
-            ToolFitTypeLb.Layout.Column = 1;
-            app.ToolFitTypeDd = uidropdown(PnParamDDGl,'Items',{'onlyArc','arcRansac','lineArc'}, ...
-                'Value',app.toolFitTypeDefault,'BackgroundColor',[1,1,1]);
-            app.ToolFitTypeDd.Layout.Row = 1;
-            app.ToolFitTypeDd.Layout.Column = 2;
-            
-            % Create the B-spline parametric method label and dropdown box
-            ParamMethodLb = uilabel(PnParamDDGl,'Text',{'B-spline', 'param-method'});
-            ParamMethodLb.Layout.Row = 2;
-            ParamMethodLb.Layout.Column = 1;
-            app.ParamMethodDd = uidropdown(PnParamDDGl,'Items',{'uniform','centripetal','chord'}, ...
-                'Value',app.paramMethodDefault,'BackgroundColor',[1,1,1]);
-            app.ParamMethodDd.Layout.Row = 2;
-            app.ParamMethodDd.Layout.Column = 2;
+            ParamPnGl = uigridlayout(ParamPn,[2,2]);
+            ParamPnGl.ColumnWidth = {'1x','1x'};
+            ParamPnGl.RowHeight = {'1x','fit'};
+
+            ParamTabgroup = uitabgroup(ParamPnGl,'SelectedTab',app.ParamTabCommon);
+            ParamTabgroup.Layout.Row = 1;
+            ParamTabgroup.Layout.Column = [1,2];
+
+            % ---Common parameter selection---
+            app.ParamTabCommon = uitab(ParamTabgroup,'Title','Common','Scrollable','on');
+            ParamTabCommonGl = uigridlayout(app.ParamTabCommon,[3,2]);
+            ParamTabCommonGl.RowHeight = {'fit','fit','fit'};
+            ParamTabCommonGl.ColumnWidth = {'fit','1x'};
+            ParamTabCommonGl.Scrollable = 'on';
             
             % Create the unit selection label and dropdown box
-            UnitLB = uilabel(PnParamDDGl,'Text','Data unit');
-            UnitLB.Layout.Row = 3;
+            UnitLB = uilabel(ParamTabCommonGl,'Text','Data unit');
+            UnitLB.Layout.Row = 1;
             UnitLB.Layout.Column = 1;
-            app.UnitDd = uidropdown(PnParamDDGl,'Items',{'m','mm','/mum','nm'},'Editable','on', ...
+            app.UnitDd = uidropdown(ParamTabCommonGl,'Items',{'m','mm','/mum','nm'},'Editable','on', ...
                 'Value',app.unitDefault,'BackgroundColor',[1,1,1]);
-            app.UnitDd.Layout.Row = 3;
+            app.UnitDd.Layout.Row = 1;
             app.UnitDd.Layout.Column = 2;
             
             % Create the font name selection label and dropdown box
-            FontNameLb = uilabel(PnParamDDGl,'Text','Ploting font type');
-            FontNameLb.Layout.Row = 4;
+            FontNameLb = uilabel(ParamTabCommonGl,'Text','Ploting font type');
+            FontNameLb.Layout.Row = 2;
             FontNameLb.Layout.Column = 1;
-            app.FontNameDd = uidropdown(PnParamDDGl,'Items',listfonts,'Value',app.fontNameDefault, ...
+            app.FontNameDd = uidropdown(ParamTabCommonGl,'Items',listfonts,'Value',app.fontNameDefault, ...
                 'BackgroundColor',[1,1,1],'Visible','on');
-            app.FontNameDd.Layout.Row = 4;
+            app.FontNameDd.Layout.Row = 2;
             app.FontNameDd.Layout.Column = 2;
             app.FontNameDd.ValueChangedFcn = createCallbackFcn(app,@FontNameDdValueChanged,true);
             
             % Create the font size selection label and editfield box
-            FontSizeLb = uilabel(PnParamDDGl,'Text','Ploting font size');
-            FontSizeLb.Layout.Row = 5;
+            FontSizeLb = uilabel(ParamTabCommonGl,'Text','Ploting font size');
+            FontSizeLb.Layout.Row = 3;
             FontSizeLb.Layout.Column = 1;
-            app.FontSizeEf = uieditfield(PnParamDDGl,'numeric','Limits',[6 72], ...
+            app.FontSizeEf = uieditfield(ParamTabCommonGl,'numeric','Limits',[6 72], ...
                 'HorizontalAlignment','center','ValueDisplayFormat','%d','Value',app.fontSizeDefault);
-            app.FontSizeEf.Layout.Row = 5;
+            app.FontSizeEf.Layout.Row = 3;
             app.FontSizeEf.Layout.Column = 2;
             app.FontSizeEf.ValueChangedFcn = createCallbackFcn(app,@FontSizeEfValueChanged,true);
+
+            % ---Tool fitting parameter selection---
+            app.ParamTabToolfit = uitab(ParamTabgroup,'Title','Tool fit','Scrollable','on');
+            ParamTabToolfitGl = uigridlayout(app.ParamTabToolfit,[5,2]);
+            ParamTabToolfitGl.RowHeight = {'fit','fit','fit','fit','fit'};
+            ParamTabToolfitGl.ColumnWidth = {'fit','1x'};
+            ParamTabToolfitGl.Scrollable = 'on';
+
+            % Create the tool fitting type label and dropdown box
+            ToolFitTypeLb = uilabel(ParamTabToolfitGl,'Text','Tool fitting type');
+            ToolFitTypeLb.Layout.Row = 1;
+            ToolFitTypeLb.Layout.Column = 1;
+            app.ToolFitTypeDd = uidropdown(ParamTabToolfitGl,'Items',{'onlyArc','arcRansac','lineArc'}, ...
+                'Value',app.toolFitTypeDefault,'BackgroundColor',[1,1,1]);
+            app.ToolFitTypeDd.Layout.Row = 1;
+            app.ToolFitTypeDd.Layout.Column = 2;
+            app.ToolFitTypeDd.ValueChangedFcn = createCallbackFcn(app,@ToolFitTypeDdValueChanged,true);
+            app.ToolFitTypeDd.DropDownOpeningFcn = createCallbackFcn(app,@ToolFitTypeDdOpening,true);
             
-            PnParamBtnGl = uigridlayout(PnParamGL,[1,2]);
-            PnParamBtnGl.Layout.Row = 2;
-            PnParamBtnGl.RowHeight = {'fit'};
-            PnParamBtnGl.ColumnWidth = {'1x','1x'};
+            % Create the arc fitting method label and dropdown box
+            ArcFitMethodLb = uilabel(ParamTabToolfitGl,'Text','Arc fitting method');
+            ArcFitMethodLb.Layout.Row = 2;
+            ArcFitMethodLb.Layout.Column = 1;
+            app.ArcFitMethodDd = uidropdown(ParamTabToolfitGl, ...
+                'Items',{'gradient-decent','normal-equation','levenberg-marquardt'}, ...
+                'Value',app.arcFitMethodDefault);
+            app.ArcFitMethodDd.Layout.Row = 2;
+            app.ArcFitMethodDd.Layout.Column = 2;
+            app.ArcFitMethodDd.BackgroundColor = [1 1 1];
+
+            % Create the arc ransac fitting max distance label and dropdown box
+            ArcRansacMaxDistLb = uilabel(ParamTabToolfitGl,'Text',{'Arc ransac fitting','max distance'});
+            ArcRansacMaxDistLb.Layout.Row = 3;
+            ArcRansacMaxDistLb.Layout.Column = 1;
+            app.ArcRansacMaxDistEf = uieditfield(ParamTabToolfitGl,'numeric','Limits',[0 inf], ...
+                'HorizontalAlignment','center','ValueDisplayFormat','%d','Value',app.arcRansacMaxDistDefault);
+            app.ArcRansacMaxDistEf.Layout.Row = 3;
+            app.ArcRansacMaxDistEf.Layout.Column = 2;
+            app.ArcRansacMaxDistEf.Enable = 'off';
+            app.ArcRansacMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+            % app.ArcRansacMaxDistEf.ValueChangedFcn = createCallbackFcn(app,@FontSizeEfValueChanged,true);
+
+            % Create the line fitting method label and dropdown box
+            LineFitMethodLb = uilabel(ParamTabToolfitGl,'Text','Line fitting method');
+            LineFitMethodLb.Layout.Row = 4;
+            LineFitMethodLb.Layout.Column = 1;
+            app.LineFitMethodDd = uidropdown(ParamTabToolfitGl, ...
+                'Items',{'polyfit','ransac'}, ...
+                'Value',app.lineFitMethodDefault);
+            app.LineFitMethodDd.Layout.Row = 4;
+            app.LineFitMethodDd.Layout.Column = 2;
+            app.LineFitMethodDd.Enable = "off";
+            app.LineFitMethodDd.BackgroundColor = [0.96 0.96 0.96];
+
+            % Create the line fitting max distance label and dropdown box
+            LineFitMaxDistEfLb = uilabel(ParamTabToolfitGl,'Text',{'Line fitting', 'max distance'});
+            LineFitMaxDistEfLb.Layout.Row = 5;
+            LineFitMaxDistEfLb.Layout.Column = 1;
+            app.LineFitMaxDistEf = uieditfield(ParamTabToolfitGl,'numeric','Limits',[0 inf], ...
+                'HorizontalAlignment','center','ValueDisplayFormat','%d','Value',app.lineFitMaxDistDefault);
+            app.LineFitMaxDistEf.Layout.Row = 5;
+            app.LineFitMaxDistEf.Layout.Column = 2;
+            app.LineFitMaxDistEf.Enable = "off";
+            app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+
+            % ---Tool Interpolation parameter selection---
+            app.ParamTabToolinterp = uitab(ParamTabgroup,'Title','Tool Interpolation','Scrollable','on');
+            ParamTabToolinterpGl = uigridlayout(app.ParamTabToolinterp,[3,2]);
+            ParamTabToolinterpGl.RowHeight = {'fit','fit','fit'};
+            ParamTabToolinterpGl.ColumnWidth = {'fit','1x'};
+            ParamTabToolinterpGl.Scrollable = 'on';
+
+            % Create the B-spline parametric method label and dropdown box
+            ParamMethodLb = uilabel(ParamTabToolinterpGl,'Text',{'B-spline', 'param-method'});
+            ParamMethodLb.Layout.Row = 2;
+            ParamMethodLb.Layout.Column = 1;
+            app.ParamMethodDd = uidropdown(ParamTabToolinterpGl, ...
+                'Items',{'uniform','chord','centripetal'}, ...
+                'Value',app.paramMethodDefault,'BackgroundColor',[1,1,1]);
+            app.ParamMethodDd.Layout.Row = 2;
+            app.ParamMethodDd.Layout.Column = 2;
             
-            % Create the reset button
-            app.ResetBtn = uibutton(PnParamBtnGl,'push','Text','Reset','Visible','on');
+            % ---Create the reset button---
+            app.ResetBtn = uibutton(ParamPnGl,'push','Text','Reset','Visible','on');
+            app.ResetBtn.Layout.Row = 2;
             app.ResetBtn.Layout.Column = 1;
             app.ResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ResetBtnValueChanged,true);
             
-            % Create the update button
-            app.UpdateBtn = uibutton(PnParamBtnGl,'push','Text','Update','Visible','on');
+            % ---Create the update button---
+            app.UpdateBtn = uibutton(ParamPnGl,'push','Text','Update','Visible','on');
+            app.UpdateBtn.Layout.Row = 2;
             app.UpdateBtn.Layout.Column = 2;
             app.UpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@UpdateBtnValueChanged,true);
 
@@ -476,7 +645,7 @@ classdef toolDataInput <matlab.apps.AppBase
             app.ToolDataAxes.Layout.Row = 4;
             app.ToolDataAxes.Layout.Column = [2,4];
 
-            app.PlotBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Plot');
+            app.PlotBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Extract & Plot');
             app.PlotBtn.Layout.Row = 5;
             app.PlotBtn.Layout.Column = 2;
             app.PlotBtn.ButtonPushedFcn = createCallbackFcn(app,@PlotBtnValueChanged,true);
@@ -586,6 +755,27 @@ classdef toolDataInput <matlab.apps.AppBase
             ConcentricOptimBtngp.Layout.Row = 2;
             ConcentricOptimBtngp.Layout.Column = 2;
 
+            % ---------------------------Optimization process---------------------------
+            OptimPn = uipanel(ProgramGl,'Visible','on', ...
+                'Title','','TitlePosition','centertop');
+            OptimPn.Layout.Row = 2;
+            OptimPn.Layout.Column = 2;
+            OptimPn.Scrollable = 'on';
+
+            OptimGl = uigridlayout(OptimPn,[1,5]);
+            OptimGl.RowHeight = {'1x'};
+            OptimGl.ColumnWidth = {'fit','1x','fit','1x','fit'};
+
+            OptimArrow1 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
+                'ScaleMethod','stretch');
+            OptimArrow1.Layout.Row = 1;
+            OptimArrow1.Layout.Column = 2;
+
+            OptimArrow2 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
+                'ScaleMethod','stretch');
+            OptimArrow2.Layout.Row = 1;
+            OptimArrow2.Layout.Column = 4;
+
             % ------------------------Info displaying window------------------------
             app.InfoEf = uieditfield(FigureGl,'text','Value','Ready to process','Editable','off', ...
                 'BackgroundColor',[0.96 0.96 0.96]);
@@ -603,7 +793,7 @@ classdef toolDataInput <matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = toolDataInput
+        function app = upm_toolpath
             % Create UIFigure and components
             createComponents(app);
 
@@ -622,6 +812,7 @@ classdef toolDataInput <matlab.apps.AppBase
         function delete(app)
             % Delete UIFigure when app is deleted
             delete(app.PlotUIFigure)
+            % rmpath(genpath('funcs');
         end
     end
 end

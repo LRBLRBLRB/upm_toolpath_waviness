@@ -1,6 +1,16 @@
 % 给定刀具波纹度拟合曲线和已加工曲面拟合曲线，给定残高，求各个刀位点的切宽
 % 方案：先求切宽和残高的定量关系；然后考虑如何移动各个刀位点，微调来获得所要求的残高
-if true
+
+%% simulation initialization
+isAPP = true;
+if isAPP
+    addpath(genpath('funcs'));
+    fitOpts.toolFitType = app.toolFitType;
+    paramMethod = app.paramMethod;
+    unit = app.unit;
+    textFontSize = app.fontSize;
+    textFontType = app.fontName;
+else
     close all;
     clear; clc;
     addpath(genpath('funcs'));
@@ -13,73 +23,73 @@ if true
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
-end
-
-%% simulation initialization
-debug = 3;
-switch debug
-    case 2 % 2D tool profile simulation
-        cx0 = 0*1000; % unit: mu m
-        cy0 = 0*1000; % unit: mu m
-        r0 = 0.1*1000; % unit: mu m
-        noise = 0.03;
-        zNoise = 0.01;
-        theta = linspace(0,2*pi/3,200);
-        r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
-        toolOri(1,:) = r.*cos(theta) + cx0;
-        toolOri(2,:) = r.*sin(theta) + cy0;
-        toolOri(3,:) = zeros(1,length(theta));
-        rmse0 = sqrt(...
-                    sum(...
-                        ((toolOri(1,:) - cx0).^2 + (toolOri(2,:) - cy0).^2 - r0^2).^2) ...
+    
+    debug = 3;
+    switch debug
+        case 2 % 2D tool profile simulation
+            cx0 = 0*1000; % unit: mu m
+            cy0 = 0*1000; % unit: mu m
+            r0 = 0.1*1000; % unit: mu m
+            noise = 0.03;
+            zNoise = 0.01;
+            theta = linspace(0,2*pi/3,200);
+            r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
+            toolOri(1,:) = r.*cos(theta) + cx0;
+            toolOri(2,:) = r.*sin(theta) + cy0;
+            toolOri(3,:) = zeros(1,length(theta));
+            rmse0 = sqrt(...
+                        sum(...
+                            ((toolOri(1,:) - cx0).^2 + (toolOri(2,:) - cy0).^2 - r0^2).^2) ...
+                    /length(theta));
+            clear theta r;
+        case 3 % 3D tool profile simulation
+            cx0 = 1*1000; % unit:mu m
+            cy0 = 2*1000; % unit:mu m
+            cz0 = 3*1000; % unit:mu m
+            r0 = 0.1*1000; % unit:mu m
+            openAng = pi/3; % unit: rad
+            edgePV = 200; % low-frequency error
+            k = -edgePV/openAng;
+            noise = r0*5e-3; % mid-frequency error
+            zNoise = r0*0.05; % data pre-processing error
+            theta = linspace(0,openAng,300);
+            r = r0 + edgePV/2 + k*theta + (noise*rand(1,length(theta)) - 0.5*noise);
+            toolOri(1,:) = cx0 + r.*cos(theta);
+            toolOri(2,:) = cy0 + r.*sin(theta);
+            toolOri(3,:) = cz0 + (zNoise*rand(1,length(theta)) - 0.5*zNoise);
+            rmse0 = sqrt( ...
+                sum((toolOri - ndgrid([cx0;cy0;cz0],1:length(theta)).^2),2) ...
                 /length(theta));
-        clear theta r;
-    case 3 % 3D tool profile simulation
-        cx0 = 1*1000; % unit:mu m
-        cy0 = 2*1000; % unit:mu m
-        cz0 = 3*1000; % unit:mu m
-        r0 = 0.1*1000; % unit:mu m
-        openAng = pi/3; % unit: rad
-        edgePV = 200; % low-frequency error
-        k = -edgePV/openAng;
-        noise = r0*5e-3; % mid-frequency error
-        zNoise = r0*0.05; % data pre-processing error
-        theta = linspace(0,openAng,300);
-        r = r0 + edgePV/2 + k*theta + (noise*rand(1,length(theta)) - 0.5*noise);
-        toolOri(1,:) = cx0 + r.*cos(theta);
-        toolOri(2,:) = cy0 + r.*sin(theta);
-        toolOri(3,:) = cz0 + (zNoise*rand(1,length(theta)) - 0.5*zNoise);
-        rmse0 = sqrt( ...
-            sum((toolOri - ndgrid([cx0;cy0;cz0],1:length(theta)).^2),2) ...
-            /length(theta));
-        clear theta r;
-    otherwise
-        toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
-            'Unit','Font type in figure','Font size in figure'}, ...
-            'Tool Processing Input', ...
-            [1 20; 1 20; 1 20; 1 20; 1 20], ...
-            {'levenberg-marquardt','centripetal','\mu m','Times New Roman','14'}, ...
-            'WindowStyle');
-        fitOpts.arcFitMethod = toolInput{1};
-        paramMethod = toolInput{2};
-        unit = toolInput{3};
-        textFontType = toolInput{4};
-        textFontSize = str2double(toolInput{5});
-        % tool measurement file loading
-        [fileName,dirName] = uigetfile({ ...
-            '*.mat','MAT-files(*.mat)'; ...
-            '*.txt','text-files(*.txt)'; ...
-            '*.*','all files(*.*)'...
-            }, ...
-            'Select one tool tip measurement data', ...
-            'Tool\', ...
-            'MultiSelect','off');
-        pathName = fullfile(dirName,fileName);
-        dataOri = load(pathName); % load from file, n*2 matrix
-        % data pre-processing
-        toolOri = dataOri;
+            clear theta r;
+        otherwise
+            toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
+                'Unit','Font type in figure','Font size in figure'}, ...
+                'Tool Processing Input', ...
+                [1 20; 1 20; 1 20; 1 20; 1 20], ...
+                {'levenberg-marquardt','centripetal','\mu m','Times New Roman','14'}, ...
+                'WindowStyle');
+            fitOpts.arcFitMethod = toolInput{1};
+            paramMethod = toolInput{2};
+            unit = toolInput{3};
+            textFontType = toolInput{4};
+            textFontSize = str2double(toolInput{5});
+            % tool measurement file loading
+            [fileName,dirName] = uigetfile({ ...
+                '*.mat','MAT-files(*.mat)'; ...
+                '*.txt','text-files(*.txt)'; ...
+                '*.*','all files(*.*)'...
+                }, ...
+                'Select one tool tip measurement data', ...
+                'Tool\', ...
+                'MultiSelect','off');
+            pathName = fullfile(dirName,fileName);
+            dataOri = load(pathName); % load from file, n*2 matrix
+            % data pre-processing
+            toolOri = dataOri;
+    end
 end
 
+%% plot the importing result
 f1 = figure('Name','Original Scatters of the Tool');
 % set(0,"Units","centimeters");
 % winSize = get(0,"ScreenSize");
@@ -133,6 +143,7 @@ ylabel(['y(',unit,')']);
 title('Tool fitting result');
 legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
+clear theta xtmp ytmp
 
 %% tool modelling
 s1_toolModel

@@ -14,7 +14,7 @@ arguments
     k (1,1) {mustBeInteger,mustBePositive}
     n (1,1) {mustBeInteger,mustBeGreaterThanOrEqual(n,k)}
     options.NodeMethod {mustBeMember(options.NodeMethod, ...
-        ['Riesenfeld','Hartley-Judd','Interpolation','Approximation',''])} = 'Interpolation'
+        {'Riesenfeld','Hartley-Judd','Interpolation','Approximation',''})} = 'Interpolation'
     options.Cpts {mustBeFloat} = []
     options.uQ (:,1) {mustBeInRange(options.uQ,0,1,'inclusive')} = []
 end

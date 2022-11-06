@@ -1,14 +1,20 @@
 % to deal with the tool tip measurement data
 % and to get the 3D point cloud of the tool tip
 
+%% 2D curve results
 isAPP = true;
 if isAPP
+    workspaceDir = app.workspaceDir;
     toolOri = app.toolOri;
-    fitOpts.toolFitType = app.toolFitType;
-    paramMethod = app.paramMethod;
     unit = app.unit;
     textFontSize = app.fontSize;
     textFontType = app.fontName;
+    fitOpts.toolFitType = app.toolFitType;
+    paramMethod = app.paramMethod;
+    fitOpts.arcRansacMaxDist = app.arcRansacMaxDist;
+    fitOpts.arcFitMethod = app.arcFitMethod;
+    fitOpts.lineFitMaxDist = app.lineFitMaxDist;
+    fitOpts.lineFitMethod = app.lineFitMethod;
 else
     close all;
     clear; clc;
@@ -18,12 +24,15 @@ else
     % global textFontSize textFontType unit fitMethod paramMethod;
     workspaceDir = 'workspace/20221020-tooltip';
     fitOpts.toolFitType = 'lineArc';
+    fitOpts.arcRansacMaxDist = 1;
+    fitOpts.arcFitMethod = 'levenberg-marquardt';
+    fitOpts.lineFitMaxDist = 1;
+    fitOpts.lineFitMethod = 'polyfit';
     paramMethod = 'centripetal';
     unit = 'mm';
     textFontSize = 12;
     textFontType = 'Times New Roman';
 
-    %% 2D curve results
     isTest = false;
     isSelf = false;
     if isTest
@@ -42,6 +51,10 @@ else
                 /length(theta));
         clear theta r;
     else
+        fitOpts.arcRansacMaxDist = 1;
+        fitOpts.arcFitMethod = 'levenberg-marquardt';
+        fitOpts.lineFitMaxDist = 1;
+        fitOpts.lineFitMethod = 'polyfit';
         if isSelf
             optsInput.Resize = 'on';
             optsInput.WindowStyle = 'normal';
@@ -89,7 +102,7 @@ else
     end
 end
 
-% plot the importing result
+%% plot the importing result
 fig1 = figure('Name','Original tool data');
 ax1 = plot(toolOri(1,:),toolOri(2,:),'.','MarkerSize',2);
 hold on;
@@ -98,7 +111,7 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 
 %% outliners removed
-% rmoutliers(oriPts,2,"median");
+% rmoutliers(toolOri,2,"median");
 % 如果多边形的直线段和圆弧段重合部分的数据差别比较大，说明目前的测量模式有问题。
 
 
@@ -114,12 +127,10 @@ ylabel(['y (',unit,')']);
 
 % line fitting based on ransac
 figure(fig1);
-arcMaxDist = 1e-2;
-lineMaxDist = 1e-2;
 fitOpts.arcFitdisplayType = 'iter-detailed';
-[circ2D,toolFit,RMSE] = toolFit2D(toolOri,arcMaxDist,lineMaxDist, ...
-    'toolFitType',fitOpts.toolFitType,'lineFitMethod','polyfit', ...
-    'arcFitMethod','levenberg-marquardt', ...
+[circ2D,toolFit,RMSE] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
+    'toolFitType',fitOpts.toolFitType,'lineFitMethod',fitOpts.lineFitMethod, ...
+    'arcFitMethod',fitOpts.arcFitMethod, ...
     'arcFitdisplayType',fitOpts.arcFitdisplayType);
 radius = circ2D{2};
 openAngle = circ2D{3};

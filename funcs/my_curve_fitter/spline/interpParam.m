@@ -11,7 +11,7 @@ function uQ = interpParam(Q,options)
 arguments
     Q {mustBeFinite}
     options.paramMethod {mustBeMember(options.paramMethod, ...
-        ['uniform','centripetal','chord',''])} = 'chord'
+        {'uniform','centripetal','chord',''})} = 'chord'
 end
 
 n = size(Q,1);

@@ -1,7 +1,17 @@
 % to deal with the tool tip measurement data
 % and to get the 3D point cloud of the tool tip
 
-if true
+%% 3D curve results
+isAPP = false;
+if isAPP
+    workspaceDir = app.workspaceDir;
+    toolOri = app.toolOri;
+    fitOpts.toolFitType = app.toolFitType;
+    paramMethod = app.paramMethod;
+    unit = app.unit;
+    textFontSize = app.fontSize;
+    textFontType = app.fontName;
+else
     close all;
     clear; clc;
     addpath(genpath('funcs'));
@@ -14,12 +24,10 @@ if true
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
-end
 
-%% 3D curve results
-debug = 2;
-switch debug
-    case 0
+    isTest = false;
+    isSelf = false;
+    if isTest
         cx0 = 1*1000; % unit:mu m
         cy0 = 2*1000; % unit:mu m
         cz0 = 3*1000; % unit:mu m
@@ -38,58 +46,62 @@ switch debug
             sum((toolOri - ndgrid([cx0;cy0;cz0],1:length(theta)).^2),2) ...
             /length(theta));
         clear theta r;
-    case 1
-        pathName = fullfile(workspaceDir,"tooltip result/20221019-strategy-2+40-5.csv");
-    case 2
-        optsInput.Resize = 'on';
-        optsInput.WindowStyle = 'normal';
-        optsInput.Interpreter = 'tex';
-        toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
-            'Unit','Font type in figure','Font size in figure'}, ...
-            'Tool Processing Input', ...
-            [1 50; 1 50; 1 50; 1 50; 1 50], ...
-            {'Levenberg-Marquardt','centripetal','\mu m','Times New Roman','14'},optsInput);
-        fitOpts.fitMethod = toolInput{1};
-        paramMethod = toolInput{2};
-        unit = toolInput{3};
-        textFontType = toolInput{4};
-        textFontSize = str2double(toolInput{5});
-        % tool measurement file loading
-        [fileName,dirName] = uigetfile({ ...
-            '*.csv','Comma-Separated Values-files(*.csv)'; ...
-            '*.mat','MAT-files(*.mat)'; ...
-            '*.txt','text-files(*.txt)'; ...
-            '*.*','all files(*.*)'...
-            }, ...
-            'Select one tool tip measurement data', ...
-            workspaceDir, ...
-            'MultiSelect','off');
-        pathName = fullfile(dirName,fileName);
+    else
+        if isSelf
+            optsInput.Resize = 'on';
+            optsInput.WindowStyle = 'normal';
+            optsInput.Interpreter = 'tex';
+            toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
+                'Unit','Font type in figure','Font size in figure'}, ...
+                'Tool Processing Input', ...
+                [1 50; 1 50; 1 50; 1 50; 1 50], ...
+                {'lineArc','centripetal','\mu m','Times New Roman','14'},optsInput);
+            fitOpts.toolFitType = toolInput{1};
+            paramMethod = toolInput{2};
+            unit = toolInput{3};
+            textFontType = toolInput{4};
+            textFontSize = str2double(toolInput{5});
+            % tool measurement file loading
+            [fileName,dirName] = uigetfile({ ...
+                '*.csv','Comma-Separated Values-files(*.csv)'; ...
+                '*.mat','MAT-files(*.mat)'; ...
+                '*.txt','text-files(*.txt)'; ...
+                '*.*','all files(*.*)'...
+                }, ...
+                'Select one tool tip measurement data', ...
+                workspaceDir, ...
+                'MultiSelect','off');
+            pathName = fullfile(dirName,fileName);
+        else
+            pathName = fullfile(workspaceDir,"tooltip result/20221019-strategy-2+40-5.csv");
+        end    
+        % get rid of the header of the csv file
+        numHeader = 0;
+        tooltipFile = fopen(pathName);
+        while ~feof(tooltipFile)
+            tmpLine = fgets(tooltipFile);
+            if ~isnan(str2double(tmpLine(1:2)))
+                break;
+            end
+            numHeader = numHeader + 1;
+        end
+        fclose(tooltipFile);
+        toolOri = importdata(pathName,',',numHeader);
+        toolOri = toolOri.data;
+        toolOri = toolOri';
+    end
 end
 
-% get rid of the header of the csv file
-numHeader = 0;
-tooltipFile = fopen(pathName);
-while ~feof(tooltipFile)
-    tmpLine = fgets(tooltipFile);
-    if ~isnan(str2double(tmpLine(1:2)))
-        break;
-    end
-    numHeader = numHeader + 1;
-end
-fclose(tooltipFile);
-oriPts = importdata(pathName,',',numHeader);
-oriPts = oriPts.data;
 figure('Name','Original tool data');
-plot3(oriPts(:,1),oriPts(:,2),oriPts(:,3),'.','MarkerSize',2);
+plot3(toolOri(1,:),toolOri(2,:),toolOri(3,:),'.','MarkerSize',2);
 hold on;
 grid on;
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 
-% outliners removed
-% rmoutliers(oriPts,2,"median");
+%% outliners removed
+% rmoutliers(toolOri,2,"median");
 % 如果多边形的直线段和圆弧段重合部分的数据差别比较大，说明目前的测量模式有问题。
 
 
@@ -116,14 +128,14 @@ zlabel(['z (',unit,')']);
 
 % ransac
 sampleSz = 3; % number of points to sample per trial
-maxDist = 1; % max allowable distance for inliers
+maxDist = 100; % max allowable distance for inliers
 
 fitLineFcn = @(pts) arcFit3D(pts','displayType','off');  % fit function
 evalLineFcn = ...   % distance evaluation function
   @(mdl, pts) sum(abs(vecnorm(pts - (mdl{1})',2,2) - mdl{2}^2));
 
 % test whetger the functions above is true
-isTest = true;
+isTest = false;
 if isTest
     cx0 = 1*1000; % unit:mu m
     cy0 = 2*1000; % unit:mu m
@@ -136,13 +148,13 @@ if isTest
     zNoise = r0*0.5; % data pre-processing error
     theta = transpose(linspace(0,openAng,300));
     r = r0 + edgePV/2 + k*theta + (noise*rand(length(theta),1) - 0.5*noise);
-    toolOri(:,1) = cx0 + r.*cos(theta);
-    toolOri(:,2) = cy0 + r.*sin(theta);
-    toolOri(:,3) = cz0 + (zNoise*rand(length(theta),1) - 0.5*zNoise);
-    toolOri = toolOri*(rotz(pi/3))'*(roty(pi/6))';
-    fitCirc = fitLineFcn(toolOri);
+    testOri(:,1) = cx0 + r.*cos(theta);
+    testOri(:,2) = cy0 + r.*sin(theta);
+    testOri(:,3) = cz0 + (zNoise*rand(length(theta),1) - 0.5*zNoise);
+    testOri = testOri*(rotz(pi/3))'*(roty(pi/6))';
+    fitCirc = fitLineFcn(testOri);
     figure('Name','Function Testification');
-    plot3(toolOri(:,1),toolOri(:,2),toolOri(:,3),'.','Color',[0,0.45,0.74]); hold on;
+    plot3(testOri(:,1),testOri(:,2),testOri(:,3),'.','Color',[0,0.45,0.74]); hold on;
     % plot the fitting center of the circle
     scatter3(fitCirc{1}(1),fitCirc{1}(2),fitCirc{1}(3),36,[0.6350,0.0780,0.1840],'filled');
     quiver3(fitCirc{1}(1),fitCirc{1}(2),fitCirc{1}(3),fitCirc{4}(1),fitCirc{4}(2),fitCirc{4}(3), ...
@@ -175,7 +187,7 @@ if isTest
     xtick = get(gca,'XTick');
     ytick = get(gca,'YTick');
     ztick = get(gca,'ZTick');
-    %ytick间距，并将xtick间距设为与y相同
+    % ytick间距，并将xtick间距设为与y相同
     N = (max(xtick) - min(xtick))/(ztick(2)-ztick(1));
     N_ = (max(ytick) - min(ytick)) / (ztick(2) - ztick(1));
     xtick = xtick(1) + (0:(N  - 1))*(ztick(2)-ztick(1));
@@ -184,7 +196,7 @@ if isTest
     set(gca,'YTick',ytick');
 end
 
-[modelRANSAC,inlierIdx] = ransac(oriPts,fitLineFcn,evalLineFcn, ...
+[modelRANSAC,inlierIdx] = ransac(toolOri',fitLineFcn,evalLineFcn, ...
   sampleSz,maxDist);
 
 

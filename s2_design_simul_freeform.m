@@ -3,6 +3,10 @@
 % Step two: tool path calculation
 % Step three: residual height calculation and correction
 % Step four: simulation of the machining surface
+
+iSAPP = true;
+if isAPP
+else
 close all;
 clear;
 clc;

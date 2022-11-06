@@ -4,102 +4,110 @@
 % Step three: tool path adjusting for the rest
 % Step four: simulation of the machining surface
 % Step Five: generate the actual toolpath
-% close all;
-clear;
-clc;
-addpath(genpath('funcs'));
-t0 = tic;
 
-% global variables
-% global textFontSize textFontType;
-workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
-unit = '\mum';
-textFontSize = 12;
-textFontType = 'Times New Roman';
-
-msgOpts.Default = 'Cancel and quit';
-msgOpts.Interpreter = 'tex';
-% msgOpts.modal = 'non-modal';
-profile on
-tPar0 = tic;
-parObj = gcp;
-tPar = toc(tPar0);
-fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
-
-%% concentric surface generation / import
-% tool data import
-[fileName,dirName] = uigetfile({ ...
-    '*.mat','MAT-files(*.mat)'; ...
-    '*,*','all files(*.*)'}, ...
-    'Select one tool edge data file', ...
-    fullfile(workspaceDir,'tooltheo.mat'), ...
-    'MultiSelect','off');
-toolName = fullfile(dirName,fileName);
-% toolName = 'output_data\tool\toolTheo_3D.mat';
-toolData = load(toolName);
-
-% surface data import
-default = false;
-if default
+isAPP = false;
+if isAPP
+    % machining paramters
+    aimRes = app.aimRes;
+    rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
+    arcLength = app.arcLength;
+    maxAngPtDist = app.maxAngPtDist;
+else
+    % close all;
+    clear;
+    clc;
+    addpath(genpath('funcs'));
+    % global variables
+    % global textFontSize textFontType;
+    workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
+    unit = '\mum';
+    textFontSize = 12;
+    textFontType = 'Times New Roman';
+    
+    msgOpts.Default = 'Cancel and quit';
+    msgOpts.Interpreter = 'tex';
+    % msgOpts.modal = 'non-modal';
+    profile on
+    tPar0 = tic;
+    parObj = gcp;
+    tPar = toc(tPar0);
+    fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
+    
+    %% concentric surface generation / import
+    % tool data import
     [fileName,dirName] = uigetfile({ ...
         '*.mat','MAT-files(*.mat)'; ...
         '*,*','all files(*.*)'}, ...
-        'Select the surface edge data file', ...
-        'workspace\input_data\surface\ellipsoidAray.mat', ...
+        'Select one tool edge data file', ...
+        fullfile(workspaceDir,'tooltheo.mat'), ...
         'MultiSelect','off');
-    surfName = fullfile(dirName,fileName);
-    load(surfName);
-else % ellipsoid
-    R = 10/2*1000;
-    A = 3.5/2;
-    B = 4/2;
-    C = 5/2;
-    % sampling density
-    spar = 101;
-    surfCenter = [0;0;sqrt(C^2*(R.^2-R/4.^2))]; % concentric circle center
-    conR = linspace(0,R/4,spar); % concentric radius vector
-    conTheta = linspace(0,2*pi,spar);
-    [rMesh,thetaMesh] = meshgrid(conR,conTheta);
-    surfMesh(:,:,1) = A*rMesh.*cos(thetaMesh);
-    surfMesh(:,:,2) = B*rMesh.*sin(thetaMesh);
-    surfMesh(:,:,3) = sqrt(C^2*(R.^2 - rMesh.^2));
-%     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
-%         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
-    % save('input_data/surface/ellipsoidAray.mat', ...
-    %    "surfMesh","surfNorm","surfCenter");
+    toolName = fullfile(dirName,fileName);
+    % toolName = 'output_data\tool\toolTheo_3D.mat';
+    toolData = load(toolName);
+    
+    % surface data import
+    default = false;
+    if default
+        [fileName,dirName] = uigetfile({ ...
+            '*.mat','MAT-files(*.mat)'; ...
+            '*,*','all files(*.*)'}, ...
+            'Select the surface edge data file', ...
+            'workspace\input_data\surface\ellipsoidAray.mat', ...
+            'MultiSelect','off');
+        surfName = fullfile(dirName,fileName);
+        load(surfName);
+    else % ellipsoid
+        R = 10/2*1000;
+        A = 3.5/2;
+        B = 4/2;
+        C = 5/2;
+        % sampling density
+        spar = 101;
+        surfCenter = [0;0;sqrt(C^2*(R.^2-R/4.^2))]; % concentric circle center
+        conR = linspace(0,R/4,spar); % concentric radius vector
+        conTheta = linspace(0,2*pi,spar);
+        [rMesh,thetaMesh] = meshgrid(conR,conTheta);
+        surfMesh(:,:,1) = A*rMesh.*cos(thetaMesh);
+        surfMesh(:,:,2) = B*rMesh.*sin(thetaMesh);
+        surfMesh(:,:,3) = sqrt(C^2*(R.^2 - rMesh.^2));
+    %     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
+    %         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
+        % save('input_data/surface/ellipsoidAray.mat', ...
+        %    "surfMesh","surfNorm","surfCenter");
+    end
+    
+    figure('Name','original xyz scatters of the surface (sparsely)');
+    surf( ...
+        surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+        'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+    hold on; axis equal;
+    set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
+    xlabel(['x (',unit,')']);
+    ylabel(['y (',unit,')']);
+    zlabel(['z (',unit,')']);
+    msgfig = questdlg({'Surface was generated successfully!', ...
+        'Ready to continue?'}, ...
+        'Surface Generation','OK & continue','Cancel & quit','OK & continue');
+    if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+        msgbox('Exit for the program','Exit','error','modal');
+        uiwait(msgbox);
+        return;
+    end
+    
+    % machining surface
+    syms x y;
+    surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
+    surfFunc = matlabFunction(surfSym);
+    surfFx = matlabFunction(diff(surfFunc,x));
+    surfFy = matlabFunction(diff(surfFunc,y));
+    rMax = R/2;
+    
+    % machining paramters
+    aimRes = 10;
+    rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
+    arcLength = 30;
+    maxAngPtDist = 6*pi/180;
 end
-
-figure('Name','original xyz scatters of the surface (sparsely)');
-surf( ...
-    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-hold on; axis equal;
-set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
-xlabel(['x (',unit,')']);
-ylabel(['y (',unit,')']);
-zlabel(['z (',unit,')']);
-msgfig = questdlg({'Surface was generated successfully!', ...
-    'Ready to continue?'}, ...
-    'Surface Generation','OK & continue','Cancel & quit','OK & continue');
-if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    msgbox('Exit for the program','Exit','error','modal');
-    uiwait(msgbox);
-    return;
-end
-
-% machining surface
-syms x y;
-surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
-surfFunc = matlabFunction(surfSym);
-surfFx = matlabFunction(diff(surfFunc,x));
-surfFy = matlabFunction(diff(surfFunc,y));
-rMax = R/2;
-
-% machining paramters
-aimRes = 10;
-rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
-arcLength = 30;
-maxAngPtDist = 6*pi/180;
 
 %% load the data of the residual function, and get the appropriate cutting width
 load(fullfile(workspaceDir,"widthRes.mat")); % widthRes
@@ -108,6 +116,7 @@ load(fullfile(workspaceDir,"widthRes.mat")); % widthRes
 
 
 %% Tool path adjusting for the first loop
+t0 = tic;
 tRes0 = tic;
 t1 = tic;
 r = rStep/2; % 可以通过widthRes确定迭代初值

@@ -13,6 +13,9 @@ t = tiledlayout(2,1);
 nexttile;
 plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.5); % tool edge scatters
 hold on;
+theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
+xtmp = radius*cos(theta);
+ytmp = radius*sin(theta);
 plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
 xlabel(['x(',unit,')']);
 ylabel(['y(',unit,')']);
