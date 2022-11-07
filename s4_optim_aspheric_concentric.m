@@ -131,6 +131,7 @@ while true
     % calculate the cutting pts
     loopPtNum = length(conTheta); % the number of points in each loop
     loopR = r; % the radius R of the current loop
+    toolR = r*ones(1,loopPtNum);
     surfPt(1,:) = r*cos(conTheta); % x coordinates of surface cutting points
     surfPt(2,:) = r*sin(conTheta); % y coordinates of surface cutting points
     surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:)); % z coordinates of surface cutting points
@@ -165,18 +166,12 @@ while true
         end
     end
     
+    % calculate the residual height together with the inner loop (i.e., the
+    % loop itself
     angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
     for ii = 1:loopPtNum
         angleDel = (angle - wrapToPi(angle(ii) + pi));
-        if isempty(angle(angleDel >= 0))
-            % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
-            angleDel = angleDel + 2*pi;
-        end
-        ind2 = find(angle == min(angle(angleDel >= 0)));
-        if isempty(angle(angleDel < 0))
-            angleDel = angleDel - 2*pi;
-        end
-        ind3 = find(angle == max(angle(angleDel < 0)));
+        [ind2,ind3] = getInnerLoopToolPathIndex(angle,angleDel);
         [res(1,ii),peakPtIn(:,ii),uLim(:,ii)] = residual3D( ...
             toolPathPt,toolNormDirect,toolCutDirect,toolContactU, ...
             toolSp,toolRadius,uLim(:,ii),ii,ind2,ind3);
@@ -250,16 +245,17 @@ while true
         % inner side of each point on the tool path
         angleN = angle(1:loopPtNumLast);
         for ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
-            angleDel = angleN - angle(ii);
-            if isempty(angleN(angleDel >= 0))
-                % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
-                angleDel = angleDel + 2*pi;
-            end
-            ind2 = find(angleN == min(angleN(angleDel >= 0)));
-            if isempty(angleN(angleDel < 0))
-                angleDel = angleDel - 2*pi;
-            end
-            ind3 = find(angleN == max(angleN(angleDel < 0)));
+            angleDel = angleN - angle(ii);为啥这里不是angleN - angleN(ii)
+            [ind2,ind3] = getInnerLoopToolPathIndex(angleN,angleDel);
+            % if isempty(angleN(angleDel >= 0))
+            %     % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
+            %     angleDel = angleDel + 2*pi;
+            % end
+            % ind2 = find(angleN == min(angleN(angleDel >= 0)));
+            % if isempty(angleN(angleDel < 0))
+            %     angleDel = angleDel - 2*pi;
+            % end
+            % ind3 = find(angleN == max(angleN(angleDel < 0)));
             [resTmp(1,ii),peakPtTmpIn(:,ii),uLimTmp(:,ii)] = residual3D( ...
                 toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
                 toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
@@ -283,15 +279,16 @@ while true
     angleN = angle(loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp);
     for ii = 1:loopPtNumLast
         angleDel = angleN - angle(ii);
-        if isempty(angleN(angleDel >= 0))
-            % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
-            angleDel = angleDel + 2*pi;
-        end
-        ind2 = loopPtNumLast + find(angleN == min(angleN(angleDel >= 0)));
-        if isempty(angleN(angleDel < 0))
-            angleDel = angleDel - 2*pi;
-        end
-        ind3 = loopPtNumLast + find(angleN == max(angleN(angleDel < 0)));
+        [ind2,ind3] = getOuterLoopToolPathIndex(angleN,angleDel,loopPtNumLast);
+        % if isempty(angleN(angleDel >= 0))
+        %     % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
+        %     angleDel = angleDel + 2*pi;
+        % end
+        % ind2 = loopPtNumLast + find(angleN == min(angleN(angleDel >= 0)));
+        % if isempty(angleN(angleDel < 0))
+        %     angleDel = angleDel - 2*pi;
+        % end
+        % ind3 = loopPtNumLast + find(angleN == max(angleN(angleDel < 0)));
         [resTmp(2,ii),peakPtTmpOut(:,ii),uLimTmp(:,ii)] = residual3D( ...
             toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
             toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
@@ -300,6 +297,7 @@ while true
     % then store the data of this loop
     loopPtNum = [loopPtNum,loopPtNumTmp];
     loopR = [loopR,r];
+    toolR = [toolR,r*ones(1,loopPtNumTmp)];
     surfPt = [surfPt,surfPtTmp];
     % surfNorm = [surfNorm,surfNormTmp];
     % surfDirect = [surfDirect,surfDirectTmp];
@@ -388,18 +386,35 @@ fnplt(Fr,'r',[0,accumPtNum(end)]);
 set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
 xlabel('Loop Accumulating Point Number');
 ylabel(['Radius of the Loop (',unit,')']);
+legend('No.-R scatters','csape result');
 
-% % tool path generation with the smoothing result
-% spiralPtNum = loopPtNum;
-% spiralPath = zeros(3,size(toolPathPt,2)); % the spiral tool path
-% spiralNorm = zeros(3,size(toolPathPt,2));
-% for kk = 1:length(loopPtNum) % each loop
-%     for jj = 1:loopPtNum(kk)
-%         tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
-%         tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
-%         toolCutDirect
-%         toolNormDirect
-% 
+% tool path generation with the smoothing result
+spiralPtNum = loopPtNum;
+numLoop = length(loopPtNum);
+spiralPath = zeros(3,size(toolPathPt,2)); % the spiral tool path
+spiralNorm = zeros(3,size(toolPathPt,2));
+spiralCutDir = zeros(3,size(toolPathPt,2));
+angle = atan2(toolPathPt(2,:),toolPathPt(1,:)); % the concentric angle of each tool path
+% for each loop, shift the tool path point by decreasing the radius
+for kk = 1:numLoop
+    for jj = 1:loopPtNum(kk)
+        % Method 1: get the (x,y) by interpolation and use residual3D to get z
+        % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
+        % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
+
+        % Method 2: get the outer closest point and linearly interpolate them
+        indInterp = accumPtNum(kk) + jj;
+        angleN = angle(accumPtNum(k) +1:accumPtNum(kk + 1));
+        angleDel = angleN - angleN(indInterp);
+        [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel);
+        [spiralPath(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
+            toolPathPt,toolNormDirect,toolCutDirect,toolR,ind1,ind2,indInterp);
+    end
+end
+
+
+
+%% Comparison: directly generate the spiral tool path
 % parfor ii = (sparTheta + 1):ptNum
 %     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
 %     nLoop = floor((ii - 1)/sparTheta) - 1;

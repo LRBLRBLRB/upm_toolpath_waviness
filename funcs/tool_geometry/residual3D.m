@@ -4,13 +4,20 @@ function [res,peakPt,uLim1] = residual3D(toolPt,toolNorm,toolCutDir, ...
 %
 % Usage:
 %
-% [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDirect,
+% [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDir,
 %   toolContactU,sp,toolRadius,uLim1,uLim2,toolPt2,toolNorm2,toolPt3,
 %   toolContactU2,toolNorm3,,toolContactU3)
 % Inputs:
 %   toolPt          (3,1) double    the current point on the tool path
 %   toolNorm        (3,1) double    the spindle direction of the current point
 %   toolCutDir      (3,1) double    the cutting direction of the current point
+%   toolContactU    (1,1) double    
+%   sp              (1,1) struct    the B-form spline struct of the tool edge
+%   toolRadius      (1,1) double    the tool radius
+%   uLim1           (1,2) double    the interval of the parameter for the
+%                                   current tool point
+%   uLim2           (1,2) double    the interval of the parameter for the
+%                                   cloest tool point
 %   sp              (1,1) struct    the B-form spline struct of the tool edge
 %   toolPt2         (3,1) double    the closest point on the tool path
 %   toolNorm2       (3,1) double    the spindle direction of "toolPt2"
@@ -27,13 +34,19 @@ function [res,peakPt,uLim1] = residual3D(toolPt,toolNorm,toolCutDir, ...
 % [res,peakPt,uLim1,uLim2] = residual3D(toolPt,toolNorm,toolCutDirect,
 %   toolContactU,sp,toolRadius,uLim1,uLim2,ind1,ind2,ind3)
 % Inputs:
-%   toolPt          (3,:) double    the current point on the tool path
-%   toolNorm        (3,:) double    the spindle direction of the current point
-%   toolCutDir      (3,:) double    the cutting direction of the current point
+%   toolPt          (3,:) double    the list of tool path points
+%   toolNorm        (3,:) double    the list of the spindle direction
+%   toolCutDir      (3,:) double    the list of the cutting direction
+%   toolContactU    (1,:) double    
 %   sp              (1,1) struct    the B-form spline struct of the tool edge
-%   ind1
-%   ind2
-%   ind3
+%   toolRadius      (1,1) double    the tool radius
+%   uLim1           (1,1) double    the interval of the parameter for the
+%                                   current tool point
+%   uLim2           (1,1) double    the interval of the parameter for the
+%                                   cloest tool point
+%   ind1            (1,1) double    the index of the current tool path point
+%   ind2            (1,1) double    the index of the 1st tool path point
+%   ind3            (1,1) double    the index of the 2nd tool path point
 % Outputs: same as the above
 
 switch nargin
@@ -64,7 +77,7 @@ switch nargin
         error('Invalid input. Not enough or tool many input parameters');
 end
 
-%% tool point and orientation projecition
+%% tool point and orientation projection
 % method 1: to project the closest point and its tool edge to the current one
 % toolPtProj = ptOnPlane(toolPt1,toolPt2,toolCutDir1);
 
@@ -82,7 +95,7 @@ toolNormProj = vecOnPlane(toolNormInterp,toolPtProj,toolCutDir1);
 toolNormProj = toolNormProj./norm(toolNormProj);
 % 讲道理两个应该是相等的但是并不等，是否意味着我的刃口并不在对应平面内？
 % toolCutDirProj1 = vecRot(toolNorm2,toolNormProj)*quat2rotm(qInterp)*toolCutDir2; 
-toolCutDirProj = toolCutDir1; % 讲道理应该是同向的
+toolCutDirProj = toolCutDir1;
 
 %% rigid transform of tool edge from the standard place to the corresponding
 R1 = axesRot([0;0;1],[1;0;0],toolNorm1,toolCutDir1,'zx');
