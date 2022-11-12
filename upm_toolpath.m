@@ -445,7 +445,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                 'WindowStyle','alwaysontop','WindowState','normal','Visible','off');
             app.PlotUIFigure.CloseRequestFcn = createCallbackFcn(app,@UIFigureCloseReq,true);
             app.PlotUIFigure.Resize = "on";
-            app.PlotUIFigure.Position = [1000,1000,1000,600];
+            app.PlotUIFigure.Position = [1000,1000,1000,800];
             app.PlotUIFigure.Scrollable = "on";
 
             % Manage menu
