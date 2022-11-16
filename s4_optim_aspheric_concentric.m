@@ -155,6 +155,7 @@ while true
     surfNorm(3,:) = -1*ones(1,accumPtNum(end)); % z coordinates of the normal vectors on surface points
     surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
     surfDirect = [[0;1;0],cutDirection(surfPt(:,2:end),[0;0;0])]; % cutting direction of each points
+    % 和[0;0;1]垂直、且与surfDirect(:,end)夹角最小的向量作为surDirect(:,1)
     surfDirect(:,1) = surfDirect(:,end);
 
     % calculate the tool path and residual height
@@ -180,6 +181,9 @@ while true
     figure;
     plot3(tSp1.coefs(1,:),tSp1.coefs(2,:),tSp1.coefs(3,:),'.'); hold on;
     plot3(tSp2.coefs(1,:),tSp2.coefs(2,:),tSp2.coefs(3,:),'.');
+
+    % 投影
+    
     [res,~] = residual2D_numeric(tSp1,tSp2,1e-3,tContactU(1),tContactU(2),'DSearchn');
 
     if res < aimRes
@@ -337,6 +341,7 @@ while true
     
     % then store the data of this loop
     loopPtNum = [loopPtNum,loopPtNumTmp];
+    accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNumTmp];
     loopR = [loopR,r];
     toolR = [toolR,r*ones(1,loopPtNumTmp)];
     surfPt = [surfPt,surfPtTmp];
