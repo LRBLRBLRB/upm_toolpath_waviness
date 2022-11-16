@@ -103,7 +103,7 @@ else
     rMax = R/2;
     
     % machining paramters
-    aimRes = 50;
+    aimRes = 500;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
     arcLength = 30;
     maxAngPtDist = 6*pi/180;
@@ -155,6 +155,7 @@ while true
     surfNorm(3,:) = -1*ones(1,accumPtNum(end)); % z coordinates of the normal vectors on surface points
     surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
     surfDirect = [[0;1;0],cutDirection(surfPt(:,2:end),[0;0;0])]; % cutting direction of each points
+    surfDirect(:,1) = surfDirect(:,end);
 
     % calculate the tool path and residual height
     [tQuat(1,:),tVec(:,1),tContactU(1),isColl(1)] = toolPos( ...
@@ -185,7 +186,7 @@ while true
         clear tQuat tVec tContactU isColl tPathPt tCutDir tNorm res
         break;
     else
-        warning('The residual height of No.%d is beyond the expected range.',length(loopPtNum));
+        fprintf('The residual height of No.%d is beyond the expected range.\n',length(loopPtNum));
         delta = delta/3;
         r = r - delta;
     end
@@ -305,7 +306,7 @@ while true
         if max(resTmp(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp),[],"all") < aimRes
             break;
         else
-            warning('The residual height of No.%d is beyond the expected range.',length(loopPtNum) + 1);
+            fprintf('The residual height of No.%d is beyond the expected range.\n',length(loopPtNum) + 1);
             delta = delta/3;
             r = r - delta;
                 clear surfPtTmp surfNormTmp surfDirectTmp toolQuatTmp toolVecTmp ...
@@ -360,7 +361,7 @@ while true
         toolContactUTmp isCollisionTmp toolPathPtTmp toolNormDirectTmp ...
         toolCutDirectTmp;
     clear uLimTmp peakPtOutTmp resTmp loopPtNumLast;
-    fprintf('No.%d\tElapsed time is %f seconds.\n',length(loopPtNum),toc);
+    fprintf('No.%d\tElapsed time is %f seconds.\n-----\n',length(loopPtNum),toc);
     if r > rMax, break; end
     delta = rStep;
     r = r + delta;

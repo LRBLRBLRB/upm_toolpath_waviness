@@ -24,8 +24,6 @@ classdef upm_toolpath < matlab.apps.AppBase
         BoldInfoToggletool      matlab.ui.container.toolbar.ToggleTool
         FigureTbGp              matlab.ui.container.TabGroup
         ToolTb                  matlab.ui.container.Tab
-        SurfaceTb               matlab.ui.container.Tab
-        ProgramTb               matlab.ui.container.Tab
         WorkspaceDirEf          matlab.ui.control.EditField
         WorkspaceDirBtn         matlab.ui.control.Button
         ToolFileEf              matlab.ui.control.EditField
@@ -42,12 +40,19 @@ classdef upm_toolpath < matlab.apps.AppBase
         ArcRansacMaxDistEf      matlab.ui.control.NumericEditField
         ParamTabToolinterp      matlab.ui.container.Tab
         ParamMethodDd           matlab.ui.control.DropDown
-        ResetBtn                matlab.ui.control.Button
-        UpdateBtn               matlab.ui.control.Button
+        ToolResetBtn            matlab.ui.control.Button
+        ToolUpdateBtn           matlab.ui.control.Button
         ToolDataAxes            matlab.ui.control.UIAxes
-        PlotBtn                 matlab.ui.control.Button
-        EnterBtn                matlab.ui.control.Button
-        CancelBtn               matlab.ui.control.Button
+        ToolPlotBtn             matlab.ui.control.Button
+        ToolSavedBtn            matlab.ui.control.Button
+        ToolCancelBtn           matlab.ui.control.Button
+        SurfaceTb               matlab.ui.container.Tab
+        SurfaceFuncsEf          matlab.ui.control.EditField
+        SurfaceDataAxes         matlab.ui.control.UIAxes
+        SurfacePlotBtn          matlab.ui.control.Button
+        SurfaceSavedBtn         matlab.ui.control.Button
+        SurfaceCancelBtn        matlab.ui.control.Button
+        ProgramTb               matlab.ui.container.Tab
         InfoTa                  matlab.ui.control.TextArea
         MsgState                logical
         Msg                     char
@@ -155,7 +160,8 @@ classdef upm_toolpath < matlab.apps.AppBase
 
         % Button down: shift to the toolbar tab, and refresh the message
         function ToolTbButtonDown(app,event)
-            app.Msg = 'Please choose a directory for the workspace.';
+            app.Msg = ['Switch to the tool tab. ', ...
+                'Please choose a directory for the workspace.'];
             InfoTaValueChanged(app,true);
         end
 
@@ -291,7 +297,7 @@ classdef upm_toolpath < matlab.apps.AppBase
         end
 
         % Value changed function: update the selection selection
-        function UpdateBtnValueChanged(app,event)
+        function ToolUpdateBtnValueChanged(app,event)
             app.unit = app.UnitDd.Value;
             app.fontName = app.FontNameDd.Value;
             app.fontSize = app.FontSizeEf.Value;
@@ -309,7 +315,7 @@ classdef upm_toolpath < matlab.apps.AppBase
         end
 
         % Value changed function: reset the parameters
-        function ResetBtnValueChanged(app,event)
+        function ToolResetBtnValueChanged(app,event)
             % Reset all the values to the default
             resetToolfitParams(app);
 
@@ -320,7 +326,7 @@ classdef upm_toolpath < matlab.apps.AppBase
         end
 
         % Value changed function: plot the tool file data
-        function PlotBtnValueChanged(app,event)
+        function ToolPlotBtnValueChanged(app,event)
             % ensure the workspace directory and tool file path have been difined
             if isempty(app.workspaceDir)
                 uialert(app.PlotUIFigure,{'Invalid workspace directory:', ...
@@ -358,9 +364,9 @@ classdef upm_toolpath < matlab.apps.AppBase
         end
 
         % Value changed function: transfer the parameters to the main program
-        function EnterBtnValueChanged(app,event)
+        function ToolSavedBtnValueChanged(app,event)
             selection = uiconfirm(app.PlotUIFigure, ...
-                'Save the original tool data and close the window?','Comfirmation');
+                'Save the tool data?','Comfirmation');
             switch selection
                 case 'OK'
                     delete(app.PlotUIFigure);
@@ -370,7 +376,10 @@ classdef upm_toolpath < matlab.apps.AppBase
         end
 
         % Value changed function: cancel the process with nothing to be saved
-        function CancelBtnValueChanged(app,event)
+        function ToolCancelBtnValueChanged(app,event)
+            resetToolfitParams(app);
+            clf(app.ToolDataAxes,'reset');
+            title(app.ToolDataAxes,'tool original data');
             UIFigureCloseReq(app,true);
         end
 
@@ -380,6 +389,41 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.InfoTa.Value{app.MsgNum} = char([num2str(app.MsgNum),' ',app.Msg]);
             scroll(app.InfoTa,"bottom");
         end
+
+        % Button down: shift to the surface tab, and refresh the message
+        function SurfaceTbButtonDown(app,event)
+            app.Msg = ['Switch to the surface tab. ', ...
+                'Press the corresponding button to finish the programming process.'];
+            InfoTaValueChanged(app,true);
+        end
+
+        % Value changed function: plot the tool file data
+        function SurfacePlotBtnValueChanged(app,event)
+        end
+
+        % Value changed function: save the surface data
+        function SurfaceSavedBtnValueChanged(app,event)
+            selection = uiconfirm(app.PlotUIFigure, ...
+                'Save the surface data?','Comfirmation');
+            switch selection
+                case 'OK'
+                    delete(app.PlotUIFigure);
+                case 'Cancel'
+                    return
+            end
+        end
+
+        % Value changed function: cancel the process with nothing to be saved
+        function SurfaceCancelBtnValueChanged(app,event)
+        end
+
+        % Button down: shift to the program tab, and refresh the message
+        function ProgramTbButtonDown(app,event)
+            app.Msg = ['Switch to the program tab. ', ...
+                'Press the corresponding button to finish the programming process.'];
+            InfoTaValueChanged(app,true);
+        end
+
 
         % --------------------------Function Execution--------------------------
         function S1Tool2DBtnValueChanged(app,event)
@@ -400,18 +444,6 @@ classdef upm_toolpath < matlab.apps.AppBase
 
         function S1ToolExtractSurfBtnValueChanged(app,event)
             s1_toolExtract_surf
-        end
-
-        % Button down: shift to the surface tab, and refresh the message
-        function SurfaceTbButtonDown(app,event)
-            app.Msg = '';
-            InfoTaValueChanged(app,true);
-        end
-
-        % Button down: shift to the program tab, and refresh the message
-        function ProgramTbButtonDown(app,event)
-            app.Msg = 'Press the corresponding button to finish the programming process.';
-            InfoTaValueChanged(app,true);
         end
 
         function S2DesignSimulAsphericConcentricBtnValueChanged(app,event)
@@ -667,16 +699,16 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.ParamMethodDd.Layout.Column = 2;
             
             % ---Create the reset button---
-            app.ResetBtn = uibutton(ParamPnGl,'push','Text','Reset','Visible','on');
-            app.ResetBtn.Layout.Row = 2;
-            app.ResetBtn.Layout.Column = 1;
-            app.ResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ResetBtnValueChanged,true);
+            app.ToolResetBtn = uibutton(ParamPnGl,'push','Text','Reset','Visible','on');
+            app.ToolResetBtn.Layout.Row = 2;
+            app.ToolResetBtn.Layout.Column = 1;
+            app.ToolResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolResetBtnValueChanged,true);
             
             % ---Create the update button---
-            app.UpdateBtn = uibutton(ParamPnGl,'push','Text','Update','Visible','on');
-            app.UpdateBtn.Layout.Row = 2;
-            app.UpdateBtn.Layout.Column = 2;
-            app.UpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@UpdateBtnValueChanged,true);
+            app.ToolUpdateBtn = uibutton(ParamPnGl,'push','Text','Update','Visible','on');
+            app.ToolUpdateBtn.Layout.Row = 2;
+            app.ToolUpdateBtn.Layout.Column = 2;
+            app.ToolUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolUpdateBtnValueChanged,true);
 
             % ------------------------Ploting axes------------------------
             app.ToolDataAxes = uiaxes(ToolTbGl);
@@ -687,21 +719,21 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.ToolDataAxes.Layout.Row = 4;
             app.ToolDataAxes.Layout.Column = [2,4];
 
-            app.PlotBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Extract & Plot');
-            app.PlotBtn.Layout.Row = 5;
-            app.PlotBtn.Layout.Column = 2;
-            app.PlotBtn.ButtonPushedFcn = createCallbackFcn(app,@PlotBtnValueChanged,true);
+            app.ToolPlotBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Extract & Plot');
+            app.ToolPlotBtn.Layout.Row = 5;
+            app.ToolPlotBtn.Layout.Column = 2;
+            app.ToolPlotBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolPlotBtnValueChanged,true);
 
             % ------------------------Ending process------------------------
-            app.EnterBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Enter');
-            app.EnterBtn.Layout.Row = 5;
-            app.EnterBtn.Layout.Column = 3;
-            app.EnterBtn.ButtonPushedFcn = createCallbackFcn(app,@EnterBtnValueChanged,true);
+            app.ToolSavedBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Enter');
+            app.ToolSavedBtn.Layout.Row = 5;
+            app.ToolSavedBtn.Layout.Column = 3;
+            app.ToolSavedBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolSavedBtnValueChanged,true);
             
-            app.CancelBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Cancel');
-            app.CancelBtn.Layout.Row = 5;
-            app.CancelBtn.Layout.Column = 4;
-            app.CancelBtn.ButtonPushedFcn = createCallbackFcn(app,@CancelBtnValueChanged,true);
+            app.ToolCancelBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Cancel');
+            app.ToolCancelBtn.Layout.Row = 5;
+            app.ToolCancelBtn.Layout.Column = 4;
+            app.ToolCancelBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolCancelBtnValueChanged,true);
 
             % ------------------------------------------------------------------------
             % ---------------------------Surface Processing---------------------------
@@ -709,6 +741,34 @@ classdef upm_toolpath < matlab.apps.AppBase
 
             app.SurfaceTb = uitab(app.FigureTbGp,'Title','Surface Load');
             app.SurfaceTb.ButtonDownFcn = createCallbackFcn(app,@SurfaceTbButtonDown,true);
+
+            SurfaceTbGl = uigridlayout(app.SurfaceTb,[4,4]);
+            SurfaceTbGl.RowHeight = {'fit','fit','1x','fit'};
+            SurfaceTbGl.ColumnWidth = {'1x','1x','1x','1x'};
+
+            app.SurfaceFuncsEf = uieditfield(SurfaceTbGl,'text');
+
+            app.SurfaceDataAxes = uiaxes(SurfaceTbGl);
+            title(app.ToolDataAxes,'surface loaded result');
+            app.SurfaceDataAxes.Layout.Row = 3;
+            app.SurfaceDataAxes.Layout.Column = [2,4];
+
+            app.SurfacePlotBtn = uibutton(SurfaceTbGl,'push','WordWrap','on','Text','Extract & Plot');
+            app.SurfacePlotBtn.Layout.Row = 4;
+            app.SurfacePlotBtn.Layout.Column = 2;
+            app.SurfacePlotBtn.ButtonPushedFcn = createCallbackFcn(app,@SurfacePlotBtnValueChanged,true);
+
+            % ------------------------Ending process------------------------
+            app.SurfaceSavedBtn = uibutton(SurfaceTbGl,'push','WordWrap','on','Text','Enter');
+            app.SurfaceSavedBtn.Layout.Row = 4;
+            app.SurfaceSavedBtn.Layout.Column = 3;
+            app.SurfaceSavedBtn.ButtonPushedFcn = createCallbackFcn(app,@SurfaceSavedBtnValueChanged,true);
+            
+            app.SurfaceCancelBtn = uibutton(SurfaceTbGl,'push','WordWrap','on','Text','Cancel');
+            app.SurfaceCancelBtn.Layout.Row = 4;
+            app.SurfaceCancelBtn.Layout.Column = 4;
+            app.SurfaceCancelBtn.ButtonPushedFcn = createCallbackFcn(app,@SurfaceCancelBtnValueChanged,true);
+
 
             % ------------------------------------------------------------------------
             % ---------------------------Program Processing---------------------------
