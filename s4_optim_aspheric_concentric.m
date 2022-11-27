@@ -8,10 +8,27 @@
 isAPP = false;
 if isAPP
     % machining paramters
+    cutDirection = app.cutDirection;
+    spindleDirection = app.spindleDirection;
+    angularDiscrete = app.angularDiscrete;
     aimRes = app.aimRes;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
     arcLength = app.arcLength;
     maxAngPtDist = app.maxAngPtDist;
+    angleLength = app.angleLength;
+
+    surfFunc = app.surfFuncs;
+    surfFx = app.surfFx;
+    surfFy = app.surfFy;
+    surfDomain = app.surfDomain;
+    rMax = norm(surfDomain(:,2) - surfDomain(:,1));
+    
+    msgOpts.Default = 'Cancel and quit';
+    msgOpts.Interpreter = 'tex';
+    tPar0 = tic;
+    parObj = gcp;
+    tPar = toc(tPar0);
+    fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
 else
     close all;
     clear;
@@ -56,20 +73,38 @@ else
             'MultiSelect','off');
         surfName = fullfile(dirName,fileName);
         load(surfName);
+        R = 10/2*1000;
+        A = 3.5/2;
+        B = 4/2;
+        C = 5/2;
+        % machining surface
+        syms x y;
+        surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
+        surfFunc = matlabFunction(surfSym);
+        surfFx = matlabFunction(diff(surfFunc,x));
+        surfFy = matlabFunction(diff(surfFunc,y));
+        rMax = R/2;
     else % ellipsoid
         R = 10/2*1000;
         A = 3.5/2;
         B = 4/2;
         C = 5/2;
+        % machining surface
+        syms x y;
+        surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
+        surfFunc = matlabFunction(surfSym);
+        surfFx = matlabFunction(diff(surfFunc,x));
+        surfFy = matlabFunction(diff(surfFunc,y));
+        rMax = R/2;
         % sampling density
-        spar = 101;
+        spar = 501;
         surfCenter = [0;0;sqrt(C^2*(R.^2-R/4.^2))]; % concentric circle center
         conR = linspace(0,R/4,spar); % concentric radius vector
         conTheta = linspace(0,2*pi,spar);
         [rMesh,thetaMesh] = meshgrid(conR,conTheta);
         surfMesh(:,:,1) = A*rMesh.*cos(thetaMesh);
         surfMesh(:,:,2) = B*rMesh.*sin(thetaMesh);
-        surfMesh(:,:,3) = sqrt(C^2*(R.^2 - rMesh.^2));
+        surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
     %     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
     %         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
         % save('input_data/surface/ellipsoidAray.mat', ...
@@ -94,19 +129,15 @@ else
         return;
     end
     
-    % machining surface
-    syms x y;
-    surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
-    surfFunc = matlabFunction(surfSym);
-    surfFx = matlabFunction(diff(surfFunc,x));
-    surfFy = matlabFunction(diff(surfFunc,y));
-    rMax = R/2;
-    
-    % machining paramters
-    aimRes = 500;
+    % machining paramters    
+    cutDirection = 'Center to Edge'; % 'Edge to Center'
+    spindleDirection = 'Counterclockwise'; % 'Clockwise'
+    angularDiscrete = 'Constant Arc'; % 'Constant Angle'
+    aimRes = 50;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
     arcLength = 30;
     maxAngPtDist = 6*pi/180;
+    angleLength = 6*pi/180;
 end
 
 %% load the data of the residual function, and get the appropriate cutting width
@@ -128,9 +159,18 @@ toolRadius = toolData.radius; % fitted tool radius
 while true
     % calculate the discretization scatters
     % if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
-    conTheta = linspace(0,2*pi, ...
-        ceil(2*pi/min(maxAngPtDist,arcLength/r)) + 1);
-    conTheta(1) = [];
+    switch angularDiscrete
+        case 'Constant Arc'
+            conTheta = linspace(0,2*pi, ...
+                ceil(2*pi/maxAngPtDist) + 1);
+            conTheta(1) = [];
+        case 'Constant Angle'
+            conTheta = linspace(0,2*pi, ...
+                ceil(2*pi/angleLength) + 1);
+            conTheta(1) = [];
+        otherwise
+            error('Invalid angular discretization type.');
+    end
 
 %     % initialize the cutting pts
 %     loopPtNum = 1; % the number of points in each loop
@@ -154,9 +194,9 @@ while true
     surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:)); % y coordinates of the normal vectors on surface points
     surfNorm(3,:) = -1*ones(1,accumPtNum(end)); % z coordinates of the normal vectors on surface points
     surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
-    surfDirect = [[0;1;0],cutDirection(surfPt(:,2:end),[0;0;0])]; % cutting direction of each points
-    % 和[0;0;1]垂直、且与surfDirect(:,end)夹角最小的向量作为surDirect(:,1)
-    surfDirect(:,1) = surfDirect(:,end);
+    surfDirect = [[0;1;0],cutdirection(surfPt(:,2:end),[0;0;0])]; % cutting direction of each points
+    % 和[0;0;1]垂直、且与surfDirect(:,end)夹角最小的向量作为surDirect(:,1)，可视作surfDirect(:,end)到[0;0;1]平面的投影
+    surfDirect(:,1) = vecOnPlane(surfDirect(:,end),surfPt(:,1),[0;0;1]);
 
     % calculate the tool path and residual height
     [tQuat(1,:),tVec(:,1),tContactU(1),isColl(1)] = toolPos( ...
@@ -178,19 +218,17 @@ while true
     tSp1.coefs = axesRot([0;0;1],[1;0;0],tNorm(:,1),tCutDir(:,1),'zx')*toolSp.coefs + tPathPt(:,1);
     tSp2 = toolSp;
     tSp2.coefs = axesRot([0;0;1],[1;0;0],tNorm(:,2),tCutDir(:,2),'zx')*toolSp.coefs + tPathPt(:,2);
-    figure;
-    plot3(tSp1.coefs(1,:),tSp1.coefs(2,:),tSp1.coefs(3,:),'.'); hold on;
-    plot3(tSp2.coefs(1,:),tSp2.coefs(2,:),tSp2.coefs(3,:),'.');
-
-    % 投影
+    % figure;
+    % plot3(tSp1.coefs(1,:),tSp1.coefs(2,:),tSp1.coefs(3,:),'.'); hold on;
+    % plot3(tSp2.coefs(1,:),tSp2.coefs(2,:),tSp2.coefs(3,:),'.');
     
-    [res,~] = residual2D_numeric(tSp1,tSp2,1e-3,tContactU(1),tContactU(2),'DSearchn');
+    [res,~] = residual2D_numeric(tSp1,tSp2,1e-3,fnval(tSp1,tContactU(1)),fnval(tSp2,tContactU(2)),'DSearchn');
 
     if res < aimRes
         clear tQuat tVec tContactU isColl tPathPt tCutDir tNorm res
         break;
     else
-        fprintf('The residual height of No.%d is beyond the expected range.\n',length(loopPtNum));
+        fprintf('The residual height of No.%d is beyond the expected range.\n-----\n',length(loopPtNum));
         delta = delta/3;
         r = r - delta;
     end
@@ -222,7 +260,7 @@ end
 % calculate the residual height together with the rotation center
 angle = atan2(toolPathPt(2,2:accumPtNum(end)),toolPathPt(1,2:accumPtNum(end)));
 for ii = 2:accumPtNum(end)
-    angleDel = (angle - wrapToPi(angle(ii) + pi));
+    angleDel = (angle - wrapToPi(angle(ii - 1) + pi));
     [ind2,ind3] = getInnerLoopToolPathIndex(angle,angleDel);
     [res(1,ii),peakPtIn(:,ii),uLim(:,ii)] = residual3D( ...
         toolPathPt,toolNormDirect,toolCutDirect,toolContactU, ...
@@ -232,17 +270,26 @@ peakPt = [peakPtIn;zeros(3,accumPtNum(end))];
 
 
 r = r + delta;
-fprintf('No.1\tElapsed time is %f seconds.\n',toc(t1));
+fprintf('No.2\tElapsed time is %f seconds.\n',toc(t1));
 
 %% Tool path adjusting for the rest
 while true
     tic
     while true
         % calculate the discretization scatters
-        % if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
-        conTheta = linspace(0,2*pi, ...
-            ceil(2*pi/min(maxAngPtDist,arcLength/r)) + 1);
-        conTheta(end) = [];
+        switch angularDiscrete
+            case 'Constant Arc'
+                % if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
+                conTheta = linspace(0,2*pi, ...
+                    ceil(2*pi/min(maxAngPtDist,arcLength/r)) + 1);
+                conTheta(end) = [];
+            case 'Constant Angle'
+                conTheta = linspace(0,2*pi, ...
+                    ceil(2*pi/angleLength) + 1);
+                conTheta(1) = [];
+            otherwise
+                error('Invalid angular discretization type.');
+        end
     
         % calculate the cutting pts
         loopPtNumTmp = length(conTheta); % the number of points in the loop
@@ -254,7 +301,7 @@ while true
         surfNormTmp(2,:) = surfFy(surfPtTmp(1,:),surfPtTmp(2,:)); % y coordinates of the normal vectors on surface points
         surfNormTmp(3,:) = -1*ones(1,loopPtNumTmp); % z coordinates of the normal vectors on surface points
         surfNormTmp = -1*(surfNormTmp./vecnorm(surfNormTmp,2,1)); % normolization of the normal vector
-        surfDirectTmp = cutDirection(surfPtTmp,[0;0;0]); % cutting direction of each points
+        surfDirectTmp = cutdirection(surfPtTmp,[0;0;0]); % cutting direction of each points
         
         % calculate the tool path and residual height
         toolQuatTmp = zeros(loopPtNumTmp,4);
@@ -289,7 +336,7 @@ while true
         angle = atan2(toolPathPtRes(2,:),toolPathPtRes(1,:));
         % inner side of each point on the tool path
         angleN = angle(1:loopPtNumLast);
-        for ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
+        parfor ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
             angleDel = angleN - angle(ii);
             [ind2,ind3] = getInnerLoopToolPathIndex(angleN,angleDel);
             % if isempty(angleN(angleDel >= 0))
@@ -322,7 +369,7 @@ while true
 
     % outer side of each point in the tool path
     angleN = angle(loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp);
-    for ii = 1:loopPtNumLast
+    parfor ii = 1:loopPtNumLast
         angleDel = angleN - angle(ii);
         [ind2,ind3] = getOuterLoopToolPathIndex(angleN,angleDel,loopPtNumLast);
         % if isempty(angleN(angleDel >= 0))
@@ -408,7 +455,8 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 
 save workspace\20220925-contrast\nagayama_concentric\loopR.mat loopR
 
-s5_visualize_process;
+s4_visualize_concentric;
+% 这里还有问题：中间一圈的残高比外圈的小很多，而且中间的一圈残高的计算是有问题的。
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path

@@ -3,14 +3,14 @@ function projVec = vecOnPlane(vec,varargin)
 %
 % usage:
 %
-% projPt = vecOnPlane(Pt,param)
+% projVec = vecOnPlane(vec,param)
 %   the plane is described with parameters of the general equation
 %   vec         (3,:)   the vector that will be projected
 %   param       (4,1)   the parameters of the equation, i.e., A, B, C & D,
 %                       respectively
 %   projVec     (3,:)   the projection of the point Pt
 %
-% projPt = vecOnPlane(Pt,surfPt,surfNorm)
+% projVec = vecOnPlane(vec,surfPt,surfNorm)
 %   the plane is described with a point on it and its normal vector
 %   vec         (3,:)   the vector that will be projected
 %   surfPt      (3,1)   the point on the plane

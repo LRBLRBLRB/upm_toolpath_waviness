@@ -1,0 +1,522 @@
+classdef add_surface < matlab.apps.AppBase
+    % the figure to add surfaces
+
+    properties (Constant)
+        ButtonRowInterval = 15
+        ButtonColumnInterval = 20
+        ButtonWidth = 120
+        ButtonHeight = 20
+    end
+    
+    properties (Access = public)
+        SurfaceUI               matlab.ui.Figure
+        SurfaceGl               matlab.ui.container.GridLayout
+        SurfaceDd               matlab.ui.control.DropDown
+        ImportBtnGp             matlab.ui.container.ButtonGroup
+        PointCloudRadioBtn      matlab.ui.control.RadioButton
+        PointCloudBtnGl         matlab.ui.container.GridLayout
+        PointCloudLb            matlab.ui.control.Label
+        PointCloudEf            matlab.ui.control.EditField
+        PointCloudActivateBtn   matlab.ui.control.Button
+        FuncsRadioBtn           matlab.ui.control.RadioButton
+        FuncsBtnGl              matlab.ui.container.GridLayout
+        FuncsLb                 matlab.ui.control.Label
+        FuncsEf                 matlab.ui.control.EditField
+        FuncsActivateBtn        matlab.ui.control.Button
+        Geometry2DBtnGp         matlab.ui.container.ButtonGroup
+        AsphericRadioBtn        matlab.ui.control.RadioButton
+        AsphericBtnGl           matlab.ui.container.GridLayout
+        AsphericActivateBtn     matlab.ui.control.Button
+        AsphericRadiusLb        matlab.ui.control.Label
+        AsphericRadiusSpin      matlab.ui.control.Spinner
+        AsphericRadiusUnitLb    matlab.ui.control.Label
+        AsphericConicLb         matlab.ui.control.Label
+        AsphericConicSpin       matlab.ui.control.Spinner
+        AsphericOffsetLb        matlab.ui.control.Label
+        AsphericOffsetSpin      matlab.ui.control.Spinner
+        AsphericOffsetUnitLb    matlab.ui.control.Label
+        Geometry3DBtnGp         matlab.ui.container.ButtonGroup
+        EllipsoidRadioBtn       matlab.ui.control.RadioButton
+        EllipsoidBtnGl          matlab.ui.container.GridLayout
+        EllipsoidFuncLb         matlab.ui.control.Label
+        EllipsoidActivateBtn    matlab.ui.control.Button
+        EllipsoidALb            matlab.ui.control.Label
+        EllipsoidASpin          matlab.ui.control.Spinner
+        EllipsoidBLb            matlab.ui.control.Label
+        EllipsoidBSpin          matlab.ui.control.Spinner
+        EllipsoidCLb            matlab.ui.control.Label
+        EllipsoidCSpin          matlab.ui.control.Spinner
+        EllipsoidDLb            matlab.ui.control.Label
+        EllipsoidDSpin          matlab.ui.control.Spinner
+        SurfaceDomainPn         matlab.ui.container.Panel
+        SurfaceDomainPnGl       matlab.ui.container.GridLayout
+        SurfaceXLb              matlab.ui.control.Label
+        SurfaceX1Spin           matlab.ui.control.Spinner
+        SurfaceX2Spin           matlab.ui.control.Spinner
+        SurfaceXUnitLb          matlab.ui.control.Label
+        SurfaceYLb              matlab.ui.control.Label
+        SurfaceY1Spin           matlab.ui.control.Spinner
+        SurfaceY2Spin           matlab.ui.control.Spinner
+        SurfaceYUnitLb          matlab.ui.control.Label
+        SurfaceFuncsEf          matlab.ui.control.EditField
+        SurfaceEnterBtn         matlab.ui.control.Button
+
+        surfFuncs               
+        surfPath
+    end
+
+    % relation to the main app
+    properties (Access = private)
+        CallingApp % main app object
+    end
+
+    methods (Access = private)
+        function paramGpIni(app)
+            app.PointCloudBtnGl.Visible = 'off';
+            app.FuncsBtnGl.Visible = 'off';
+            app.AsphericBtnGl.Visible = 'off';
+            app.EllipsoidBtnGl.Visible = 'off';
+        end
+    end
+
+    methods (Access = private)
+        function startupFcn(app,mainapp,surfName,surfString)
+            % Store main app in property for CloseRequestFcn to use
+            app.CallingApp = mainapp;
+
+            % Update UI with the input values
+            app.SurfaceDd.Value = surfName;
+            SurfaceDdValueChanged(app,true);
+            % switch surfName
+            %     case 'Import'
+            %         app.SurfaceDd.Value = 'Import';
+            %         app.ImportBtnGp.Visible = 'on';
+            %         app.PointCloudRadioBtn.Value = true;
+            %         app.PointCloudBtnGl.Visible = 'on';
+            %         app.PointCloudRadioBtn.Position = [app.ButtonColumnInterval, ...
+            %             app.ImportBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+            %             app.ButtonWidth,app.ButtonHeight];
+            %     case '2D Geometry'
+            %         app.SurfaceDd.Value = '2D Geometry';
+            %         app.Geometry2DBtnGp.Visible = 'on';
+            %         app.AsphericRadioBtn.Value = true;
+            %         app.AsphericBtnGl.Visible = 'on';
+            %         app.AsphericRadioBtn.Position = [app.ButtonColumnInterval, ...
+            %             app.Geometry2DBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+            %             app.ButtonWidth,app.ButtonHeight];
+            %     case '3D Geometry'
+            %         app.SurfaceDd.Value = '3D Geometry';
+            %         app.Geometry3DBtnGp.Visible = 'on';
+            %         app.EllipsoidRadioBtn.Value = true;
+            %         app.EllipsoidBtnGl.Visible = 'on';
+            %         app.FuncsRadioBtn.Position = [app.ButtonColumnInterval, ...
+            %             app.Geometry3DBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+            %             app.ButtonWidth,app.ButtonHeight];
+            %         app.EllipsoidRadioBtn.Position = [app.ButtonColumnInterval, ...
+            %             app.Geometry3DBtnGp.Position(4) - 2*app.ButtonHeight - 2*app.ButtonRowInterval, ...
+            %             app.ButtonWidth,app.ButtonHeight];
+            % end
+            app.SurfaceFuncsEf.Value = surfString;
+        end
+
+        % uifigure closed request callback
+        function AddSurfaceUICloseReq(app,event)
+            app.CallingApp.AddSurfaceBtn.Enable = 'on';
+            delete(app);
+        end
+
+        % Value changed function: select the proper surface category
+        function SurfaceDdValueChanged(app,event)
+            switch app.SurfaceDd.Value
+                case 'Import'
+                    app.ImportBtnGp.Visible = 'on';
+                    app.Geometry2DBtnGp.Visible = 'off';
+                    app.Geometry3DBtnGp.Visible = 'off';
+                    paramGpIni(app);
+                    app.PointCloudRadioBtn.Value = true;
+                    app.PointCloudBtnGl.Visible = 'on';
+                    app.PointCloudRadioBtn.Position = [app.ButtonColumnInterval, ...
+                        app.ImportBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+                        app.ButtonWidth,app.ButtonHeight];
+                case '2D Geometry'
+                    app.ImportBtnGp.Visible = 'off';
+                    app.Geometry2DBtnGp.Visible = 'on';
+                    app.Geometry3DBtnGp.Visible = 'off';
+                    paramGpIni(app);
+                    app.AsphericRadioBtn.Value = true;
+                    app.AsphericBtnGl.Visible = 'on';
+                    app.AsphericRadioBtn.Position = [app.ButtonColumnInterval, ...
+                        app.Geometry2DBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+                        app.ButtonWidth,app.ButtonHeight];
+                case '3D Geometry'
+                    app.ImportBtnGp.Visible = 'off';
+                    app.Geometry2DBtnGp.Visible = 'off';
+                    app.Geometry3DBtnGp.Visible = 'on';
+                    paramGpIni(app);
+                    app.EllipsoidRadioBtn.Value = true;
+                    app.EllipsoidBtnGl.Visible = 'on';
+                    app.FuncsRadioBtn.Position = [app.ButtonColumnInterval, ...
+                        app.Geometry3DBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+                        app.ButtonWidth,app.ButtonHeight];
+                    app.EllipsoidRadioBtn.Position = [app.ButtonColumnInterval, ...
+                        app.Geometry3DBtnGp.Position(4) - 2*app.ButtonHeight - 2*app.ButtonRowInterval, ...
+                        app.ButtonWidth,app.ButtonHeight];
+            end
+        end
+
+        % Selection changed function: change the radio buttion of the import buttongroup
+        function ImportBtnGpSelectionChanged(app,true)
+            switch app.ImportBtnGp.SelectedObject.Text
+                case 'Point Cloud'
+                    paramGpIni(app);
+                    app.PointCloudBtnGl.Visible = 'on';
+            end
+        end
+
+        % Button pushed function: change the add_functions edit field
+        function PointCloudActivateButtonPushed(app,event)
+            app.SurfaceFuncsEf.Value = app.PointCloudEf.Value;
+        end
+
+        % Selection changed function: change the radio buttion of the 2-D geometry buttongroup
+        function Geometry2DBtnGpSelectionChanged(app,event)
+            switch app.Geometry2DBtnGp.SelectedObject.Text
+                case 'Aspheric'
+                    paramGpIni(app);
+                    app.AsphericBtnGl.Visible = 'on';
+            end
+        end
+
+        % Value changed function: change the spinner of the aspheric surface
+        function AsphericActivateBtnButtonPushed(app,event)
+            syms x;
+            c = 1/app.AsphericRadiusSpin.Value;
+            k = app.AsphericConicSpin.Value;
+            x0 = app.AsphericOffsetSpin.Value;
+            app.surfFuncs = (c*(x - x0)^2)/(1 + sqrt(1 - (1 + k)*c^2*(x - x0)^2));
+            app.SurfaceFuncsEf.Value = char(app.surfFuncs);
+        end
+    
+        % Selection changed function: change the radio buttion of the 3-D geometry buttongroup
+        function Geometry3DBtnGpSelectionChanged(app,event)
+            switch app.Geometry3DBtnGp.SelectedObject.Text
+                case 'Function-Based'
+                    paramGpIni(app);
+                    app.FuncsBtnGl.Visible = 'on';
+                case 'Ellipsoid'
+                    paramGpIni(app);
+                    app.EllipsoidBtnGl.Visible = 'on';
+            end
+        end
+
+        % Button pushed function: change the add_functions edit field
+        function FuncsActivateButtonPushed(app,event)
+            app.SurfaceFuncsEf.Value = app.FuncsEf.Value;
+            app.surfFuncs
+        end
+
+        % Value changed function: change the spinner of the Ellipsoid surface
+        function EllipsoidActivateBtnButtonPushed(app,event)
+            syms x y;
+            A = app.EllipsoidASpin.Value;
+            B = app.EllipsoidBSpin.Value;
+            C = app.EllipsoidCSpin.Value;
+            D = app.EllipsoidDSpin.Value;
+            app.surfFuncs = C*sqrt(D.^2 - x.^2/A^2 - y.^2/B^2);
+            app.SurfaceFuncsEf.Value = char(app.surfFuncs);
+        end
+
+        % Button pushed function: correct the surface and sent it back
+        function AddSurfaceEnterButtonPushed(app,event)
+            surfDomain = [app.SurfaceX1Spin.Value,app.SurfaceX2Spin.Value;
+                app.SurfaceY1Spin.Value,app.SurfaceY2Spin.Value];
+            switch app.SurfaceDd.Value
+                case 'Import'
+                    % Call main app's public function
+                    updateSurface(app.CallingApp, ...
+                        app.ImportBtnGp.SelectedObject.Text, ...
+                        app.surfPath.Value,surfDomain);
+                case '2D Geometry'
+                    % Call main app's public function
+                    updateSurface(app.CallingApp, ...
+                        app.Geometry2DBtnGp.SelectedObject.Text, ...
+                        app.surfFuncs.Value,surfDomain);
+                case '3D Geometry'
+                    % Call main app's public function
+                    updateSurface(app.CallingApp, ...
+                        app.Geometry3DBtnGp.SelectedObject.Text, ...
+                        app.surfFuncs,surfDomain);
+            end
+
+            % Delete the dialog box
+            delete(app);
+        end
+
+        function createComponents(app)
+            % Create the add surface window
+            app.SurfaceUI = uifigure('Name','Add Surface', ...
+                'WindowStyle','modal','WindowState','normal','Visible','off');
+            app.SurfaceUI.CloseRequestFcn = createCallbackFcn(app,@AddSurfaceUICloseReq,true);
+            app.SurfaceUI.Resize = "on";
+            app.SurfaceUI.Position = [600,600,600,400];
+            app.SurfaceUI.Scrollable = "on";
+        
+            app.SurfaceGl = uigridlayout(app.SurfaceUI,[4,3]);
+            app.SurfaceGl.RowHeight = {'fit','2x','fit','fit'};
+            app.SurfaceGl.ColumnWidth = {app.ButtonWidth + 2*app.ButtonColumnInterval,'2x','fit'};
+        
+            app.SurfaceDd = uidropdown(app.SurfaceGl, ...
+                'Items',{'Import','2D Geometry','3D Geometry'}, ...
+                'Value','3D Geometry','BackgroundColor',[1,1,1]);
+            app.SurfaceDd.Layout.Row = 1;
+            app.SurfaceDd.Layout.Column = 1;
+            app.SurfaceDd.ValueChangedFcn = createCallbackFcn(app,@SurfaceDdValueChanged,true);
+
+            % ------------------------------------------------------------------
+            % ------------------------- Import Surface -------------------------
+            % ------------------------------------------------------------------
+            app.ImportBtnGp = uibuttongroup(app.SurfaceGl,'BorderType','line', ...
+                'Title','Import Selection','TitlePosition','centertop', ...
+                'FontSize',16,'FontName','Times New Roman');
+            app.ImportBtnGp.Layout.Row = [2,3];
+            app.ImportBtnGp.Layout.Column = 1;
+            app.ImportBtnGp.Visible = 'off';
+            app.ImportBtnGp.SelectionChangedFcn = createCallbackFcn(app,@ImportBtnGpSelectionChanged,true);
+
+            % ----------------------- Point-cloud surface -----------------------
+            app.PointCloudRadioBtn = uiradiobutton(app.ImportBtnGp,'Text','Point Cloud','WordWrap','on', ...
+                'Position',[app.ButtonColumnInterval,app.ImportBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+                app.ButtonWidth,app.ButtonHeight]);
+            app.PointCloudBtnGl = uigridlayout(app.SurfaceGl,[2,2]);
+            app.PointCloudBtnGl.Layout.Row = [1,2];
+            app.PointCloudBtnGl.Layout.Column = [2,3];
+            app.PointCloudBtnGl.RowHeight = {'fit','1x'};
+            app.PointCloudBtnGl.ColumnWidth = {'1x','fit'};
+            app.PointCloudBtnGl.Visible = 'off';
+
+            app.PointCloudLb = uilabel(app.PointCloudBtnGl,'Text','Surface path: ');
+            app.PointCloudLb.Layout.Row = 1;
+            app.PointCloudLb.Layout.Column = 1;
+            app.PointCloudEf = uieditfield(app.PointCloudBtnGl,'text');
+            app.PointCloudEf.Layout.Row = 2;
+            app.PointCloudEf.Layout.Column = [1,2];
+
+            app.PointCloudActivateBtn = uibutton(app.PointCloudBtnGl,'push','Text','Activate');
+            app.PointCloudActivateBtn.Layout.Row = 1;
+            app.PointCloudActivateBtn.Layout.Column = 2;
+            app.PointCloudActivateBtn.ButtonPushedFcn = createCallbackFcn(app,@PointCloudActivateButtonPushed,true);
+
+            % -------------------------------------------------------------------
+            % ----------------------- 2D Geometry Surface -----------------------
+            % -------------------------------------------------------------------
+            app.Geometry2DBtnGp = uibuttongroup(app.SurfaceGl,'Title','','BorderType','line');
+            app.Geometry2DBtnGp.Layout.Row = [2,3];
+            app.Geometry2DBtnGp.Layout.Column = 1;
+            app.Geometry2DBtnGp.Visible = 'off';
+            app.Geometry2DBtnGp.SelectionChangedFcn = createCallbackFcn(app,@Geometry2DBtnGpSelectionChanged,true);
+
+            % ----------------------- Aspheric -----------------------
+            app.AsphericRadioBtn = uiradiobutton(app.Geometry2DBtnGp,'Text','Aspheric','WordWrap','on', ...
+                'Position',[app.ButtonColumnInterval, ...
+                app.Geometry2DBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+                app.ButtonWidth,app.ButtonHeight]);
+            app.AsphericBtnGl = uigridlayout(app.SurfaceGl,[4,3]);
+            app.AsphericBtnGl.Layout.Row = [1,2];
+            app.AsphericBtnGl.Layout.Column = [2,3];
+            app.AsphericBtnGl.RowHeight = {'fit','fit','fit','fit'};
+            app.AsphericBtnGl.ColumnWidth = {'fit','1x','fit'};
+            app.AsphericBtnGl.Visible = 'off';
+
+            app.AsphericActivateBtn = uibutton(app.AsphericBtnGl,'push','Text','Activate');
+            app.AsphericActivateBtn.Layout.Row = 1;
+            app.AsphericActivateBtn.Layout.Column = 3;
+            app.AsphericActivateBtn.ButtonPushedFcn = createCallbackFcn(app,@AsphericActivateBtnButtonPushed,true);
+
+            app.AsphericRadiusLb = uilabel(app.AsphericBtnGl,'Text','Radius (1/c)');
+            app.AsphericRadiusLb.Layout.Row = 2;
+            app.AsphericRadiusLb.Layout.Column = 1;
+            app.AsphericRadiusSpin = uispinner(app.AsphericBtnGl,'Value',200,'Limits',[0,inf]);
+            app.AsphericRadiusSpin.Layout.Row = 2;
+            app.AsphericRadiusSpin.Layout.Column = 2;
+            app.AsphericRadiusUnitLb = uilabel(app.AsphericBtnGl,'Interpreter','latex');
+            app.AsphericRadiusUnitLb.Layout.Row = 2;
+            app.AsphericRadiusUnitLb.Layout.Column = 3;
+            app.AsphericRadiusUnitLb.Text = '$\mu$m';
+
+            app.AsphericConicLb = uilabel(app.AsphericBtnGl,'Text','Conic (k)');
+            app.AsphericConicLb.Layout.Row = 3;
+            app.AsphericConicLb.Layout.Column = 1;
+            app.AsphericConicSpin = uispinner(app.AsphericBtnGl,'Value',200,'Limits',[0,inf]);
+            app.AsphericConicSpin.Layout.Row = 3;
+            app.AsphericConicSpin.Layout.Column = 2;
+
+            app.AsphericOffsetLb = uilabel(app.AsphericBtnGl,'Text','X Offset (x_0)');
+            app.AsphericOffsetLb.Layout.Row = 4;
+            app.AsphericOffsetLb.Layout.Column = 1;
+            app.AsphericOffsetSpin = uispinner(app.AsphericBtnGl,'Value',200,'Limits',[0,inf]);
+            app.AsphericOffsetSpin.Layout.Row = 4;
+            app.AsphericOffsetSpin.Layout.Column = 2;
+            app.AsphericOffsetUnitLb = uilabel(app.AsphericBtnGl,'Interpreter','latex');
+            app.AsphericOffsetUnitLb.Layout.Row = 4;
+            app.AsphericOffsetUnitLb.Layout.Column = 3;
+            app.AsphericOffsetUnitLb.Text = '$\mu$m';
+
+            % -------------------------------------------------------------------
+            % ----------------------- 3D Geometry Surface -----------------------
+            % -------------------------------------------------------------------
+            app.Geometry3DBtnGp = uibuttongroup(app.SurfaceGl,'Title','','BorderType','line');
+            app.Geometry3DBtnGp.Layout.Row = [2,3];
+            app.Geometry3DBtnGp.Layout.Column = 1;
+            app.Geometry3DBtnGp.Visible = 'off';
+            app.Geometry3DBtnGp.SelectionChangedFcn = createCallbackFcn(app,@Geometry3DBtnGpSelectionChanged,true);
+
+            % ----------------------- Function-based surface -----------------------
+            app.FuncsRadioBtn = uiradiobutton(app.Geometry3DBtnGp,'Text','Function-Based','WordWrap','on', ...
+                'Position',[app.ButtonColumnInterval, ...
+                app.Geometry3DBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+                app.ButtonWidth,app.ButtonHeight]);
+            app.FuncsBtnGl = uigridlayout(app.SurfaceGl,[2,2]);
+            app.FuncsBtnGl.Layout.Row = [1,2];
+            app.FuncsBtnGl.Layout.Column = [2,3];
+            app.FuncsBtnGl.RowHeight = {'fit','1x'};
+            app.FuncsBtnGl.ColumnWidth = {'1x','fit'};
+            app.FuncsBtnGl.Visible = 'off';
+
+            app.FuncsLb = uilabel(app.FuncsBtnGl,'Text','Function: ');
+            app.FuncsLb.Layout.Row = 1;
+            app.FuncsLb.Layout.Column = 1;
+            app.FuncsEf = uieditfield(app.FuncsBtnGl,'text');
+            app.FuncsEf.Layout.Row = 2;
+            app.FuncsEf.Layout.Column = [1,2];
+            app.FuncsEf.Value = 'C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2)';
+
+            app.FuncsActivateBtn = uibutton(app.FuncsBtnGl,'push','Text','Activate');
+            app.FuncsActivateBtn.Layout.Row = 1;
+            app.FuncsActivateBtn.Layout.Column = 2;
+            app.FuncsActivateBtn.ButtonPushedFcn = createCallbackFcn(app,@FuncsActivateButtonPushed,true);
+
+            % ----------------------- Elliptical surface -----------------------
+            app.EllipsoidRadioBtn = uiradiobutton(app.Geometry3DBtnGp,'Text','Ellipsoid','WordWrap','on', ...
+                'Position',[app.ButtonColumnInterval, ...
+                app.Geometry3DBtnGp.Position(4) - 2*app.ButtonHeight - 2*app.ButtonRowInterval, ...
+                app.ButtonWidth,app.ButtonHeight]);
+            app.EllipsoidBtnGl = uigridlayout(app.SurfaceGl,[5,4]);
+            app.EllipsoidBtnGl.Layout.Row = [1,2];
+            app.EllipsoidBtnGl.Layout.Column = [2,3];
+            app.EllipsoidBtnGl.RowHeight = {'fit','fit','fit','fit','fit'};
+            app.EllipsoidBtnGl.ColumnWidth = {'fit','1x','1x','fit'};
+            app.EllipsoidBtnGl.Visible = 'off';
+            app.EllipsoidBtnGl.Scrollable = 'on';
+
+            app.EllipsoidFuncLb = uilabel(app.EllipsoidBtnGl,'Interpreter','latex');
+            app.EllipsoidFuncLb.Layout.Row = 1;
+            app.EllipsoidFuncLb.Layout.Column = [1,3];
+            app.EllipsoidFuncLb.Text = '$Z = \sqrt{C^{2}(D-\frac{x^{2}}{A^{2}}-\frac{y^{2}}{B^{2}})}$';
+
+            app.EllipsoidActivateBtn = uibutton(app.EllipsoidBtnGl,'push','Text','Activate');
+            app.EllipsoidActivateBtn.Layout.Row = 1;
+            app.EllipsoidActivateBtn.Layout.Column = 4;
+            app.EllipsoidActivateBtn.ButtonPushedFcn = createCallbackFcn(app,@EllipsoidActivateBtnButtonPushed,true);
+
+            app.EllipsoidALb = uilabel(app.EllipsoidBtnGl,'Text','A');
+            app.EllipsoidALb.Layout.Row = 2;
+            app.EllipsoidALb.Layout.Column = 1;
+            app.EllipsoidASpin = uispinner(app.EllipsoidBtnGl,'Value',3.5/2);
+            app.EllipsoidASpin.Layout.Row = 2;
+            app.EllipsoidASpin.Layout.Column = [2,4];
+
+            app.EllipsoidBLb = uilabel(app.EllipsoidBtnGl,'Text','B');
+            app.EllipsoidBLb.Layout.Row = 3;
+            app.EllipsoidBLb.Layout.Column = 1;
+            app.EllipsoidBSpin = uispinner(app.EllipsoidBtnGl,'Value',4/2);
+            app.EllipsoidBSpin.Layout.Row = 3;
+            app.EllipsoidBSpin.Layout.Column = [2,4];
+
+            app.EllipsoidCLb = uilabel(app.EllipsoidBtnGl,'Text','C');
+            app.EllipsoidCLb.Layout.Row = 4;
+            app.EllipsoidCLb.Layout.Column = 1;
+            app.EllipsoidCSpin = uispinner(app.EllipsoidBtnGl,'Value',5/2);
+            app.EllipsoidCSpin.Layout.Row = 4;
+            app.EllipsoidCSpin.Layout.Column = [2,4];
+
+            app.EllipsoidDLb = uilabel(app.EllipsoidBtnGl,'Text','D');
+            app.EllipsoidDLb.Layout.Row = 5;
+            app.EllipsoidDLb.Layout.Column = 1;
+            app.EllipsoidDSpin = uispinner(app.EllipsoidBtnGl,'Value',10/2*1000);
+            app.EllipsoidDSpin.Layout.Row = 5;
+            app.EllipsoidDSpin.Layout.Column = [2,4];
+
+            % ----------------------- surface domain -----------------------
+            app.SurfaceDomainPn = uipanel(app.SurfaceGl,'Title','Domain', ...
+                'TitlePosition','lefttop');
+            app.SurfaceDomainPn.Layout.Row = 3;
+            app.SurfaceDomainPn.Layout.Column = [2,3];
+            app.SurfaceDomainPnGl = uigridlayout(app.SurfaceDomainPn,[2,4]);
+            app.SurfaceDomainPnGl.RowHeight = {'fit','fit'};
+            app.SurfaceDomainPnGl.ColumnWidth = {'fit','1x','1x','1x'};
+            app.SurfaceXLb = uilabel(app.SurfaceDomainPnGl,'Text','X Range');
+            app.SurfaceXLb.Layout.Row = 2;
+            app.SurfaceXLb.Layout.Column = 1;
+            app.SurfaceX1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-5000);
+            app.SurfaceX1Spin.Layout.Row = 2;
+            app.SurfaceX1Spin.Layout.Column = 2;
+            app.SurfaceX2Spin = uispinner(app.SurfaceDomainPnGl,'Value',5000);
+            app.SurfaceX2Spin.Layout.Row = 2;
+            app.SurfaceX2Spin.Layout.Column = 3;
+            app.SurfaceXUnitLb = uilabel(app.SurfaceDomainPnGl,'Interpreter','latex');
+            app.SurfaceXUnitLb.Layout.Row = 2;
+            app.SurfaceXUnitLb.Layout.Column = 4;
+            app.SurfaceXUnitLb.Text = '$\mu$m';
+
+            app.SurfaceYLb = uilabel(app.SurfaceDomainPnGl,'Text','Y Range');
+            app.SurfaceYLb.Layout.Row = 3;
+            app.SurfaceYLb.Layout.Column = 1;
+            app.SurfaceY1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-5000);
+            app.SurfaceY1Spin.Layout.Row = 3;
+            app.SurfaceY1Spin.Layout.Column = 2;
+            app.SurfaceY2Spin = uispinner(app.SurfaceDomainPnGl,'Value',5000);
+            app.SurfaceY2Spin.Layout.Row = 3;
+            app.SurfaceY2Spin.Layout.Column = 3;
+            app.SurfaceYUnitLb = uilabel(app.SurfaceDomainPnGl,'Interpreter','latex');
+            app.SurfaceYUnitLb.Layout.Row = 3;
+            app.SurfaceYUnitLb.Layout.Column = 4;
+            app.SurfaceYUnitLb.Text = '$\mu$m';
+
+            % ------------------------ state text area ------------------------
+            app.SurfaceFuncsEf = uieditfield(app.SurfaceGl,'text', ...
+                'Editable','off','BackgroundColor',[0.96,0.96,0.96]);
+            app.SurfaceFuncsEf.Layout.Row = 4;
+            app.SurfaceFuncsEf.Layout.Column = [1,2];
+            app.SurfaceFuncsEf.Value = 'No surface is activated now.';
+
+            app.SurfaceEnterBtn = uibutton(app.SurfaceGl,'push','Text','Enter');
+            app.SurfaceEnterBtn.Layout.Row = 4;
+            app.SurfaceEnterBtn.Layout.Column = 3;
+            app.SurfaceEnterBtn.ButtonPushedFcn = createCallbackFcn(app,@AddSurfaceEnterButtonPushed,true);
+
+            % enable the window
+            app.SurfaceUI.Visible = 'on';
+        end
+    end
+
+    methods (Access = public)
+        function app = add_surface(varargin)
+            % Create UIFigure and components
+            createComponents(app);
+
+            % Register the app with App Designer
+            registerApp(app,app.SurfaceUI);
+
+            % Execute the startup function
+            runStartupFcn(app,@(app)startupFcn(app,varargin{:}));
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        function delete(app)
+            delete(app.SurfaceUI);
+        end
+    end
+end

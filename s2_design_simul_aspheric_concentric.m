@@ -365,7 +365,8 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 
 
 %% Visualization & Simulation
-s5_visualize_process;
+nLoop = ceil(ptNum/sparTheta);
+s2_visualize_process;
 
 % delete(parObj);
 profile off

@@ -71,7 +71,6 @@ while true
             fprintf('The time spent in the residual map process is %fs.\n',tRes);
         case 'Machining simulation'
             stepLength = 0.01;
-            nLoop = ceil(ptNum/sparTheta);
             uLimRound = round(uLim,2);
             toolPathList = [];
             tSimul0 = tic;

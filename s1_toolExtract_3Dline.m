@@ -2,7 +2,7 @@
 % and to get the 3D point cloud of the tool tip
 
 %% 3D curve results
-isAPP = false;
+isAPP = true;
 if isAPP
     workspaceDir = app.workspaceDir;
     toolOri = app.toolOri;

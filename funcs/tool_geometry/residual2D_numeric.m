@@ -5,14 +5,19 @@ function [res,peakPt,varargout] = residual2D_numeric(s1,s2,eps,varargin)
 % 
 % Usage:
 % [res,peakPt,ind1,ind2] = residual2D_numeric(s1,s2,eps,c1,c2,vec1,vec2,r,method)
-%   vec1 (2,1) 1st normal vector of the tool edge
 %   s1 (2,:) 1st scatters of the tool edge
+%   c1 (2,1) 1st center of the tool edge
+%   vec1 (2,1) 1st normal vector of the tool edge
 %   c2,vec2,s2 are parameters of the other tool edge
 %   res (1,1) the residual within the two position
 %   interPt (2,1)
 %
 % [res,peakPt,ind1,ind2] = residual2D_numeric(s1,s2,eps,p1,p2,method)
-%
+%   s1 & s2 struct  the B-form struct of the two tool edge
+%   eps (1,1)  the discretization of the parameter u
+%   p1 % p2 ()  
+%   res (1,1)  the residual within the two position
+%   interPt (2,1)  
 %
 % [res,peakPt,ind1,ind2] = residual2D_numeric(sp1,sp2,...)
 %   all the same except that the sp1 and sp2 remain the B-form spline
