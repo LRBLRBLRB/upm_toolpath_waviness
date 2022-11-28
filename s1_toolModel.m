@@ -125,23 +125,25 @@ toolDirect = [0;1;0];
         }, ...
         'Select the directory and filename to save the tool model', ...
         fullfile(workspaceDir,['toolTheo',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
-toolFile = fullfile(toolDirName,toolFileName);
 switch toolFileType
     case 0 % no saving files
+        toolDataFile = '';
         msgfig = msgbox("No tool model saved","Warning","warn","modal");
         uiwait(msgfig);
     case 1 % *.mat
+        toolDataFile = fullfile(toolDirName,toolFileName);
         Comments = cell2mat(inputdlg( ...
             'Enter Comment of the tool model:', ...
             'Saving Comments', ...
             [5 60], ...
             string(datestr(now))));
-        save(toolFile,"Comments","unit","fitMethod","paramMethod", ... % comments and notes
+        save(toolDataFile,"Comments","unit","fitOpts","paramMethod", ... % comments and notes
             "center","radius","openAngle", ... % tool fitting results
             "toolEdgeNorm","toolDirect","cutDirect","toolBform", ... % tool interpolation results
             "toolEdgePt","toolFit"); % auxiliary data
         % toolEdgePt, toolCpts, toolFit are useless in the following process at present
     otherwise
+        toolDataFile = fullfile(toolDirName,toolFileName);
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);
 end

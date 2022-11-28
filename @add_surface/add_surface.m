@@ -50,6 +50,7 @@ classdef add_surface < matlab.apps.AppBase
         EllipsoidDSpin          matlab.ui.control.Spinner
         SurfaceDomainPn         matlab.ui.container.Panel
         SurfaceDomainPnGl       matlab.ui.container.GridLayout
+        SurfaceDomainDd         matlab.ui.control.DropDown
         SurfaceXLb              matlab.ui.control.Label
         SurfaceX1Spin           matlab.ui.control.Spinner
         SurfaceX2Spin           matlab.ui.control.Spinner
@@ -58,11 +59,16 @@ classdef add_surface < matlab.apps.AppBase
         SurfaceY1Spin           matlab.ui.control.Spinner
         SurfaceY2Spin           matlab.ui.control.Spinner
         SurfaceYUnitLb          matlab.ui.control.Label
+        SurfaceRLb              matlab.ui.control.Label
+        SurfaceR1Spin           matlab.ui.control.Spinner
+        SurfaceR2Spin           matlab.ui.control.Spinner
+        SurfaceRUnitLb          matlab.ui.control.Label
         SurfaceFuncsEf          matlab.ui.control.EditField
         SurfaceEnterBtn         matlab.ui.control.Button
 
         surfFuncs               
         surfPath
+        unit
     end
 
     % relation to the main app
@@ -80,7 +86,7 @@ classdef add_surface < matlab.apps.AppBase
     end
 
     methods (Access = private)
-        function startupFcn(app,mainapp,surfName,surfString)
+        function startupFcn(app,mainapp,surfName,unit)
             % Store main app in property for CloseRequestFcn to use
             app.CallingApp = mainapp;
 
@@ -116,7 +122,16 @@ classdef add_surface < matlab.apps.AppBase
             %             app.Geometry3DBtnGp.Position(4) - 2*app.ButtonHeight - 2*app.ButtonRowInterval, ...
             %             app.ButtonWidth,app.ButtonHeight];
             % end
-            app.SurfaceFuncsEf.Value = surfString;
+            
+            app.unit = unit;
+            if strcmp(app.unit,'\mum')
+                app.unit = '$\mu$m';
+            end
+            app.AsphericRadiusUnitLb.Text = app.unit;
+            app.AsphericOffsetUnitLb.Text = app.unit;
+            app.SurfaceXUnitLb.Text = app.unit;
+            app.SurfaceYUnitLb.Text = app.unit;
+            app.SurfaceRUnitLb.Text = app.unit;
         end
 
         % uifigure closed request callback
@@ -226,10 +241,55 @@ classdef add_surface < matlab.apps.AppBase
             app.SurfaceFuncsEf.Value = char(app.surfFuncs);
         end
 
+        % Value changed funciton: change the domain type
+        function SurfaceDomainDdValueChanged(app,event)
+            switch app.SurfaceDomainDd.Value
+                case 'XY'
+                    app.SurfaceXLb.Visible = 'on';
+                    app.SurfaceX1Spin.Visible = 'on';
+                    app.SurfaceX2Spin.Visible = 'on';
+                    app.SurfaceXUnitLb.Visible = 'on';
+                    app.SurfaceYLb.Visible = 'on';
+                    app.SurfaceY1Spin.Visible = 'on';
+                    app.SurfaceY2Spin.Visible = 'on';
+                    app.SurfaceYUnitLb.Visible = 'on';
+                    app.SurfaceRLb.Visible = 'off';
+                    app.SurfaceR1Spin.Visible = 'off';
+                    app.SurfaceR2Spin.Visible = 'off';
+                    app.SurfaceRUnitLb.Visible = 'off';
+                case 'Ploar'
+                    app.SurfaceXLb.Visible = 'off';
+                    app.SurfaceX1Spin.Visible = 'off';
+                    app.SurfaceX2Spin.Visible = 'off';
+                    app.SurfaceXUnitLb.Visible = 'off';
+                    app.SurfaceYLb.Visible = 'off';
+                    app.SurfaceY1Spin.Visible = 'off';
+                    app.SurfaceY2Spin.Visible = 'off';
+                    app.SurfaceYUnitLb.Visible = 'off';
+                    app.SurfaceRLb.Visible = 'on';
+                    app.SurfaceR1Spin.Visible = 'on';
+                    app.SurfaceR2Spin.Visible = 'on';
+                    app.SurfaceRUnitLb.Visible = 'on';
+            end
+        end
+
+        % Value changed function: ensure R1 and R2 to be opposite numbers
+        function SurfaceR1SpinValueChanged(app,true);
+            app.SurfaceR2Spin.Value = -app.SurfaceR1Spin.Value;
+        end
+        function SurfaceR2SpinValueChanged(app,true);
+            app.SurfaceR1Spin.Value = -app.SurfaceR2Spin.Value;
+        end
+
         % Button pushed function: correct the surface and sent it back
-        function AddSurfaceEnterButtonPushed(app,event)
-            surfDomain = [app.SurfaceX1Spin.Value,app.SurfaceX2Spin.Value;
-                app.SurfaceY1Spin.Value,app.SurfaceY2Spin.Value];
+        function SurfaceEnterButtonPushed(app,event)
+            switch app.SurfaceDomainDd.Value
+                case 'XY'
+                    surfDomain = [app.SurfaceX1Spin.Value,app.SurfaceX2Spin.Value;
+                        app.SurfaceY1Spin.Value,app.SurfaceY2Spin.Value];
+                case 'Polar'
+                    surfDomain = [app.SurfaceR1Spin.Value,app.SurfaceR2Spin.Value];
+            end
             switch app.SurfaceDd.Value
                 case 'Import'
                     % Call main app's public function
@@ -341,7 +401,6 @@ classdef add_surface < matlab.apps.AppBase
             app.AsphericRadiusUnitLb = uilabel(app.AsphericBtnGl,'Interpreter','latex');
             app.AsphericRadiusUnitLb.Layout.Row = 2;
             app.AsphericRadiusUnitLb.Layout.Column = 3;
-            app.AsphericRadiusUnitLb.Text = '$\mu$m';
 
             app.AsphericConicLb = uilabel(app.AsphericBtnGl,'Text','Conic (k)');
             app.AsphericConicLb.Layout.Row = 3;
@@ -359,7 +418,6 @@ classdef add_surface < matlab.apps.AppBase
             app.AsphericOffsetUnitLb = uilabel(app.AsphericBtnGl,'Interpreter','latex');
             app.AsphericOffsetUnitLb.Layout.Row = 4;
             app.AsphericOffsetUnitLb.Layout.Column = 3;
-            app.AsphericOffsetUnitLb.Text = '$\mu$m';
 
             % -------------------------------------------------------------------
             % ----------------------- 3D Geometry Surface -----------------------
@@ -448,39 +506,66 @@ classdef add_surface < matlab.apps.AppBase
 
             % ----------------------- surface domain -----------------------
             app.SurfaceDomainPn = uipanel(app.SurfaceGl,'Title','Domain', ...
-                'TitlePosition','lefttop');
+                'TitlePosition','centertop');
             app.SurfaceDomainPn.Layout.Row = 3;
             app.SurfaceDomainPn.Layout.Column = [2,3];
-            app.SurfaceDomainPnGl = uigridlayout(app.SurfaceDomainPn,[2,4]);
-            app.SurfaceDomainPnGl.RowHeight = {'fit','fit'};
-            app.SurfaceDomainPnGl.ColumnWidth = {'fit','1x','1x','1x'};
+            app.SurfaceDomainPnGl = uigridlayout(app.SurfaceDomainPn,[3,4]);
+            app.SurfaceDomainPnGl.RowHeight = {'fit','fit','fit'};
+            app.SurfaceDomainPnGl.ColumnWidth = {'fit','2x','2x','1x'};
+            app.SurfaceDomainDd = uidropdown(app.SurfaceDomainPnGl, ...
+                'Items',{'XY','Polar'},'Value','Polar');
+            app.SurfaceDomainDd.Layout.Row = 1;
+            app.SurfaceDomainDd.Layout.Column = [1,4];
+            app.SurfaceDomainDd.ValueChangedFcn = createCallbackFcn(app,@SurfaceDomainDdValueChanged,true);
+            
             app.SurfaceXLb = uilabel(app.SurfaceDomainPnGl,'Text','X Range');
             app.SurfaceXLb.Layout.Row = 2;
             app.SurfaceXLb.Layout.Column = 1;
-            app.SurfaceX1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-5000);
+            app.SurfaceXLb.Visible = 'off';
+            app.SurfaceX1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-2000);
             app.SurfaceX1Spin.Layout.Row = 2;
             app.SurfaceX1Spin.Layout.Column = 2;
-            app.SurfaceX2Spin = uispinner(app.SurfaceDomainPnGl,'Value',5000);
+            app.SurfaceX1Spin.Visible = 'off';
+            app.SurfaceX2Spin = uispinner(app.SurfaceDomainPnGl,'Value',2000);
             app.SurfaceX2Spin.Layout.Row = 2;
             app.SurfaceX2Spin.Layout.Column = 3;
+            app.SurfaceX2Spin.Visible = 'off';
             app.SurfaceXUnitLb = uilabel(app.SurfaceDomainPnGl,'Interpreter','latex');
             app.SurfaceXUnitLb.Layout.Row = 2;
             app.SurfaceXUnitLb.Layout.Column = 4;
-            app.SurfaceXUnitLb.Text = '$\mu$m';
+            app.SurfaceXUnitLb.Visible = 'off';
 
             app.SurfaceYLb = uilabel(app.SurfaceDomainPnGl,'Text','Y Range');
             app.SurfaceYLb.Layout.Row = 3;
             app.SurfaceYLb.Layout.Column = 1;
-            app.SurfaceY1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-5000);
+            app.SurfaceYLb.Visible = 'off';
+            app.SurfaceY1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-2500);
             app.SurfaceY1Spin.Layout.Row = 3;
             app.SurfaceY1Spin.Layout.Column = 2;
-            app.SurfaceY2Spin = uispinner(app.SurfaceDomainPnGl,'Value',5000);
+            app.SurfaceY1Spin.Visible = 'off';
+            app.SurfaceY2Spin = uispinner(app.SurfaceDomainPnGl,'Value',2500);
             app.SurfaceY2Spin.Layout.Row = 3;
             app.SurfaceY2Spin.Layout.Column = 3;
+            app.SurfaceY2Spin.Visible = 'off';
             app.SurfaceYUnitLb = uilabel(app.SurfaceDomainPnGl,'Interpreter','latex');
             app.SurfaceYUnitLb.Layout.Row = 3;
             app.SurfaceYUnitLb.Layout.Column = 4;
-            app.SurfaceYUnitLb.Text = '$\mu$m';
+            app.SurfaceYUnitLb.Visible = 'off';
+
+            app.SurfaceRLb = uilabel(app.SurfaceDomainPnGl,'Text','Y Range');
+            app.SurfaceRLb.Layout.Row = 2;
+            app.SurfaceRLb.Layout.Column = 2;
+            app.SurfaceR1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-2500);
+            app.SurfaceR1Spin.Layout.Row = 2;
+            app.SurfaceR1Spin.Layout.Column = 2;
+            app.SurfaceR1Spin.ValueChangedFcn = createCallbackFcn(app,@SurfaceR1SpinValueChanged,true);
+            app.SurfaceR2Spin = uispinner(app.SurfaceDomainPnGl,'Value',2500);
+            app.SurfaceR2Spin.Layout.Row = 2;
+            app.SurfaceR2Spin.Layout.Column = 3;
+            app.SurfaceR2Spin.ValueChangedFcn = createCallbackFcn(app,@SurfaceR2SpinValueChanged,true);
+            app.SurfaceRUnitLb = uilabel(app.SurfaceDomainPnGl,'Interpreter','latex');
+            app.SurfaceRUnitLb.Layout.Row = 2;
+            app.SurfaceRUnitLb.Layout.Column = 4;
 
             % ------------------------ state text area ------------------------
             app.SurfaceFuncsEf = uieditfield(app.SurfaceGl,'text', ...
@@ -492,7 +577,7 @@ classdef add_surface < matlab.apps.AppBase
             app.SurfaceEnterBtn = uibutton(app.SurfaceGl,'push','Text','Enter');
             app.SurfaceEnterBtn.Layout.Row = 4;
             app.SurfaceEnterBtn.Layout.Column = 3;
-            app.SurfaceEnterBtn.ButtonPushedFcn = createCallbackFcn(app,@AddSurfaceEnterButtonPushed,true);
+            app.SurfaceEnterBtn.ButtonPushedFcn = createCallbackFcn(app,@SurfaceEnterButtonPushed,true);
 
             % enable the window
             app.SurfaceUI.Visible = 'on';

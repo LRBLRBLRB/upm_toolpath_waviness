@@ -1,10 +1,6 @@
 function resetToolfitParams(app)
-    app.UnitDd.Value = app.unitDefault;
-    app.unit = app.UnitDd.Value;
-    app.FontNameDd.Value = app.fontNameDefault;
-    app.fontName = app.FontNameDd.Value;
-    app.FontSizeEf.Value = app.fontSizeDefault;
-    app.fontSize = app.FontSizeEf.Value;
+    app.ToolUnitDd.Value = app.toolUnitDefault;
+    app.toolUnit = app.ToolUnitDd.Value;
 
     app.ToolFitTypeDd.Value = app.toolFitTypeDefault;
     app.toolFitType = app.ToolFitTypeDd.Value;

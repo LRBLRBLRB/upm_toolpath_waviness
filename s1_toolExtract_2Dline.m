@@ -128,12 +128,16 @@ ylabel(['y (',unit,')']);
 % line fitting based on ransac
 figure(fig1);
 fitOpts.arcFitdisplayType = 'iter-detailed';
-[circ2D,toolFit,RMSE] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
+[circ2D,toolFit,RMSE,lineFitMaxDist] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
     'toolFitType',fitOpts.toolFitType,'lineFitMethod',fitOpts.lineFitMethod, ...
     'arcFitMethod',fitOpts.arcFitMethod, ...
     'arcFitdisplayType',fitOpts.arcFitdisplayType);
 radius = circ2D{2};
 openAngle = circ2D{3};
+
+if isAPP
+    app.lineFitMaxDist = lineFitMaxDist;
+end
 
 %% plot the fitting results
 f2 = figure('Name','Tool Sharpness Fitting Result');

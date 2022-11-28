@@ -5,23 +5,30 @@
 % Step four: simulation of the machining surface
 % Step Five: generate the actual toolpath
 
-isAPP = false;
+isAPP = true;
 if isAPP
+    workspaceDir = app.workspaceDir;
+    unit = app.unit;
+    textFontSize = app.fontSize;
+    textFontType = app.fontName;
+
     % machining paramters
     cutDirection = app.cutDirection;
     spindleDirection = app.spindleDirection;
     angularDiscrete = app.angularDiscrete;
     aimRes = app.aimRes;
+    toolData = app.toolData;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
+    rMax = app.rMax;
     arcLength = app.arcLength;
     maxAngPtDist = app.maxAngPtDist;
-    angleLength = app.angleLength;
+    angularLength = app.angularLength;
 
     surfFunc = app.surfFuncs;
     surfFx = app.surfFx;
     surfFy = app.surfFy;
     surfDomain = app.surfDomain;
-    rMax = norm(surfDomain(:,2) - surfDomain(:,1));
+    surfMesh = app.surfMesh;
     
     msgOpts.Default = 'Cancel and quit';
     msgOpts.Interpreter = 'tex';
@@ -137,7 +144,7 @@ else
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
     arcLength = 30;
     maxAngPtDist = 6*pi/180;
-    angleLength = 6*pi/180;
+    angularLength = 6*pi/180;
 end
 
 %% load the data of the residual function, and get the appropriate cutting width
@@ -166,7 +173,7 @@ while true
             conTheta(1) = [];
         case 'Constant Angle'
             conTheta = linspace(0,2*pi, ...
-                ceil(2*pi/angleLength) + 1);
+                ceil(2*pi/angularLength) + 1);
             conTheta(1) = [];
         otherwise
             error('Invalid angular discretization type.');
@@ -285,7 +292,7 @@ while true
                 conTheta(end) = [];
             case 'Constant Angle'
                 conTheta = linspace(0,2*pi, ...
-                    ceil(2*pi/angleLength) + 1);
+                    ceil(2*pi/angularLength) + 1);
                 conTheta(1) = [];
             otherwise
                 error('Invalid angular discretization type.');
