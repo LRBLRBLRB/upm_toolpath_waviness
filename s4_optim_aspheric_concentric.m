@@ -158,53 +158,39 @@ load(fullfile(workspaceDir,"widthRes.mat")); % widthRes
 t0 = tic;
 tRes0 = tic;
 t1 = tic;
-r = rStep/2; % 可以通过widthRes确定迭代初值
-delta = rStep;
 
 toolSp = toolData.toolBform; % B-form tool tip arc
 toolRadius = toolData.radius; % fitted tool radius
 
-while true
-    % calculate the discretization scatters
-    % if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
-    switch angularDiscrete
-        case 'Constant Arc'
-            conTheta = linspace(0,2*pi, ...
-                ceil(2*pi/maxAngPtDist) + 1);
-            conTheta(1) = [];
-        case 'Constant Angle'
-            conTheta = linspace(0,2*pi, ...
-                ceil(2*pi/angularLength) + 1);
-            conTheta(1) = [];
-        otherwise
-            error('Invalid angular discretization type.');
-    end
+switch angularDiscrete
+    case 'Constant Arc'
+        conTheta = linspace(0,2*pi, ...
+            ceil(2*pi/maxAngPtDist) + 1);
+        conTheta(1) = [];
+    case 'Constant Angle'
+        conTheta = linspace(0,2*pi, ...
+            ceil(2*pi/angularLength) + 1);
+        conTheta(1) = [];
+    otherwise
+        error('Invalid angular discretization type.');
+end
 
-%     % initialize the cutting pts
-%     loopPtNum = 1; % the number of points in each loop
-%     loopR = 0; % the radius R of the current loop
-%     toolR = 0; % the radius R of each tool path points
-%     surfPt = [0;0;surfFunc(0,0)]; % coordinates of surface cutting points
-%     surfNorm = [surfFx(0,0);surfFy(0,0);-1]; % coordinates of the normal vectors on surface points
-%     surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
-%     surfDirect = [1;0;0]; % cutting direction of each points
-
-
-    % initialize the cutting pts: the rotation center is seen as the first loop
-    loopPtNum = [1,length(conTheta)]; % the number of points in each loop
-    accumPtNum = [1,1 + length(conTheta)]; % the No. of the last points in each loop
-    loopR = [0,r]; % the radius R of the current loop
-    toolR = [0,r*ones(1,loopPtNum(end))];
-    surfPt(1,:) = [0,r*cos(conTheta)]; % x coordinates of surface cutting points
-    surfPt(2,:) = [0,r*sin(conTheta)]; % y coordinates of surface cutting points
-    surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:)); % z coordinates of surface cutting points
-    surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:)); % x coordinates of the normal vectors on surface points
-    surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:)); % y coordinates of the normal vectors on surface points
-    surfNorm(3,:) = -1*ones(1,accumPtNum(end)); % z coordinates of the normal vectors on surface points
-    surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
-    surfDirect = [[0;1;0],cutdirection(surfPt(:,2:end),[0;0;0])]; % cutting direction of each points
+% initialize the cutting pts: the rotation center is seen as the first loop
+loopPtNum = [length(conTheta)]; % the number of points in each loop
+accumPtNum = [length(conTheta)]; % the No. of the last points in each loop
+loopR = 0; % the radius R of the current loop
+toolR = zeros(1,loopPtNum(end));
+surfPt(1,:) = zeros(1,loopPtNum(end)); % x coordinates of surface cutting points
+surfPt(2,:) = zeros(1,loopPtNum(end)); % y coordinates of surface cutting points
+surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:)); % z coordinates of surface cutting points
+surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:)); % x coordinates of the normal vectors on surface points
+surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:)); % y coordinates of the normal vectors on surface points
+surfNorm(3,:) = -1*ones(1,accumPtNum(end)); % z coordinates of the normal vectors on surface points
+surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
+    surfDirect = % cutting direction of each points
+    % surfDirect = [[0;1;0],cutdirection(surfPt(:,2:end),[0;0;0])]; % cutting direction of each points
     % 和[0;0;1]垂直、且与surfDirect(:,end)夹角最小的向量作为surDirect(:,1)，可视作surfDirect(:,end)到[0;0;1]平面的投影
-    surfDirect(:,1) = vecOnPlane(surfDirect(:,end),surfPt(:,1),[0;0;1]);
+    % surfDirect(:,1) = vecOnPlane(surfDirect(:,end),surfPt(:,1),[0;0;1]);
 
     % calculate the tool path and residual height
     [tQuat(1,:),tVec(:,1),tContactU(1),isColl(1)] = toolPos( ...
@@ -222,25 +208,7 @@ while true
         tNorm(:,2) = quat2rotm(tQuat(2,:))*toolData.toolEdgeNorm;
     end
 
-    tSp1 = toolSp;
-    tSp1.coefs = axesRot([0;0;1],[1;0;0],tNorm(:,1),tCutDir(:,1),'zx')*toolSp.coefs + tPathPt(:,1);
-    tSp2 = toolSp;
-    tSp2.coefs = axesRot([0;0;1],[1;0;0],tNorm(:,2),tCutDir(:,2),'zx')*toolSp.coefs + tPathPt(:,2);
-    % figure;
-    % plot3(tSp1.coefs(1,:),tSp1.coefs(2,:),tSp1.coefs(3,:),'.'); hold on;
-    % plot3(tSp2.coefs(1,:),tSp2.coefs(2,:),tSp2.coefs(3,:),'.');
-    
-    [res,~] = residual2D_numeric(tSp1,tSp2,1e-3,fnval(tSp1,tContactU(1)),fnval(tSp2,tContactU(2)),'DSearchn');
 
-    if res < aimRes
-        clear tQuat tVec tContactU isColl tPathPt tCutDir tNorm res
-        break;
-    else
-        fprintf('The residual height of No.%d is beyond the expected range.\n-----\n',length(loopPtNum));
-        delta = delta/3;
-        r = r - delta;
-    end
-end
 
 % tool path initialization
 toolQuat = zeros(accumPtNum(end),4); % the quaternions for each points
@@ -276,11 +244,12 @@ for ii = 2:accumPtNum(end)
 end
 peakPt = [peakPtIn;zeros(3,accumPtNum(end))];
 
-
-r = r + delta;
-fprintf('No.2\tElapsed time is %f seconds.\n',toc(t1));
+fprintf('No.1\tElapsed time is %f seconds.\n',toc(t1));
 
 %% Tool path adjusting for the rest
+r = rStep/2; % 可以通过widthRes确定迭代初值
+delta = rStep;
+
 while true
     tic
     while true
@@ -506,7 +475,7 @@ for kk = 2:numLoop % begin with the 2nd loop
         % Method 2: get the inner closest point and linearly interpolate them
         angleN = angle(accumPtNum(kk - 1) + 1:accumPtNum(kk));
         angleDel = angleN - angleN(jj);
-        [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel);
+        [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel); % 
         ind1 = ind1 + accumPtNum(kk - 1);
         ind2 = ind2 + accumPtNum(kk - 1);
         indInterp = jj + accumPtNum(kk - 1);
