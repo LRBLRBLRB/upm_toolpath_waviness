@@ -5,7 +5,7 @@
 % Step four: simulation of the machining surface
 % Step Five: generate the actual toolpath
 
-isAPP = true;
+isAPP = false;
 if isAPP
     workspaceDir = app.workspaceDir;
     unit = app.unit;
@@ -43,7 +43,8 @@ else
     addpath(genpath('funcs'));
     % global variables
     % global textFontSize textFontType;
-    workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
+    % workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
+    workspaceDir = 'workspace\20221020-tooltip';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -470,47 +471,72 @@ s4_visualize_concentric;
 
 % cubic spline approximation
 % the function between the numeric label of tool path and surf radius R
-Fr = csape(accumPtNum,toolR); 
+Fr = csape(accumPtNum,loopR); 
 
 figure('Name','Feed Rate Smoothing');
-scatter(accumPtNum,toolR);
+scatter(accumPtNum,loopR);
 hold on; grid on;
 fnplt(Fr,'r',[0,accumPtNum(end)]);
+plot(1:accumPtNum(end),toolR);
 % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
 %     'Color',[0.929,0.694,0.1250]);
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel('Loop Accumulating Point Number');
 ylabel(['Radius of the Loop (',unit,')']);
-legend('No.-R scatters','csape result');
+legend('No.-R scatters','csape result','Concentric result');
 
 % tool path generation with the smoothing result
+interpR = fnval(Fr,1:accumPtNum(end));
 spiralPtNum = loopPtNum;
 numLoop = length(accumPtNum);
 spiralPath = zeros(3,size(toolPathPt,2)); % the spiral tool path
 spiralNorm = zeros(3,size(toolPathPt,2));
 spiralCutDir = zeros(3,size(toolPathPt,2));
+spiralPath(:,1) = toolPathPt(:,1);
+spiralNorm(:,1) = toolNormDirect(:,1);
+spiralCutDir(:,1) = toolCutDirect(:,1);
 angle = atan2(toolPathPt(2,:),toolPathPt(1,:)); % the concentric angle of each tool path
 % for each loop, shift the tool path point by decreasing the radius
-accumPtNumleng = [0,accumPtNum];
-for kk = 3:numLoop
-    for jj = 1:accumPtNumleng(kk)
+for kk = 2:numLoop % begin with the 2nd loop
+    for jj = 1:spiralPtNum(kk)
         % Method 1: get the (x,y) by interpolation and use residual3D to get z
         % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
         % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
 
-        % Method 2: get the outer closest point and linearly interpolate them
-        indInterp = accumPtNumleng(kk - 1) + jj;
-        angleN = angle(accumPtNumleng(kk - 2) + 1:accumPtNumleng(kk - 1));
-        angleDel = angleN - angleN(indInterp);
+        % Method 2: get the inner closest point and linearly interpolate them
+        angleN = angle(accumPtNum(kk - 1) + 1:accumPtNum(kk));
+        angleDel = angleN - angleN(jj);
         [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel);
+        ind1 = ind1 + accumPtNum(kk - 1);
+        ind2 = ind2 + accumPtNum(kk - 1);
+        indInterp = jj + accumPtNum(kk - 1);
         [spiralPath(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
-            toolPathPt,toolNormDirect,toolCutDirect,toolR,ind1,ind2,indInterp);
+            toolPathPt,toolNormDirect,toolCutDirect,interpR,ind1,ind2,indInterp);
     end
 end
+
+% numLoop = numLoop + 1;
+% accumPtNumlength = [0,accumPtNum];
+% for kk = 3:numLoop % begin with the 2nd loop
+%     for jj = 1:accumPtNumlength(kk)
+%         % Method 1: get the (x,y) by interpolation and use residual3D to get z
+%         % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
+%         % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
+% 
+%         % Method 2: get the inner closest point and linearly interpolate them
+%         indInterp = accumPtNumlength(kk - 1) + jj;
+%         angleN = angle(accumPtNumlength(kk - 2) + 1:accumPtNumlength(kk - 1));
+%         angleDel = angleN - angleN(indInterp);
+%         [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel);
+%         [spiralPath(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
+%             toolPathPt,toolNormDirect,toolCutDirect,toolR,ind1,ind2,indInterp);
+%     end
+% end
 
 % spiral tool path result
 figure('Name','Spiral tool path result');
 tPlot0 = tic;
+plotSpar = 5;
 plot3(spiralPath(1,1:plotSpar:end), ...
     spiralPath(2,1:plotSpar:end), ...
     spiralPath(3,1:plotSpar:end), ...

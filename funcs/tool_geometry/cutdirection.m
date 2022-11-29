@@ -1,4 +1,4 @@
-function toolDirect = cutDirection(varargin)
+function toolDirect = cutdirection(varargin)
 % to solve the turning direction of the tool edge, provide the tool
 % direction of the tool edge at the exact points that are given.
 % usage: 
