@@ -125,5 +125,9 @@ while true
             grid on;
             tSimul = toc(tSimul0);
             fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
+        otherwise
+            msgfig = msgbox("No tool path saved","Warning","warn","non-modal");
+            uiwait(msgfig);
+            return;
     end
 end

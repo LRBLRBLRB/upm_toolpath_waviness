@@ -90,7 +90,8 @@ if strcmp(sparMode,'angle')
     surfPt = transpose(reshape(surfMesh,[],3));
     surfNorm = transpose(reshape(surfNorm,[],3));
     ptNum = size(surfPt,2);
-    surfDirect = cutDirection(surfPt,[0;0;0]);
+    surfDirect = cutdirection(surfPt,[0;0;0],'method','concentric');
+    % surfDirect = cutdirection(surfPt,'method','vertical');
     % surfDirect = zeros(3,ptNum);
     % for ii = 1:densR
     %     surfDirect(:,(ii - 1)*sparTheta + 1:ii*sparTheta) = ...
@@ -126,7 +127,8 @@ else % still need debugging!
     surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:));
     surfNorm(3,:) = -1*ones(1,ptNum);
     surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1));
-    surfDirect = cutDirection(surfPt,[0;0;0]);
+%     surfDirect = cutdirection(surfPt,[0;0;0],'method','concentric');
+    surfDirect = cutdirection(surfPt,'method','vertical');
 end
 
 %% plot the aspheric surface
@@ -182,6 +184,7 @@ toolNormDirect = zeros(3,ptNum);
 toolContactU = zeros(1,ptNum);
 isCollision = false(1,ptNum);
 tToolpath0 = tic;
+% figure;
 parfor ii = 1:ptNum
     [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
         toolData,surfPt(:,ii),surfNorm(:,ii),[0;0;1],surfDirect(:,ii));
@@ -190,6 +193,15 @@ parfor ii = 1:ptNum
         toolCutDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
         toolNormDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
     end
+%     plot3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii)); hold on;
+%     quiver3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii), ...
+%         toolCutDirect(1,ii),toolCutDirect(2,ii),toolCutDirect(3,ii), ...
+%         'AutoScale','on');
+%     toolSp1 = toolData.toolBform;
+%     toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolData.toolBform.coefs + toolVec(:,ii);
+%     Q = fnval(toolSp1,0:0.01:1);
+%     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+%     xlabel('x'); ylabel('y'); axis equal; hold on; 
 end
 tToolpath = toc(tToolpath0);
 fprintf('The time spent in the tool path generating process is %fs.\n',tToolpath);
@@ -235,8 +247,8 @@ msgfig = questdlg({'Tool Path was calculated successfully!', ...
     'Ready to continue?'}, ...
     'Tool Path Simulation','OK & continue','Cancel & quit','OK & continue');
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    msgbox('Exit for the program','Exit','help','modal');
-    uiwait(msgbox);
+    msgfig = msgbox('Exit for the program','Exit','help','modal');
+    uiwait(msgfig);
     profile off;
     tTol = toc(t0);
     fprintf("The time spent in the whole process is %fs.\n",tTol);
@@ -257,7 +269,7 @@ angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 
 tTip0 = tic;
 % outer side of each point in the tool path
-for ii = 1:resNum
+parfor ii = 1:resNum
     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
     nLoop = floor((ii - 1)/sparTheta) + 1;
     angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
@@ -345,7 +357,7 @@ surf( ...
 colormap('summer');
 cb = colorbar;
 cb.Label.String = ['Height (',unit,')'];
-for ii = 1:ptNum
+parfor ii = 1:ptNum
     toolSp = toolData.toolBform;
     toolCoefs = toolData.toolBform.coefs;
     toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);

@@ -1,5 +1,5 @@
 function [toolPtInterp,toolNormInterp,toolCutDirInterp] = toolInterp( ...
-    toolPt,toolNorm,toolCutDir,toolU,varargin)
+    interpU,toolPt,toolNorm,toolCutDir,toolU,varargin)
 % to linear interpolate the exact tool path between two known tool points
 %
 % Usage:
@@ -30,36 +30,61 @@ function [toolPtInterp,toolNormInterp,toolCutDirInterp] = toolInterp( ...
 % Outputs: same as the above
 
 switch nargin
-    case 7
-        toolPt1 = toolPt(:,varargin{1});
-        toolPt2 = toolPt(:,varargin{2});
+    case 8
+        toolPt1 = toolPt(:,varargin{1}); % the outer tool point
+        toolPt2 = toolPt(:,varargin{2}); % the 1st inner tool point
+        toolPt3 = toolPt(:,varargin{3}); % the 2nd inner tool point
         toolNorm1 = toolNorm(:,varargin{1});
         toolNorm2 = toolNorm(:,varargin{2});
+        toolNorm3 = toolNorm(:,varargin{3});
         toolCutDir1 = toolCutDir(:,varargin{1});
         toolCutDir2 = toolCutDir(:,varargin{2});
+        toolCutDir3 = toolCutDir(:,varargin{3});
         toolU1 = toolU(varargin{1});
         toolU2 = toolU(varargin{2});
-        toolUInterp = toolU(varargin{3});
-    case 10
+        toolUInterp = interpU;
+    case 12
         toolPt1 = toolPt;
         toolPt2 = varargin{1};
+        toolPt3 = varargin{5};
         toolNorm1 = toolNorm;
         toolNorm2 = varargin{2};
+        toolNorm3 = varargin{6};
         toolCutDir1 = toolCutDir;
         toolCutDir2 = varargin{3};
+        toolCutDir3 = varargin{7};
         toolU1 = toolU;
-        toolU2 = toolU(varargin{4});
-        toolUInterp = toolU(varargin{5});
+        toolU2 = varargin{4};
+        toolUInterp = interpU;
     otherwise
         error('Invalid input. Not enough or tool many input parameters');
 end
 
-%%
-t = (toolUInterp - toolU1)/(toolU2 - toolU1);
-toolPtInterp = toolPt1 + t*(toolPt2 - toolPt1);
-Rot12 = axesRot(toolNorm1,toolCutDir1,toolNorm2,toolCutDir2,'zx');
+%% projection
+toolPtProj = lineIntersectPlane(toolPt2,toolPt3,toolPt1,toolCutDir1);
+t = norm(toolPtProj - toolPt2)/norm(toolPt3 - toolPt2);
+% theta = t*vecAng(toolNorm2,toolNorm3,1);
+% axis = cross(toolNorm2,toolNorm3);
+% RInterp = expm(theta*axis);
+q2 = vecQuat(toolNorm2,toolNorm3);
+qInterp = slerp([1,0,0,0],q2,t);
+toolNormInterp = quat2rotm(qInterp)*toolNorm2;
+% toolCutDirProj = quat2rotm(qInterp)*toolCutDir2;
+toolNormProj = vecOnPlane(toolNormInterp,toolPtProj,toolCutDir1);
+toolNormProj = toolNormProj./norm(toolNormProj);
+% 讲道理两个应该是相等的但是并不等，是否意味着我的刃口并不在对应平面内？
+% toolCutDirProj1 = vecRot(toolNorm2,toolNormProj)*quat2rotm(qInterp)*toolCutDir2; 
+toolCutDirProj = toolCutDir1;
+
+% now toolPtInterp should be the interpolation between the toolPt1 and the
+% toolPtProj
+
+%% interpolation
+u = (toolU1 - toolUInterp)/(toolU1 - toolU2); % p.s. toolU2 = toolU3 = toolUProj
+toolPtInterp = toolPt1 - u*(toolPt1 - toolPtProj);
+Rot12 = axesRot(toolNorm1,toolCutDir1,toolNormProj,toolCutDirProj,'zx');
 quat12 = rotm2quat(Rot12);
-quatInterp = slerp([1,0,0,0],quat12,t);
+quatInterp = slerp([1,0,0,0],quat12,u);
 toolNormInterp = quat2rotm(quatInterp)*toolNorm1;
 toolNormInterp = toolNormInterp./norm(toolNormInterp);
 toolCutDirInterp = quat2rotm(quatInterp)*toolCutDir1;

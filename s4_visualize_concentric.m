@@ -80,7 +80,7 @@ while true
             uLimRound = round(uLim,2);
             toolPathList = [];
             tSimul0 = tic;
-            parfor ii = accumPtNum % each tool path point
+            for ii = accumPtNum(1):accumPtNum(end) % each tool path point
                 toolSp = toolData.toolBform;
                 toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
                 tmp = fnval(toolSp,uLimRound(1,ii):stepLength:uLimRound(2,ii));
@@ -119,5 +119,9 @@ while true
             grid on;
             tSimul = toc(tSimul0);
             fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
+        otherwise
+            msgfig = msgbox("No tool path saved","Warning","warn","non-modal");
+            uiwait(msgfig);
+            return;
     end
 end

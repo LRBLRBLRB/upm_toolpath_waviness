@@ -1126,120 +1126,12 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.SurfaceCancelBtn.ButtonPushedFcn = createCallbackFcn(app,@SurfaceCancelBtnPushed,true);
 
             % ------------------------------------------------------------------------
-            % ---------------------------Program Processing---------------------------
-            % ------------------------------------------------------------------------
-
-            app.ProgramTb = uitab(app.FigureTbGp,'Title','Program');
-            app.ProgramTb.ButtonDownFcn = createCallbackFcn(app,@ProgramTbButtonDown,true);
-
-            ProgramGl = uigridlayout(app.ProgramTb,[4,2]);
-            ProgramGl.RowHeight = {'1x','1x','1x','fit'};
-            ProgramGl.ColumnWidth = {'1x','1x'};
-
-            % ---------------------------tool fitting process---------------------------
-            ToolFitPn = uipanel(ProgramGl,'Visible','on', ...
-                'Title','','TitlePosition','centertop');
-            ToolFitPn.Layout.Row = [1,3];
-            ToolFitPn.Layout.Column = 1;
-            ToolFitPn.Scrollable = 'on';
-
-            ToolFitGl = uigridlayout(ToolFitPn,[5,1]);
-            ToolFitGl.RowHeight = {'1x','1x','1x','1x','1x'};
-            ToolFitGl.ColumnWidth = {'1x'};
-
-            % button to execute s1_tool2D.m
-            app.S1Tool2DBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
-                'Text','s1_tool2D');
-            app.S1Tool2DBtn.Layout.Row = 1;
-            app.S1Tool2DBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@S1Tool2DBtnPushed,true);
-
-            % button to execute s1_tool3D.m
-            app.S1Tool3DBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
-                'Text','s1_tool3D');
-            app.S1Tool3DBtn.Layout.Row = 2;
-            app.S1Tool3DBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@S1Tool3DBtnPushed,true);
-
-            % button to execute s1_toolExtract_2Dline.m
-            app.S1ToolExtract2DLineBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
-                'Text','s1_toolExtract_2DLine');
-            app.S1ToolExtract2DLineBtn.Layout.Row = 3;
-            app.S1ToolExtract2DLineBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@S1ToolExtract2DLineBtnPushed,true);
-
-            % button to execute s1_toolExtract_3Dline.m
-            app.S1ToolExtract3DLineBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
-                'Text','s1_toolExtract_3Dline');
-            app.S1ToolExtract3DLineBtn.Layout.Row = 4;
-            app.S1ToolExtract3DLineBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@S1ToolExtract3DLineBtnPushed,true);
-
-            % button to execute s1_toolExtract_surf.m
-            app.S1ToolExtractSurfBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
-                'Text','s1_toolExtract_surf');
-            app.S1ToolExtractSurfBtn.Layout.Row = 5;
-            app.S1ToolExtractSurfBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@S1ToolExtractSurfBtnPushed,true);
-
-            % ---------------------------simulation process---------------------------
-            SimulatePn = uipanel(ProgramGl,'Visible','on', ...
-                'Title','','TitlePosition','centertop');
-            SimulatePn.Layout.Row = 1;
-            SimulatePn.Layout.Column = 2;
-            SimulatePn.Scrollable = 'on';
-
-            SimulateGl = uigridlayout(SimulatePn,[1,2]);
-            SimulateGl.RowHeight = {'1x'};
-            SimulateGl.ColumnWidth = {'1x','1x'};
-            
-            % button to execute s2_design_simul_aspheric_concentric.m
-            app.S2DesignSimulAsphericConcentricBtn = uibutton(SimulateGl,'push', ...
-                'WordWrap','on','Text','s2_design_simul_aspheric_concentric');
-            app.S2DesignSimulAsphericConcentricBtn.Layout.Column = 1;
-            app.S2DesignSimulAsphericConcentricBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@S2DesignSimulAsphericConcentricBtnPushed,true);
-
-            % button to execute s2_design_simul_freeform.m
-            app.S2DesignSimulFreeformBtn = uibutton(SimulateGl,'push', ...
-                'WordWrap','on','Text','s2_design_simul_freeform');
-            app.S2DesignSimulFreeformBtn.Layout.Column = 2;
-            app.S2DesignSimulFreeformBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@S2DesignSimulFreeformBtnPushed,true);
-
-            % concentric optimization process
-            ConcentricOptimBtngp = uibuttongroup(ProgramGl);
-            ConcentricOptimBtngp.Layout.Row = 2;
-            ConcentricOptimBtngp.Layout.Column = 2;
-
-            % ---------------------------Optimization process---------------------------
-            OptimPn = uipanel(ProgramGl,'Visible','on', ...
-                'Title','','TitlePosition','centertop');
-            OptimPn.Layout.Row = 2;
-            OptimPn.Layout.Column = 2;
-            OptimPn.Scrollable = 'on';
-
-            OptimGl = uigridlayout(OptimPn,[1,5]);
-            OptimGl.RowHeight = {'1x'};
-            OptimGl.ColumnWidth = {'fit','1x','fit','1x','fit'};
-
-            OptimArrow1 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
-                'ScaleMethod','stretch');
-            OptimArrow1.Layout.Row = 1;
-            OptimArrow1.Layout.Column = 2;
-
-            OptimArrow2 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
-                'ScaleMethod','stretch');
-            OptimArrow2.Layout.Row = 1;
-            OptimArrow2.Layout.Column = 4;
-
-            % ------------------------------------------------------------------------
             % --------------------------Optimization Process--------------------------
             % ------------------------------------------------------------------------
 
             app.OptimTb = uitab(app.FigureTbGp,'Title','Optimization');
             app.OptimTb.ButtonDownFcn = createCallbackFcn(app,@OptimTbButtonDown,true);
-            % app.OptimTb.Scrollable = 'on';
+            app.OptimTb.Scrollable = 'on';
 
             OptimTbGl = uigridlayout(app.OptimTb,[2,4]);
             OptimTbGl.RowHeight = {'fit','fit'};
@@ -1405,7 +1297,117 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.S4OptimAsphericConcentricBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S4OptimAsphericConcentricBtnPushed,true);
 
-            % ------------------------Info displaying window------------------------
+            % ------------------------------------------------------------------------
+            % ---------------------------Program Processing---------------------------
+            % ------------------------------------------------------------------------
+
+            app.ProgramTb = uitab(app.FigureTbGp,'Title','Program');
+            app.ProgramTb.ButtonDownFcn = createCallbackFcn(app,@ProgramTbButtonDown,true);
+
+            ProgramGl = uigridlayout(app.ProgramTb,[4,2]);
+            ProgramGl.RowHeight = {'1x','1x','1x','fit'};
+            ProgramGl.ColumnWidth = {'1x','1x'};
+
+            % ---------------------------tool fitting process---------------------------
+            ToolFitPn = uipanel(ProgramGl,'Visible','on', ...
+                'Title','','TitlePosition','centertop');
+            ToolFitPn.Layout.Row = [1,3];
+            ToolFitPn.Layout.Column = 1;
+            ToolFitPn.Scrollable = 'on';
+
+            ToolFitGl = uigridlayout(ToolFitPn,[5,1]);
+            ToolFitGl.RowHeight = {'1x','1x','1x','1x','1x'};
+            ToolFitGl.ColumnWidth = {'1x'};
+
+            % button to execute s1_tool2D.m
+            app.S1Tool2DBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
+                'Text','s1_tool2D');
+            app.S1Tool2DBtn.Layout.Row = 1;
+            app.S1Tool2DBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@S1Tool2DBtnPushed,true);
+
+            % button to execute s1_tool3D.m
+            app.S1Tool3DBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
+                'Text','s1_tool3D');
+            app.S1Tool3DBtn.Layout.Row = 2;
+            app.S1Tool3DBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@S1Tool3DBtnPushed,true);
+
+            % button to execute s1_toolExtract_2Dline.m
+            app.S1ToolExtract2DLineBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
+                'Text','s1_toolExtract_2DLine');
+            app.S1ToolExtract2DLineBtn.Layout.Row = 3;
+            app.S1ToolExtract2DLineBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@S1ToolExtract2DLineBtnPushed,true);
+
+            % button to execute s1_toolExtract_3Dline.m
+            app.S1ToolExtract3DLineBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
+                'Text','s1_toolExtract_3Dline');
+            app.S1ToolExtract3DLineBtn.Layout.Row = 4;
+            app.S1ToolExtract3DLineBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@S1ToolExtract3DLineBtnPushed,true);
+
+            % button to execute s1_toolExtract_surf.m
+            app.S1ToolExtractSurfBtn = uibutton(ToolFitGl,'push','WordWrap','on', ...
+                'Text','s1_toolExtract_surf');
+            app.S1ToolExtractSurfBtn.Layout.Row = 5;
+            app.S1ToolExtractSurfBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@S1ToolExtractSurfBtnPushed,true);
+
+            % ---------------------------simulation process---------------------------
+            SimulatePn = uipanel(ProgramGl,'Visible','on', ...
+                'Title','','TitlePosition','centertop');
+            SimulatePn.Layout.Row = 1;
+            SimulatePn.Layout.Column = 2;
+            SimulatePn.Scrollable = 'on';
+
+            SimulateGl = uigridlayout(SimulatePn,[1,2]);
+            SimulateGl.RowHeight = {'1x'};
+            SimulateGl.ColumnWidth = {'1x','1x'};
+            
+            % button to execute s2_design_simul_aspheric_concentric.m
+            app.S2DesignSimulAsphericConcentricBtn = uibutton(SimulateGl,'push', ...
+                'WordWrap','on','Text','s2_design_simul_aspheric_concentric');
+            app.S2DesignSimulAsphericConcentricBtn.Layout.Column = 1;
+            app.S2DesignSimulAsphericConcentricBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@S2DesignSimulAsphericConcentricBtnPushed,true);
+
+            % button to execute s2_design_simul_freeform.m
+            app.S2DesignSimulFreeformBtn = uibutton(SimulateGl,'push', ...
+                'WordWrap','on','Text','s2_design_simul_freeform');
+            app.S2DesignSimulFreeformBtn.Layout.Column = 2;
+            app.S2DesignSimulFreeformBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@S2DesignSimulFreeformBtnPushed,true);
+
+            % concentric optimization process
+            ConcentricOptimBtngp = uibuttongroup(ProgramGl);
+            ConcentricOptimBtngp.Layout.Row = 2;
+            ConcentricOptimBtngp.Layout.Column = 2;
+
+            % ---------------------------Optimization process---------------------------
+            OptimPn = uipanel(ProgramGl,'Visible','on', ...
+                'Title','','TitlePosition','centertop');
+            OptimPn.Layout.Row = 2;
+            OptimPn.Layout.Column = 2;
+            OptimPn.Scrollable = 'on';
+
+            OptimGl = uigridlayout(OptimPn,[1,5]);
+            OptimGl.RowHeight = {'1x'};
+            OptimGl.ColumnWidth = {'fit','1x','fit','1x','fit'};
+
+            OptimArrow1 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
+                'ScaleMethod','stretch');
+            OptimArrow1.Layout.Row = 1;
+            OptimArrow1.Layout.Column = 2;
+
+            OptimArrow2 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
+                'ScaleMethod','stretch');
+            OptimArrow2.Layout.Row = 1;
+            OptimArrow2.Layout.Column = 4;
+            
+            % ------------------------------------------------------------------------
+            % -------------------------Info displaying window-------------------------
+            % ------------------------------------------------------------------------
             app.InfoTa = uitextarea(FigureGl,'WordWrap','on', ...
                 'Editable','off','BackgroundColor',[0.96 0.96 0.96]);
             app.InfoTa.Layout.Row = 3;
