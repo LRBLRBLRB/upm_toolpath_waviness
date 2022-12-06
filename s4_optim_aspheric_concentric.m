@@ -107,7 +107,7 @@ else
         C = 5/2;
         % machining surface
         syms x y;
-        surfSym = D - C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
+        surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
         surfFunc = matlabFunction(surfSym);
         surfFx = matlabFunction(diff(surfFunc,x));
         surfFy = matlabFunction(diff(surfFunc,y));
@@ -227,7 +227,7 @@ res = 5*aimRes*ones(2,accumPtNum(end)); % the residual height, initialized with 
 % calculate the 1st loop of the tool path
 parfor ii = 1:accumPtNum(end)
     [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
-        toolData,surfPt(:,ii),surfNorm(:,ii),[0;0;1],surfDirect(:,ii));
+        toolData,surfPt(:,ii),surfNorm(:,ii),[0;0;-1],surfDirect(:,ii));
     if isCollision(ii) == false
         toolPathPt(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.center + toolVec(:,ii);
         toolCutDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
@@ -251,14 +251,15 @@ r = rStep/2; % 可以通过widthRes确定迭代初值
 delta = rStep;
 iter = 1;
 
-% figure('Name','concentric tool path debug');
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
-% colormap('summer');
-% set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
-% xlabel('x'); ylabel('y'); view(0,90);
-% toolCoefs = toolSp.coefs;
+figure('Name','concentric tool path debug');
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
+colormap('summer');
+set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
+xlabel('x'); ylabel('y'); 
+% view(0,90);
+toolCoefs = toolSp.coefs;
 
 while true
     tic
@@ -312,7 +313,7 @@ while true
         toolNormDirectTmp = zeros(3,loopPtNumTmp);
         for ii = 1:loopPtNumTmp
             [toolQuatTmp(ii,:),toolVecTmp(:,ii),toolContactUTmp(ii)] = toolPos( ...
-                toolData,surfPtTmp(:,ii),surfNormTmp(:,ii),[0;0;1],surfDirectTmp(:,ii));
+                toolData,surfPtTmp(:,ii),surfNormTmp(:,ii),[0;0;-1],surfDirectTmp(:,ii));
             toolPathPtTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.center + toolVecTmp(:,ii);
             toolCutDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.cutDirect;
             toolNormDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.toolEdgeNorm;
@@ -418,14 +419,16 @@ while true
     res = [res,resTmp];
 
     % debug
-    % plot3(toolPathPtTmp(1,:),toolPathPtTmp(2,:),toolPathPtTmp(3,:), ...
-    %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-    % for jj = accumPtNum(end - 1) + 1:accumPtNum(end)
-    %     toolSp1 = toolSp;
-    %     toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
-    %     Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
-    %     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
-    % end
+    plot3(toolPathPtTmp(1,:),toolPathPtTmp(2,:),toolPathPtTmp(3,:), ...
+        '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+    % quiver3(toolPathPtTmp(1,:),toolPathPtTmp(2,:),toolPathPtTmp(3,:), ...
+    %     toolNormDirectTmp(1,:),toolNormDirectTmp(2,:),toolNormDirectTmp(3,:));
+    for jj = accumPtNum(end - 1) + 1:accumPtNum(end)
+        toolSp1 = toolSp;
+        toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
+        Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
+        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+    end
     
     clear surfPtTmp surfNormTmp surfDirectTmp toolQuatTmp toolVecTmp ...
         toolContactUTmp isCollisionTmp toolPathPtTmp toolNormDirectTmp ...
