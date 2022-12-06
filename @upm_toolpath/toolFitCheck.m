@@ -16,6 +16,7 @@ function toolFitCheck(app,toolDataFile)
         app.toolDataFile = toolDataFile;
     end
     app.toolData = load(app.toolDataFile);
+    app.RStepEf.Value = app.toolData.radius;
     app.Msg = 'Tool tip is fitted successfully.';
     InfoTaValueChanged(app,true);
     app.CheckToolLamp.Color = 'g';

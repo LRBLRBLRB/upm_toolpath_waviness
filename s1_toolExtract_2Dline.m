@@ -18,15 +18,16 @@ if isAPP
 else
     close all;
     clear; clc;
+    isAPP = false;
     addpath(genpath('funcs'));
     
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
     workspaceDir = 'workspace/20221020-tooltip';
     fitOpts.toolFitType = 'lineArc';
-    fitOpts.arcRansacMaxDist = 1;
+    fitOpts.arcRansacMaxDist = 1e-3;
     fitOpts.arcFitMethod = 'levenberg-marquardt';
-    fitOpts.lineFitMaxDist = 1;
+    fitOpts.lineFitMaxDist = 1e-3;
     fitOpts.lineFitMethod = 'polyfit';
     paramMethod = 'centripetal';
     unit = 'mm';
@@ -51,10 +52,6 @@ else
                 /length(theta));
         clear theta r;
     else
-        fitOpts.arcRansacMaxDist = 1;
-        fitOpts.arcFitMethod = 'levenberg-marquardt';
-        fitOpts.lineFitMaxDist = 1;
-        fitOpts.lineFitMethod = 'polyfit';
         if isSelf
             optsInput.Resize = 'on';
             optsInput.WindowStyle = 'normal';
@@ -128,12 +125,20 @@ ylabel(['y (',unit,')']);
 % line fitting based on ransac
 figure(fig1);
 fitOpts.arcFitdisplayType = 'iter-detailed';
-[circ2D,toolFit,RMSE,lineFitMaxDist] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
+[circ2D,toolFitUnsorted,RMSE,lineFitMaxDist] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
     'toolFitType',fitOpts.toolFitType,'lineFitMethod',fitOpts.lineFitMethod, ...
     'arcFitMethod',fitOpts.arcFitMethod, ...
     'arcFitdisplayType',fitOpts.arcFitdisplayType);
 radius = circ2D{2};
 openAngle = circ2D{3};
+
+% tool data resort & averaging
+toolAngle = atan2(toolFitUnsorted(2,:),toolFitUnsorted(1,:)); % polar angle of the tool point
+[~,sortInd] = sort(toolAngle,'descend');
+toolFit = toolFitUnsorted(:,sortInd);
+% toolAngle1 = atan2(toolFit(2,:),toolFit(1,:)); % polar angle of the tool point
+% toolDiff = toolAngle1(2:end) - toolAngle1(1:end - 1);
+% find([0,toolDiff] > 0)
 
 if isAPP
     app.lineFitMaxDist = lineFitMaxDist;

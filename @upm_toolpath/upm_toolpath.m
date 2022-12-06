@@ -4,7 +4,7 @@ classdef upm_toolpath < matlab.apps.AppBase
     % Default properties
     properties (Constant)
         workspaceDirDefault     = 'D:\Code\2021-11_ToolWaviness\upm_toolpath_waviness\workspace';
-        unitDefault             = '\mum'
+        unitDefault             = 'mm'
         toolUnitDefault         = 'mm'
         fontNameDefault         = 'Times New Roman'
         fontSizeDefault         = 12
@@ -15,14 +15,15 @@ classdef upm_toolpath < matlab.apps.AppBase
         lineFitMaxDistDefault   = 1e-3
         paramMethodDefault      = 'centripetal'
         ImportCell              = {'Point Cloud','Mesh'}
-        Geometry2DCell          = {'Aspheric'}
+        Geometry2DCell          = {'Rotating Paraboloid','Aspheric'}
         Geometry3DCell          = {'Ellipsoid','Function-Based'}
         cutDirectionDefault     = 'Center to Edge'
         spindleDirectionDefault = 'Counterclockwise'
         angularDiscreteDefault  = 'Constant Arc'
-        aimResDefault           = 50
-        rStepDefault            = 200
-        arcLengthDefault        = 30
+        aimResDefault           = 0.05
+        rStepDefault            = 0.2
+        maxIterDefault          = 10
+        arcLengthDefault        = 0.03
         maxAngPtDistDefault     = 6*pi/180
         angularLengthDefault    = 6*pi/180
         surfPlotSparDefault     = 501
@@ -33,6 +34,7 @@ classdef upm_toolpath < matlab.apps.AppBase
         UIFigure                matlab.ui.Figure
         FigureMenu              matlab.ui.container.Menu
         FigureToolbar           matlab.ui.container.Toolbar
+        AxisEqualPushtool       matlab.ui.container.toolbar.PushTool
         CloseAllFigurePushtool  matlab.ui.container.toolbar.PushTool
         BoldInfoToggletool      matlab.ui.container.toolbar.ToggleTool
         TopToggletool           matlab.ui.container.toolbar.ToggleTool
@@ -66,9 +68,11 @@ classdef upm_toolpath < matlab.apps.AppBase
         SurfaceTb               matlab.ui.container.Tab
         AddSurfaceBtn           matlab.ui.control.Button
         SurfacePlotSparSpin     matlab.ui.control.Spinner
+        SurfaceUnitDd           matlab.ui.control.DropDown
         SurfaceDetailTa         matlab.ui.control.TextArea
         SurfaceDataAxes         matlab.ui.control.UIAxes
-        SurfacePlotBtn          matlab.ui.control.Button
+        Surface2DPlotBtn        matlab.ui.control.Button
+        Surface3DPlotBtn        matlab.ui.control.Button
         SurfaceSavedBtn         matlab.ui.control.Button
         SurfaceCancelBtn        matlab.ui.control.Button
         ProgramTb               matlab.ui.container.Tab
@@ -80,6 +84,7 @@ classdef upm_toolpath < matlab.apps.AppBase
         SpindleDirectionDd      matlab.ui.control.DropDown
         AngularDiscreteDd       matlab.ui.control.DropDown
         AimResEf                matlab.ui.control.NumericEditField
+        MaxIterSpin             matlab.ui.control.Spinner
         RStepEf                 matlab.ui.control.NumericEditField
         ArcLengthLb             matlab.ui.control.Label
         ArcLengthEf             matlab.ui.control.NumericEditField
@@ -129,6 +134,7 @@ classdef upm_toolpath < matlab.apps.AppBase
         toolOri
         toolDataFile
         toolData                    struct
+        surfaceUnit                 char
         surfType                    char
         surfDomain          (:,2)   double
         surfPathName                char
@@ -143,6 +149,7 @@ classdef upm_toolpath < matlab.apps.AppBase
         angularDiscrete             string
         aimRes              (1,1)   double
         rStep               (1,1)   double
+        maxIter             (1,1)   double
         rMax                (1,1)   double
         arcLength           (1,1)   double
         maxAngPtDist        (1,1)   double
@@ -179,10 +186,10 @@ classdef upm_toolpath < matlab.apps.AppBase
 
             switch size(app.surfDomain,1)
                 case 2
-                    app.SurfaceDetailTa.Value{5} = ['    X: ',num2str(app.surfDomain(1,:)),' (\mum)'];
-                    app.SurfaceDetailTa.Value{6} = ['    Y: ',num2str(app.surfDomain(2,:)),' (\mum)'];
+                    app.SurfaceDetailTa.Value{5} = ['    X: ',num2str(app.surfDomain(1,:)),' (',app.unit,')'];
+                    app.SurfaceDetailTa.Value{6} = ['    Y: ',num2str(app.surfDomain(2,:)),' (',app.unit,')'];
                 case 1
-                    app.SurfaceDetailTa.Value{5} = ['    R: ',num2str(app.surfDomain),' (\mum)'];
+                    app.SurfaceDetailTa.Value{5} = ['    R: ',num2str(app.surfDomain),' (',app.unit,')'];
             end
             % Re-enable the AddSurface buttion
             app.AddSurfaceBtn.Enable = 'on';
@@ -200,6 +207,10 @@ classdef upm_toolpath < matlab.apps.AppBase
         resetOptimParams(app);
 
         toolFitCheck(app,toolDataFile);
+
+        surfaceMeshGen(app);
+
+        surfacePlot(app,method);
     end
 
     % Callbacks that handle component events
@@ -218,12 +229,19 @@ classdef upm_toolpath < matlab.apps.AppBase
             resetToolfitParams(app);
             resetSurfaceParams(app);
             resetOptimParams(app);
+            app.unit = app.UnitDd.Value;
             % updateSurface(app,app.surfType,app.surfString);
             addpath(genpath('funcs'));
             app.Msg = 'All the parameters have been reset.';
             InfoTaValueChanged(app,true);
             app.Msg = 'Please choose a directory for the workspace.';
             InfoTaValueChanged(app,true);
+        end
+
+        % Clicked function: set the current figure equal
+        function AxisEqualPushtoolClicked(app,event)
+            % app.UIFigure.CurrentAxes
+            axis(app.UIFigure.CurrentAxes,'equal');
         end
 
         % Clicked toolbar pushtool: close all the figures
@@ -310,7 +328,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                     'Alert Message','CloseFcn',createCallbackFcn(app,@WorkspaceDirBtnPushed,true));
                 return
             end
-            [fileName,dirName] = uigetfile({ ...
+            [fileName,dirName,fileType] = uigetfile({ ...
                 '*.csv','Comma-Separated Values-files(*.csv)'; ...
                 '*.mat','MAT-files(*.mat)'; ...
                 '*.txt','text-files(*.txt)'; ...
@@ -321,6 +339,34 @@ classdef upm_toolpath < matlab.apps.AppBase
                 'MultiSelect','off');
             app.toolPathName = fullfile(dirName,fileName);
             app.ToolFileEf.Value = app.toolPathName;
+            if strcmp(fileName(end - 3:end),'.mat')
+                app.toolData = load(app.toolPathName);
+                if isfield(app.toolData,'toolBform')
+                    plot(app.ToolDataAxes, ...
+                        app.toolData.toolFit(2,:),app.toolData.toolFit(3,:), ...
+                        '--.','MarkerSize',8,'Color',[0,0.447,0.741]);
+                    hold(app.ToolDataAxes,'on');
+                    plot(app.ToolDataAxes, ...
+                        app.toolData.toolBform.coefs(2,:),app.toolData.toolBform.coefs(3,:), ...
+                        'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
+                    plot(app.ToolDataAxes, ...
+                        app.toolData.toolEdgePt(2,:),app.toolData.toolEdgePt(3,:), ...
+                        'Color',[0.635,0.078,0.184]);
+                    axis(app.ToolDataAxes,'equal');
+                    set(app.ToolDataAxes,'FontSize',app.fontSize, ...
+                        'FontName',app.fontName);
+                    xlabel(app.ToolDataAxes,['y(',app.toolUnit,')']);
+                    ylabel(app.ToolDataAxes,['z(',app.toolUnit,')']);
+                    legend(app.ToolDataAxes, ...
+                        'Measured Pts','Control Pts','Fitting Pts','Location','best');
+                    app.CheckToolLamp.Color = 'g';
+                    app.Msg = 'tool Data has been loaded.';
+                    InfoTaValueChanged(app,true);
+                    app.Tool2DLineBtnBtn.Enable = 'off';
+                else
+                    app.toolData = [];
+                end
+            end
             app.Msg = 'Please select the parameters and click ''Update''.';
             InfoTaValueChanged(app,true);
         end
@@ -480,7 +526,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             unitList = {'m','mm','\mum','nm'};
             presUnit = find(strcmp(unitList,app.toolUnit),1);
             aimUnit = find(strcmp(unitList,app.unit),1);
-            app.toolOri = (aimUnit - presUnit)*1000*app.toolOri;
+            app.toolOri = 1000^(aimUnit - presUnit)*app.toolOri;
 
             % plot the importing results
             plot(app.ToolDataAxes,app.toolOri(1,:),app.toolOri(2,:),'.','MarkerSize',2);
@@ -498,7 +544,9 @@ classdef upm_toolpath < matlab.apps.AppBase
                 'Confirmation');
             switch selection
                 case 'OK'
-                    S1ToolExtract2DLineBtnPushed(app,true);
+                    toolDataFile = S1ToolExtract2DLineBtnPushed(app,true);
+                    toolFitCheck(app,toolDataFile);
+                    app.Tool2DLineBtnBtn.Enable = 'off';
                 case 'Cancel'
                     return
             end
@@ -506,27 +554,23 @@ classdef upm_toolpath < matlab.apps.AppBase
 
         % Value changed function: cancel the process with nothing to be saved
         function ToolCancelBtnPushed(app,event)
+            app.ToolFileEf.Value = '';
+            app.toolPathName = '';
+            app.toolData = [];
             resetToolfitParams(app);
-            clf(app.ToolDataAxes,'reset');
+            cla(app.ToolDataAxes,'reset');
             title(app.ToolDataAxes,'tool original data');
             app.CheckToolLamp.Color = 'r';
         end
 
-        % Code that update the infomation of the EfInfo window
-        function InfoTaValueChanged(app,event)
-            app.MsgNum = app.MsgNum + 1;
-            app.InfoTa.Value{app.MsgNum} = char([num2str(app.MsgNum),' ',app.Msg]);
-            scroll(app.InfoTa,"bottom");
-        end
-
-        % Button down: shift to the surface tab, and refresh the message
+        % Button down function: shift to the surface tab, and refresh the message
         function SurfaceTbButtonDown(app,event)
             app.Msg = ['Switch to the surface tab. ', ...
                 'Press the corresponding button to finish the programming process.'];
             InfoTaValueChanged(app,true);
         end
 
-        % Button down: open the surface adding page
+        % Button down function: open the surface adding page
         function AddSurfaceBtnPushed(app,event)
             % Disable Plot Options button while dialog is open
             app.AddSurfaceBtn.Enable = 'off';
@@ -534,6 +578,8 @@ classdef upm_toolpath < matlab.apps.AppBase
             % Open the add surface dialog
             app.surfType = '3D Geometry';
             app.AddSurfaceApp = add_surface(app,app.surfType,app.unit);
+            app.surfPlotSpar = app.SurfacePlotSparSpin.Value;
+            app.surfMesh = zeros(app.surfPlotSpar,app.surfPlotSpar,3);
         end
 
         function SurfacePlotSparSpinValueChanged(app,event)
@@ -545,78 +591,28 @@ classdef upm_toolpath < matlab.apps.AppBase
             InfoTaValueChanged(app,true);
         end
 
+        function SurfaceUnitDdValueChanged(app,event)
+            app.surfaceUnit = app.SurfaceUnitDd.Value;
+
+            % unit conversion (now: app.toolUnit, aim: app.unit)
+            unitList = {'m','mm','\mum','nm'};
+            presUnit = find(strcmp(unitList,app.surfaceUnit),1);
+            aimUnit = find(strcmp(unitList,app.unit),1);
+            % app.toolOri = 1000^(aimUnit - presUnit)*app.toolOri;
+        end
+
         % Value changed function: plot the tool file data
-        function SurfacePlotBtnPushed(app,event)
-            % process the surface function or point cloud
-            switch app.surfType
-                case app.ImportCell
-                    uialert(app.UIFigure,'There has not been methods fot import surface. ', ...
-                        'Warning','Icon','warning');
+        function Surface2DPlotBtnPushed(app,event)
+            surfacePlot(app,'2D');
+            app.Msg = 'Surface 2D image is successfully shown.';
+            InfoTaValueChanged(app,true);
+        end
 
-                case app.Geometry2DCell % 2D Geometry
-                    app.rMax = app.surfDomain(1,2);
-                    % partial differential function
-                    syms x;
-                    app.surfFx = matlabFunction(diff(app.surfFuncs,x));
-
-                    % sampling
-                    conR = linspace(0,app.surfDomain(1,2),app.surfPlotSpar); % concentric radius vector
-                    conTheta = linspace(0,2*pi,spar);
-                    [rMesh,thetaMesh] = meshgrid(conR,conTheta);
-                    app.surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
-                    app.surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
-                    app.surfMesh(:,:,3) = app.surfFuncs(app.surfMesh(:,:,1),app.surfMesh(:,:,2));
-
-                    % plot the importing results
-                    surf(app.SurfaceDataAxes, ...
-                        app.surfMesh(:,:,1),app.surfMesh(:,:,2),app.surfMesh(:,:,3), ...
-                        'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-                    hold(app.SurfaceDataAxes,'on');
-                    grid(app.SurfaceDataAxes,'on');
-                    set(app.SurfaceDataAxes,'FontSize',app.fontSize, ...
-                        'FontName',app.fontName,'ZDir','reverse');
-                    xlabel(app.SurfaceDataAxes,['x (',app.unit,')']);
-                    ylabel(app.SurfaceDataAxes,['y (',app.unit,')']);
-                    ylabel(app.SurfaceDataAxes,['z (',app.unit,')']);
-                    app.Msg = 'Surface data is successfully loaded.';
-                    InfoTaValueChanged(app,true);
-
-                case app.Geometry3DCell % 3D Geometry
-                    % partial differential function
-                    syms x y;
-                    app.surfFx = matlabFunction(diff(app.surfFuncs,x));
-                    app.surfFy = matlabFunction(diff(app.surfFuncs,y));
-
-                    % sampling
-                    if size(app.surfDomain,1) == 1
-                        conR = linspace(0,app.surfDomain(1,2),app.surfPlotSpar); % concentric radius vector
-                        conTheta = linspace(0,2*pi,app.surfPlotSpar);
-                        [rMesh,thetaMesh] = meshgrid(conR,conTheta);
-                        app.surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
-                        app.surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
-                        app.rMax = app.surfDomain(1,2);
-                    else
-                        xx = linspace(app.surfDomain(1,1),app.surfDomain(1,2),app.surfPlotSpar);
-                        yy = linspace(app.surfDomain(2,1),app.surfDomain(2,2),app.surfPlotSpar);
-                        [app.surfMesh(:,:,1),app.surfMesh(:,:,2)] = meshgrid(xx,yy);
-                        app.rMax = norm(app.surfDomain(:,2) - app.surfDomain(:,1));
-                    end
-                    app.surfMesh(:,:,3) = app.surfFuncs(app.surfMesh(:,:,1),app.surfMesh(:,:,2));
-
-                    % plot the importing results
-                    surf(app.SurfaceDataAxes, ...
-                        app.surfMesh(:,:,1),app.surfMesh(:,:,2),app.surfMesh(:,:,3), ...
-                        'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-                    hold(app.SurfaceDataAxes,'on');
-                    grid(app.SurfaceDataAxes,'on');
-                    set(app.SurfaceDataAxes,'FontSize',app.fontSize, ...
-                        'FontName',app.fontName,'ZDir','reverse');
-                    xlabel(app.SurfaceDataAxes,['x (',app.unit,')']);
-                    ylabel(app.SurfaceDataAxes,['y (',app.unit,')']);
-                    zlabel(app.SurfaceDataAxes,['z (',app.unit,')']);
-                    app.Msg = 'Surface data is successfully loaded.';
-                    InfoTaValueChanged(app,true);
-            end
+        % Value changed function: plot the tool file data
+        function Surface3DPlotBtnPushed(app,event)
+            surfacePlot(app,'3D');
+            app.Msg = 'Surface 3D image is successfully shown.';
+            InfoTaValueChanged(app,true);
         end
 
         % Value changed function: save the surface data
@@ -626,6 +622,9 @@ classdef upm_toolpath < matlab.apps.AppBase
             switch selection
                 case 'OK'
                     if ~isempty(app.surfFuncs)
+                        if isempty(app.surfFx)
+                            surfaceMeshGen(app);
+                        end
                         app.Msg = 'Surface is corrected.';
                         InfoTaValueChanged(app,true);
                         app.CheckSurfLamp.Color = 'g';
@@ -635,6 +634,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                         InfoTaValueChanged(app,true);
                         app.CheckSurfLamp.Color = 'r';
                     end
+                    app.SurfaceSavedBtn.Enable = 'off';
                 case 'Cancel'
                     return
             end
@@ -643,8 +643,8 @@ classdef upm_toolpath < matlab.apps.AppBase
         % Value changed function: cancel the process with nothing to be saved
         function SurfaceCancelBtnPushed(app,event)
             resetSurfaceParams(app);
-            clf(app.SurfaceDataAxes,'reset');
-            % title(app.SurfaceDataAxes,'Surface Original Data','FontSize',14);
+            cla(app.SurfaceDataAxes,'reset');
+            title(app.SurfaceDataAxes,'Surface Original Data','FontSize',14);
 
             app.Msg = 'Add-surface tab is reset.';
             InfoTaValueChanged(app,true);
@@ -700,6 +700,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.spindleDirection = app.SpindleDirectionDd.Value;
             app.angularDiscrete = app.AngularDiscreteDd.Value;
             app.aimRes = app.AimResEf.Value;
+            app.maxIter = app.MaxIterSpin.Value;
             app.rStep = app.RStepEf.Value;
             app.arcLength = app.ArcLengthEf.Value;
             app.maxAngPtDist = app.MaxAngPtDistEf.Value;
@@ -729,27 +730,22 @@ classdef upm_toolpath < matlab.apps.AppBase
         % --------------------------Function Execution--------------------------
         function S1Tool2DBtnPushed(app,event)
             s1_tool2D;
-            toolFitCheck(app,toolDataFile);
         end
 
         function S1Tool3DBtnPushed(app,event)
             s1_tool3D;
-            toolFitCheck(app,toolDataFile);
         end
 
-        function S1ToolExtract2DLineBtnPushed(app,event)
+        function toolDataFile = S1ToolExtract2DLineBtnPushed(app,event)
             s1_toolExtract_2Dline;
-            toolFitCheck(app,toolDataFile);
         end
 
-        function S1ToolExtract3DLineBtnPushed(app,event)
+        function toolDataFile = S1ToolExtract3DLineBtnPushed(app,event)
             s1_toolExtract_3Dline;
-            toolFitCheck(app,toolDataFile);
         end
 
         function S1ToolExtractSurfBtnPushed(app,event)
             s1_toolExtract_surf;
-            toolFitCheck(app,toolDataFile);
         end
 
         function S2DesignSimulAsphericConcentricBtnPushed(app,event)
@@ -758,6 +754,13 @@ classdef upm_toolpath < matlab.apps.AppBase
 
         function S2DesignSimulFreeformBtnPushed(app,event)
             s2_design_simul_freeform
+        end
+
+        % Code that update the infomation of the EfInfo window
+        function InfoTaValueChanged(app,event)
+            app.MsgNum = app.MsgNum + 1;
+            app.InfoTa.Value{app.MsgNum} = char([num2str(app.MsgNum),' ',app.Msg]);
+            scroll(app.InfoTa,"bottom");
         end
 
         % Cross pushed function: execute when pushing the cross of the UIFigure
@@ -785,12 +788,19 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.UIFigure.Resize = "on";
             app.UIFigure.Position = [500,500,800,600];
             app.UIFigure.Scrollable = "on";
+            % app.UIFigure.
 
             % Manage menu
             app.FigureMenu = uimenu(app.UIFigure,'Text','Options');
 
             % Manage toolbar
             app.FigureToolbar = uitoolbar(app.UIFigure);
+
+            app.AxisEqualPushtool = uipushtool(app.FigureToolbar, ...
+                'Icon','resource/image/AxisEqualPushtool.svg');
+            app.AxisEqualPushtool.ClickedCallback = createCallbackFcn( ...
+                app,@AxisEqualPushtoolClicked,true);
+            app.AxisEqualPushtool.Tooltip = 'Set the axis of the current figure equal';
 
             app.CloseAllFigurePushtool = uipushtool(app.FigureToolbar, ...
                 'Icon','resource/image/CloseAllFigure.svg');
@@ -1077,9 +1087,9 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.SurfaceTb = uitab(app.FigureTbGp,'Title','Surface Load');
             app.SurfaceTb.ButtonDownFcn = createCallbackFcn(app,@SurfaceTbButtonDown,true);
 
-            SurfaceTbGl = uigridlayout(app.SurfaceTb,[4,5]);
-            SurfaceTbGl.RowHeight = {'fit','fit','1x','fit'};
-            SurfaceTbGl.ColumnWidth = {'1x','1x','1x','1x','1x'};
+            SurfaceTbGl = uigridlayout(app.SurfaceTb,[6,4]);
+            SurfaceTbGl.RowHeight = {'fit','fit','fit','1x','fit','fit'};
+            SurfaceTbGl.ColumnWidth = {'2x','2x','3x','3x'};
 
             app.AddSurfaceBtn = uibutton(SurfaceTbGl,'push','WordWrap','on', ...
                 'Text','Add Geometry');
@@ -1088,7 +1098,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.AddSurfaceBtn.Icon = 'resource/image/AddSurf1.svg';
             app.AddSurfaceBtn.ButtonPushedFcn = createCallbackFcn(app,@AddSurfaceBtnPushed,true);
 
-            SurfacePlotSparLb = uilabel(SurfaceTbGl,'Text','Plot discretization:');
+            SurfacePlotSparLb = uilabel(SurfaceTbGl,'Text','Plot Discretization:');
             SurfacePlotSparLb.Layout.Row = 2;
             SurfacePlotSparLb.Layout.Column = 1;
             app.SurfacePlotSparSpin = uispinner(SurfaceTbGl,'Value',app.surfPlotSparDefault, ...
@@ -1096,9 +1106,17 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.SurfacePlotSparSpin.Layout.Row = 2;
             app.SurfacePlotSparSpin.Layout.Column = 2;
 
+            SurfaceUnitLb = uilabel(SurfaceTbGl,'Text','Surface Unit');
+            SurfaceUnitLb.Layout.Row = 3;
+            SurfaceUnitLb.Layout.Column = 1;
+            app.SurfaceUnitDd = uidropdown(SurfaceTbGl);
+            app.SurfaceUnitDd.ValueChangedFcn = createCallbackFcn(app,@SurfaceUnitDdValueChanged,true);
+            app.SurfaceUnitDd.Layout.Row = 3;
+            app.SurfaceUnitDd.Layout.Column = 2;
+
             app.SurfaceDetailTa = uitextarea(SurfaceTbGl,'WordWrap','on', ...
                 'Editable','off');
-            app.SurfaceDetailTa.Layout.Row = [3,4];
+            app.SurfaceDetailTa.Layout.Row = [4,6];
             app.SurfaceDetailTa.Layout.Column = [1,2];
             app.SurfaceDetailTa.FontName = 'Times New Roman';
             app.SurfaceDetailTa.FontSize = 16;
@@ -1106,23 +1124,28 @@ classdef upm_toolpath < matlab.apps.AppBase
             
             app.SurfaceDataAxes = uiaxes(SurfaceTbGl);
             title(app.SurfaceDataAxes,'Surface Original Data','FontSize',14);
-            app.SurfaceDataAxes.Layout.Row = [1,3];
-            app.SurfaceDataAxes.Layout.Column = [3,5];
+            app.SurfaceDataAxes.Layout.Row = [1,4];
+            app.SurfaceDataAxes.Layout.Column = [3,4];
 
-            app.SurfacePlotBtn = uibutton(SurfaceTbGl,'push','WordWrap','on','Text','Generate & Plot');
-            app.SurfacePlotBtn.Layout.Row = 4;
-            app.SurfacePlotBtn.Layout.Column = 3;
-            app.SurfacePlotBtn.ButtonPushedFcn = createCallbackFcn(app,@SurfacePlotBtnPushed,true);
+            app.Surface2DPlotBtn = uibutton(SurfaceTbGl,'push','WordWrap','on','Text','2D Image');
+            app.Surface2DPlotBtn.Layout.Row = 5;
+            app.Surface2DPlotBtn.Layout.Column = 3;
+            app.Surface2DPlotBtn.ButtonPushedFcn = createCallbackFcn(app,@Surface2DPlotBtnPushed,true);
+
+            app.Surface3DPlotBtn = uibutton(SurfaceTbGl,'push','WordWrap','on','Text','3D Image');
+            app.Surface3DPlotBtn.Layout.Row = 5;
+            app.Surface3DPlotBtn.Layout.Column = 4;
+            app.Surface3DPlotBtn.ButtonPushedFcn = createCallbackFcn(app,@Surface3DPlotBtnPushed,true);
 
             % ------------------------Ending process------------------------
             app.SurfaceSavedBtn = uibutton(SurfaceTbGl,'push','WordWrap','on','Text','Enter');
-            app.SurfaceSavedBtn.Layout.Row = 4;
-            app.SurfaceSavedBtn.Layout.Column = 4;
+            app.SurfaceSavedBtn.Layout.Row = 6;
+            app.SurfaceSavedBtn.Layout.Column = 3;
             app.SurfaceSavedBtn.ButtonPushedFcn = createCallbackFcn(app,@SurfaceSavedBtnPushed,true);
             
             app.SurfaceCancelBtn = uibutton(SurfaceTbGl,'push','WordWrap','on','Text','Cancel');
-            app.SurfaceCancelBtn.Layout.Row = 4;
-            app.SurfaceCancelBtn.Layout.Column = 5;
+            app.SurfaceCancelBtn.Layout.Row = 6;
+            app.SurfaceCancelBtn.Layout.Column = 4;
             app.SurfaceCancelBtn.ButtonPushedFcn = createCallbackFcn(app,@SurfaceCancelBtnPushed,true);
 
             % ------------------------------------------------------------------------
@@ -1133,26 +1156,33 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.OptimTb.ButtonDownFcn = createCallbackFcn(app,@OptimTbButtonDown,true);
             app.OptimTb.Scrollable = 'on';
 
-            OptimTbGl = uigridlayout(app.OptimTb,[2,4]);
+            OptimTbGl = uigridlayout(app.OptimTb,[2,2]);
             OptimTbGl.RowHeight = {'fit','fit'};
-            OptimTbGl.ColumnWidth = {'fit','1x','fit','1x'};
+            OptimTbGl.ColumnWidth = {'1x','1x'};
 
-            CheckToolPn = uipanel(OptimTbGl);
+            CheckGl = uigridlayout(OptimTbGl,[1,2],'Padding',[0,0,0,0]);
+            CheckGl.Layout.Row = 1;
+            CheckGl.Layout.Column = [1,2];
+            CheckGl.RowHeight = {'fit'};
+            CheckGl.ColumnWidth = {'1x','1x'};
+
+            CheckToolPn = uipanel(CheckGl);
             CheckToolPn.Layout.Row = 1;
-            CheckToolPn.Layout.Column = [1,2];
-            CheckToolPnGl = uigridlayout(CheckToolPn,[1,2]);
+            CheckToolPn.Layout.Column = 1;
+            CheckToolPnGl = uigridlayout(CheckToolPn,[1,3]);
             CheckToolPnGl.RowHeight = {'fit'};
-            CheckToolPnGl.ColumnWidth = {'fit','1x'};
+            CheckToolPnGl.ColumnWidth = {'fit','1x','fit'};
             CheckToolLb = uilabel(CheckToolPnGl,'Text','Check Tool');
             CheckToolLb.Layout.Row = 1;
             CheckToolLb.Layout.Column = 1;
             app.CheckToolLamp = uilamp(CheckToolPnGl,'Color','r');
             app.CheckToolLamp.Layout.Row = 1;
             app.CheckToolLamp.Layout.Column = 2;
+%             app.CheckToolPath = uieditfield()
 
-            CheckSurfPn = uipanel(OptimTbGl);
+            CheckSurfPn = uipanel(CheckGl);
             CheckSurfPn.Layout.Row = 1;
-            CheckSurfPn.Layout.Column = [3,4];
+            CheckSurfPn.Layout.Column = 2;
             CheckSurfPnGl = uigridlayout(CheckSurfPn,[1,2]);
             CheckSurfPnGl.RowHeight = {'fit'};
             CheckSurfPnGl.ColumnWidth = {'fit','1x'};
@@ -1166,7 +1196,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             OptimParamPn = uipanel(OptimTbGl,'Title','Edit Parameters', ...
                 'TitlePosition','centertop');
             OptimParamPn.Layout.Row = 2;
-            OptimParamPn.Layout.Column = [1,3];
+            OptimParamPn.Layout.Column = 1;
             OptimParamPn.Scrollable = 'on';
             OptimParamPnGl = uigridlayout(OptimParamPn,[2,2]);
             OptimParamPnGl.RowHeight = {'1x','fit'};
@@ -1179,9 +1209,9 @@ classdef upm_toolpath < matlab.apps.AppBase
 
             app.OptimParamPathTab = uitab(OptimParamTabgroup,'Title','Tool Path');
             app.OptimParamPathTab.Scrollable = 'on';
-            OptimParamPathTabGl = uigridlayout(app.OptimParamPathTab,[7,3]);
+            OptimParamPathTabGl = uigridlayout(app.OptimParamPathTab,[8,3]);
             OptimParamPathTabGl.Scrollable = 'on';
-            OptimParamPathTabGl.RowHeight = {'fit','fit','fit','fit','fit','fit','fit'};
+            OptimParamPathTabGl.RowHeight = {'fit','fit','fit','fit','fit','fit','fit','fit'};
             OptimParamPathTabGl.ColumnWidth = {'fit','1x','fit'};
 
             CutDirectionLb = uilabel(OptimParamPathTabGl,'Text','Cut Direction');
@@ -1202,7 +1232,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.SpindleDirectionDd.Layout.Row = 2;
             app.SpindleDirectionDd.Layout.Column = 2;
 
-            AngularDiscreteLb = uilabel(OptimParamPathTabGl,'Text','Spindle Direction');
+            AngularDiscreteLb = uilabel(OptimParamPathTabGl,'Text','Angular Output Type');
             AngularDiscreteLb.Layout.Row = 3;
             AngularDiscreteLb.Layout.Column = 1;
             app.AngularDiscreteDd = uidropdown(OptimParamPathTabGl, ...
@@ -1224,53 +1254,62 @@ classdef upm_toolpath < matlab.apps.AppBase
             AimResUnitLb.Layout.Column = 3;
             AimResUnitLb.Text = app.unit;
 
-            RStepLb = uilabel(OptimParamPathTabGl,'Text','Initial Annulus Width');
-            RStepLb.Layout.Row = 5;
+            MaxIterLb = uilabel(OptimParamPathTabGl,'Text','Max No. of Iteration');
+            MaxIterLb.Layout.Row = 5;
+            MaxIterLb.Layout.Column = 1;
+            app.MaxIterSpin = uispinner(OptimParamPathTabGl,'Value',app.maxIterDefault, ...
+                'Limits',[1,inf],'ValueDisplayFormat','%d','RoundFractionalValues','on');
+            app.MaxIterSpin.Layout.Row = 5;
+            app.MaxIterSpin.Layout.Column = 2;
+
+            % initial annulus width when calculating concentric tool path
+            RStepLb = uilabel(OptimParamPathTabGl,'Text','Initial Annulus Width (rStep)');
+            RStepLb.Layout.Row = 6;
             RStepLb.Layout.Column = 1;
             app.RStepEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
-                'HorizontalAlignment','center','Value',app.rStepDefault);
-            app.RStepEf.Layout.Row = 5;
+                'HorizontalAlignment','center');
+            app.RStepEf.Layout.Row = 6;
             app.RStepEf.Layout.Column = 2;
             RStepUnitLb = uilabel(OptimParamPathTabGl,'Interpreter','latex');
-            RStepUnitLb.Layout.Row = 5;
+            RStepUnitLb.Layout.Row = 6;
             RStepUnitLb.Layout.Column = 3;
             RStepUnitLb.Text = app.unit;
 
             app.ArcLengthLb = uilabel(OptimParamPathTabGl,'Text','Arc Length');
-            app.ArcLengthLb.Layout.Row = 6;
+            app.ArcLengthLb.Layout.Row = 7;
             app.ArcLengthLb.Layout.Column = 1;
             app.ArcLengthEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
                 'HorizontalAlignment','center','Value',app.arcLengthDefault);
-            app.ArcLengthEf.Layout.Row = 6;
+            app.ArcLengthEf.Layout.Row = 7;
             app.ArcLengthEf.Layout.Column = 2;
             app.ArcLengthUnitLb = uilabel(OptimParamPathTabGl,'Interpreter','latex');
-            app.ArcLengthUnitLb.Layout.Row = 6;
+            app.ArcLengthUnitLb.Layout.Row = 7;
             app.ArcLengthUnitLb.Layout.Column = 3;
             app.ArcLengthUnitLb.Text = app.unit;
 
             app.MaxAngPtDistLb = uilabel(OptimParamPathTabGl,'Text','Max Angular Point Distance');
-            app.MaxAngPtDistLb.Layout.Row = 7;
+            app.MaxAngPtDistLb.Layout.Row = 8;
             app.MaxAngPtDistLb.Layout.Column = 1;
             app.MaxAngPtDistEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
                 'HorizontalAlignment','center','Value',app.maxAngPtDistDefault);
-            app.MaxAngPtDistEf.Layout.Row = 7;
+            app.MaxAngPtDistEf.Layout.Row = 8;
             app.MaxAngPtDistEf.Layout.Column = 2;
             app.MaxAngPtDistUnitLb = uilabel(OptimParamPathTabGl,'Interpreter','latex');
-            app.MaxAngPtDistUnitLb.Layout.Row = 7;
+            app.MaxAngPtDistUnitLb.Layout.Row = 8;
             app.MaxAngPtDistUnitLb.Layout.Column = 3;
             app.MaxAngPtDistUnitLb.Text = 'rad';
 
             app.AngularLengthLb = uilabel(OptimParamPathTabGl,'Text','Angular Length');
-            app.AngularLengthLb.Layout.Row = 6;
+            app.AngularLengthLb.Layout.Row = 7;
             app.AngularLengthLb.Layout.Column = 1;
             app.AngularLengthLb.Visible = 'off';
             app.AngularLengthEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
                 'HorizontalAlignment','center','Value',app.angularLengthDefault);
-            app.AngularLengthEf.Layout.Row = 6;
+            app.AngularLengthEf.Layout.Row = 7;
             app.AngularLengthEf.Layout.Column = 2;
             app.AngularLengthEf.Visible = 'off';
             app.AngularLengthUnitLb = uilabel(OptimParamPathTabGl,'Text','rad');
-            app.AngularLengthUnitLb.Layout.Row = 6;
+            app.AngularLengthUnitLb.Layout.Row = 7;
             app.AngularLengthUnitLb.Layout.Column = 3;
             app.AngularLengthUnitLb.Visible = 'off';
 
@@ -1293,7 +1332,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.S4OptimAsphericConcentricBtn = uibutton(OptimTbGl,'push','WordWrap','on', ...
                 'Text','s4_optim_aspheric_concentric');
             app.S4OptimAsphericConcentricBtn.Layout.Row = 2;
-            app.S4OptimAsphericConcentricBtn.Layout.Column = 4;
+            app.S4OptimAsphericConcentricBtn.Layout.Column = 2;
             app.S4OptimAsphericConcentricBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S4OptimAsphericConcentricBtnPushed,true);
 

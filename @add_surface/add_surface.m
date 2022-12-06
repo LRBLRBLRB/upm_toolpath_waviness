@@ -2,10 +2,11 @@ classdef add_surface < matlab.apps.AppBase
     % the figure to add surfaces
 
     properties (Constant)
-        ButtonRowInterval = 15
-        ButtonColumnInterval = 20
-        ButtonWidth = 120
-        ButtonHeight = 20
+        ButtonRowInterval       = 15
+        ButtonColumnInterval    = 20
+        ButtonWidth             = 120
+        ButtonHeight            = 20
+        DomainDefault           = 2.5
     end
     
     properties (Access = public)
@@ -24,8 +25,18 @@ classdef add_surface < matlab.apps.AppBase
         FuncsEf                 matlab.ui.control.EditField
         FuncsActivateBtn        matlab.ui.control.Button
         Geometry2DBtnGp         matlab.ui.container.ButtonGroup
+        ParaboloidRadioBtn      matlab.ui.control.RadioButton
+        ParaboloidBtnGl         matlab.ui.container.GridLayout
+        ParaboloidFuncLb        matlab.ui.control.Label
+        ParaboloidActivateBtn   matlab.ui.control.Button
+        ParaboloidALb           matlab.ui.control.Label
+        ParaboloidASpin         matlab.ui.control.Spinner
+        ParaboloidAUnitLb       matlab.ui.control.Label
+        ParaboloidBLb           matlab.ui.control.Label
+        ParaboloidBSpin         matlab.ui.control.Spinner
         AsphericRadioBtn        matlab.ui.control.RadioButton
         AsphericBtnGl           matlab.ui.container.GridLayout
+        AsphericFuncLb          matlab.ui.control.Label
         AsphericActivateBtn     matlab.ui.control.Button
         AsphericRadiusLb        matlab.ui.control.Label
         AsphericRadiusSpin      matlab.ui.control.Spinner
@@ -80,6 +91,7 @@ classdef add_surface < matlab.apps.AppBase
         function paramGpIni(app)
             app.PointCloudBtnGl.Visible = 'off';
             app.FuncsBtnGl.Visible = 'off';
+            app.ParaboloidBtnGl.Visible = 'off';
             app.AsphericBtnGl.Visible = 'off';
             app.EllipsoidBtnGl.Visible = 'off';
         end
@@ -153,16 +165,22 @@ classdef add_surface < matlab.apps.AppBase
                     app.PointCloudRadioBtn.Position = [app.ButtonColumnInterval, ...
                         app.ImportBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
                         app.ButtonWidth,app.ButtonHeight];
+                    app.SurfaceDomainDd.Enable = 'on';
                 case '2D Geometry'
                     app.ImportBtnGp.Visible = 'off';
                     app.Geometry2DBtnGp.Visible = 'on';
                     app.Geometry3DBtnGp.Visible = 'off';
                     paramGpIni(app);
-                    app.AsphericRadioBtn.Value = true;
-                    app.AsphericBtnGl.Visible = 'on';
+                    app.ParaboloidRadioBtn.Value = true;
+                    app.ParaboloidBtnGl.Visible = 'on';
+                    app.ParaboloidRadioBtn.Position = [app.ButtonColumnInterval, ...
+                        app.Geometry2DBtnGp.Position(4) - 2*app.ButtonHeight - app.ButtonRowInterval, ...
+                        app.ButtonWidth,2*app.ButtonHeight];
                     app.AsphericRadioBtn.Position = [app.ButtonColumnInterval, ...
-                        app.Geometry2DBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+                        app.Geometry2DBtnGp.Position(4) - 3*app.ButtonHeight - 2*app.ButtonRowInterval, ...
                         app.ButtonWidth,app.ButtonHeight];
+                    app.SurfaceDomainDd.Value = 'Polar';
+                    app.SurfaceDomainDd.Enable = 'off';
                 case '3D Geometry'
                     app.ImportBtnGp.Visible = 'off';
                     app.Geometry2DBtnGp.Visible = 'off';
@@ -176,6 +194,7 @@ classdef add_surface < matlab.apps.AppBase
                     app.EllipsoidRadioBtn.Position = [app.ButtonColumnInterval, ...
                         app.Geometry3DBtnGp.Position(4) - 2*app.ButtonHeight - 2*app.ButtonRowInterval, ...
                         app.ButtonWidth,app.ButtonHeight];
+                    app.SurfaceDomainDd.Enable = 'on';
             end
         end
 
@@ -196,6 +215,9 @@ classdef add_surface < matlab.apps.AppBase
         % Selection changed function: change the radio buttion of the 2-D geometry buttongroup
         function Geometry2DBtnGpSelectionChanged(app,event)
             switch app.Geometry2DBtnGp.SelectedObject.Text
+                case 'Rotating Paraboloid'
+                    paramGpIni(app);
+                    app.ParaboloidBtnGl.Visible = 'on';
                 case 'Aspheric'
                     paramGpIni(app);
                     app.AsphericBtnGl.Visible = 'on';
@@ -203,12 +225,21 @@ classdef add_surface < matlab.apps.AppBase
         end
 
         % Value changed function: change the spinner of the aspheric surface
+        function ParaboloidActivateBtnButtonPushed(app,event)
+            syms x y;
+            a = app.ParaboloidASpin.Value;
+            b = app.ParaboloidBSpin.Value;
+            app.surfFuncs = a*(x^2 + y^2) + b;
+            app.SurfaceFuncsEf.Value = char(app.surfFuncs);
+        end
+
+        % Value changed function: change the spinner of the aspheric surface
         function AsphericActivateBtnButtonPushed(app,event)
-            syms x;
+            syms x y;
             c = 1/app.AsphericRadiusSpin.Value;
             k = app.AsphericConicSpin.Value;
             x0 = app.AsphericOffsetSpin.Value;
-            app.surfFuncs = (c*(x - x0)^2)/(1 + sqrt(1 - (1 + k)*c^2*(x - x0)^2));
+            app.surfFuncs = (c*((x - x0)^2 + (y - x0)^2))/(1 + sqrt(1 - (1 + k)*c^2*((x - x0)^2 + (y - x0)^2)));
             app.SurfaceFuncsEf.Value = char(app.surfFuncs);
         end
     
@@ -300,7 +331,7 @@ classdef add_surface < matlab.apps.AppBase
                     % Call main app's public function
                     updateSurface(app.CallingApp, ...
                         app.Geometry2DBtnGp.SelectedObject.Text, ...
-                        app.surfFuncs.Value,surfDomain);
+                        app.surfFuncs,surfDomain);
                 case '3D Geometry'
                     % Call main app's public function
                     updateSurface(app.CallingApp, ...
@@ -375,10 +406,46 @@ classdef add_surface < matlab.apps.AppBase
             app.Geometry2DBtnGp.Visible = 'off';
             app.Geometry2DBtnGp.SelectionChangedFcn = createCallbackFcn(app,@Geometry2DBtnGpSelectionChanged,true);
 
+            % ----------------------- Rotating Paraboloid -----------------------
+            app.ParaboloidRadioBtn = uiradiobutton(app.Geometry2DBtnGp,'Text','Rotating Paraboloid','WordWrap','on', ...
+                'Position',[app.ButtonColumnInterval, ...
+                app.Geometry2DBtnGp.Position(4) - 2*app.ButtonHeight - app.ButtonRowInterval, ...
+                app.ButtonWidth,2*app.ButtonHeight]);
+            app.ParaboloidBtnGl = uigridlayout(app.SurfaceGl,[3,2]);
+            app.ParaboloidBtnGl.Layout.Row = [1,2];
+            app.ParaboloidBtnGl.Layout.Column = [2,3];
+            app.ParaboloidBtnGl.RowHeight = {'fit','fit','fit'};
+            app.ParaboloidBtnGl.ColumnWidth = {'fit','1x','fit'};
+            app.ParaboloidBtnGl.Visible = 'off';
+
+            app.ParaboloidFuncLb = uilabel(app.ParaboloidBtnGl,'Interpreter','latex');
+            app.ParaboloidFuncLb.Layout.Row = 1;
+            app.ParaboloidFuncLb.Layout.Column = [1,2];
+            app.ParaboloidFuncLb.Text = '$Z = a\cdot r^{2} + b$';
+
+            app.ParaboloidActivateBtn = uibutton(app.ParaboloidBtnGl,'push','Text','Activate');
+            app.ParaboloidActivateBtn.Layout.Row = 1;
+            app.ParaboloidActivateBtn.Layout.Column = 3;
+            app.ParaboloidActivateBtn.ButtonPushedFcn = createCallbackFcn(app,@ParaboloidActivateBtnButtonPushed,true);
+
+            app.ParaboloidALb = uilabel(app.ParaboloidBtnGl,'Text','a');
+            app.ParaboloidALb.Layout.Row = 2;
+            app.ParaboloidALb.Layout.Column = 1;
+            app.ParaboloidASpin = uispinner(app.ParaboloidBtnGl,'Value',0.038,'Limits',[-inf,inf]);
+            app.ParaboloidASpin.Layout.Row = 2;
+            app.ParaboloidASpin.Layout.Column = [2,3];
+
+            app.ParaboloidBLb = uilabel(app.ParaboloidBtnGl,'Text','b');
+            app.ParaboloidBLb.Layout.Row = 3;
+            app.ParaboloidBLb.Layout.Column = 1;
+            app.ParaboloidBSpin = uispinner(app.ParaboloidBtnGl,'Value',0.96,'Limits',[-inf,inf]);
+            app.ParaboloidBSpin.Layout.Row = 3;
+            app.ParaboloidBSpin.Layout.Column = [2,3];
+
             % ----------------------- Aspheric -----------------------
             app.AsphericRadioBtn = uiradiobutton(app.Geometry2DBtnGp,'Text','Aspheric','WordWrap','on', ...
                 'Position',[app.ButtonColumnInterval, ...
-                app.Geometry2DBtnGp.Position(4) - app.ButtonHeight - app.ButtonRowInterval, ...
+                app.Geometry2DBtnGp.Position(4) - 3*app.ButtonHeight - 2*app.ButtonRowInterval, ...
                 app.ButtonWidth,app.ButtonHeight]);
             app.AsphericBtnGl = uigridlayout(app.SurfaceGl,[4,3]);
             app.AsphericBtnGl.Layout.Row = [1,2];
@@ -386,6 +453,11 @@ classdef add_surface < matlab.apps.AppBase
             app.AsphericBtnGl.RowHeight = {'fit','fit','fit','fit'};
             app.AsphericBtnGl.ColumnWidth = {'fit','1x','fit'};
             app.AsphericBtnGl.Visible = 'off';
+
+            app.AsphericFuncLb = uilabel(app.AsphericBtnGl,'Interpreter','latex');
+            app.AsphericFuncLb.Layout.Row = 1;
+            app.AsphericFuncLb.Layout.Column = [1,2];
+            app.AsphericFuncLb.Text = '$Z = \frac{c(r - r_{0})^2}{1 + \sqrt{1 - (1 + k)c^2(r - r_{0})^2}}$';
 
             app.AsphericActivateBtn = uibutton(app.AsphericBtnGl,'push','Text','Activate');
             app.AsphericActivateBtn.Layout.Row = 1;
@@ -412,7 +484,7 @@ classdef add_surface < matlab.apps.AppBase
             app.AsphericOffsetLb = uilabel(app.AsphericBtnGl,'Text','X Offset (x_0)');
             app.AsphericOffsetLb.Layout.Row = 4;
             app.AsphericOffsetLb.Layout.Column = 1;
-            app.AsphericOffsetSpin = uispinner(app.AsphericBtnGl,'Value',200,'Limits',[0,inf]);
+            app.AsphericOffsetSpin = uispinner(app.AsphericBtnGl,'Value',200,'Limits',[-inf,inf]);
             app.AsphericOffsetSpin.Layout.Row = 4;
             app.AsphericOffsetSpin.Layout.Column = 2;
             app.AsphericOffsetUnitLb = uilabel(app.AsphericBtnGl,'Interpreter','latex');
@@ -497,7 +569,7 @@ classdef add_surface < matlab.apps.AppBase
             app.EllipsoidCSpin.Layout.Row = 4;
             app.EllipsoidCSpin.Layout.Column = [2,4];
 
-            app.EllipsoidDLb = uilabel(app.EllipsoidBtnGl,'Text','D');
+            app.EllipsoidDLb = uilabel(app.EllipsoidBtnGl,'Text','R');
             app.EllipsoidDLb.Layout.Row = 5;
             app.EllipsoidDLb.Layout.Column = 1;
             app.EllipsoidDSpin = uispinner(app.EllipsoidBtnGl,'Value',10/2*1000);
@@ -522,11 +594,11 @@ classdef add_surface < matlab.apps.AppBase
             app.SurfaceXLb.Layout.Row = 2;
             app.SurfaceXLb.Layout.Column = 1;
             app.SurfaceXLb.Visible = 'off';
-            app.SurfaceX1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-2000);
+            app.SurfaceX1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-app.DomainDefault);
             app.SurfaceX1Spin.Layout.Row = 2;
             app.SurfaceX1Spin.Layout.Column = 2;
             app.SurfaceX1Spin.Visible = 'off';
-            app.SurfaceX2Spin = uispinner(app.SurfaceDomainPnGl,'Value',2000);
+            app.SurfaceX2Spin = uispinner(app.SurfaceDomainPnGl,'Value',app.DomainDefault);
             app.SurfaceX2Spin.Layout.Row = 2;
             app.SurfaceX2Spin.Layout.Column = 3;
             app.SurfaceX2Spin.Visible = 'off';
@@ -539,11 +611,11 @@ classdef add_surface < matlab.apps.AppBase
             app.SurfaceYLb.Layout.Row = 3;
             app.SurfaceYLb.Layout.Column = 1;
             app.SurfaceYLb.Visible = 'off';
-            app.SurfaceY1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-2500);
+            app.SurfaceY1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-app.DomainDefault);
             app.SurfaceY1Spin.Layout.Row = 3;
             app.SurfaceY1Spin.Layout.Column = 2;
             app.SurfaceY1Spin.Visible = 'off';
-            app.SurfaceY2Spin = uispinner(app.SurfaceDomainPnGl,'Value',2500);
+            app.SurfaceY2Spin = uispinner(app.SurfaceDomainPnGl,'Value',app.DomainDefault);
             app.SurfaceY2Spin.Layout.Row = 3;
             app.SurfaceY2Spin.Layout.Column = 3;
             app.SurfaceY2Spin.Visible = 'off';
@@ -555,11 +627,11 @@ classdef add_surface < matlab.apps.AppBase
             app.SurfaceRLb = uilabel(app.SurfaceDomainPnGl,'Text','Y Range');
             app.SurfaceRLb.Layout.Row = 2;
             app.SurfaceRLb.Layout.Column = 2;
-            app.SurfaceR1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-2500);
+            app.SurfaceR1Spin = uispinner(app.SurfaceDomainPnGl,'Value',-app.DomainDefault);
             app.SurfaceR1Spin.Layout.Row = 2;
             app.SurfaceR1Spin.Layout.Column = 2;
             app.SurfaceR1Spin.ValueChangedFcn = createCallbackFcn(app,@SurfaceR1SpinValueChanged,true);
-            app.SurfaceR2Spin = uispinner(app.SurfaceDomainPnGl,'Value',2500);
+            app.SurfaceR2Spin = uispinner(app.SurfaceDomainPnGl,'Value',app.DomainDefault);
             app.SurfaceR2Spin.Layout.Row = 2;
             app.SurfaceR2Spin.Layout.Column = 3;
             app.SurfaceR2Spin.ValueChangedFcn = createCallbackFcn(app,@SurfaceR2SpinValueChanged,true);

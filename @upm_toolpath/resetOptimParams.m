@@ -8,6 +8,8 @@ function resetOptimParams(app)
     app.angularDiscrete = app.AngularDiscreteDd.Value;
     app.AimResEf.Value = app.aimResDefault;
     app.aimRes = app.AimResEf.Value;
+    app.MaxIterSpin.Value = app.maxIterDefault;
+    app.maxIter = app.MaxIterSpin.Value;
     app.RStepEf.Value = app.rStepDefault;
     app.rStep = app.RStepEf.Value;
     app.ArcLengthEf.Value = app.arcLengthDefault;

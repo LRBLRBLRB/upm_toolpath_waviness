@@ -4,5 +4,7 @@ function resetSurfaceParams(app)
     app.SurfaceDetailTa.Value = '';
     app.surfPlotSpar = app.surfPlotSparDefault;
     app.surfMesh = zeros(app.surfPlotSpar,app.surfPlotSpar,3);
+
+    app.SurfaceSavedBtn.Enable = 'on';
 end
 

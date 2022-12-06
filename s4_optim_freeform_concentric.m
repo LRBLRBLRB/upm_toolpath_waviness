@@ -5,8 +5,6 @@
 % Step four: simulation of the machining surface
 % Step Five: generate the actual toolpath
 
-% 实际上，我打算把concentric和freeform的方案给合并。目前aspheric文件中的是旧的刀位点计算方案，freeform中是新的
-
 isAPP = false;
 if isAPP
     workspaceDir = app.workspaceDir;
@@ -14,15 +12,14 @@ if isAPP
     textFontSize = app.fontSize;
     textFontType = app.fontName;
 
-    toolData = app.toolData;
-
     % machining paramters
     cutDirection = app.cutDirection;
     spindleDirection = app.spindleDirection;
     angularDiscrete = app.angularDiscrete;
     aimRes = app.aimRes;
+    toolData = app.toolData;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
-    maxIter = app.maxIter;
+    maxIter = 1000;
     rMax = app.rMax;
     arcLength = app.arcLength;
     maxAngPtDist = app.maxAngPtDist;
@@ -33,8 +30,6 @@ if isAPP
     surfFy = app.surfFy;
     surfDomain = app.surfDomain;
     surfMesh = app.surfMesh;
-    Geometry2DCell = app.Geometry2DCell;
-    surfType = app.surfType;
     
     msgOpts.Default = 'Cancel and quit';
     msgOpts.Interpreter = 'tex';
@@ -50,7 +45,7 @@ else
     % global variables
     % global textFontSize textFontType;
     % workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
-    workspaceDir = 'workspace\20220925-contrast\nagayama_concentric';
+    workspaceDir = 'workspace\20221020-tooltip';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -87,27 +82,25 @@ else
             'MultiSelect','off');
         surfName = fullfile(dirName,fileName);
         load(surfName);
-        D = 0;
-        R = 10/2;
-        A = 3.5/2;
-        B = 4/2;
-        C = 5/2;
-        % machining surface
-        syms x y;
-        surfSym = D - C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
-        surfFunc = matlabFunction(surfSym);
-        surfFx = matlabFunction(diff(surfFunc,x));
-        surfFy = matlabFunction(diff(surfFunc,y));
-        rMax = R/2;
-    else % ellipsoid
-        D = 0;
         R = 10/2*1000;
         A = 3.5/2;
         B = 4/2;
         C = 5/2;
         % machining surface
         syms x y;
-        surfSym = D - C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
+        surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
+        surfFunc = matlabFunction(surfSym);
+        surfFx = matlabFunction(diff(surfFunc,x));
+        surfFy = matlabFunction(diff(surfFunc,y));
+        rMax = R/2;
+    else % ellipsoid
+        R = 10/2*1000;
+        A = 3.5/2;
+        B = 4/2;
+        C = 5/2;
+        % machining surface
+        syms x y;
+        surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
         surfFunc = matlabFunction(surfSym);
         surfFx = matlabFunction(diff(surfFunc,x));
         surfFy = matlabFunction(diff(surfFunc,y));
@@ -131,9 +124,8 @@ else
     surf( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
         'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-    hold on; 
-    % axis equal;
-    set(gca,'FontSize',textFontSize,'FontName',textFontType);
+    hold on; axis equal;
+    set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
     xlabel(['x (',unit,')']);
     ylabel(['y (',unit,')']);
     zlabel(['z (',unit,')']);
@@ -146,9 +138,6 @@ else
         return;
     end
     
-    surfType = '3D';
-    Geometry2DCell = {'Rotating Paraboloid','Aspheric'};
-
     % machining paramters    
     cutDirection = 'Center to Edge'; % 'Edge to Center'
     spindleDirection = 'Counterclockwise'; % 'Clockwise'
@@ -196,16 +185,10 @@ toolRAccum = zeros(1,loopPtNum(end));
 surfPt(1,:) = zeros(1,loopPtNum(end)); % x coordinates of surface cutting points
 surfPt(2,:) = zeros(1,loopPtNum(end)); % y coordinates of surface cutting points
 surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:)); % z coordinates of surface cutting points
-switch surfType
-    case Geometry2DCell
-        surfNorm(1,:) = surfFx(surfPt(1,:)); % x coordinates of the normal vectors on surface points
-        surfNorm(2,:) = surfFy(surfPt(2,:)); % y coordinates of the normal vectors on surface points
-    otherwise
-        surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:)); % x coordinates of the normal vectors on surface points
-        surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:)); % y coordinates of the normal vectors on surface points
-end
+surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:)); % x coordinates of the normal vectors on surface points
+surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:)); % y coordinates of the normal vectors on surface points
 surfNorm(3,:) = -1*ones(1,accumPtNum(end)); % z coordinates of the normal vectors on surface points
-surfNorm = (surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
+surfNorm = -1*(surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
 surfDirect = cutdirection(surfPt,[0;0;0],conTheta,'method','vertical'); % cutting direction of each points
 % surfDirect = [[0;1;0],cutdirection(surfPt(:,2:end),[0;0;0])]; % cutting direction of each points
 % 和[0;0;1]垂直、且与surfDirect(:,end)夹角最小的向量作为surDirect(:,1)，可视作surfDirect(:,end)到[0;0;1]平面的投影
@@ -249,20 +232,21 @@ fprintf('No.1\tElapsed time is %f seconds.\n-----\n',toc(t1));
 %% Tool path adjusting for the rest
 r = rStep/2; % 可以通过widthRes确定迭代初值
 delta = rStep;
-iter = 1;
+iter = 0;
 
-% figure('Name','concentric tool path debug');
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
-% colormap('summer');
-% set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
-% xlabel('x'); ylabel('y'); view(0,90);
-% toolCoefs = toolSp.coefs;
+figure('Name','concentric tool path debug');
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
+colormap('summer');
+set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
+xlabel('x'); ylabel('y'); view(0,90);
+toolCoefs = toolSp.coefs;
 
 while true
     tic
     while iter <= maxIter
+        iter = iter + 1;
         % calculate the discretization scatters
         switch angularDiscrete
             case 'Constant Arc'
@@ -277,12 +261,6 @@ while true
             otherwise
                 error('Invalid angular discretization type.');
         end
-
-        % clear the temporary variables
-        clear surfPtTmp surfNormTmp surfDirectTmp toolQuatTmp toolVecTmp ...
-            toolContactUTmp isCollisionTmp toolPathPtTmp toolNormDirectTmp ...
-            toolCutDirectTmp;
-        clear uLimTmp peakPtOutTmp resTmp loopPtNumLast;
     
         % calculate the cutting pts
         loopPtNumTmp = length(conTheta); % the number of points in the loop
@@ -290,16 +268,10 @@ while true
         surfPtTmp(1,:) = r*cos(conTheta); % x coordinates of surface cutting points in the loop
         surfPtTmp(2,:) = r*sin(conTheta); % y coordinates of surface cutting points
         surfPtTmp(3,:) = surfFunc(surfPtTmp(1,:),surfPtTmp(2,:)); % z coordinates of surface cutting points
-        switch surfType
-            case Geometry2DCell
-                surfNormTmp(1,:) = surfFx(surfPtTmp(1,:)); % x coordinates of the normal vectors on surface points
-                surfNormTmp(2,:) = surfFy(surfPtTmp(2,:)); % y coordinates of the normal vectors on surface points
-            otherwise
-                surfNormTmp(1,:) = surfFx(surfPtTmp(1,:),surfPtTmp(2,:)); % x coordinates of the normal vectors on surface points
-                surfNormTmp(2,:) = surfFy(surfPtTmp(1,:),surfPtTmp(2,:)); % y coordinates of the normal vectors on surface points
-        end
+        surfNormTmp(1,:) = surfFx(surfPtTmp(1,:),surfPtTmp(2,:)); % x coordinates of the normal vectors on surface points
+        surfNormTmp(2,:) = surfFy(surfPtTmp(1,:),surfPtTmp(2,:)); % y coordinates of the normal vectors on surface points
         surfNormTmp(3,:) = -1*ones(1,loopPtNumTmp); % z coordinates of the normal vectors on surface points
-        surfNormTmp = (surfNormTmp./vecnorm(surfNormTmp,2,1)); % normolization of the normal vector
+        surfNormTmp = -1*(surfNormTmp./vecnorm(surfNormTmp,2,1)); % normolization of the normal vector
         surfDirectTmp = cutdirection(surfPtTmp,[0;0;0],conTheta,'method','vertical'); % cutting direction of each points
         
         % calculate the tool path and residual height
@@ -318,12 +290,12 @@ while true
             toolNormDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.toolEdgeNorm;
 
             % debug
-            % plot3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
-            %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-            % toolSp1 = toolSp;
-            % toolSp1.coefs = quat2rotm(toolQuatTmp(ii,:))*toolSp.toolCoefs + toolVecTmp(:,ii);
-            % Q = fnval(toolSp1,0:0.01:1);
-            % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+            plot3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
+            '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+            toolSp1 = toolSp;
+            toolSp1.coefs = quat2rotm(toolQuatTmp(ii,:))*toolCoefs + toolVecTmp(:,ii);
+            Q = fnval(toolSp1,0:0.01:1);
+            plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
         end
     
         % restore the data that will be used in the residual height calculation
@@ -364,10 +336,13 @@ while true
         if max(resTmp(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp),[],"all") < aimRes
             break;
         else
-            fprintf('\tIter %d: The residual height of No.%d is beyond the expected range.\n',iter,length(loopPtNum) + 1);
+            fprintf('The residual height of No.%d is beyond the expected range.\n',length(loopPtNum) + 1);
             delta = delta/3;
             r = r - delta;
-            iter = iter + 1;
+                clear surfPtTmp surfNormTmp surfDirectTmp toolQuatTmp toolVecTmp ...
+                    toolContactUTmp isCollisionTmp toolPathPtTmp toolNormDirectTmp ...
+                    toolCutDirectTmp;
+                clear uLimTmp peakPtOutTmp resTmp loopPtNumLast;
         end
     end
 
@@ -418,14 +393,14 @@ while true
     res = [res,resTmp];
 
     % debug
-    % plot3(toolPathPtTmp(1,:),toolPathPtTmp(2,:),toolPathPtTmp(3,:), ...
-    %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-    % for jj = accumPtNum(end - 1) + 1:accumPtNum(end)
-    %     toolSp1 = toolSp;
-    %     toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
-    %     Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
-    %     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
-    % end
+%     plot3(toolPathPtTmp(1,:),toolPathPtTmp(2,:),toolPathPtTmp(3,:), ...
+%         '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+%     for jj = accumPtNum(end - 1) + 1:accumPtNum(end)
+%         toolSp1 = toolSp;
+%         toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
+%         Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
+%         plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+%     end
     
     clear surfPtTmp surfNormTmp surfDirectTmp toolQuatTmp toolVecTmp ...
         toolContactUTmp isCollisionTmp toolPathPtTmp toolNormDirectTmp ...
@@ -435,7 +410,7 @@ while true
     if r > rMax, break; end
     delta = rStep;
     r = r + delta;
-    iter = 1;
+    iter = 0;
 end
 tRes = toc(tRes0);
 
@@ -461,10 +436,8 @@ parfor jj = 1:ptNum
     Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
 end
-% axis equal;
-grid on;
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% set(gca,'ZDir','reverse');
+axis equal; grid on;
+set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
@@ -529,15 +502,15 @@ spiralCutDir(:,1:accumPtNum(1)) = toolCutDirect(:,1:accumPtNum(1));
 angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 
 % video capture & debug
-% figure('Name','concentric-to-spiral debug & video');
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
-% colormap('summer');
-% set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% xlabel('x'); ylabel('y'); view(0,90);
-% plot3(spiralPath(1,1:accumPtNum(1)),spiralPath(2,1:accumPtNum(1)), ...
-%     spiralPath(3,1:accumPtNum(1)),'.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+figure('Name','concentric-to-spiral debug & video');
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
+colormap('summer');
+set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
+xlabel('x'); ylabel('y'); view(0,90);
+plot3(spiralPath(1,1:accumPtNum(1)),spiralPath(2,1:accumPtNum(1)), ...
+    spiralPath(3,1:accumPtNum(1)),'.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 
 % for each loop, shift the tool path point by decreasing the radius
 for kk = 2:numLoop % begin with the 2nd loop
@@ -556,8 +529,8 @@ for kk = 2:numLoop % begin with the 2nd loop
             interpR(indInterp),toolPathPt,toolNormDirect,toolCutDirect,toolRAccum,indInterp,ind1,ind2);
 
         % test & debug & video
-        % plot3(spiralPath(1,indInterp),spiralPath(2,indInterp),spiralPath(3,indInterp), ...
-        %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+        plot3(spiralPath(1,indInterp),spiralPath(2,indInterp),spiralPath(3,indInterp), ...
+            '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
         % toolSp1 = toolSp;
         % toolSp1.coefs = quat2rotm(toolQuat(indInterp,:))*toolSp.coefs + toolVec(:,indInterp);
         % Q = fnval(toolSp1,uLim(1,indInterp):0.01:uLim(2,indInterp));
@@ -606,10 +579,8 @@ parfor ii = 1:ptNum
     Q = fnval(toolSp1,uLim(1,ii):0.05:uLim(2,ii));
     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
 end
-% axis equal;
-grid on;
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% set(gca,'ZDir','reverse');
+axis equal; grid on;
+set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);

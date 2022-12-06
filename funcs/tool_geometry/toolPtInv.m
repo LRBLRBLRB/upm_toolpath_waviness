@@ -18,24 +18,30 @@ arguments
     maxIter {mustBeFinite} = 100
     options.Type {mustBeMember(options.Type, ...
         ['OpenAngle','PolarAngle','Cartesian','TangentPlane',''])} = 'PolarAngle'
+    options.method {mustBeMember(options.method, ...
+        ['Newton-Iteration','Traverse'])}
     options.IncludedAng {mustBeFinite}
     options.Radius {mustBeFinite}
 end
 
 switch options.Type
     case 'PolarAngle' % DEBUG: the iteration may end to a endless loop!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        u = 0.5 - (known - pi/2)/options.IncludedAng;
-%         u = fsolve(@(u) funPolar(u,sp),u0);
-%         Q = fnval(sp,u);
-        iter = 0;
-        while iter <= maxIter
-            Q = fnval(sp,u);
-            delta = atan2(Q(end),Q(end - 1)) - known;
-            if  abs(delta) < eps 
-                break;
+        if strcmp(options.method,'Traverse')
+            
+        else
+            u = 0.5 - (known - pi/2)/options.IncludedAng;
+    %         u = fsolve(@(u) funPolar(u,sp),u0);
+    %         Q = fnval(sp,u);
+            iter = 0;
+            while iter <= maxIter
+                Q = fnval(sp,u);
+                delta = atan2(Q(end),Q(end - 1)) - known;
+                if  abs(delta) < eps 
+                    break;
+                end
+                u = u - delta/options.IncludedAng;
+                iter = iter + 1;
             end
-            u = u - delta/options.IncludedAng;
-            iter = iter + 1;
         end
     case 'OpenAngle'
         u = 0.5 + known/options.IncludedAng;

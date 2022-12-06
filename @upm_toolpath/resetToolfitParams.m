@@ -21,4 +21,7 @@ function resetToolfitParams(app)
 
     app.ParamMethodDd.Value = app.paramMethodDefault;
     app.paramMethod = app.ParamMethodDd.Value;
+
+    app.Tool2DLineBtnBtn.Enable = 'on';
+    app.Tool3DLineBtnBtn.Enable = 'on';
 end
