@@ -12,11 +12,12 @@ figure('name','Tool Geometric Error');
 t = tiledlayout(2,1);
 nexttile;
 plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.5); % tool edge scatters
-hold on;
+hold on; axis equal;
 theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
 xtmp = radius*cos(theta);
 ytmp = radius*sin(theta);
 plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['x(',unit,')']);
 ylabel(['y(',unit,')']);
 title('Tool contour');
@@ -118,6 +119,7 @@ center = [0;0;0];
 toolEdgeNorm = [0;0;1];
 cutDirect = [1;0;0];
 toolDirect = [0;1;0];
+pause(1);
 [toolFileName,toolDirName,toolFileType] = uiputfile({ ...
         '*.mat','MAT-file(*.mat)'; ...
         '*.txt','text-file(.txt)';...

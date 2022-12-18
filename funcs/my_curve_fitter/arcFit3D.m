@@ -25,7 +25,7 @@ arguments
     options.arcFitMethod {mustBeMember(options.arcFitMethod, ...
         ['gradient-decent','normal-equation','levenberg-marquardt'])} ...
         = 'levenberg-marquardt'
-    options.displayType {mustBeMember(options.displayType, ...
+    options.arcdisplayType {mustBeMember(options.arcdisplayType, ...
         ['off','none','iter','iter-detailed','final','final-detailed'])} = 'final'
 end
 
@@ -65,28 +65,43 @@ planeNorm = V(:,3); % normVec remains the norm vector of th e fitting plane
 % planeAng = vecAng(planeNorm,[0;0;1],1);
 % scatterPlane = Rodrigues(scatterOri,rotNorm,planeAng);
 scatterR = vecRot(planeNorm,[0;0;1]);
-scatterPlane = scatterR*scatterOri;
+scatterPlane = scatterR*scatterOri; % scatters projected to the xOy plane
 
 % 2D circle fitting
-% if any(scatterPlane(3,:))
-%     error('Error: uncorrect projection from plane to xOz.');
-% end
 [circ2D,RMSE] = arcFit2D(scatterPlane(1:2,:), ...
-    'arcFitMethod',options.arcFitMethod,'displayType',options.displayType);
+    'arcFitMethod',options.arcFitMethod,'displayType',options.arcdisplayType);
+% debug
+% figure;
+% plot(scatterPlane(1,:),scatterPlane(2,:)); 
+% hold on; axis equal;
+% scatter(circ2D{1}(1),circ2D{1}(2));
+% plot([circ2D{1}(1),circ2D{1}(1) + circ2D{2}*circ2D{4}(1)], ...
+%     [circ2D{1}(2),circ2D{1}(2) + circ2D{2}*circ2D{4}(2)]);
+% RLeft = rotz(circ2D{3}/2);
+% tmpLeft = RLeft(1:2,1:2)*circ2D{4};
+% plot([circ2D{1}(1),circ2D{1}(1) + circ2D{2}*tmpLeft(1)], ...
+%     [circ2D{1}(2),circ2D{1}(2) + circ2D{2}*tmpLeft(2)]);
+% RRight = rotz(-circ2D{3}/2);
+% tmpRight = RRight(1:2,1:2)*circ2D{4};
+% plot([circ2D{1}(1),circ2D{1}(1) + circ2D{2}*tmpRight(1)], ...
+%     [circ2D{1}(2),circ2D{1}(2) + circ2D{2}*tmpRight(2)]);
 
 % Inverse rigid transform to find the fitting center of the original data
 scatterPlaneZ = mean(scatterPlane(3,:));
-center3D = [circ2D{1};scatterPlaneZ];
-center3D = scatterR'*center3D;
-arcVec = [circ2D{4};0];
-arcVec = scatterR'*arcVec;
+circ3D.center = [circ2D.center;scatterPlaneZ];
+circ3D.center = scatterR'*circ3D.center;
+circ3D.radius = circ2D.radius; % radius
+circ3D.openAng = circ2D.openAng; % open angle
 
-circ3D = cell(5,1);
-circ3D{1} = center3D;
-circ3D{2} = circ2D{2};
-circ3D{3} = circ2D{3};
-circ3D{4} = arcVec/norm(arcVec);
-circ3D{5} = planeNorm/norm(planeNorm);
+circ3D.arcVec = [circ2D.center;0];
+circ3D.arcVec = scatterR'*circ3D.arcVec;
+circ3D.arcVec = circ3D.arcVec/norm(circ3D.arcVec); % unit arc vector
+circ3D.planeNorm = planeNorm/norm(planeNorm); % unit plane normal vector
+
+circ3D.startV = [circ2D.startV;0];
+circ3D.startV = scatterR'*circ3D.startV;
+circ3D.endV = [circ2D.endV;0];
+circ3D.endV = scatterR'*circ3D.endV;
 
 %% Method Three: Projection & Least Square Fitting
 % Method From 化春键, 熊雪梅, 陈莹. 基于拉格朗日乘子法的空间圆弧拟合优化方法[J]. 

@@ -29,14 +29,31 @@ arguments
 end
 
 [circ3D,RMSE,scatterPlane,circ2D] = arcFit3D(scatterOri, ...
-    'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType);
+    'arcFitMethod',options.arcFitMethod,'arcdisplayType',options.arcFitdisplayType);
+
+% debug
+% hold on;
+% scatter3(circ3D{1}(1),circ3D{1}(2),circ3D{1}(3));
+% plot3([circ3D{1}(1),circ3D{1}(1) + circ3D{2}*circ3D{4}(1)], ...
+%     [circ3D{1}(2),circ3D{1}(2) + circ3D{2}*circ3D{4}(2)], ...
+%     [circ3D{1}(3),circ3D{1}(3) + circ3D{2}*circ3D{4}(3)]);
+% RLeft = vec2rot(circ3D{3}/2*circ3D{5});
+% tmpLeft = RLeft*circ3D{4};
+% plot3([circ3D{1}(1),circ3D{1}(1) + circ3D{2}*tmpLeft(1)], ...
+%     [circ3D{1}(2),circ3D{1}(2) + circ3D{2}*tmpLeft(2)], ...
+%     [circ3D{1}(3),circ3D{1}(3) + circ3D{2}*tmpLeft(3)]);
+% RRight = vec2rot(-circ3D{3}/2*circ3D{5});
+% tmpRight = RRight*circ3D{4};
+% plot3([circ3D{1}(1),circ3D{1}(1) + circ3D{2}*tmpRight(1)], ...
+%     [circ3D{1}(2),circ3D{1}(2) + circ3D{2}*tmpRight(2)], ...
+%     [circ3D{1}(3),circ3D{1}(3) + circ3D{2}*tmpRight(3)]);
 
 %% rigid transform: to get the standardized tool profile
 n = size(scatterOri,2);
-rotAng = pi/2 - atan2(circ2D{4}(2),circ2D{4}(1));
+rotAng = pi/2 - atan2(circ2D.arcVec(2),circ2D.arcVec(1));
 rotMat = rotz(rotAng);
 rotMat = rotMat(1:2,1:2);
-scatterDst = rotMat*(scatterPlane(1:2,:) - ndgrid(circ2D{1},1:n));
+scatterDst = rotMat*(scatterPlane(1:2,:) - ndgrid(circ2D.center,1:n));
 
 %% optional output
 varargout{1} = RMSE;

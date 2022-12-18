@@ -2,7 +2,7 @@
 % 方案：先求切宽和残高的定量关系；然后考虑如何移动各个刀位点，微调来获得所要求的残高
 
 %% simulation initialization
-isAPP = true;
+isAPP = false;
 if isAPP
     addpath(genpath('funcs'));
     fitOpts.toolFitType = app.toolFitType;
@@ -17,11 +17,11 @@ else
     
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
-    workspaceDir = 'workspace/20221020-tooltip';
+    workspaceDir = 'workspace/20220925-contrast/nagayama_concentric';
     fitOpts.arcFitMethod = 'levenberg-marquardt';
     paramMethod = 'centripetal';
     unit = '\mum';
-    textFontSize = 12;
+    textFontSize = 14;
     textFontType = 'Times New Roman';
     
     debug = 3;
@@ -62,17 +62,6 @@ else
                 /length(theta));
             clear theta r;
         otherwise
-            toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
-                'Unit','Font type in figure','Font size in figure'}, ...
-                'Tool Processing Input', ...
-                [1 20; 1 20; 1 20; 1 20; 1 20], ...
-                {'levenberg-marquardt','centripetal','\mu m','Times New Roman','14'}, ...
-                'WindowStyle');
-            fitOpts.arcFitMethod = toolInput{1};
-            paramMethod = toolInput{2};
-            unit = toolInput{3};
-            textFontType = toolInput{4};
-            textFontSize = str2double(toolInput{5});
             % tool measurement file loading
             [fileName,dirName] = uigetfile({ ...
                 '*.mat','MAT-files(*.mat)'; ...
@@ -80,7 +69,7 @@ else
                 '*.*','all files(*.*)'...
                 }, ...
                 'Select one tool tip measurement data', ...
-                'Tool\', ...
+                workspaceDir, ...
                 'MultiSelect','off');
             pathName = fullfile(dirName,fileName);
             dataOri = load(pathName); % load from file, n*2 matrix
@@ -112,8 +101,8 @@ clear theta theta1 theta2;
 fitOpts.arcFitdisplayType = 'iter-detailed';
 [circ3D,toolFit] = toolFit3D(toolOri, ...
     'arcFitMethod',fitOpts.arcFitMethod,'arcFitdisplayType',fitOpts.arcFitdisplayType);
-radius = circ3D{2};
-openAngle = circ3D{3};
+radius = circ3D.radius;
+openAngle = circ3D.openAng;
 pause(1);
 
 % plot the fitting results

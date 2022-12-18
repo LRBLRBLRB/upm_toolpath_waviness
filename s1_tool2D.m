@@ -2,7 +2,7 @@
 % 方案：先求切宽和残高的定量关系；然后考虑如何移动各个刀位点，微调来获得所要求的残高
 
 %% simulation initialization
-isAPP = true;
+isAPP = false;
 if isAPP
     toolOri = app.toolOri;
     fitOpts.toolFitType = app.toolFitType;
@@ -31,9 +31,11 @@ else
             cy0 = 0*1000; % unit: mu m
             r0 = 0.1*1000; % unit: mu m
             openAng = pi/3; % unit: rad
-            noise = 0.02; % mid-frequency error
+            edgePV = 200; % low-frequency error
+            k = -edgePV/openAng;
+            noise = r0*5e-3; % mid-frequency error
             theta = linspace(0,openAng,200);
-            r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
+            r = r0 + edgePV/2 + k*theta + (noise*rand(1,length(theta)) - 0.5*noise);
             toolOri(1,:) = r.*cos(theta) + cx0;
             toolOri(2,:) = r.*sin(theta) + cy0;
             rmse0 = sqrt(...
@@ -90,8 +92,8 @@ clear theta theta1 theta2;
 fitOpts.arcFitdisplayType = 'iter-detailed';
 [circ2D,toolFit,rmseLsc] = toolFit2D(toolOri, ...
     'arcFitMethod',fitOpts.arcFitMethod,'arcFitdisplayType',fitOpts.arcFitdisplayType);
-radius = circ2D{2};
-openAngle = circ2D{3};
+radius = circ2D.radius;
+openAngle = circ2D.openAng;
 
 % plot the fitting results
 f2 = figure('Name','Tool Sharpness Fitting Result');

@@ -101,8 +101,8 @@ else
         rMax = R/2;
     else % ellipsoid
         D = 0;
-        R = 10/2*1000;
-        A = 3.5/2;
+        R = 4*1000;
+        A = 3/2;
         B = 4/2;
         C = 5/2;
         % machining surface
@@ -111,7 +111,8 @@ else
         surfFunc = matlabFunction(surfSym);
         surfFx = matlabFunction(diff(surfFunc,x));
         surfFy = matlabFunction(diff(surfFunc,y));
-        rMax = R/2;
+        surfDomain = [-A*R/4,A*R/4;-B*R/4,B*R/4];
+        rMax = max(surfDomain(1,2),surfDomain(2,2));
         % sampling density
         spar = 501;
         surfCenter = [0;0;sqrt(C^2*(R.^2-R/4.^2))]; % concentric circle center
@@ -126,23 +127,37 @@ else
         % save('input_data/surface/ellipsoidAray.mat', ...
         %    "surfMesh","surfNorm","surfCenter");
     end
-    
-    figure('Name','original xyz scatters of the surface (sparsely)');
+
+    % normal direction & cutting direction of the surface mesh
+    surfPtIni = transpose(reshape(surfMesh,[],3));
+    ptNum = length(surfPtIni);
+    surfNormIni(1,:) = surfFx(surfPtIni(1,:),surfPtIni(2,:));
+    surfNormIni(2,:) = surfFy(surfPtIni(1,:),surfPtIni(2,:));
+    surfNormIni(3,:) = -1*ones(1,ptNum);
+    surfNormIni = -1*(surfNormIni./vecnorm(surfNormIni,2,1));
+
+    fig1 = figure('Name','original xyz scatters of the surface (sparsely)');
     surf( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
         'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-    hold on; 
+    hold on;
+    quiver3(surfPtIni(1,1:10:end),surfPtIni(2,1:10:end),surfPtIni(3,1:10:end), ...
+        surfNormIni(1,1:10:end),surfNormIni(2,1:10:end),surfNormIni(3,1:10:end), ...
+        'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
+    legend('Original Points','Orthogonal direction','Location','northeast');
     % axis equal;
     set(gca,'FontSize',textFontSize,'FontName',textFontType);
     xlabel(['x (',unit,')']);
     ylabel(['y (',unit,')']);
     zlabel(['z (',unit,')']);
+
+    % interaction
+    msgfig = msgbox('Surface was generated successfully!','Exit','help','non-modal');
+    uiwait(msgfig);
     msgfig = questdlg({'Surface was generated successfully!', ...
         'Ready to continue?'}, ...
         'Surface Generation','OK & continue','Cancel & quit','OK & continue');
     if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-        msgfig = msgbox('Exit for the program','Exit','error','modal');
-        uiwait(msgfig);
         return;
     end
     
@@ -150,8 +165,8 @@ else
     Geometry2DCell = {'Rotating Paraboloid','Aspheric'};
 
     % machining paramters    
-    cutDirection = 'Center to Edge'; % 'Edge to Center'
-    spindleDirection = 'Counterclockwise'; % 'Clockwise'
+    cutDirection = 'Edge to Center'; % 'Center to Edge'
+    spindleDirection = 'Clockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
     aimRes = 50;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
@@ -251,15 +266,15 @@ r = rStep/2; % 可以通过widthRes确定迭代初值
 delta = rStep;
 iter = 1;
 
-figure('Name','concentric tool path debug');
-surf( ...
-    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
-colormap('summer');
-set(gca,'FontSize',textFontSize,'FontName',textFontType,'ZDir','reverse');
-xlabel('x'); ylabel('y'); 
+% debug
+% figure('Name','concentric tool path debug');
+% surf( ...
+%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+%     'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
+% colormap('summer');
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% xlabel('x'); ylabel('y'); zlabel('z');
 % view(0,90);
-toolCoefs = toolSp.coefs;
 
 while true
     tic
@@ -320,11 +335,21 @@ while true
 
             % debug
             % plot3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
-            %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-            % toolSp1 = toolSp;
-            % toolSp1.coefs = quat2rotm(toolQuatTmp(ii,:))*toolSp.toolCoefs + toolVecTmp(:,ii);
+            %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]); hold on;
+            % plot3(surfPtTmp(1,ii),surfPtTmp(2,ii),surfPtTmp(3,ii), ...
+            %     '.','MarkerSize',36,'Color',[0,0.4470,0.7410]); hold on;
+            % qui1 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
+            %     toolNormDirectTmp(1,ii),toolNormDirectTmp(2,ii),toolNormDirectTmp(3,ii), ...
+            %     300,'r');
+            % qui2 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
+            %     toolCutDirectTmp(1,ii),toolCutDirectTmp(2,ii),toolCutDirectTmp(3,ii), ...
+            %     300,'b');
+            % toolSp1 = toolData.toolBform;
+            % toolSp1.coefs = quat2rotm(toolQuatTmp(ii,:))*toolData.toolBform.coefs + toolVecTmp(:,ii);
             % Q = fnval(toolSp1,0:0.01:1);
-            % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+            % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+            % delete(qui1);
+            % delete(qui2);
         end
     
         % restore the data that will be used in the residual height calculation
@@ -419,16 +444,16 @@ while true
     res = [res,resTmp];
 
     % debug
-    plot3(toolPathPtTmp(1,:),toolPathPtTmp(2,:),toolPathPtTmp(3,:), ...
-        '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+    % plot3(toolPathPtTmp(1,:),toolPathPtTmp(2,:),toolPathPtTmp(3,:), ...
+    %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
     % quiver3(toolPathPtTmp(1,:),toolPathPtTmp(2,:),toolPathPtTmp(3,:), ...
     %     toolNormDirectTmp(1,:),toolNormDirectTmp(2,:),toolNormDirectTmp(3,:));
-    for jj = accumPtNum(end - 1) + 1:accumPtNum(end)
-        toolSp1 = toolSp;
-        toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
-        Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
-        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
-    end
+    % for jj = accumPtNum(end - 1) + 1:accumPtNum(end)
+    %     toolSp1 = toolSp;
+    %     toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
+    %     Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
+    %     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+    % end
     
     clear surfPtTmp surfNormTmp surfDirectTmp toolQuatTmp toolVecTmp ...
         toolContactUTmp isCollisionTmp toolPathPtTmp toolNormDirectTmp ...
@@ -458,12 +483,30 @@ plot3(toolPathPt(1,1:plotSpar:end), ...
     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 ptNum = sum(loopPtNum);
 toolCoefs = toolSp.coefs;
-parfor jj = 1:ptNum
-    toolSp1 = toolSp;
-    toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
-    Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
-    plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+% figure;
+if size(surfDomain,1) == 1
+    for jj = 1:ptNum
+        toolSp1 = toolSp;
+        toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
+        Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
+        isQDomain = (Q(1,:).^2 + Q(2,:).^2 - surfDomain(1,2)^2) >= 0;
+        Q(:,isQDomain) = [];
+        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1); hold on;
+    end
+else
+    for jj = 1:ptNum
+        toolSp1 = toolSp;
+        toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
+        Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
+%         isQXDomain = abs(Q(1,:)) - surfDomain(1,2) >= 0;
+%         Q(:,isQXDomain) = [];
+%         isQYDomain = abs(Q(2,:)) - surfDomain(2,2) >= 0;
+%         Q(:,isQYDomain) = [];
+%         isQDomain = Q(1,:).^2/A^2 + Q(2,:).^2/B^2 - ;
+        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1); hold on;
+    end
 end
+
 % axis equal;
 grid on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
@@ -471,6 +514,7 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
+axis equal;
 % legend('tool center point','tool cutting direction', ...
 %     'tool spindle direction','','tool edge','Location','northeast');
 legend('designed surface','tool center point','tool edge','Location','northeast');
@@ -486,8 +530,6 @@ msgfig = questdlg({'Concentric tool path was generated successfully!', ...
     'Ready to continue?'}, ...
     'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    msgfig = msgbox('Exit for the program','Exit','error','modal');
-    uiwait(msgfig);
     return;
 end
 
@@ -607,6 +649,7 @@ parfor ii = 1:ptNum
     toolSp1 = toolSp;
     toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
     Q = fnval(toolSp1,uLim(1,ii):0.05:uLim(2,ii));
+
     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
 end
 % axis equal;

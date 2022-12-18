@@ -129,8 +129,8 @@ fitOpts.arcFitdisplayType = 'iter-detailed';
     'toolFitType',fitOpts.toolFitType,'lineFitMethod',fitOpts.lineFitMethod, ...
     'arcFitMethod',fitOpts.arcFitMethod, ...
     'arcFitdisplayType',fitOpts.arcFitdisplayType);
-radius = circ2D{2};
-openAngle = circ2D{3};
+radius = circ2D.radius;
+openAngle = circ2D.openAng;
 
 % tool data resort & averaging
 toolAngle = atan2(toolFitUnsorted(2,:),toolFitUnsorted(1,:)); % polar angle of the tool point

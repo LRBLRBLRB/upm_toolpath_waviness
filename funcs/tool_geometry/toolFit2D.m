@@ -180,8 +180,8 @@ end
 
 %% rigid transform
 n = size(scatterOri,2);
-rotAng = pi/2 - atan2(circ2D{4}(2),circ2D{4}(1));
+rotAng = pi/2 - atan2(circ2D.arcVec(2),circ2D.arcVec(1));
 rotMat = rotz(rotAng);
 rotMat = rotMat(1:2,1:2);
-scatterDst = rotMat*(scatterOri - ndgrid(circ2D{1},1:n));
+scatterDst = rotMat*(scatterOri - ndgrid(circ2D.center,1:n));
 end

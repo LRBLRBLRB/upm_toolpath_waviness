@@ -25,7 +25,7 @@ switch options.method
         % if diffAngular < 0, it means the tool point is counterclockwise,
         % and that the direction vector should be [-sin(theta),cos(theta)],
         % otherwise it should be clockwise.
-        diffAngular = angular(1) - angular(2);
+        diffAngular = angular(1) - angular(2) <= 0;
         if ~diffAngular
             error(['Invalid input: concentric angle should be given and ', ...
                 'should not be identical inf when using the method ''vertical''']);
@@ -33,6 +33,7 @@ switch options.method
         toolDirect = [-sin(angular)*diffAngular;
             cos(angular)*diffAngular;
             zeros(1,length(angular))];
+        toolDirect = toolDirect./vecnorm(toolDirect,2,1);
     case 'concentric'
         % 思路一：对于回转体的同心圆算法（concentric），可以直接求回转轴指向曲面点的向量，然后投影到回转轴垂直的表面，再取x,y后右转90度。
         if any(surfCenter == inf)

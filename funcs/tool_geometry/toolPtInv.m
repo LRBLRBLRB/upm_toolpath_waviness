@@ -17,7 +17,8 @@ arguments
     eps {mustBeFinite} = 1e-3
     maxIter {mustBeFinite} = 100
     options.Type {mustBeMember(options.Type, ...
-        ['OpenAngle','PolarAngle','Cartesian','TangentPlane',''])} = 'PolarAngle'
+        ['OpenAngle','PolarAngle','Cartesian', ...
+        'TangentPlane','TangentLine',''])} = 'PolarAngle'
     options.method {mustBeMember(options.method, ...
         ['Newton-Iteration','Traverse'])}
     options.IncludedAng {mustBeFinite}
@@ -56,6 +57,18 @@ switch options.Type
             iter = iter + 1;
         end
     case 'TangentPlane'
+        % The input known is the normal vector of a plane that lies outside
+        % the tool edge, and the point closest to the plane will be worked
+        % out.
+        % simply traverse the parameter throughout all the interval
+        surfPt = 2*options.Radius*known/norm(known);
+        u = 0:eps:1;
+        Pt = fnval(sp,u);
+        dist = abs(dist2Plane(Pt,surfPt,known));
+        [varargout{1},minI] = min(dist);
+        u = u(minI);
+        Q = fnval(sp,u);
+    case 'TangentLine'
         % The input known is the normal vector of a plane that lies outside
         % the tool edge, and the point closest to the plane will be worked
         % out.

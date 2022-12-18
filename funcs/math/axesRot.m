@@ -58,6 +58,8 @@ switch option
         varargin{1} = R1*varargin{1};
         varargin{2} = R1*varargin{2};
         R2 = vecRot(varargin{2},varargin{4});
+        varargin{1} = R2*varargin{1};
+        varargin{2} = R2*varargin{2};
         R = R2*R1;
 end
 
