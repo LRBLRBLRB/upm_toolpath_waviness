@@ -21,6 +21,7 @@ if isAPP
     spindleDirection = app.spindleDirection;
     angularDiscrete = app.angularDiscrete;
     aimRes = app.aimRes;
+    toolData = app.toolData;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
     maxIter = app.maxIter;
     rMax = app.rMax;
