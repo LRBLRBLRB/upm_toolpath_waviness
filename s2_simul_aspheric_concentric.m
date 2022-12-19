@@ -4,7 +4,7 @@
 % Step three: residual height calculation and correction
 % Step four: simulation of the machining surface
 
-isAPP = false;
+isAPP = true;
 if isAPP
     workspaceDir = app.workspaceDir;
     unit = app.unit;

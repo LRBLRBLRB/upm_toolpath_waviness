@@ -7,7 +7,7 @@
 
 % 实际上，我打算把concentric和freeform的方案给合并。目前aspheric文件中的是旧的刀位点计算方案，freeform中是新的
 
-isAPP = false;
+isAPP = true;
 if isAPP
     workspaceDir = app.workspaceDir;
     unit = app.unit;
@@ -177,6 +177,13 @@ else
     angularLength = 6*pi/180;
 end
 
+switch spindleDirection
+    case 'Clockwise'
+        conThetaBound = [2*pi,0];
+    case 'Counterclockwise'
+        conThetaBound = [0,2*pi];
+end
+
 %% load the data of the residual function, and get the appropriate cutting width
 load(fullfile(workspaceDir,"widthRes.mat")); % widthRes
 % wid = interp1(widthRes(2,:),widthRes(1,:),aimRes);
@@ -193,11 +200,11 @@ toolRadius = toolData.radius; % fitted tool radius
 
 switch angularDiscrete
     case 'Constant Arc'
-        conTheta = linspace(0,2*pi, ...
+        conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
             ceil(2*pi/maxAngPtDist) + 1);
         conTheta(end) = [];
     case 'Constant Angle'
-        conTheta = linspace(0,2*pi, ...
+        conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
             ceil(2*pi/angularLength) + 1);
         conTheta(end) = [];
     otherwise
@@ -263,8 +270,7 @@ end
 fprintf('No.1\tElapsed time is %f seconds.\n-----\n',toc(t1));
 
 %% Tool path adjusting for the rest
-r = rStep/2; % 可以通过widthRes确定迭代初值
-delta = rStep;
+% r = rStep/2; % 可以通过widthRes确定迭代初值
 iter = 1;
 
 % debug
@@ -284,11 +290,11 @@ while true
         switch angularDiscrete
             case 'Constant Arc'
                 % if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
-                conTheta = linspace(0,2*pi, ...
+                conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
                     ceil(2*pi/min(maxAngPtDist,arcLength/r)) + 1);
                 conTheta(end) = [];
             case 'Constant Angle'
-                conTheta = linspace(0,2*pi, ...
+                conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
                     ceil(2*pi/angularLength) + 1);
                 conTheta(end) = [];
             otherwise
@@ -536,6 +542,12 @@ end
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
+
+% cut direction change doesn't affect the concentric tool path
+switch cutDirection
+    case 'Edge to Center'
+    case 'Center to Edge'
+end
 
 % cubic spline approximation
 % the function between the numeric label of tool path and surf radius R
