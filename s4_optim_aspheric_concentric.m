@@ -7,7 +7,7 @@
 
 % 实际上，我打算把concentric和freeform的方案给合并。目前aspheric文件中的是旧的刀位点计算方案，freeform中是新的
 
-isAPP = true;
+isAPP = false;
 if isAPP
     workspaceDir = app.workspaceDir;
     unit = app.unit;
@@ -167,7 +167,7 @@ else
 
     % machining paramters    
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    spindleDirection = 'Clockwise'; % 'Counterclockwise'
+    spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
     aimRes = 50;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
@@ -248,7 +248,7 @@ res = 5*aimRes*ones(2,accumPtNum(end)); % the residual height, initialized with 
 
 % figure;
 % calculate the 1st loop of the tool path
-parfor ii = 1:accumPtNum(end)
+for ii = 1:accumPtNum(end)
     [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
         toolData,surfPt(:,ii),surfNorm(:,ii),[0;0;-1],surfDirect(:,ii));
     if isCollision(ii) == false
@@ -270,7 +270,8 @@ end
 fprintf('No.1\tElapsed time is %f seconds.\n-----\n',toc(t1));
 
 %% Tool path adjusting for the rest
-% r = rStep/2; % 可以通过widthRes确定迭代初值
+r = rStep/2; % 可以通过widthRes确定迭代初值
+delta = rStep;
 iter = 1;
 
 % debug
@@ -496,8 +497,8 @@ if size(surfDomain,1) == 1
         toolSp1 = toolSp;
         toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
         Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
-        isQDomain = (Q(1,:).^2 + Q(2,:).^2 - surfDomain(1,2)^2) >= 0;
-        Q(:,isQDomain) = [];
+        % isQDomain = (Q(1,:).^2 + Q(2,:).^2 - surfDomain(1,2)^2) >= 0;
+        % Q(:,isQDomain) = [];
         plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1); hold on;
     end
 else

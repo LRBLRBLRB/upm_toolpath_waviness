@@ -25,10 +25,10 @@ switch options.method
         % if diffAngular < 0, it means the tool point is counterclockwise,
         % and that the direction vector should be [-sin(theta),cos(theta)],
         % otherwise it should be clockwise.
-        diffAngular = angular(1) - angular(2) <= 0;
+        diffAngular = sign(angular(2) - angular(1));
         if ~diffAngular
             error(['Invalid input: concentric angle should be given and ', ...
-                'should not be identical inf when using the method ''vertical''']);
+                'should not be identical when using the method ''vertical''']);
         end
         toolDirect = [-sin(angular)*diffAngular;
             cos(angular)*diffAngular;

@@ -169,7 +169,7 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Clockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 50;
+    aimRes = 0.001;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 10;
     arcLength = 30;
