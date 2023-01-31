@@ -10,7 +10,7 @@ if isempty(ylim)
 elseif ~isequal(size(ylim),[1,2])
     error('Invalid y range. A 1*2 array is needed.');
 end
-surfType = 'function';
+surfType = 'functionv';
 if strcmp(surfType,'function') % analytic surface
     syms x y;
     surfSym = input("Type the function expression of the surface," + ...

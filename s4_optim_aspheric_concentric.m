@@ -97,8 +97,8 @@ else
         syms x y;
         surfSym = D - C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
         surfFunc = matlabFunction(surfSym);
-        surfFx = matlabFunction(diff(surfFunc,x));
-        surfFy = matlabFunction(diff(surfFunc,y));
+        surfFx = matlabFunction(diff(surfFunc,x),'Vars',{x,y});
+        surfFy = matlabFunction(diff(surfFunc,y),'Vars',{x,y});
         rMax = R/2;
     else % ellipsoid
         D = 0;
@@ -110,8 +110,8 @@ else
         syms x y;
         surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
         surfFunc = matlabFunction(surfSym);
-        surfFx = matlabFunction(diff(surfFunc,x));
-        surfFy = matlabFunction(diff(surfFunc,y));
+        surfFx = matlabFunction(diff(surfFunc,x),'Vars',{x,y});
+        surfFy = matlabFunction(diff(surfFunc,y),'Vars',{x,y});
         surfDomain = [-A*R/4,A*R/4;-B*R/4,B*R/4];
         rMax = max(surfDomain(1,2),surfDomain(2,2));
         % sampling density
