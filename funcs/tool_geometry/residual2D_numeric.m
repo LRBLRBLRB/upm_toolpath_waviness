@@ -15,9 +15,9 @@ function [res,peakPt,varargout] = residual2D_numeric(s1,s2,eps,varargin)
 % [res,peakPt,ind1,ind2] = residual2D_numeric(s1,s2,eps,p1,p2,method)
 %   s1 & s2 struct  the B-form struct of the two tool edge
 %   eps (1,1)  the discretization of the parameter u
-%   p1 % p2 ()  
+%   p1 & p2 () 
 %   res (1,1)  the residual within the two position
-%   interPt (2,1)  
+%   
 %
 % [res,peakPt,ind1,ind2] = residual2D_numeric(sp1,sp2,...)
 %   all the same except that the sp1 and sp2 remain the B-form spline
@@ -95,8 +95,8 @@ varargout{1} = u(ind1);
 varargout{2} = u(ind2);
 if epsCross >= norm(sp1(:,1) - sp1(:,2))
     % no intersection
-    res = nan;
-    peakPt = nan(size(sp1,1),1);
+    res = inf;
+    peakPt = inf(size(sp1,1),1);
 end
 
 end

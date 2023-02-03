@@ -10,8 +10,8 @@ switch app.surfType
     case app.Geometry2DCell % 2D Geometry
         % partial differential function
         syms x y;
-        app.surfFx = matlabFunction(diff(app.surfFuncs,x));
-        app.surfFy = matlabFunction(diff(app.surfFuncs,y));
+        app.surfFx = diff(app.surfFuncs,x);
+        app.surfFy = diff(app.surfFuncs,y);
 
         % sampling
         conR = linspace(0,app.surfDomain(1,2),app.surfPlotSpar); % concentric radius vector
@@ -24,8 +24,8 @@ switch app.surfType
     case app.Geometry3DCell % 3D Geometry
         % partial differential function
         syms x y;
-        app.surfFx = matlabFunction(diff(app.surfFuncs,x));
-        app.surfFy = matlabFunction(diff(app.surfFuncs,y));
+        app.surfFx = diff(app.surfFuncs,x);
+        app.surfFy = diff(app.surfFuncs,y);
 
         % sampling
         if size(app.surfDomain,1) == 1

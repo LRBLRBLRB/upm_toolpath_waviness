@@ -59,7 +59,7 @@ else
     msgOpts.Default = 'Cancel and quit';
     msgOpts.Interpreter = 'tex';
     % msgOpts.modal = 'non-modal';
-    profile on
+    % profile on
     tPar0 = tic;
     parObj = gcp;
     tPar = toc(tPar0);
@@ -142,9 +142,9 @@ else
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
         'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
     hold on;
-    quiver3(surfPtIni(1,1:10:end),surfPtIni(2,1:10:end),surfPtIni(3,1:10:end), ...
-        surfNormIni(1,1:10:end),surfNormIni(2,1:10:end),surfNormIni(3,1:10:end), ...
-        'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
+    % quiver3(surfPtIni(1,1:10:end),surfPtIni(2,1:10:end),surfPtIni(3,1:10:end), ...
+    %     surfNormIni(1,1:10:end),surfNormIni(2,1:10:end),surfNormIni(3,1:10:end), ...
+    %     'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
     legend('Original Points','Orthogonal direction','Location','northeast');
     % axis equal;
     set(gca,'FontSize',textFontSize,'FontName',textFontType);
@@ -185,7 +185,7 @@ switch spindleDirection
 end
 
 %% load the data of the residual function, and get the appropriate cutting width
-load(fullfile(workspaceDir,"widthRes.mat")); % widthRes
+% load(fullfile(workspaceDir,"widthRes.mat")); % widthRes
 % wid = interp1(widthRes(2,:),widthRes(1,:),aimRes);
 
 
@@ -248,7 +248,7 @@ res = 5*aimRes*ones(2,accumPtNum(end)); % the residual height, initialized with 
 
 % figure;
 % calculate the 1st loop of the tool path
-for ii = 1:accumPtNum(end)
+parfor ii = 1:accumPtNum(end)
     [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
         toolData,surfPt(:,ii),surfNorm(:,ii),[0;0;-1],surfDirect(:,ii));
     if isCollision(ii) == false
@@ -334,7 +334,7 @@ while true
         toolPathPtTmp = zeros(3,loopPtNumTmp);
         toolCutDirectTmp = zeros(3,loopPtNumTmp);
         toolNormDirectTmp = zeros(3,loopPtNumTmp);
-        for ii = 1:loopPtNumTmp
+        parfor ii = 1:loopPtNumTmp
             [toolQuatTmp(ii,:),toolVecTmp(:,ii),toolContactUTmp(ii)] = toolPos( ...
                 toolData,surfPtTmp(:,ii),surfNormTmp(:,ii),[0;0;-1],surfDirectTmp(:,ii));
             toolPathPtTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.center + toolVecTmp(:,ii);
@@ -342,22 +342,22 @@ while true
             toolNormDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.toolEdgeNorm;
 
             % debug
-            % plot3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
-            %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]); hold on;
-            % plot3(surfPtTmp(1,ii),surfPtTmp(2,ii),surfPtTmp(3,ii), ...
-            %     '.','MarkerSize',36,'Color',[0,0.4470,0.7410]); hold on;
-            % qui1 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
-            %     toolNormDirectTmp(1,ii),toolNormDirectTmp(2,ii),toolNormDirectTmp(3,ii), ...
-            %     300,'r');
-            % qui2 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
-            %     toolCutDirectTmp(1,ii),toolCutDirectTmp(2,ii),toolCutDirectTmp(3,ii), ...
-            %     300,'b');
-            % toolSp1 = toolData.toolBform;
-            % toolSp1.coefs = quat2rotm(toolQuatTmp(ii,:))*toolData.toolBform.coefs + toolVecTmp(:,ii);
-            % Q = fnval(toolSp1,0:0.01:1);
-            % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
-            % delete(qui1);
-            % delete(qui2);
+%             plot3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
+%                 '.','MarkerSize',6,'Color',[0,0.4470,0.7410]); hold on;
+%             plot3(surfPtTmp(1,ii),surfPtTmp(2,ii),surfPtTmp(3,ii), ...
+%                 '.','MarkerSize',36,'Color',[0,0.4470,0.7410]); hold on;
+%             qui1 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
+%                 toolNormDirectTmp(1,ii),toolNormDirectTmp(2,ii),toolNormDirectTmp(3,ii), ...
+%                 300,'r');
+%             qui2 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
+%                 toolCutDirectTmp(1,ii),toolCutDirectTmp(2,ii),toolCutDirectTmp(3,ii), ...
+%                 300,'b');
+%             toolSp1 = toolData.toolBform;
+%             toolSp1.coefs = quat2rotm(toolQuatTmp(ii,:))*toolData.toolBform.coefs + toolVecTmp(:,ii);
+%             Q = fnval(toolSp1,0:0.01:1);
+%             plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+%             delete(qui1);
+%             delete(qui2);
         end
     
         % restore the data that will be used in the residual height calculation
@@ -392,6 +392,15 @@ while true
             [resTmp(1,ii),peakPtInTmp(:,ii),uLimTmp(:,ii)] = residual3D( ...
                 toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
                 toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
+
+            % debug
+            % plot3(toolPathPtRes(1,ii),toolPathPtRes(2,ii),toolPathPtRes(3,ii), ...
+            %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+            % toolSp1 = toolSp;
+            % R1 = axesRot([0;0;1],[1;0;0],toolNormDirectRes(:,ii),toolCutDirectRes(:,ii),'zx');
+            % toolSp1.coefs = R1*toolSp.coefs + toolPathPtRes(:,ii);
+            % Q = fnval(toolSp1,uLimTmp(1,ii):0.01:uLimTmp(2,ii));
+            % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1);
         end
 
         % if residual height does not satisfy the reqiurement,
@@ -426,6 +435,15 @@ while true
         [resTmp(2,ii),peakPtOutTmp(:,ii),uLimTmp(:,ii)] = residual3D( ...
             toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
             toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
+
+        % debug
+%         plot3(toolPathPtRes(1,ii),toolPathPtRes(2,ii),toolPathPtRes(3,ii), ...
+%             '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+%         toolSp1 = toolSp;
+%         R1 = axesRot([0;0;1],[1;0;0],toolNormDirectRes(:,ii),toolCutDirectRes(:,ii),'zx');
+%         toolSp1.coefs = R1*toolSp.coefs + toolPathPtRes(:,ii);
+%         Q = fnval(toolSp1,uLimTmp(1,ii):0.01:uLimTmp(2,ii));
+%         plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1);
     end
     
     % then store the data of this loop

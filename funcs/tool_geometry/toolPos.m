@@ -1,5 +1,5 @@
 function [toolQuad,toolVec,toolContactU,varargout] = toolPos( ...
-    toolEdge,surfPt,surfNorm,designNorm,varargin)
+    toolEdge,surfPt,surfNorm,toolPathNorm,varargin)
 % usage: [toolPos,toolCutDirect,log] = toolPos(toolEdge,surfPt,surfNorm,designDirect,designNorm)
 %   Solve the tool pose using the tangent relationship of tool tip and
 %   surface, with the tool axis unchanged.
@@ -15,12 +15,12 @@ function [toolQuad,toolVec,toolContactU,varargout] = toolPos( ...
 %   toolPos (3,1) the position of the tool center
 
 if nargin == 4 % 2D
-    if size(surfPt,1) ~= 2 || size(surfNorm,1) ~= 2 || size(designNorm,1) ~= 2
+    if size(surfPt,1) ~= 2 || size(surfNorm,1) ~= 2 || size(toolPathNorm,1) ~= 2
         error('Invalid input: the dimension goes wrong.');
     end
 
     varargout{1} = false;
-    toolRot = rotz(vecAng([0;1],designNorm,1));
+    toolRot = rotz(vecAng([0;1],toolPathNorm,1));
     toolRot = toolRot(1:2,1:2);
     toolEdge.center = toolRot*toolEdge.center;
     toolEdge.toolEdgeNorm = toolRot*toolEdge.toolEdgeNorm;
@@ -40,15 +40,15 @@ if nargin == 4 % 2D
     toolVec = surfPt - toolRot*toolContactPt;
 
 else % 3D
-    if size(surfPt,1) ~= 3 || size(surfNorm,1) ~= 3 || size(designNorm,1) ~= 3
+    if size(surfPt,1) ~= 3 || size(surfNorm,1) ~= 3 || size(toolPathNorm,1) ~= 3
         error('Invalid input: the dimension goes wrong.');
     end
 
-    designDirect = varargin{1};
+    toolPathDir = varargin{1};
     % adjust the normal vector of the tool
     varargout{1} = false;
     if nnz(toolEdge.toolEdgeNorm - [0;0;1])
-        toolRot1 = vecRot(toolEdge.toolEdgeNorm,designNorm);
+        toolRot1 = vecRot(toolEdge.toolEdgeNorm,toolPathNorm);
         toolEdge = toolRigid(toolEdge,toolRot1,[0;0;0]);
     end
 
@@ -61,7 +61,7 @@ else % 3D
 
     % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
     toolRot = axesRot(toolEdge.toolEdgeNorm,toolEdge.cutDirect, ...
-        designNorm,designDirect,'');
+        toolPathNorm,toolPathDir,'');
     toolEdge2 = toolRigid(toolEdge,toolRot,[0;0;0]);
 
     % find the contact point on the tool edge

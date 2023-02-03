@@ -1,5 +1,9 @@
 function [dist,ptProj] = dist2surf(pt,surfFunc,surfFunc_x,surfFunc_y,options)
-%DIST2SURF calculate the distance between the given point to the surface
+%DIST2SURF calculate the distance between the given point to the surface.
+% The distance is named as the oriented distance from the point pt to the
+% surface surfFunc. If the pt is on the same side of the surface based on
+% the normal vector, then the distance will be positive.
+%
 % pt         (3,:) the points set, the distance of which would be calculated 
 % surfFunc   sym   the surface function, i.e., surfFunc = f(x,y,z) = 0
 % surfFunc_x 
@@ -22,7 +26,13 @@ optimOpt = optimoptions('fsolve','Display','final-detailed', ...
 
 switch options.CalculateType
     case 'Taylor-Expand'
-        
+        if isempty(surfFunc_x)
+            syms x y;
+            surfFunc_x = matlabFunction(diff(surfFunc,x),'Vars',{x,y});
+            surfFunc_y = matlabFunction(diff(surfFunc,y),'Vars',{x,y});
+        end
+        % ptProj
+        % dist
     case'Lagrange-Multiplier'
         if isempty(surfFunc_x)
             syms x y;
@@ -32,6 +42,10 @@ switch options.CalculateType
         ptProj = fsolve(@(Q) eqs2solve(Q,pt,surfFunc,surfFunc_x,surfFunc_y),pt(1:2,:),optimOpt);
         ptProj(3,:) = surfFunc(ptProj(1,:),ptProj(2,:));
         dist = vecnorm(pt - ptProj,2,1);
+
+        % calculate the direction
+        ifSame = pt(3,:) - ptProj(3,:) < 0; % QP & norm are opposite
+        dist(ifSame) = -dist(ifSame);
 end
 
 end

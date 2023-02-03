@@ -59,7 +59,7 @@ else
     msgOpts.Default = 'Cancel and quit';
     msgOpts.Interpreter = 'tex';
     % msgOpts.modal = 'non-modal';
-    profile on
+    % profile on
     tPar0 = tic;
     parObj = gcp;
     tPar = toc(tPar0);
@@ -97,8 +97,8 @@ else
         syms x y;
         surfSym = D - C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
         surfFunc = matlabFunction(surfSym);
-        surfFx = matlabFunction(diff(surfFunc,x),'Vars',{x,y});
-        surfFy = matlabFunction(diff(surfFunc,y),'Vars',{x,y});
+        surfFx = diff(surfFunc,x);
+        surfFy = diff(surfFunc,y);
         rMax = R/2;
     else % ellipsoid
         D = 0;
@@ -110,8 +110,8 @@ else
         syms x y;
         surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
         surfFunc = matlabFunction(surfSym);
-        surfFx = matlabFunction(diff(surfFunc,x),'Vars',{x,y});
-        surfFy = matlabFunction(diff(surfFunc,y),'Vars',{x,y});
+        surfFx = diff(surfFunc,x);
+        surfFy = diff(surfFunc,y);
         surfDomain = [-A*R/4,A*R/4;-B*R/4,B*R/4];
         rMax = max(surfDomain(1,2),surfDomain(2,2));
         % sampling density
@@ -123,28 +123,25 @@ else
         surfMesh(:,:,1) = A*rMesh.*cos(thetaMesh);
         surfMesh(:,:,2) = B*rMesh.*sin(thetaMesh);
         surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
-    %     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
-    %         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
         % save('input_data/surface/ellipsoidAray.mat', ...
         %    "surfMesh","surfNorm","surfCenter");
     end
-
-    % normal direction & cutting direction of the surface mesh
-    surfPtIni = transpose(reshape(surfMesh,[],3));
-    ptNum = length(surfPtIni);
-    surfNormIni(1,:) = surfFx(surfPtIni(1,:),surfPtIni(2,:));
-    surfNormIni(2,:) = surfFy(surfPtIni(1,:),surfPtIni(2,:));
-    surfNormIni(3,:) = -1*ones(1,ptNum);
-    surfNormIni = -1*(surfNormIni./vecnorm(surfNormIni,2,1));
+    [surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...
+        surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
 
     fig1 = figure('Name','original xyz scatters of the surface (sparsely)');
     surf( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
         'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
     hold on;
-    quiver3(surfPtIni(1,1:10:end),surfPtIni(2,1:10:end),surfPtIni(3,1:10:end), ...
-        surfNormIni(1,1:10:end),surfNormIni(2,1:10:end),surfNormIni(3,1:10:end), ...
-        'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
+%     quiver3(surfMesh(1:10:end,1:10:end,1), ...
+%         surfMesh(1:10:end,1:10:end,2), ...
+%         surfMesh(1:10:end,1:10:end,3), ...
+%         surfNormIni(1:10:end,1:10:end,1), ...
+%         surfNormIni(1:10:end,1:10:end,2), ...
+%         surfNormIni(1:10:end,1:10:end,3), ...
+%         'AutoScale','on','Color',[0.85,0.33,0.10], ...
+%         'DisplayName','Normal Vectors');
     legend('Original Points','Orthogonal direction','Location','northeast');
     % axis equal;
     set(gca,'FontSize',textFontSize,'FontName',textFontType);
@@ -167,9 +164,9 @@ else
 
     % machining paramters    
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    spindleDirection = 'Clockwise'; % 'Counterclockwise'
+    spindleDirection = 'Counterclockwise'; % 'Clockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 0.001;
+    aimRes = 50;
     rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 10;
     arcLength = 30;
@@ -177,8 +174,20 @@ else
     angularLength = 6*pi/180;
 end
 
+% pre-processing
+surfNormSym = [surfFx;surfFy;-1];
+surfNormSym = surfNormSym./norm(surfNormSym);
+surfNormFunc = matlabFunction(surfNormSym,'Vars',{x,y});
+
+switch spindleDirection
+    case 'Clockwise'
+        conThetaBound = [2*pi,0];
+    case 'Counterclockwise'
+        conThetaBound = [0,2*pi];
+end
+
 %% load the data of the residual function, and get the appropriate cutting width
-load(fullfile(workspaceDir,"widthRes.mat")); % widthRes
+% load(fullfile(workspaceDir,"widthRes.mat")); % widthRes
 % wid = interp1(widthRes(2,:),widthRes(1,:),aimRes);
 
 
@@ -193,11 +202,11 @@ toolRadius = toolData.radius; % fitted tool radius
 
 switch angularDiscrete
     case 'Constant Arc'
-        conTheta = linspace(0,2*pi, ...
+        conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
             ceil(2*pi/maxAngPtDist) + 1);
         conTheta(end) = [];
     case 'Constant Angle'
-        conTheta = linspace(0,2*pi, ...
+        conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
             ceil(2*pi/angularLength) + 1);
         conTheta(end) = [];
     otherwise
@@ -212,16 +221,6 @@ toolRAccum = zeros(1,loopPtNum(end));
 surfPt(1,:) = zeros(1,loopPtNum(end)); % x coordinates of surface cutting points
 surfPt(2,:) = zeros(1,loopPtNum(end)); % y coordinates of surface cutting points
 surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:)); % z coordinates of surface cutting points
-switch surfType
-    case Geometry2DCell
-        surfNorm(1,:) = surfFx(surfPt(1,:)); % x coordinates of the normal vectors on surface points
-        surfNorm(2,:) = surfFy(surfPt(2,:)); % y coordinates of the normal vectors on surface points
-    otherwise
-        surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:)); % x coordinates of the normal vectors on surface points
-        surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:)); % y coordinates of the normal vectors on surface points
-end
-surfNorm(3,:) = -1*ones(1,accumPtNum(end)); % z coordinates of the normal vectors on surface points
-surfNorm = (surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
 surfDirect = cutdirection(surfPt,[0;0;0],conTheta,'method','vertical'); % cutting direction of each points
 % surfDirect = [[0;1;0],cutdirection(surfPt(:,2:end),[0;0;0])]; % cutting direction of each points
 % 和[0;0;1]垂直、且与surfDirect(:,end)夹角最小的向量作为surDirect(:,1)，可视作surfDirect(:,end)到[0;0;1]平面的投影
@@ -231,7 +230,7 @@ surfDirect = cutdirection(surfPt,[0;0;0],conTheta,'method','vertical'); % cuttin
 toolQuat = zeros(accumPtNum(end),4); % the quaternions for each points
 toolVec = zeros(3,accumPtNum(end)); % the translation vectors for each points
 toolContactU = zeros(1,accumPtNum(end)); % the parameter u of the contact point on the tool tip
-isCollision = false(1,accumPtNum(end));
+% the xOy projection of tool path points should be arranged in loops
 toolPathPt = zeros(3,accumPtNum(end));
 toolCutDirect = zeros(3,accumPtNum(end));
 toolNormDirect = zeros(3,accumPtNum(end));
@@ -241,14 +240,11 @@ res = 5*aimRes*ones(2,accumPtNum(end)); % the residual height, initialized with 
 
 % figure;
 % calculate the 1st loop of the tool path
-parfor ii = 1:accumPtNum(end)
-    [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
-        toolData,surfPt(:,ii),surfNorm(:,ii),[0;0;-1],surfDirect(:,ii));
-    if isCollision(ii) == false
-        toolPathPt(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.center + toolVec(:,ii);
+for ii = 1:accumPtNum(end)
+        [toolQuat(ii,:),toolPathPt(:,ii),toolContactU(ii),surfPt(:,ii)] = surfPos( ...
+            toolData,toolPathPt(:,ii),[0;0;-1],surfDirect(:,ii),surfFunc,surfNormFunc);
         toolCutDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
         toolNormDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
-    end
     % plot3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii)); hold on;
     % quiver3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii), ...
     %     toolCutDirect(1,ii),toolCutDirect(2,ii),toolCutDirect(3,ii), ...
@@ -268,14 +264,14 @@ delta = rStep;
 iter = 1;
 
 % debug
-% figure('Name','concentric tool path debug');
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
-% colormap('summer');
-% set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% xlabel('x'); ylabel('y'); zlabel('z');
-% view(0,90);
+figure('Name','concentric tool path debug');
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',1,'LineStyle','none'); hold on;
+colormap('summer');
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel('x'); ylabel('y'); zlabel('z');
+view(0,90);
 
 while true
     tic
@@ -284,11 +280,11 @@ while true
         switch angularDiscrete
             case 'Constant Arc'
                 % if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
-                conTheta = linspace(0,2*pi, ...
+                conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
                     ceil(2*pi/min(maxAngPtDist,arcLength/r)) + 1);
                 conTheta(end) = [];
             case 'Constant Angle'
-                conTheta = linspace(0,2*pi, ...
+                conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
                     ceil(2*pi/angularLength) + 1);
                 conTheta(end) = [];
             otherwise
@@ -297,89 +293,77 @@ while true
 
         % clear the temporary variables
         clear surfPtTmp surfNormTmp surfDirectTmp toolQuatTmp toolVecTmp ...
-            toolContactUTmp isCollisionTmp toolPathPtTmp toolNormDirectTmp ...
+            toolContactUTmp toolPathPtTmp toolNormDirectTmp ...
             toolCutDirectTmp;
         clear uLimTmp peakPtOutTmp resTmp loopPtNumLast;
     
-        % calculate the cutting pts
+        % calculate the xOy projection of tool path points
         loopPtNumTmp = length(conTheta); % the number of points in the loop
         loopPtNumLast = loopPtNum(end);  % the number of points in the former loop
-        surfPtTmp(1,:) = r*cos(conTheta); % x coordinates of surface cutting points in the loop
-        surfPtTmp(2,:) = r*sin(conTheta); % y coordinates of surface cutting points
-        surfPtTmp(3,:) = surfFunc(surfPtTmp(1,:),surfPtTmp(2,:)); % z coordinates of surface cutting points
-        switch surfType
-            case Geometry2DCell
-                surfNormTmp(1,:) = surfFx(surfPtTmp(1,:)); % x coordinates of the normal vectors on surface points
-                surfNormTmp(2,:) = surfFy(surfPtTmp(2,:)); % y coordinates of the normal vectors on surface points
-            otherwise
-                surfNormTmp(1,:) = surfFx(surfPtTmp(1,:),surfPtTmp(2,:)); % x coordinates of the normal vectors on surface points
-                surfNormTmp(2,:) = surfFy(surfPtTmp(1,:),surfPtTmp(2,:)); % y coordinates of the normal vectors on surface points
-        end
-        surfNormTmp(3,:) = -1*ones(1,loopPtNumTmp); % z coordinates of the normal vectors on surface points
-        surfNormTmp = (surfNormTmp./vecnorm(surfNormTmp,2,1)); % normolization of the normal vector
-        surfDirectTmp = cutdirection(surfPtTmp,[0;0;0],conTheta,'method','vertical'); % cutting direction of each points
+        toolPathPtTmp = zeros(3,loopPtNumTmp);
+        toolPathPtTmp(1,:) = r*cos(conTheta); % x coordinates of surface cutting points in the loop
+        toolPathPtTmp(2,:) = r*sin(conTheta); % y coordinates of surface cutting points
+        surfDirectTmp = cutdirection(toolPathPtTmp,[0;0;0],conTheta,'method','vertical'); % cutting direction of each points
         
         % calculate the tool path and residual height
         toolQuatTmp = zeros(loopPtNumTmp,4);
-        toolVecTmp = zeros(3,loopPtNumTmp);
+        toolVecTmp = zeros(3,loopPtNumTmp); % 这个还没算！！！！！
         toolContactUTmp = zeros(1,loopPtNumTmp);
-        isCollisionTmp = zeros(1,loopPtNumTmp);
-        toolPathPtTmp = zeros(3,loopPtNumTmp);
         toolCutDirectTmp = zeros(3,loopPtNumTmp);
         toolNormDirectTmp = zeros(3,loopPtNumTmp);
         for ii = 1:loopPtNumTmp
-            [toolQuatTmp(ii,:),toolVecTmp(:,ii),toolContactUTmp(ii)] = toolPos( ...
-                toolData,surfPtTmp(:,ii),surfNormTmp(:,ii),[0;0;-1],surfDirectTmp(:,ii));
-            toolPathPtTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.center + toolVecTmp(:,ii);
-            toolCutDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.cutDirect;
-            toolNormDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.toolEdgeNorm;
+            [toolQuatTmp(ii,:),toolPathPtTmp(:,ii),toolContactUTmp(ii),surfPtTmp(:,ii)] = surfPos( ...
+                toolData,toolPathPtTmp(:,ii),[0;0;-1],surfDirectTmp(:,ii),surfFunc,surfNormFunc);
+            toolCutDirectTmp(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
+            toolNormDirectTmp(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
 
             % debug
-            % plot3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
-            %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]); hold on;
-            % plot3(surfPtTmp(1,ii),surfPtTmp(2,ii),surfPtTmp(3,ii), ...
-            %     '.','MarkerSize',36,'Color',[0,0.4470,0.7410]); hold on;
-            % qui1 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
-            %     toolNormDirectTmp(1,ii),toolNormDirectTmp(2,ii),toolNormDirectTmp(3,ii), ...
-            %     300,'r');
-            % qui2 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
-            %     toolCutDirectTmp(1,ii),toolCutDirectTmp(2,ii),toolCutDirectTmp(3,ii), ...
-            %     300,'b');
-            % toolSp1 = toolData.toolBform;
-            % toolSp1.coefs = quat2rotm(toolQuatTmp(ii,:))*toolData.toolBform.coefs + toolVecTmp(:,ii);
-            % Q = fnval(toolSp1,0:0.01:1);
-            % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
-            % delete(qui1);
-            % delete(qui2);
+            plot3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
+                '.','MarkerSize',6,'Color',[0,0.4470,0.7410]); hold on;
+            plot3(surfPtTmp(1,ii),surfPtTmp(2,ii),surfPtTmp(3,ii), ...
+                '.','MarkerSize',6,'Color',[0.85,0.325,0.098]); hold on;
+            qui1 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
+                toolNormDirectTmp(1,ii),toolNormDirectTmp(2,ii),toolNormDirectTmp(3,ii), ...
+                300,'r');
+            qui2 = quiver3(toolPathPtTmp(1,ii),toolPathPtTmp(2,ii),toolPathPtTmp(3,ii), ...
+                toolCutDirectTmp(1,ii),toolCutDirectTmp(2,ii),toolCutDirectTmp(3,ii), ...
+                300,'b');
+            toolSp1 = toolData.toolBform;
+            toolSp1.coefs = quat2rotm(toolQuatTmp(ii,:))*toolData.toolBform.coefs + toolVecTmp(:,ii);
+            Q = fnval(toolSp1,0:0.01:1);
+            plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+            delete(qui1);
+            delete(qui2);
         end
     
         % restore the data that will be used in the residual height calculation
-        toolPathPtRes = [toolPathPt(:,end - loopPtNumLast + 1:end),toolPathPtTmp];
-        toolNormDirectRes = [toolNormDirect(:,end + 1 - loopPtNumLast:end),toolNormDirectTmp];
-        toolCutDirectRes = [toolCutDirect(:,end + 1 - loopPtNumLast:end),toolCutDirectTmp];
-        toolContactURes = [toolContactU(end + 1 - loopPtNumLast:end),toolContactUTmp];
-        uLimTmp = [uLim(:,end - loopPtNumLast + 1:end), ...
-            [zeros(1,loopPtNumTmp);ones(1,loopPtNumTmp)]]; % the interval of each toolpath
-        resTmp = [res(:,end - loopPtNumLast + 1:end), ...
-            5*aimRes*ones(2,loopPtNumTmp)];
-        peakPtInTmp = [peakPt(1:3,end - loopPtNumLast + 1:end), ...
-            zeros(3,loopPtNumTmp)];
-        peakPtOutTmp = zeros(3,loopPtNumLast + loopPtNumTmp);
-    
-        % calculate the residual height of the loop and the inner nearest loop
-        angle = atan2(toolPathPtRes(2,:),toolPathPtRes(1,:));
-        % inner side of each point on the tool path
-        angleN = angle(1:loopPtNumLast);
-        parfor ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
-            angleDel = angleN - angle(ii);
-            [ind2,ind3] = getInnerLoopToolPathIndex(angleN,angleDel);
-            [resTmp(1,ii),peakPtInTmp(:,ii),uLimTmp(:,ii)] = residual3D( ...
-                toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
-                toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
-        end
+%         toolPathPtRes = [toolPathPt(:,end - loopPtNumLast + 1:end),toolPathPtTmp];
+%         toolNormDirectRes = [toolNormDirect(:,end + 1 - loopPtNumLast:end),toolNormDirectTmp];
+%         toolCutDirectRes = [toolCutDirect(:,end + 1 - loopPtNumLast:end),toolCutDirectTmp];
+%         toolContactURes = [toolContactU(end + 1 - loopPtNumLast:end),toolContactUTmp];
+%         uLimTmp = [uLim(:,end - loopPtNumLast + 1:end), ...
+%             [zeros(1,loopPtNumTmp);ones(1,loopPtNumTmp)]]; % the interval of each toolpath
+%         resTmp = [res(:,end - loopPtNumLast + 1:end), ...
+%             5*aimRes*ones(2,loopPtNumTmp)];
+%         peakPtInTmp = [peakPt(1:3,end - loopPtNumLast + 1:end), ...
+%             zeros(3,loopPtNumTmp)];
+%         peakPtOutTmp = zeros(3,loopPtNumLast + loopPtNumTmp);
+%     
+%         % calculate the residual height of the loop and the inner nearest loop
+%         angle = atan2(toolPathPtRes(2,:),toolPathPtRes(1,:));
+%         % inner side of each point on the tool path
+%         angleN = angle(1:loopPtNumLast);
+%         for ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
+%             angleDel = angleN - angle(ii);
+%             [ind2,ind3] = getInnerLoopToolPathIndex(angleN,angleDel);
+%             [resTmp(1,ii),peakPtInTmp(:,ii),uLimTmp(:,ii)] = residual3D( ...
+%                 toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
+%                 toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
+%         end
 
         % if residual height does not satisfy the reqiurement,
-        if max(resTmp(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp),[],"all") < aimRes
+%         if max(resTmp(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp),[],"all") < aimRes
+        if true
             break;
         else
             fprintf('\tIter %d: The residual height of No.%d is beyond the expected range.\n',iter,length(loopPtNum) + 1);
@@ -394,14 +378,14 @@ while true
     end
 
     % outer side of each point in the tool path
-    angleN = angle(loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp);
-    parfor ii = 1:loopPtNumLast
-        angleDel = angleN - angle(ii);
-        [ind2,ind3] = getOuterLoopToolPathIndex(angleN,angleDel,loopPtNumLast);
-        [resTmp(2,ii),peakPtOutTmp(:,ii),uLimTmp(:,ii)] = residual3D( ...
-            toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
-            toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
-    end
+%     angleN = angle(loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp);
+%     parfor ii = 1:loopPtNumLast
+%         angleDel = angleN - angle(ii);
+%         [ind2,ind3] = getOuterLoopToolPathIndex(angleN,angleDel,loopPtNumLast);
+%         [resTmp(2,ii),peakPtOutTmp(:,ii),uLimTmp(:,ii)] = residual3D( ...
+%             toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
+%             toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
+%     end
     
     % then store the data of this loop
     loopPtNum = [loopPtNum,loopPtNumTmp];
@@ -409,22 +393,20 @@ while true
     toolREach = [toolREach,r];
     toolRAccum = [toolRAccum,r*ones(1,loopPtNumTmp)];
     surfPt = [surfPt,surfPtTmp];
-    surfNorm = [surfNorm,surfNormTmp];
     % surfDirect = [surfDirect,surfDirectTmp];
     toolQuat = [toolQuat;toolQuatTmp];
     toolVec = [toolVec,toolVecTmp];
     toolContactU = [toolContactU,toolContactUTmp];
-    isCollision = [isCollision,isCollisionTmp];
     toolPathPt = [toolPathPt,toolPathPtTmp];
     toolNormDirect = [toolNormDirect,toolNormDirectTmp];
     toolCutDirect = [toolCutDirect,toolCutDirectTmp];
 
-    uLim(:,end - loopPtNumLast + 1:end) = [];
-    uLim = [uLim,uLimTmp]; % the interval of each toolpath
-    peakPt(:,end - loopPtNumLast + 1:end) = [];
-    peakPt = [peakPt,[peakPtInTmp;peakPtOutTmp]];
-    res(:,end - loopPtNumLast + 1:end) = [];
-    res = [res,resTmp];
+%     uLim(:,end - loopPtNumLast + 1:end) = [];
+%     uLim = [uLim,uLimTmp]; % the interval of each toolpath
+%     peakPt(:,end - loopPtNumLast + 1:end) = [];
+%     peakPt = [peakPt,[peakPtInTmp;peakPtOutTmp]];
+%     res(:,end - loopPtNumLast + 1:end) = [];
+%     res = [res,resTmp];
 
     % debug
     % plot3(toolPathPtTmp(1,:),toolPathPtTmp(2,:),toolPathPtTmp(3,:), ...
@@ -472,8 +454,8 @@ if size(surfDomain,1) == 1
         toolSp1 = toolSp;
         toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolCoefs + toolVec(:,jj);
         Q = fnval(toolSp1,uLim(1,jj):0.01:uLim(2,jj));
-        isQDomain = (Q(1,:).^2 + Q(2,:).^2 - surfDomain(1,2)^2) >= 0;
-        Q(:,isQDomain) = [];
+        % isQDomain = (Q(1,:).^2 + Q(2,:).^2 - surfDomain(1,2)^2) >= 0;
+        % Q(:,isQDomain) = [];
         plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1); hold on;
     end
 else
@@ -518,6 +500,12 @@ end
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
+
+% cut direction change doesn't affect the concentric tool path
+switch cutDirection
+    case 'Edge to Center'
+    case 'Center to Edge'
+end
 
 % cubic spline approximation
 % the function between the numeric label of tool path and surf radius R

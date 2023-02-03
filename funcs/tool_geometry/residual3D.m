@@ -82,6 +82,7 @@ end
 % toolPtProj = ptOnPlane(toolPt1,toolPt2,toolCutDir1);
 
 % method 2: to simulate the runin process to get the projection tool edge
+% the tool path point projection on the plane of tool path 1
 toolPtProj = lineIntersectPlane(toolPt2,toolPt3,toolPt1,toolCutDir1);
 t = norm(toolPtProj - toolPt2)/norm(toolPt3 - toolPt2);
 % theta = t*vecAng(toolNorm2,toolNorm3,1);
@@ -112,7 +113,7 @@ toolContactPtProj = fnval(toolSpProj,toolContactUProj);
     toolContactPt1,toolContactPtProj,'DSearchn');
 
 %% to update the valid U range of the two toolpath
-if norm(toolPtProj - fnval(toolSp1,0)) > toolRadius
+if norm(toolPt1(1:2)) < norm(toolPtProj(1:2))
     % the projection point stays outside the current point
     uLim1(2) = min(u1,uLim1(2));
 %     uLim2(1) = max(uProj,uLim2(1));
