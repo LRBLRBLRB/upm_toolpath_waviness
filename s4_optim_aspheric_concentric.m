@@ -22,7 +22,7 @@ if isAPP
     angularDiscrete = app.angularDiscrete;
     aimRes = app.aimRes;
     toolData = app.toolData;
-    rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
+    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = app.maxIter;
     rMax = app.rMax;
     arcLength = app.arcLength;
@@ -97,8 +97,8 @@ else
         syms x y;
         surfSym = D - C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
         surfFunc = matlabFunction(surfSym);
-        surfFx = matlabFunction(diff(surfFunc,x),'Vars',{x,y});
-        surfFy = matlabFunction(diff(surfFunc,y),'Vars',{x,y});
+        surfFx = diff(surfFunc,x);
+        surfFy = diff(surfFunc,y);
         rMax = R/2;
     else % ellipsoid
         D = 0;
@@ -110,8 +110,8 @@ else
         syms x y;
         surfSym = C*sqrt(R.^2 - x.^2/A^2 - y.^2/B^2);
         surfFunc = matlabFunction(surfSym);
-        surfFx = matlabFunction(diff(surfFunc,x),'Vars',{x,y});
-        surfFy = matlabFunction(diff(surfFunc,y),'Vars',{x,y});
+        surfFx = diff(surfFunc,x);
+        surfFy = diff(surfFunc,y);
         surfDomain = [-A*R/4,A*R/4;-B*R/4,B*R/4];
         rMax = max(surfDomain(1,2),surfDomain(2,2));
         % sampling density
@@ -123,28 +123,28 @@ else
         surfMesh(:,:,1) = A*rMesh.*cos(thetaMesh);
         surfMesh(:,:,2) = B*rMesh.*sin(thetaMesh);
         surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
-    %     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
-    %         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
         % save('input_data/surface/ellipsoidAray.mat', ...
         %    "surfMesh","surfNorm","surfCenter");
     end
 
     % normal direction & cutting direction of the surface mesh
-    surfPtIni = transpose(reshape(surfMesh,[],3));
-    ptNum = length(surfPtIni);
-    surfNormIni(1,:) = surfFx(surfPtIni(1,:),surfPtIni(2,:));
-    surfNormIni(2,:) = surfFy(surfPtIni(1,:),surfPtIni(2,:));
-    surfNormIni(3,:) = -1*ones(1,ptNum);
-    surfNormIni = -1*(surfNormIni./vecnorm(surfNormIni,2,1));
+
+    [surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...
+        surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
 
     fig1 = figure('Name','original xyz scatters of the surface (sparsely)');
     surf( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
         'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
     hold on;
-    % quiver3(surfPtIni(1,1:10:end),surfPtIni(2,1:10:end),surfPtIni(3,1:10:end), ...
-    %     surfNormIni(1,1:10:end),surfNormIni(2,1:10:end),surfNormIni(3,1:10:end), ...
-    %     'AutoScale','on','Color',[0.85,0.33,0.10],'DisplayName','Normal Vectors');
+%     quiver3(surfMesh(1:10:end,1:10:end,1), ...
+%         surfMesh(1:10:end,1:10:end,2), ...
+%         surfMesh(1:10:end,1:10:end,3), ...
+%         surfNormIni(1:10:end,1:10:end,1), ...
+%         surfNormIni(1:10:end,1:10:end,2), ...
+%         surfNormIni(1:10:end,1:10:end,3), ...
+%         'AutoScale','on','Color',[0.85,0.33,0.10], ...
+%         'DisplayName','Normal Vectors');
     legend('Original Points','Orthogonal direction','Location','northeast');
     % axis equal;
     set(gca,'FontSize',textFontSize,'FontName',textFontType);
@@ -167,15 +167,20 @@ else
 
     % machining paramters    
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
+    spindleDirection = 'Counterclockwise'; % 'Clockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 50;
-    rStep = toolData.radius; % 每步步长可通过曲面轴向偏导数确定
+    aimRes = 0.5;
+    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 10;
     arcLength = 30;
     maxAngPtDist = 6*pi/180;
     angularLength = 6*pi/180;
 end
+
+% pre-processing
+surfNormSym = [surfFx;surfFy;-1];
+surfNormSym = surfNormSym./norm(surfNormSym);
+surfNormFunc = matlabFunction(surfNormSym,'Vars',{x,y});
 
 switch spindleDirection
     case 'Clockwise'
@@ -183,6 +188,8 @@ switch spindleDirection
     case 'Counterclockwise'
         conThetaBound = [0,2*pi];
 end
+
+% slCharacterEncoding('UTF-8');
 
 %% load the data of the residual function, and get the appropriate cutting width
 % load(fullfile(workspaceDir,"widthRes.mat")); % widthRes
@@ -219,16 +226,7 @@ toolRAccum = zeros(1,loopPtNum(end));
 surfPt(1,:) = zeros(1,loopPtNum(end)); % x coordinates of surface cutting points
 surfPt(2,:) = zeros(1,loopPtNum(end)); % y coordinates of surface cutting points
 surfPt(3,:) = surfFunc(surfPt(1,:),surfPt(2,:)); % z coordinates of surface cutting points
-switch surfType
-    case Geometry2DCell
-        surfNorm(1,:) = surfFx(surfPt(1,:)); % x coordinates of the normal vectors on surface points
-        surfNorm(2,:) = surfFy(surfPt(2,:)); % y coordinates of the normal vectors on surface points
-    otherwise
-        surfNorm(1,:) = surfFx(surfPt(1,:),surfPt(2,:)); % x coordinates of the normal vectors on surface points
-        surfNorm(2,:) = surfFy(surfPt(1,:),surfPt(2,:)); % y coordinates of the normal vectors on surface points
-end
-surfNorm(3,:) = -1*ones(1,accumPtNum(end)); % z coordinates of the normal vectors on surface points
-surfNorm = (surfNorm./vecnorm(surfNorm,2,1)); % normolization of the normal vector
+surfNorm = surfNormFunc(surfPt(1,:),surfPt(2,:)); % normolization of the normal vector
 surfDirect = cutdirection(surfPt,[0;0;0],conTheta,'method','vertical'); % cutting direction of each points
 % surfDirect = [[0;1;0],cutdirection(surfPt(:,2:end),[0;0;0])]; % cutting direction of each points
 % 和[0;0;1]垂直、且与surfDirect(:,end)夹角最小的向量作为surDirect(:,1)，可视作surfDirect(:,end)到[0;0;1]平面的投影
@@ -314,16 +312,7 @@ while true
         surfPtTmp(1,:) = r*cos(conTheta); % x coordinates of surface cutting points in the loop
         surfPtTmp(2,:) = r*sin(conTheta); % y coordinates of surface cutting points
         surfPtTmp(3,:) = surfFunc(surfPtTmp(1,:),surfPtTmp(2,:)); % z coordinates of surface cutting points
-        switch surfType
-            case Geometry2DCell
-                surfNormTmp(1,:) = surfFx(surfPtTmp(1,:)); % x coordinates of the normal vectors on surface points
-                surfNormTmp(2,:) = surfFy(surfPtTmp(2,:)); % y coordinates of the normal vectors on surface points
-            otherwise
-                surfNormTmp(1,:) = surfFx(surfPtTmp(1,:),surfPtTmp(2,:)); % x coordinates of the normal vectors on surface points
-                surfNormTmp(2,:) = surfFy(surfPtTmp(1,:),surfPtTmp(2,:)); % y coordinates of the normal vectors on surface points
-        end
-        surfNormTmp(3,:) = -1*ones(1,loopPtNumTmp); % z coordinates of the normal vectors on surface points
-        surfNormTmp = (surfNormTmp./vecnorm(surfNormTmp,2,1)); % normolization of the normal vector
+        surfNormTmp = surfNormFunc(surfPtTmp(1,:),surfPtTmp(2,:)); % normolization of the normal vector
         surfDirectTmp = cutdirection(surfPtTmp,[0;0;0],conTheta,'method','vertical'); % cutting direction of each points
         
         % calculate the tool path and residual height
@@ -377,7 +366,7 @@ while true
         angle = atan2(toolPathPtRes(2,:),toolPathPtRes(1,:));
         % inner side of each point on the tool path
         angleN = angle(1:loopPtNumLast);
-        parfor ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
+        for ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
             angleDel = angleN - angle(ii);
             [ind2,ind3] = getInnerLoopToolPathIndex(angleN,angleDel);
             % if isempty(angleN(angleDel >= 0))
@@ -403,11 +392,12 @@ while true
             % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1);
         end
 
-        % if residual height does not satisfy the reqiurement,
-        if max(resTmp(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp),[],"all") < aimRes
+        % if residual height does not satisfy the reqiurement
+        maxRes = max(resTmp(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp),[],"all");
+        if maxRes < aimRes
             break;
         else
-            fprintf('\tIter %d: The residual height of No.%d is beyond the expected range.\n',iter,length(loopPtNum) + 1);
+            fprintf('\tIter %d: The maximum residual height is %f %cm.\n',iter,maxRes,char([956]));
             delta = delta/3;
             r = r - delta;
             iter = iter + 1;

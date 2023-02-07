@@ -49,7 +49,7 @@ else % 3D
     varargout{1} = false;
     if nnz(toolEdge.toolEdgeNorm - [0;0;1])
         toolRot1 = vecRot(toolEdge.toolEdgeNorm,toolPathNorm);
-        toolEdge = toolRigid(toolEdge,toolRot1,[0;0;0]);
+        toolEdge1 = toolRigid(toolEdge,toolRot1,[0;0;0]);
     end
 
     % rotate the cutting direction and orientation of the tool

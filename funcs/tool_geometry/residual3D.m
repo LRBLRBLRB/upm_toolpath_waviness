@@ -83,20 +83,30 @@ end
 
 % method 2: to simulate the runin process to get the projection tool edge
 % the tool path point projection on the plane of tool path 1
-toolPtProj = lineIntersectPlane(toolPt2,toolPt3,toolPt1,toolCutDir1);
-t = norm(toolPtProj - toolPt2)/norm(toolPt3 - toolPt2);
-% theta = t*vecAng(toolNorm2,toolNorm3,1);
-% axis = cross(toolNorm2,toolNorm3);
-% RInterp = expm(theta*axis);
-q2 = vecQuat(toolNorm2,toolNorm3);
-qInterp = slerp([1,0,0,0],q2,t);
-toolNormInterp = quat2rotm(qInterp)*toolNorm2;
-% toolCutDirProj = quat2rotm(qInterp)*toolCutDir2;
-toolNormProj = vecOnPlane(toolNormInterp,toolPtProj,toolCutDir1);
-toolNormProj = toolNormProj./norm(toolNormProj);
-% 讲道理两个应该是相等的但是并不等，是否意味着我的刃口并不在对应平面内？
-% toolCutDirProj1 = vecRot(toolNorm2,toolNormProj)*quat2rotm(qInterp)*toolCutDir2; 
-toolCutDirProj = toolCutDir1;
+if all(abs(toolPt2(1:2) - toolPt3(1:2)) < 1e-1) % toolPt2 and toolPt3 remains the same position
+    toolPtProj = toolPt2;
+    if norm(toolNorm2 - toolNorm1) < norm(toolNorm3 - toolNorm1)
+        toolNormProj = toolNorm2;
+    else
+        toolNormProj = toolNorm3;
+    end
+    toolCutDirProj = toolCutDir1;
+else
+    toolPtProj = lineIntersectPlane(toolPt2,toolPt3,toolPt1,toolCutDir1);
+    t = norm(toolPtProj - toolPt2)/norm(toolPt3 - toolPt2);
+    % theta = t*vecAng(toolNorm2,toolNorm3,1);
+    % axis = cross(toolNorm2,toolNorm3);
+    % RInterp = expm(theta*axis);
+    q2 = vecQuat(toolNorm2,toolNorm3);
+    qInterp = slerp([1,0,0,0],q2,t);
+    toolNormInterp = quat2rotm(qInterp)*toolNorm2;
+    % toolCutDirProj = quat2rotm(qInterp)*toolCutDir2;
+    toolNormProj = vecOnPlane(toolNormInterp,toolPtProj,toolCutDir1);
+    toolNormProj = toolNormProj./norm(toolNormProj);
+    % 讲道理两个应该是相等的但是并不等，是否意味着我的刃口并不在对应平面内？
+    % toolCutDirProj1 = vecRot(toolNorm2,toolNormProj)*quat2rotm(qInterp)*toolCutDir2; 
+    toolCutDirProj = toolCutDir1;
+end
 
 %% rigid transform of tool edge from the standard place to the corresponding
 R1 = axesRot([0;0;1],[1;0;0],toolNorm1,toolCutDir1,'zx');

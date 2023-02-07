@@ -19,10 +19,12 @@ arguments
     surfFunc_y = []
     options.CalculateType {mustBeMember(options.CalculateType, ...
         {'Taylor-Expand','Lagrange-Multiplier'})} = 'Lagrange-Multiplier'
+    options.DisplayType {mustBeMember(options.DisplayType,{'none','off', ...
+        'iter','iter-detailed','final','final-detailed'})} = 'none'
 end
 
-optimOpt = optimoptions('fsolve','Display','final-detailed', ...
-    'FunctionTolerance',1e-6,'MaxIterations',500);
+optimOpt = optimoptions('fsolve','Display',options.DisplayType, ...
+    'FunctionTolerance',1e-6,'MaxIterations',500,'UseParallel',false);
 
 switch options.CalculateType
     case 'Taylor-Expand'

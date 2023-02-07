@@ -28,20 +28,20 @@ while true
                         [5 60], ...
                         string(datestr(now))));
                     save(pathName,"Comments","toolPathPt","toolNormDirect","toolCutDirect", ...
-                        "toolSp","toolQuat","toolVec",'uLim',"res");
+                        "toolSp","toolQuat",'uLim',"res");
             end
             return;
         case 'Residual height'
             tRes0 = tic;
             plotNum = 1000;
 %             res = 
-            res = [res(1,:),res(2,:)];
-            peakPt = [peakPt(1:3,:),peakPt(4:6,:)];
-            xPlot = linspace(min(peakPt(1,:)),max(peakPt(1,:)),plotNum);
-            yPlot = linspace(min(peakPt(2,:)),max(peakPt(2,:)),plotNum);
+            resLine = [res(1,:),res(2,:)];
+            peakPtLine = [peakPt(1:3,:),peakPt(4:6,:)];
+            xPlot = linspace(min(peakPtLine(1,:)),max(peakPtLine(1,:)),plotNum);
+            yPlot = linspace(min(peakPtLine(2,:)),max(peakPtLine(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
             % elliminate the smaller residual height at the same peak
-            [resUnique,peakPtUnique] = groupsummary(res',peakPt(1:2,:)',@max);
+            [resUnique,peakPtUnique] = groupsummary(resLine',peakPtLine(1:2,:)',@max);
             resMaxInd = find(resUnique == max(resUnique));
             resUnique(resMaxInd) = [];
             peakPtUnique{1}(resMaxInd) = [];
