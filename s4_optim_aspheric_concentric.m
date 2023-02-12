@@ -169,7 +169,7 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Counterclockwise'; % 'Clockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 0.5;
+    aimRes = 10;
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 10;
     arcLength = 30;
@@ -268,7 +268,7 @@ end
 fprintf('No.1\tElapsed time is %f seconds.\n-----\n',toc(t1));
 
 %% Tool path adjusting for the rest
-r = rStep/2; % 可以通过widthRes确定迭代初值
+r = rStep; % 可以通过widthRes确定迭代初值
 delta = rStep;
 iter = 1;
 
@@ -606,32 +606,43 @@ angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 % plot3(spiralPath(1,1:accumPtNum(1)),spiralPath(2,1:accumPtNum(1)), ...
 %     spiralPath(3,1:accumPtNum(1)),'.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 
-% for each loop, shift the tool path point by decreasing the radius
-for kk = 2:numLoop % begin with the 2nd loop
-    angleN = angle(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
-    for indInterp = accumPtNum(kk - 1) + 1:accumPtNum(kk)
-        % Method 1: get the (x,y) by interpolation and use residual3D to get z
-        % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
-        % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
-
-        % Method 2: get the inner closest point and linearly interpolate them
-        angleDel = angleN - angle(indInterp);
-        [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel); % get the closest tol point in the inner loop
-        ind1 = ind1 + accumPtNumlength(kk - 1); % get the index of the closest in the whole list
-        ind2 = ind2 + accumPtNumlength(kk - 1);
-        [spiralPath(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
-            interpR(indInterp),toolPathPt,toolNormDirect,toolCutDirect,toolRAccum,indInterp,ind1,ind2);
-
-        % test & debug & video
-        % plot3(spiralPath(1,indInterp),spiralPath(2,indInterp),spiralPath(3,indInterp), ...
-        %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-        % toolSp1 = toolSp;
-        % toolSp1.coefs = quat2rotm(toolQuat(indInterp,:))*toolSp.coefs + toolVec(:,indInterp);
-        % Q = fnval(toolSp1,uLim(1,indInterp):0.01:uLim(2,indInterp));
-        % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
-        % xlabel('x'); ylabel('y'); 
-    end
+switch angularDiscrete
+    case 'Constant Angle'
+        % if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
+        conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
+            ceil(2*pi/min(maxAngPtDist,arcLength/r)) + 1);
+        conTheta(end) = [];
+    case 'Constant Arc'
+        % for each loop, shift the tool path point by decreasing the radius
+        for kk = 2:numLoop % begin with the 2nd loop
+            angleN = angle(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
+            for indInterp = accumPtNum(kk - 1) + 1:accumPtNum(kk)
+                % Method 1: get the (x,y) by interpolation and use residual3D to get z
+                % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
+                % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
+        
+                % Method 2: get the inner closest point and linearly interpolate them
+                angleDel = angleN - angle(indInterp);
+                [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel); % get the closest tol point in the inner loop
+                ind1 = ind1 + accumPtNumlength(kk - 1); % get the index of the closest in the whole list
+                ind2 = ind2 + accumPtNumlength(kk - 1);
+                [spiralPath(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
+                    interpR(indInterp),toolPathPt,toolNormDirect,toolCutDirect,toolRAccum,indInterp,ind1,ind2);
+        
+                % test & debug & video
+                % plot3(spiralPath(1,indInterp),spiralPath(2,indInterp),spiralPath(3,indInterp), ...
+                %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+                % toolSp1 = toolSp;
+                % toolSp1.coefs = quat2rotm(toolQuat(indInterp,:))*toolSp.coefs + toolVec(:,indInterp);
+                % Q = fnval(toolSp1,uLim(1,indInterp):0.01:uLim(2,indInterp));
+                % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+                % xlabel('x'); ylabel('y'); 
+            end
+        end
+    otherwise
+        error('Invalid angular discretization type.');
 end
+
 
 % numLoop = numLoop + 1;
 % accumPtNumlength = [0,accumPtNum];
