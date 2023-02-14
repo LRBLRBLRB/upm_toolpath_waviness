@@ -1,6 +1,6 @@
 function L = arclengthoncurve(curvFunc,t1,t2,options)
 %ARCLENGTHONCURVE Calculate the arc length of the curve curvFunc between t1
-% and t2 
+%and t2 
 %
 % L = arclengthoncurve(curvFunc,t1,t2,options)
 % Inputs:
