@@ -561,9 +561,9 @@ end
 % cubic spline approximation
 % the function between the numeric label of tool path and surf radius R
 Fr = csape(accumPtNum,toolREach,[1,1]);
-% accumPtNumlength = [0,accumPtNum];
-% loopRLength = [0,loopR];
-% Fr = csape(accumPtNumlength,loopRLength); 
+
+theta = linspace(0,2*pi*(length(accumPtNum) - 1),length(accumPtNum));
+rTheta = csape(theta,toolREach,[1,1]);
 
 figure('Name','Feed Rate Smoothing');
 scatter(accumPtNum,toolREach);
@@ -585,15 +585,15 @@ accumPtNumlength = [0,accumPtNum];
 numLoop = length(accumPtNum);
 
 % initialize the spiral path
-spiralPath = zeros(3,accumPtNum(end)); % the spiral tool path
+spiralPath0 = zeros(3,accumPtNum(end)); % the spiral tool path
 spiralNorm = zeros(3,accumPtNum(end));
 spiralCutDir = zeros(3,accumPtNum(end));
-spiralPath(:,1:accumPtNum(1)) = toolPathPt(:,1:accumPtNum(1));
+spiralPath0(:,1:accumPtNum(1)) = toolPathPt(:,1:accumPtNum(1));
 spiralNorm(:,1:accumPtNum(1)) = toolNormDirect(:,1:accumPtNum(1));
 spiralCutDir(:,1:accumPtNum(1)) = toolCutDirect(:,1:accumPtNum(1));
 
 % the concentric angle of each tool path
-angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
+angle0 = atan2(toolPathPt(2,:),toolPathPt(1,:));
 
 % video capture & debug
 % figure('Name','concentric-to-spiral debug & video');
@@ -606,43 +606,57 @@ angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 % plot3(spiralPath(1,1:accumPtNum(1)),spiralPath(2,1:accumPtNum(1)), ...
 %     spiralPath(3,1:accumPtNum(1)),'.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 
-switch angularDiscrete
-    case 'Constant Angle'
-        % if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
-        conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
-            ceil(2*pi/min(maxAngPtDist,arcLength/r)) + 1);
-        conTheta(end) = [];
-    case 'Constant Arc'
-        % for each loop, shift the tool path point by decreasing the radius
-        for kk = 2:numLoop % begin with the 2nd loop
-            angleN = angle(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
-            for indInterp = accumPtNum(kk - 1) + 1:accumPtNum(kk)
-                % Method 1: get the (x,y) by interpolation and use residual3D to get z
-                % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
-                % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
-        
-                % Method 2: get the inner closest point and linearly interpolate them
-                angleDel = angleN - angle(indInterp);
-                [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel); % get the closest tol point in the inner loop
-                ind1 = ind1 + accumPtNumlength(kk - 1); % get the index of the closest in the whole list
-                ind2 = ind2 + accumPtNumlength(kk - 1);
-                [spiralPath(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
-                    interpR(indInterp),toolPathPt,toolNormDirect,toolCutDirect,toolRAccum,indInterp,ind1,ind2);
-        
-                % test & debug & video
-                % plot3(spiralPath(1,indInterp),spiralPath(2,indInterp),spiralPath(3,indInterp), ...
-                %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-                % toolSp1 = toolSp;
-                % toolSp1.coefs = quat2rotm(toolQuat(indInterp,:))*toolSp.coefs + toolVec(:,indInterp);
-                % Q = fnval(toolSp1,uLim(1,indInterp):0.01:uLim(2,indInterp));
-                % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
-                % xlabel('x'); ylabel('y'); 
-            end
-        end
-    otherwise
-        error('Invalid angular discretization type.');
+
+% if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
+conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
+    ceil(2*pi/min(maxAngPtDist,arcLength/r)) + 1);
+conTheta(end) = [];
+
+% for each loop, shift the tool path point by decreasing the radius
+for kk = 2:numLoop % begin with the 2nd loop
+    angleN = angle0(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
+    for indInterp = accumPtNum(kk - 1) + 1:accumPtNum(kk)
+        % Method 1: get the (x,y) by interpolation and use residual3D to get z
+        % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
+        % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
+
+        % Method 2: get the inner closest point and linearly interpolate them
+        angleDel = angleN - angle0(indInterp);
+        [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel); % get the closest tol point in the inner loop
+        ind1 = ind1 + accumPtNumlength(kk - 1); % get the index of the closest in the whole list
+        ind2 = ind2 + accumPtNumlength(kk - 1);
+        [spiralPath0(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
+            interpR(indInterp),toolPathPt,toolNormDirect,toolCutDirect,toolRAccum,indInterp,ind1,ind2);
+
+        % test & debug & video
+        % plot3(spiralPath(1,indInterp),spiralPath(2,indInterp),spiralPath(3,indInterp), ...
+        %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+        % toolSp1 = toolSp;
+        % toolSp1.coefs = quat2rotm(toolQuat(indInterp,:))*toolSp.coefs + toolVec(:,indInterp);
+        % Q = fnval(toolSp1,uLim(1,indInterp):0.01:uLim(2,indInterp));
+        % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+        % xlabel('x'); ylabel('y'); 
+    end
 end
 
+% change the spiral tool path to constant arc length one
+if strcmp(angularDiscrete,'Constant Arc')
+    [angle,spiralPath] = arclengthparam(angle0,spiralPath0,arcLength,'interpType','linear');
+end
+
+
+
+% switch angularDiscrete
+%     case 'Constant Angle'
+% 
+%     case 'Constant Arc'
+%         thetaSampleInr = 2*pi/loopPtNum(end);
+%         thetaSample = linspace(0,2*pi*(length(accumPtNum) - 1),thetaSampleInr);
+%         spiralSample = fnval(rTheta,thetaSample);
+%         [tEq,fEq] = arclengthparam(thetaSample,spiralSample,arcLength,'interpType','linear');
+%     otherwise
+%         error('Invalid angular discretization type.');
+% end
 
 % numLoop = numLoop + 1;
 % accumPtNumlength = [0,accumPtNum];
@@ -666,9 +680,9 @@ end
 figure('Name','Spiral tool path result');
 tPlot0 = tic;
 plotSpar = 1;
-plot3(spiralPath(1,1:plotSpar:end), ...
-    spiralPath(2,1:plotSpar:end), ...
-    spiralPath(3,1:plotSpar:end), ...
+plot3(spiralPath0(1,1:plotSpar:end), ...
+    spiralPath0(2,1:plotSpar:end), ...
+    spiralPath0(3,1:plotSpar:end), ...
     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 hold on;
 surf( ...

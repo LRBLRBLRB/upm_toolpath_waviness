@@ -66,7 +66,7 @@ dx = x; %'Zeroth' derivative
 
 for n = 1:N % Apply iteratively
 
-    dif = diff(dx,1,dim);
+    dif = diff(dx,1,dim); % till here, it remains diff(x)
 
     if dim==1
         first = [dif(1,:) ; dif];
