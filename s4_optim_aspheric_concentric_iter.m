@@ -373,8 +373,8 @@ end
 % the function between the numeric label of tool path and surf radius R
 Fr = csape(accumPtNum,toolREach,[1,1]);
 
-theta = linspace(0,2*pi*(length(accumPtNum) - 1),length(accumPtNum));
-rTheta = csape(theta,toolREach,[1,1]);
+toolThetaEach = linspace(0,2*pi*(length(accumPtNum) - 1),length(accumPtNum));
+rTheta = csape(toolThetaEach,toolREach,[1,1]);
 
 figure('Name','Feed Rate Smoothing');
 scatter(accumPtNum,toolREach);
@@ -418,10 +418,7 @@ angle0 = atan2(toolPathPt(2,:),toolPathPt(1,:));
 %     spiralPath(3,1:accumPtNum(1)),'.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 
 
-% if r*maxAngPtDist < arcLength, then discrete the circle with constant angle
-conTheta = linspace(conThetaBound(1),conThetaBound(2), ...
-    ceil(2*pi/min(maxAngPtDist,arcLength/r)) + 1);
-conTheta(end) = [];
+% spiral tool path generalizing
 
 % for each loop, shift the tool path point by decreasing the radius
 for kk = 2:numLoop % begin with the 2nd loop
@@ -449,10 +446,45 @@ for kk = 2:numLoop % begin with the 2nd loop
         % xlabel('x'); ylabel('y'); 
     end
 end
-
 % change the spiral tool path to constant arc length one
 if strcmp(angularDiscrete,'Constant Arc')
     [angle,spiralPath] = arclengthparam(angle0,spiralPath0,arcLength,'interpType','linear');
+else
+    spiralPath = spiralPath0;
+end
+
+
+% for different discretization method
+switch angularDiscrete
+    case 'Constant Angle'
+        % for each loop, shift the tool path point by decreasing the radius
+        for kk = 2:numLoop % begin with the 2nd loop
+            angleN = angle0(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
+            for indInterp = accumPtNum(kk - 1) + 1:accumPtNum(kk)
+                % Method 1: get the (x,y) by interpolation and use residual3D to get z
+                % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
+                % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
+        
+                % Method 2: get the inner closest point and linearly interpolate them
+                angleDel = angleN - angle0(indInterp);
+                [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel); % get the closest tol point in the inner loop
+                ind1 = ind1 + accumPtNumlength(kk - 1); % get the index of the closest in the whole list
+                ind2 = ind2 + accumPtNumlength(kk - 1);
+                [spiralPath0(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
+                    interpR(indInterp),toolPathPt,toolNormDirect,toolCutDirect,toolRAccum,indInterp,ind1,ind2);
+        
+                % test & debug & video
+                % plot3(spiralPath(1,indInterp),spiralPath(2,indInterp),spiralPath(3,indInterp), ...
+                %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+                % toolSp1 = toolSp;
+                % toolSp1.coefs = quat2rotm(toolQuat(indInterp,:))*toolSp.coefs + toolVec(:,indInterp);
+                % Q = fnval(toolSp1,uLim(1,indInterp):0.01:uLim(2,indInterp));
+                % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+                % xlabel('x'); ylabel('y'); 
+            end
+        end
+    case 'Constant Arc'
+        [tEq,fEq] = arclengthparam(toolThetaEach,toolREach,arcInr,'algorithm','lq-fitting');
 end
 
 
@@ -523,39 +555,6 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 
 % sprial tool path error
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% Comparison: directly generate the spiral tool path
-% 实际上，这种显然更好。用上面的那种方法，会导致不是真正的等弧长，而且在交接段会突然减速，动力学应该会影响表面质量
-% parfor ii = (sparTheta + 1):ptNum
-%     % 如果是沿同一个极径的，就可以直接不用投影；否则还是需要这样子找
-%     nLoop = floor((ii - 1)/sparTheta) - 1;
-%     angleN = angle(sparTheta*nLoop + 1:sparTheta*(nLoop + 1));
-%     angleDel = angleN - angle(ii);
-%     % ind2(ii) remains the index of angle nearest to angle(ii) within 
-%     % those which is larger than the angle(ii) and in angleN
-%     if isempty(angleN(angleDel >= 0))
-%         % to avoid that angle(ii) is cloesd to -pi, and smaller than each elements
-%         angleDel = angleDel + 2*pi;
-%     end
-%     ind2 = sparTheta*nLoop + find(angleN == min(angleN(angleDel >= 0)));
-%     % ind3(ii) remains the index of angle nearest to angle(ii) within 
-%     % those which is smaller than the angle(ii) and in angleN
-%     if isempty(angleN(angleDel < 0))
-%         angleDel = angleDel - 2*pi;
-%     end
-%     ind3 = sparTheta*nLoop + find(angleN == max(angleN(angleDel < 0)));
-%     [res(resNum + ii),peakPt(:,resNum + ii),uLim(:,ii)] = residual3D( ...
-%         toolPathPt,toolNormDirect,toolCutDirect,toolContactU,toolSp,toolRadius, ...
-%         uLim(:,ii),ii,ind2,ind3);
-% end
-% 
-% 
-% 
-% 
-%         spiralPath(:,accumPtNum(kk) + jj) = tmpSpiral;
-%         spiralNorm(:,accumPtNum(kk) + jj) = ;
-%     end
-% end
 
 
 
