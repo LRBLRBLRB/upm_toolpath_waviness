@@ -7,7 +7,7 @@ function circletoolpath(r0,toolData,delta,surfFunc,surfNormFunc, ...
 %CIRCLETOOLPATH 此处显示有关此函数的摘要
 %   此处显示详细说明
 
-global loopPtNum accumPtNum toolREach toolRAccum surfPt surfNorm surfDirect ...
+global loopPtNum accumPtNum toolREach toolRAccum toolNAccum surfPt surfNorm surfDirect ...
     toolQuat toolVec toolContactU isCollision ...
     toolPathPt toolCutDirect toolNormDirect uLim peakPt res;
 
@@ -208,6 +208,7 @@ while true
     accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNumTmp];
     toolREach = [toolREach,r1];
     toolRAccum = [toolRAccum,r1*ones(1,loopPtNumTmp)];
+    toolNAccum = [toolNAccum,(length(loopPtNum) - 1)*ones(1,loopPtNumTmp)];
     surfPt = [surfPt,surfPtTmp];
     surfNorm = [surfNorm,surfNormTmp];
     surfDirect = [surfDirect,surfDirectTmp];

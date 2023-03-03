@@ -1,4 +1,4 @@
-function [tEq,fEq] = arclengthparam(t,f,arcInr,options)
+function [tEq,fEq,vecEq] = arclengthparam(arcInr,t,f,vec,options)
 %ARCLENGTHPARAM Generate the function of arc length 
 %
 %
@@ -6,9 +6,10 @@ function [tEq,fEq] = arclengthparam(t,f,arcInr,options)
 %   The vector t remains the 
 
 arguments
+    arcInr {mustBeNumeric}
     t
     f (3,:)
-    arcInr {mustBeNumeric}
+    vec cell = {}
     options.algorithm {mustBeMember(options.algorithm, ...
         {'analytical-function','list-interpolation','lq-fitting'})} ...
         = 'list-interpolation'
@@ -17,6 +18,7 @@ arguments
         'quadratic'})} = 'linear'
 end
 
+% position interpolation
 switch options.algorithm
     case 'analytical-function'
         % f remains the curve parametric function: [x,y,z]=f(t)
@@ -34,9 +36,27 @@ switch options.algorithm
                 Vq = interp1(X,V,Xq,options.interpType);
             case 'quadratic'
         end
-        
         tEq = (Vq(:,1))';
         fEq = (Vq(:,2:end))';
+        numEq = length(tEq);
+        % orientation interpolation
+        if isempty(vec)
+            vecEq = {};
+        else
+            vecLen = length(vec);
+            vecEq = cell(vecLen,1);
+            for ii = 1:numEq
+                ind1 = find(tEq(ii) >= t);
+                ind1 = ind1(end); % the closest parameter smaller than tEq
+                ind2 = find(tEq(ii) < t,1); % the closest parameter larger than tEq
+                quat_t = (tEq(ii) - t(ind1))/(t(ind2) - t(ind1));
+                for kk = 1:vecLen
+                    quat = vecQuat(vec{kk}(:,ind1),vec{kk}(:,ind2));
+                    quatEq = slerp([1,0,0,0],quat,quat_t);
+                    vecEq{kk}(:,ii) = quat2rotm(quatEq)*vec{kk}(:,ind1);
+                end
+            end
+        end
     case 'lq-fitting'
         % the algorithm in "Tencent's Game Development"
         if length(t) ~= size(f,2)
