@@ -1,4 +1,4 @@
-function [tEq,fEq,uEq,varargout] = arclengthparam(arcInv,maxAng,t,f,u,quat,vec,options)
+function [tEq,fEq,uEq,varargout] = arclengthparam(arcInv,maxAng,t,f,u,var1,var2,options)
 %ARCLENGTHPARAM Generate the function of arc length 
 %
 %
@@ -11,8 +11,8 @@ arguments
     t
     f 
     u (1,:) = []
-    quat (:,4) = []
-    vec cell = {}
+    var1 = []
+    var2 = []
     options.algorithm {mustBeMember(options.algorithm, ...
         {'analytical-function','list-interpolation','lq-fitting'})} ...
         = 'list-interpolation'
@@ -81,9 +81,11 @@ end
 % hold on;
 
 vecEq = {};
-if isempty(quat)
+if isempty(var1) % input: (arcInv,maxAng,t,f,u,options)
     quatEq = [];
-else
+elseif size(var1,2) == 4 % input: (arcInv,maxAng,t,f,u,quat,vec,options)
+    quat = var1;
+    vec = var2;
     quatEq = zeros(numEq,4);
     vecLen = length(vec);
     vecEq = cell(vecLen,1);
@@ -95,7 +97,7 @@ else
     % constant arc length ones
     for ii = angularMaxInd + 1:numEq
 
-%         plot3(fEq(1,ii),fEq(2,ii),fEq(3,ii),'b.');
+        plot3(fEq(1,ii),fEq(2,ii),fEq(3,ii),'b.');
 
         ind1 = find(tEq(ii) >= t);
         ind1 = ind1(end); % the closest parameter smaller than tEq
@@ -104,6 +106,45 @@ else
         quatEq(ii,:) = slerp(quat(ind1,:),quat(ind2,:),quat_t);
         for kk = 1:vecLen
             vecEq{kk}(:,ii) = quat2rotm(quatEq(ii,:))*vec{kk}(:,ind1);
+
+            q(kk) = quiver3(fEq(1,ii),fEq(2,ii),fEq(3,ii), ...
+                vecEq{kk}(1,ii),vecEq{kk}(2,ii),vecEq{kk}(3,ii), ...
+                50,'ShowArrowHead','on');
+        end
+        delete(q(1));
+        delete(q(2));
+    end
+elseif iscell(var1) % input: (arcInv,maxAng,t,f,u,vec,toolData,options)
+    vec = var1;
+    quatEq = zeros(numEq,4);
+    vecLen = length(vec);
+    vecEq = cell(vecLen,1);
+    % constant angle ones
+    for ii = 1:vecLen
+        vecEq{ii}(:,1:angularMaxInd) = vec{ii}(:,1:angularMaxInd);
+    end
+    for ii = 1:angularMaxInd
+        quatEq(ii,:) = rotm2quat(axesRot(vec{1}(:,ii),vec{2}(:,ii), ...
+            var2.toolEdgeNorm,var2.cutDirect,''));
+    end
+
+    % constant arc length ones
+    for ii = angularMaxInd + 1:numEq
+
+%         plot3(fEq(1,ii),fEq(2,ii),fEq(3,ii),'b.');
+
+        ind1 = find(tEq(ii) >= t);
+        ind1 = ind1(end); % the closest parameter smaller than tEq
+        ind2 = find(tEq(ii) < t,1); % the closest parameter larger than tEq
+        quat_t = (tEq(ii) - t(ind1))/(t(ind2) - t(ind1));
+        quat = rotm2quat(axesRot(vec{1}(:,ind1),vec{2}(:,ind1), ...
+            vec{1}(:,ind2),vec{2}(:,ind2),''));
+        quatEq(ii,:) = slerp([1,0,0,0],quat,quat_t);
+        for kk = 1:vecLen
+%             quat = vecQuat(vec{kk}(:,ind1),vec{kk}(:,ind2));
+%             quatEq(ii,:) = slerp([1,0,0,0],quat,quat_t);
+            vecEq{kk}(:,ii) = quat2rotm(quatEq(ii,:))*vec{kk}(:,ind1);
+
 %             q(kk) = quiver3(fEq(1,ii),fEq(2,ii),fEq(3,ii), ...
 %                 vecEq{kk}(1,ii),vecEq{kk}(2,ii),vecEq{kk}(3,ii), ...
 %                 50,'ShowArrowHead','on');

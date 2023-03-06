@@ -34,18 +34,17 @@ while true
         case 'Spiral path error'
             tResError0 = tic;
             plotNum = 1000;
-            resLine = [spiralRes(1,:),spiralRes(2,:)];
-            peakPtLine = [spiralPeakPt(1:3,:),spiralPeakPt(4:6,:)];
-            xPlot = linspace(min(peakPtLine(1,:)),max(peakPtLine(1,:)),plotNum);
-            yPlot = linspace(min(peakPtLine(2,:)),max(peakPtLine(2,:)),plotNum);
+            spiralResLine = [spiralRes(1,:),spiralRes(2,:)];
+            spiralPeakPtLine = [spiralPeakPt(1:3,:),spiralPeakPt(4:6,:)];
+            spiralResMaxInd = find(spiralResLine == 5*aimRes);
+            spiralResLine(spiralResMaxInd) = [];
+            spiralPeakPtLine(:,spiralResMaxInd) = [];
+            xPlot = linspace(min(spiralPeakPtLine(1,:)),max(spiralPeakPtLine(1,:)),plotNum);
+            yPlot = linspace(min(spiralPeakPtLine(2,:)),max(spiralPeakPtLine(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
             % elliminate the smaller residual height at the same peak
-            [resUnique,peakPtUnique] = groupsummary(resLine',peakPtLine(1:2,:)',@max);
-            resMaxInd = find(resUnique == max(resUnique));
-            resUnique(resMaxInd) = [];
-            peakPtUnique{1}(resMaxInd) = [];
-            peakPtUnique{2}(resMaxInd) = [];
-            resMesh = griddata(peakPtUnique{1},peakPtUnique{2},resUnique,xMesh,yMesh);
+            [spiralResUnique,spiralPeakPtUnique] = groupsummary(spiralResLine',spiralPeakPtLine(1:2,:)',@max);
+            resMesh = griddata(spiralPeakPtUnique{1},spiralPeakPtUnique{2},spiralResUnique,xMesh,yMesh);
             figure('Name','Residual height map');
             pos = get(gcf,'position');
             set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
@@ -54,7 +53,7 @@ while true
             surf(xMesh,yMesh,resMesh,'EdgeColor','interp'); hold on;
             colormap("parula");
             grid on;
-            plot3(peakPtUnique{1},peakPtUnique{2},resUnique,'o', ...
+            plot3(spiralPeakPtUnique{1},spiralPeakPtUnique{2},spiralResUnique,'o', ...
                 'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
             % cb1 = colorbar;
             set(gca,'FontSize',textFontSize,'FontName',textFontType);
@@ -80,7 +79,7 @@ while true
             uLimRound = round(spiralULim,2);
             spiralPathList = [];
             tSimul0 = tic;
-            for ii = 1:spiralPtNum % each tool path point
+            parfor ii = 1:spiralPtNum % each tool path point
                 toolSp = toolData.toolBform;
                 toolSp.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
                 tmp = fnval(toolSp,uLimRound(1,ii):stepLength:uLimRound(2,ii));

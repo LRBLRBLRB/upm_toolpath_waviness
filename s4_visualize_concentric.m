@@ -35,7 +35,6 @@ while true
         case 'Residual height'
             tRes0 = tic;
             plotNum = 1000;
-%             res = 
             resLine = [res(1,:),res(2,:)];
             peakPtLine = [peakPt(1:3,:),peakPt(4:6,:)];
             xPlot = linspace(min(peakPtLine(1,:)),max(peakPtLine(1,:)),plotNum);

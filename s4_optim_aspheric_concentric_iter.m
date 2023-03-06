@@ -287,7 +287,7 @@ delta = rStep;
 % other loops!!! My god. Damn it!!!) ----------------
 r = circletoolpath01(r,toolData,delta,surfFunc,surfNormFunc, ...
     angularDiscrete,conThetaBound,maxAngPtDist,arcLength,angularLength, ...
-    aimRes,rMax,tRes0,conTheta0);
+    aimRes,rMax,conTheta0);
 
 circletoolpath(r,toolData,delta,surfFunc,surfNormFunc, ...
     angularDiscrete,conThetaBound,maxAngPtDist,arcLength,angularLength, ...
@@ -424,6 +424,7 @@ spiralPath0 = zeros(3,accumPtNum(end)); % the spiral tool path & orientation
 spiralNorm0 = zeros(3,accumPtNum(end));
 spiralCut0 = zeros(3,accumPtNum(end));
 spiralQuat0 = zeros(accumPtNum(end),4);
+spiralContactU0 = zeros(1,accumPtNum(end));
 % spiralRes0 = 5*aimRes*ones(2,accumPtNum(end));
 % spiralPeakPt0 = zeros(6,accumPtNum(end));
 % spiralULim0 = [zeros(1,accumPtNum(end));ones(1,accumPtNum(end))];
@@ -432,6 +433,7 @@ spiralPath0(:,1:accumPtNum(1)) = toolPathPt(:,1:accumPtNum(1));
 spiralNorm0(:,1:accumPtNum(1)) = toolNormDirect(:,1:accumPtNum(1));
 spiralCut0(:,1:accumPtNum(1)) = toolCutDirect(:,1:accumPtNum(1));
 spiralQuat0(1:accumPtNum(1),:) = toolQuat(1:accumPtNum(1),:);
+spiralContactU0(1:accumPtNum(1)) = toolContactU(1:accumPtNum(1));
 for kk = 2:numLoop % begin with the 2nd loop
     angleN = toolPathAngle(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
     for indInterp = accumPtNum(kk - 1) + 1:accumPtNum(kk)
@@ -471,7 +473,7 @@ spiralAngle0 = toolPathAngle + 2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
 if strcmp(angularDiscrete,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
-        spiralAngle0,spiralPath0,spiralContactU0,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
+        spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},toolData,'interpType','linear'); % spiralQuat0,
     spiralNorm = spiralVec{1};
     spiralCut = spiralVec{2};
 else
@@ -499,6 +501,11 @@ parfor ind1 = 1:spiralPtNum
     ind2 = find(spiralAngle >= spiralAngle(ind1) - 2*pi,1,'first');
     ind3 = find(spiralAngle < spiralAngle(ind1) - 2*pi,1,'last');
     if isempty(ind2) || isempty(ind3)
+%         ind2 = find(spiralAngle >= spiralAngle(ind1) + pi,1,'first');
+%         ind3 = find(spiralAngle < spiralAngle(ind1) + pi,1,'last');
+%         [tmpres1,ptres1,spiralULim(:,ind1)] = residual3D( ...
+%             spiralPath,spiralNorm,spiralCut,spiralContactU, ...
+%             toolSp,toolRadius,spiralULim(:,ind1),ind1,ind2,ind3);
         tmpres1 = 5*aimRes;
         ptres1 = zeros(3,1);
     else
@@ -521,7 +528,10 @@ parfor ind1 = 1:spiralPtNum
     
     spiralRes(:,ind1) = [tmpres1;tmpres2];
     spiralPeakPt(:,ind1) = [ptres1;ptres2];
-
+    
+    if spiralRes(:,ind1) > 5
+        1;
+    end
     % debug
     % plot3(toolPathPtRes(1,ii),toolPathPtRes(2,ii),toolPathPtRes(3,ii), ...
     %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
