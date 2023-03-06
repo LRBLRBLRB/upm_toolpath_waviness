@@ -8,7 +8,7 @@ function circletoolpath(r0,toolData,delta,surfFunc,surfNormFunc, ...
 %   此处显示详细说明
 
 global loopPtNum accumPtNum toolREach toolRAccum toolNAccum surfPt surfNorm surfDirect ...
-    toolQuat toolVec toolContactU isCollision ...
+    toolQuat toolVec toolContactU isCollision toolPathAngle ...
     toolPathPt toolCutDirect toolNormDirect uLim peakPt res;
 
 toolSp = toolData.toolBform; % B-form tool tip arc
@@ -98,7 +98,7 @@ toolRadius = toolData.radius; % fitted tool radius
         angle = atan2(toolPathPtRes(2,:),toolPathPtRes(1,:));
         % inner side of each point on the tool path
         angleIn = angle(1:loopPtNumLast);
-        for indIn1 = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
+        parfor indIn1 = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
             angleDel = angleIn - angle(indIn1);
             [indIn2,indIn3] = getInnerLoopToolPathIndex(angleIn,angleDel);
             % if isempty(angleN(angleDel >= 0))
@@ -123,7 +123,7 @@ toolRadius = toolData.radius; % fitted tool radius
             % Q = fnval(toolSp1,uLimTmp(1,ii):0.01:uLimTmp(2,ii));
             % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1);
         end
-    
+
         % if residual height does not satisfy the reqiurement
         maxRes = max(resTmp(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp),[],"all");
         diffRes = maxRes - aimRes;
@@ -171,9 +171,6 @@ while true
 
     % [r3,diffRes3] = fsolve(@iterfunc,r0,opt2);
 
-%     if iter == maxIter
-%         fprintf('The iteration ends with the maxIter is reached. \n');
-%     end
 
     % outer side of each point in the tool path
     angleOut = angle(loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp);
@@ -192,15 +189,6 @@ while true
         [resTmp(2,indOut1),peakPtOutTmp(:,indOut1),uLimTmp(:,indOut1)] = residual3D( ...
             toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
             toolSp,toolRadius,uLimTmp(:,indOut1),indOut1,indOut2,indOut3);
-
-        % debug
-%         plot3(toolPathPtRes(1,ii),toolPathPtRes(2,ii),toolPathPtRes(3,ii), ...
-%             '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-%         toolSp1 = toolSp;
-%         R1 = axesRot([0;0;1],[1;0;0],toolNormDirectRes(:,ii),toolCutDirectRes(:,ii),'zx');
-%         toolSp1.coefs = R1*toolSp.coefs + toolPathPtRes(:,ii);
-%         Q = fnval(toolSp1,uLimTmp(1,ii):0.01:uLimTmp(2,ii));
-%         plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1);
     end
     
     % then store the data of this loop
@@ -208,7 +196,11 @@ while true
     accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNumTmp];
     toolREach = [toolREach,r1];
     toolRAccum = [toolRAccum,r1*ones(1,loopPtNumTmp)];
+    toolPathAngle = [toolPathAngle,wrapTo2Pi(atan2(toolPathPtTmp(2,:),toolPathPtTmp(1,:)))];
     toolNAccum = [toolNAccum,(length(loopPtNum) - 1)*ones(1,loopPtNumTmp)];
+    if toolPathAngle(accumPtNum(end - 1) + 1) > 6
+        toolPathAngle(accumPtNum(end - 1) + 1) = toolPathAngle(accumPtNum(end - 1) + 1) - 2*pi;
+    end
     surfPt = [surfPt,surfPtTmp];
     surfNorm = [surfNorm,surfNormTmp];
     surfDirect = [surfDirect,surfDirectTmp];

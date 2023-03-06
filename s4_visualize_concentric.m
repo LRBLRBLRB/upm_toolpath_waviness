@@ -5,7 +5,7 @@
 while true
     msgfig = questdlg({'Residual Height was calculated successfully!', ...
         'Ready for residual height visualization or machining simulation?'}, ...
-        'Tool Path Simulation','Residual height','Machining simulation', ...
+        'Concentric Tool Path Simulation','Residual height','Concentric machining simulation', ...
         'Save and quit','Save and quit');
     switch msgfig
         case 'Save and quit'
@@ -14,7 +14,7 @@ while true
                 '*.txt','text-file(.txt)';...
                 '*.*','all file(*.*)';...
                 }, ...
-                'Select the directory and filename to save the surface tool path', ...
+                'Select the directory and filename to save the surface concentric tool path', ...
                 fullfile(workspaceDir,['toolPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
             pathName = fullfile(pathDirName,pathFileName);
             switch pathFileType
@@ -28,8 +28,9 @@ while true
                         [5 60], ...
                         string(datestr(now))));
                     save(pathName,"Comments","toolPathPt","toolNormDirect","toolCutDirect", ...
-                        "toolSp","toolQuat",'uLim',"res");
+                        "toolQuat",'uLim',"res",'peakPt');
             end
+            clear msgfig tRes0 tSimul0;
             return;
         case 'Residual height'
             tRes0 = tic;
@@ -65,8 +66,8 @@ while true
             legend('residual height in each peakPt','residual height map', ...
                 'Location','best');
             nexttile;
-            contourf(xMesh,yMesh,resMesh); hold on;
-            colormap("parula");
+            contourf(xMesh,yMesh,resMesh,'LineStyle',':'); hold on;
+            colormap("turbo");
             axis equal; grid on;
             cb2 = colorbar;
             cb2.Label.String = ['Residual Height (',unit,')'];
@@ -76,24 +77,26 @@ while true
             ylabel(['y (',unit,')']);
             tRes = toc(tRes0);
             fprintf('The time spent in the residual map process is %fs.\n',tRes);
-        case 'Machining simulation'
+        case 'Concentric machining simulation'
             stepLength = 0.01;
             uLimRound = round(uLim,2);
             toolPathList = [];
             tSimul0 = tic;
-            for ii = accumPtNum(1):accumPtNum(end) % each tool path point
+            % figure;
+            parfor ii = 1:accumPtNum(end) % each tool path point
                 toolSp = toolData.toolBform;
                 toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
                 tmp = fnval(toolSp,uLimRound(1,ii):stepLength:uLimRound(2,ii));
                 % Q{jj} = tmp;
                 toolPathList = [toolPathList,tmp];
+                % plot3(tmp(1,:),tmp(2,:),tmp(3,:),'b.'); hold on;
             end
             plotNum = 1000;
             xPlot = linspace(min(toolPathList(1,:)),max(toolPathList(1,:)),plotNum);
             yPlot = linspace(min(toolPathList(2,:)),max(toolPathList(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
             % elliminate the smaller residual height at the same peak
-            [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@max);
+            [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@mean);
             zMesh = griddata(toolPathXYUnique{1},toolPathXYUnique{2},toolPathZUnique,xMesh,yMesh);
             % calculate the error based on the designed surface
             z0Mesh = griddata(surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3),xMesh,yMesh);
