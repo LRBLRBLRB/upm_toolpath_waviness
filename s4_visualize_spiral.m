@@ -53,15 +53,15 @@ while true
             surf(xMesh,yMesh,resMesh,'EdgeColor','interp'); hold on;
             colormap("parula");
             grid on;
-            plot3(spiralPeakPtUnique{1},spiralPeakPtUnique{2},spiralResUnique,'o', ...
-                'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
+            % plot3(spiralPeakPtUnique{1},spiralPeakPtUnique{2},spiralResUnique,'o', ...
+            %     'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
             % cb1 = colorbar;
             set(gca,'FontSize',textFontSize,'FontName',textFontType);
             xlabel(['x (',unit,')']);
             ylabel(['y (',unit,')']);
             zlabel(['residual height (',unit,')']);
-            legend('residual height in each peakPt','residual height map', ...
-                'Location','best');
+            % legend('residual height in each peakPt','residual height map', ...
+            %     'Location','best');
             nexttile;
             contourf(xMesh,yMesh,resMesh,'LineStyle',':'); hold on;
             colormap("turbo");
