@@ -182,11 +182,30 @@ surfNormSym = [surfFx;surfFy;-1];
 surfNormSym = surfNormSym./norm(surfNormSym);
 surfNormFunc = matlabFunction(surfNormSym,'Vars',{x,y});
 
-switch spindleDirection
-    case 'Clockwise'
-        conThetaBound = [2*pi,0];
-    case 'Counterclockwise'
-        conThetaBound = [0,2*pi];
+% switch spindleDirection
+%     case 'Clockwise'
+%         conThetaBound = [2*pi,0];
+%     case 'Counterclockwise'
+%         conThetaBound = [0,2*pi];
+% end
+% 
+% switch cutDirection
+%     case 'Edge to Center'
+%         interpR = fnval(Fr,accumPtNum(end):-1:accumPtNum(1) + 1);
+%         interpR = [interpR,zeros(1,accumPtNum(1))];
+%         accumPtNumlength = [0,accumPtNum];
+%     case 'Center to Edge'
+%     otherwise
+%         errordlg('Invalid cut-direction value!','Parameter Error');
+% end
+
+% the spiral toolpath of clockwise & center-edge and that of
+% counterclockwise & edge-center remains the same except for the direction
+if (strcmp(spindleDirection,'Clockwise') && strcmp(cutDirection,'Center to Edge')) || ...
+    (strcmp(spindleDirection,'Counterclockwise') && strcmp(cutDirection,'Edge to Center'))
+    conThetaBound = [0,2*pi];
+else
+    conThetaBound = [2*pi,0];
 end
 
 % slCharacterEncoding('UTF-8');
@@ -283,8 +302,8 @@ r = rStep; % 可以通过widthRes确定迭代初值
 delta = rStep;
 
 % specially for the 2nd loop 
-% ---------------- (I have no idea how to realize it together with the
-% other loops!!! My god. Damn it!!!) ----------------
+% ---------------- (I have no idea how to put it together with the other
+% loops!!! My god. Damn it!!!) ----------------
 r = circletoolpath01(r,toolData,delta,surfFunc,surfNormFunc, ...
     angularDiscrete,conThetaBound,maxAngPtDist,arcLength,angularLength, ...
     aimRes,rMax,conTheta0);
@@ -359,7 +378,7 @@ legend('designed surface','tool center point','tool edge','Location','northeast'
 tPlot = toc(tPlot0);
 fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
 
-save workspace\20220925-contrast\nagayama_concentric\loopR.mat toolREach
+% save workspace\20220925-contrast\nagayama_concentric\loopR.mat toolREach
 
 s4_visualize_concentric;
 % 这里还有问题：中间一圈的残高比外圈的小很多，而且中间的一圈残高的计算是有问题的。
@@ -374,23 +393,19 @@ end
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
 
-% cut direction change doesn't affect the concentric tool path
-switch cutDirection
-    case 'Edge to Center'
-    case 'Center to Edge'
-end
-
 % cubic spline approximation
 % the function between the numeric label of tool path and surf radius R
 Fr = csape(accumPtNum,toolREach,[1,1]);
 
-toolThetaEach = linspace(0,2*pi*(length(accumPtNum) - 1),length(accumPtNum));
-rTheta = csape(toolThetaEach,toolREach,[1,1]);
+toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
+rTheta = csape(toolNoTheta,toolREach,[1,1]);
 
 figure('Name','Feed Rate Smoothing');
+tiledlayout(2,1);
+nexttile;
 scatter(accumPtNum,toolREach);
-hold on; grid on;
-fnplt(Fr,'r',[accumPtNum(1),accumPtNum(end)]);
+hold on;
+fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]);
 plot(1:accumPtNum(end),toolRAccum);
 % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
 %     'Color',[0.929,0.694,0.1250]);
@@ -398,12 +413,52 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel('Loop Accumulating Point Number');
 ylabel(['Radius of the Loop (',unit,')']);
 legend('No.-R scatters','csape result','Concentric result');
+nexttile;
+scatter(toolNoTheta,toolREach);
+hold on;
+fnplt(rTheta,'r',[toolPathAngle(accumPtNum(1) + 1),toolPathAngle(end)+2*pi*toolNAccum(end)]);
+plot(toolPathAngle + 2*pi*toolNAccum,toolRAccum);
+% line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
+%     'Color',[0.929,0.694,0.1250]);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel('Accumulating Toolpath Angle');
+ylabel(['Radius of the Loop (',unit,')']);
+legend('\theta-R scatters','csape result','Concentric result');
+% save the feed rate curve
+[smoothFileName,smoothDirName,smoothFileType] = uiputfile({ ...
+    '*.mat','MAT-file(*.mat)'; ...
+    '*.txt','text-file(.txt)';...
+    '*.*','all file(*.*)';...
+    }, ...
+    'Select the directory and filename to save the surface concentric tool path', ...
+    fullfile(workspaceDir,['toolPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
+smoothName = fullfile(smoothDirName,smoothFileName);
+switch smoothFileType
+    case 0
+        msgfig = msgbox("No approximation saved","Warning","warn","non-modal");
+        uiwait(msgfig);
+    case 1
+        Comments = cell2mat(inputdlg( ...
+            'Enter Comment of the feed rate smoothing processing:', ...
+            'Saving Comments', ...
+            [5 60], ...
+            string(datestr(now))));
+        save(smoothName,"Comments","Fr","rTheta");
+end
+
 
 %% spiral tool path generation with the smoothing result
+% initialize the spiral path
+spiralPath0 = zeros(3,accumPtNum(end)); % the spiral tool path & orientation
+spiralNorm0 = zeros(3,accumPtNum(end));
+spiralCut0 = zeros(3,accumPtNum(end));
+spiralQuat0 = zeros(accumPtNum(end),4);
+spiralContactU0 = zeros(1,accumPtNum(end));
+
 interpR = fnval(Fr,1:accumPtNum(end));
 interpR(1:accumPtNum(1)) = 0;
-spiralPtNum = loopPtNum;
 accumPtNumlength = [0,accumPtNum];
+
 numLoop = length(accumPtNum);
 
 % video capture & debug
@@ -418,22 +473,14 @@ numLoop = length(accumPtNum);
 %     spiralPath(3,1:accumPtNum(1)),'.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 
 tSpiral0 = tic;
-% for each loop, shift the tool path point by decreasing the radius
-% initialize the spiral path
-spiralPath0 = zeros(3,accumPtNum(end)); % the spiral tool path & orientation
-spiralNorm0 = zeros(3,accumPtNum(end));
-spiralCut0 = zeros(3,accumPtNum(end));
-spiralQuat0 = zeros(accumPtNum(end),4);
-spiralContactU0 = zeros(1,accumPtNum(end));
-% spiralRes0 = 5*aimRes*ones(2,accumPtNum(end));
-% spiralPeakPt0 = zeros(6,accumPtNum(end));
-% spiralULim0 = [zeros(1,accumPtNum(end));ones(1,accumPtNum(end))];
+
 % initialize for the first loop
 spiralPath0(:,1:accumPtNum(1)) = toolPathPt(:,1:accumPtNum(1));
 spiralNorm0(:,1:accumPtNum(1)) = toolNormDirect(:,1:accumPtNum(1));
 spiralCut0(:,1:accumPtNum(1)) = toolCutDirect(:,1:accumPtNum(1));
 spiralQuat0(1:accumPtNum(1),:) = toolQuat(1:accumPtNum(1),:);
 spiralContactU0(1:accumPtNum(1)) = toolContactU(1:accumPtNum(1));
+% for each loop, shift the tool path point by decreasing the radius
 for kk = 2:numLoop % begin with the 2nd loop
     angleN = toolPathAngle(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
     for indInterp = accumPtNum(kk - 1) + 1:accumPtNum(kk)
@@ -564,6 +611,22 @@ fprintf('The time spent in the residual height calculation for spiral toolpath p
 % end
 
 %% spiral tool path result
+
+% get the correct direction of the spiral tool path
+if strcmp(cutDirection,'Edge to Center')
+    spiralPtNum = fliplr(spiralPtNum);
+    spiralAngle = fliplr(spiralAngle);
+    spiralPath = fliplr(spiralPath);
+    spiralQuat = fliplr(spiralQuat);
+    spiralNorm = fliplr(spiralNorm);
+    spiralCut = fliplr(spiralCut);
+    spiralContactU = fliplr(spiralContactU);
+    spiralRes = fliplr(spiralRes);
+    spiralULim = fliplr(spiralULim);
+    spiralPeakPt = fliplr(spiralPeakPt);
+end
+
+% plot the result
 figure('Name','Spiral tool path result');
 tPlot0 = tic;
 plotSpar = 1;
