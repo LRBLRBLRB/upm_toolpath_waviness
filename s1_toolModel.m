@@ -2,6 +2,18 @@
 % tool tip arc based on the data that is extracted and analyzed in the file
 % "s1_tool3D.m" or "s1_toolExtract_line.m"
 
+%% data importing
+if exist('toolFit','var')
+    toolFit = app.toolFit;
+    openAngle = app.openAngle;
+    radius = app.radius;
+    textFontSize = app.textFontSize;
+    textFontType = app.textFontType;
+    unit = app.unit;
+    paramMethod = app.paramMethod;
+    workspaceDir = app.workspaceDir;
+end
+
 %% 分离轮廓误差和波纹度误差
 % Cartesian coordinate to cylindrical coordinate
 toolTheta = atan2(toolFit(2,:),toolFit(1,:));

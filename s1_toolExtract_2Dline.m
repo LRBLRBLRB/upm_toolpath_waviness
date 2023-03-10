@@ -10,7 +10,6 @@ if isAPP
     textFontSize = app.fontSize;
     textFontType = app.fontName;
     fitOpts.toolFitType = app.toolFitType;
-    paramMethod = app.paramMethod;
     fitOpts.arcRansacMaxDist = app.arcRansacMaxDist;
     fitOpts.arcFitMethod = app.arcFitMethod;
     fitOpts.lineFitMaxDist = app.lineFitMaxDist;
@@ -174,7 +173,13 @@ legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
 
 
-%% tool modelling
-s1_toolModel
+%% post-processing
+if isAPP
+    app.toolFit = toolFit;
+    app.openAngle = openAngle;
+    app.radius = radius;
+else
+    s1_toolModel;
+end
 
 % rmpath(genpath('.')
