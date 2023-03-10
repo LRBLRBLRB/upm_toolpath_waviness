@@ -592,24 +592,6 @@ end
 tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
 
-% numLoop = numLoop + 1;
-% accumPtNumlength = [0,accumPtNum];
-% for kk = 3:numLoop % begin with the 2nd loop
-%     for jj = 1:accumPtNumlength(kk)
-%         % Method 1: get the (x,y) by interpolation and use residual3D to get z
-%         % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
-%         % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
-% 
-%         % Method 2: get the inner closest point and linearly interpolate them
-%         indInterp = accumPtNumlength(kk - 1) + jj;
-%         angleN = angle(accumPtNumlength(kk - 2) + 1:accumPtNumlength(kk - 1));
-%         angleDel = angleN - angleN(indInterp);
-%         [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel);
-%         [spiralPath(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
-%             toolPathPt,toolNormDirect,toolCutDirect,toolR,ind1,ind2,indInterp);
-%     end
-% end
-
 %% spiral tool path result
 
 % get the correct direction of the spiral tool path
