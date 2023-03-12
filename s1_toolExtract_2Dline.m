@@ -173,6 +173,9 @@ legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
 
 
+nCPts = size(toolFit,2);
+toolFit = [zeros(1,nCPts);toolFit];
+
 %% post-processing
 if isAPP
     app.toolFit = toolFit;

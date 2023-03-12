@@ -50,8 +50,9 @@ classdef upm_toolpath < matlab.apps.AppBase
         ToolFileEf              matlab.ui.control.EditField
         ToolFileBtn             matlab.ui.control.Button
         ToolUnitDd              matlab.ui.control.DropDown
-        ToolImportResetBtn      matlab.ui.control.Button
-        ToolImportUpdateBtn     matlab.ui.control.Button
+        ToolimportResetBtn      matlab.ui.control.Button
+        ToolimportUpdateBtn     matlab.ui.control.Button
+        ToolimportPlotBtn       matlab.ui.control.Button
         ParamTabToolfit         matlab.ui.container.Tab
         ToolFitTypeDd           matlab.ui.control.DropDown
         LineFitMethodDd         matlab.ui.control.DropDown
@@ -61,23 +62,20 @@ classdef upm_toolpath < matlab.apps.AppBase
         S1ToolExtract2DLineBtn  matlab.ui.control.Button
         S1ToolExtract3DLineBtn  matlab.ui.control.Button
         S1ToolExtractSurfBtn    matlab.ui.control.Button
-        ToolFitResetBtn         matlab.ui.control.Button
-        ToolFitUpdateBtn        matlab.ui.control.Button
+        ToolfitResetBtn         matlab.ui.control.Button
+        ToolfitUpdateBtn        matlab.ui.control.Button
+        ToolfitPlotBtn          matlab.ui.control.Button
         ParamTabToolmod         matlab.ui.container.Tab
         S1Tool2DBtn             matlab.ui.control.Button
         S1Tool3DBtn             matlab.ui.control.Button
         ParamTabToolinterp      matlab.ui.container.Tab
         S1ToolModelBtn          matlab.ui.control.Button
-        ToolInterpResetBtn      matlab.ui.control.Button
-        ToolInterpUpdateBtn     matlab.ui.control.Button
         ParamMethodDd           matlab.ui.control.DropDown
-        ToolResetBtn            matlab.ui.control.Button
-        ToolUpdateBtn           matlab.ui.control.Button
+        ToolinterpResetBtn      matlab.ui.control.Button
+        ToolinterpUpdateBtn     matlab.ui.control.Button
+        ToolinterpPlotBtn       matlab.ui.control.Button
         ToolDataAxes            matlab.ui.control.UIAxes
-        ToolPlotBtn             matlab.ui.control.Button
-        Tool2DLineBtnBtn        matlab.ui.control.Button
-        Tool3DLineBtnBtn        matlab.ui.control.Button
-        ToolCancelBtn           matlab.ui.control.Button
+        ToolDataAxesClearBtn    matlab.ui.control.Button
         SurfaceTb               matlab.ui.container.Tab
         AddSurfaceBtn           matlab.ui.control.Button
         SurfacePlotSparSpin     matlab.ui.control.Spinner
@@ -144,8 +142,7 @@ classdef upm_toolpath < matlab.apps.AppBase
         toolFit
         radius              (1,1)   double
         openAngle
-
-        toolDataFile
+        toolDataFile                char
         toolData                    struct
 
         surfaceUnit                 char
@@ -221,7 +218,7 @@ classdef upm_toolpath < matlab.apps.AppBase
 
         resetOptimParams(app);
 
-        toolFitCheck(app,toolDataFile);
+        toolFitCheck(app);
 
         surfaceMeshGen(app);
 
@@ -322,70 +319,6 @@ classdef upm_toolpath < matlab.apps.AppBase
             InfoTaValueChanged(app,true);
         end
 
-        % Code that tool file path editfield changed
-        function ToolFileEfValueChanged(app,event)
-            if isempty(app.workspaceDir)
-                uialert(app.UIFigure, ...
-                    'Workspace directory doesn''t exist, please choose one first!', ...
-                    'Alert Message','CloseFcn',createCallbackFcn(app,@WorkspaceDirBtnPushed,true));
-                return
-            end
-            app.toolPathName = app.ToolFileEf.Value;
-            app.Msg = 'Please select the parameters and click Update.';
-            InfoTaValueChanged(app,true);
-        end
-        
-        % Value changed function: to choose the tool file path
-        function ToolFileBtnPushed(app,event)
-            if isempty(app.workspaceDir)
-                uialert(app.UIFigure, ...
-                    'Workspace directory doesn''t exist, please choose one first!', ...
-                    'Alert Message','CloseFcn',createCallbackFcn(app,@WorkspaceDirBtnPushed,true));
-                return
-            end
-            [fileName,dirName,fileType] = uigetfile({ ...
-                '*.csv','Comma-Separated Values-files(*.csv)'; ...
-                '*.mat','MAT-files(*.mat)'; ...
-                '*.txt','text-files(*.txt)'; ...
-                '*.*','all files(*.*)'...
-                }, ...
-                'Select One Tool Tip Measurement Data', ...
-                app.workspaceDir, ...
-                'MultiSelect','off');
-            app.toolPathName = fullfile(dirName,fileName);
-            app.ToolFileEf.Value = app.toolPathName;
-            if strcmp(fileName(end - 3:end),'.mat')
-                app.toolData = load(app.toolPathName);
-                if isfield(app.toolData,'toolBform')
-                    plot(app.ToolDataAxes, ...
-                        app.toolData.toolFit(2,:),app.toolData.toolFit(3,:), ...
-                        '--.','MarkerSize',8,'Color',[0,0.447,0.741]);
-                    hold(app.ToolDataAxes,'on');
-                    plot(app.ToolDataAxes, ...
-                        app.toolData.toolBform.coefs(2,:),app.toolData.toolBform.coefs(3,:), ...
-                        'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
-                    plot(app.ToolDataAxes, ...
-                        app.toolData.toolEdgePt(2,:),app.toolData.toolEdgePt(3,:), ...
-                        'Color',[0.635,0.078,0.184]);
-                    axis(app.ToolDataAxes,'equal');
-                    set(app.ToolDataAxes,'FontSize',app.fontSize, ...
-                        'FontName',app.fontName);
-                    xlabel(app.ToolDataAxes,['y(',app.toolUnit,')']);
-                    ylabel(app.ToolDataAxes,['z(',app.toolUnit,')']);
-                    legend(app.ToolDataAxes, ...
-                        'Measured Pts','Control Pts','Fitting Pts','Location','best');
-                    app.CheckToolLamp.Color = 'g';
-                    app.Msg = 'tool Data has been loaded.';
-                    InfoTaValueChanged(app,true);
-                    app.Tool2DLineBtnBtn.Enable = 'off';
-                else
-                    app.toolData = [];
-                end
-            end
-            app.Msg = 'Please select the parameters and click ''Update''.';
-            InfoTaValueChanged(app,true);
-        end
-
         % Value changed function: DdFontName i.e., font type selection
         function FontNameDdValueChanged(app,event)
             app.fontName = app.FontNameDd.Value;
@@ -421,6 +354,141 @@ classdef upm_toolpath < matlab.apps.AppBase
 
             % Report the infomation
             app.Msg = 'All the parameters in Common tab are reset.';
+            InfoTaValueChanged(app,true);
+        end
+
+        % Code that tool file path editfield changed
+        function ToolFileEfValueChanged(app,event)
+            if isempty(app.workspaceDir)
+                uialert(app.UIFigure, ...
+                    'Workspace directory doesn''t exist, please choose one first!', ...
+                    'Alert Message','CloseFcn',createCallbackFcn(app,@WorkspaceDirBtnPushed,true));
+                return
+            end
+            app.toolPathName = app.ToolFileEf.Value;
+            app.Msg = 'Please select the parameters and click Update.';
+            InfoTaValueChanged(app,true);
+        end
+        
+        % Value changed function: to choose the tool file path
+        function ToolFileBtnPushed(app,event)
+            if isempty(app.workspaceDir)
+                uialert(app.UIFigure, ...
+                    'Workspace directory doesn''t exist, please choose one first!', ...
+                    'Alert Message','CloseFcn',createCallbackFcn(app,@WorkspaceDirBtnPushed,true));
+                return
+            end
+            [fileName,dirName] = uigetfile({ ...
+                '*.csv','Comma-Separated-Values files(*.csv)'; ...
+                '*.xls;*.xlsx','Excel worksheet files(*.xls,*.xlsx)'; ...
+                '*.mat','MAT files(*.mat)'; ...
+                '*.txt','Text files(*.txt)'; ...
+                '*.*','all files(*.*)'...
+                }, ...
+                'Select One Tool Tip Measurement Data', ...
+                app.workspaceDir, ...
+                'MultiSelect','off');
+            app.toolPathName = fullfile(dirName,fileName);
+            app.ToolFileEf.Value = app.toolPathName;
+            [~,~,fileExt] = fileparts(app.toolPathName);
+            switch fileExt
+                case {'.mat'}
+                    app.toolData = load(app.toolPathName);
+                    % if the tool interpolation result is loaded, then plot it
+                    % directly; else get the original data from the file
+                    if isfield(app.toolData,'toolBform')
+                        app.toolUnit = app.toolData.unit;
+                        app.ToolUnitDd.Value = app.toolUnit;
+                        plot(app.ToolDataAxes, ...
+                            app.toolData.toolFit(2,:),app.toolData.toolFit(3,:), ...
+                            '--.','MarkerSize',8,'Color',[0,0.447,0.741]);
+                        hold(app.ToolDataAxes,'on');
+                        plot(app.ToolDataAxes, ...
+                            app.toolData.toolBform.coefs(2,:),app.toolData.toolBform.coefs(3,:), ...
+                            'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
+                        plot(app.ToolDataAxes, ...
+                            app.toolData.toolEdgePt(2,:),app.toolData.toolEdgePt(3,:), ...
+                            'Color',[0.635,0.078,0.184]);
+                        axis(app.ToolDataAxes,'equal');
+                        set(app.ToolDataAxes,'FontSize',app.fontSize, ...
+                            'FontName',app.fontName);
+                        xlabel(app.ToolDataAxes,['y(',app.toolUnit,')']);
+                        ylabel(app.ToolDataAxes,['z(',app.toolUnit,')']);
+                        legend(app.ToolDataAxes, ...
+                            'Measured Pts','Control Pts','Fitting Pts','Location','best');
+                        app.CheckToolLamp.Color = 'g';
+                        app.Msg = 'tool Data has been loaded.';
+                        InfoTaValueChanged(app,true);
+    %                     app.ParamTabToolfit.HandleVisibility = 'off';
+    %                     app.ParamTabToolmod.HandleVisibility = 'off';
+    %                     app.ParamTabToolinterp.HandleVisibility = 'off';
+    
+                        app.Msg = 'Tool proces finished. Continue to load surface.';
+                    else
+                        app.toolData = [];
+                    end
+                case {'.csv','.xls','.xlsx'}
+                    % get rid of the header of the csv file
+                    numHeader = 0;
+                    tooltipFile = fopen(app.toolPathName);
+                    while ~feof(tooltipFile)
+                        tmpLine = fgets(tooltipFile);
+                        % if the line begins with %d%d or -%d, then break
+                        if ~isnan(str2double(tmpLine(1:2)))
+                            break;
+                        end
+                        numHeader = numHeader + 1;
+                    end
+                    fclose(tooltipFile);
+                    app.toolOri = importdata(app.toolPathName,',',numHeader);
+                    app.toolOri = app.toolOri.data;
+                    app.toolOri(:,3) = [];
+                    app.toolOri = app.toolOri';
+
+                    app.Msg = 'Please select the parameters and click ''Update''.';
+            end
+            InfoTaValueChanged(app,true);
+        end
+
+        % Button Value changed function: tool import reset
+        function ToolImportResetBtnPushed(app,event)
+            app.ToolUnitDd.Value = app.toolUnitDefault;
+            app.toolUnit = app.ToolUnitDd.Value;
+            app.ToolFileEf.Value = '';
+            app.toolPathName = app.ToolFileEf.Value;
+            app.toolData = [];
+
+%             app.ParamTabToolfit.HandleVisibility = 'on';
+%             app.ParamTabToolmod.HandleVisibility = 'on';
+%             app.ParamTabToolinterp.HandleVisibility = 'on';
+
+            app.Msg = 'Tool importing process has been reset.';
+            InfoTaValueChanged(app,true);
+        end
+
+        % Button value changed function: tool import update
+        function ToolImportUpdateBtnPushed(app,event)
+            app.toolUnit = app.ToolUnitDd.Value;
+
+            % unit conversion (now: app.toolUnit, aim: app.unit)
+            unitList = {'m','mm','\mum','nm'};
+            presUnit = find(strcmp(unitList,app.toolUnit),1);
+            aimUnit = find(strcmp(unitList,app.unit),1);
+            app.toolOri = 1000^(aimUnit - presUnit)*app.toolOri;
+        end
+
+        % Button value changed function: tool import plot
+        function ToolImportPlotBtnPushed(app,event)
+            ToolDataAxesClearBtnPushed(app,event);
+            % plot the importing results
+            plot(app.ToolDataAxes,app.toolOri(1,:),app.toolOri(2,:), ...
+                '.','MarkerSize',2);
+            hold(app.ToolDataAxes,'on');
+            grid(app.ToolDataAxes,'on');
+            xlabel(app.ToolDataAxes,['x (',app.unit,')']);
+            ylabel(app.ToolDataAxes,['y (',app.unit,')']);
+            title(app.ToolDataAxes,'Tool Original Data');
+            app.Msg = 'Tool data is successfully loaded.';
             InfoTaValueChanged(app,true);
         end
 
@@ -483,22 +551,19 @@ classdef upm_toolpath < matlab.apps.AppBase
         end
 
         % Value changed function: update the selection selection
-        function ToolUpdateBtnPushed(app,event)
-            app.toolUnit = app.ToolUnitDd.Value;
+        function ToolFitUpdateBtnPushed(app,event)
             app.toolFitType = app.ToolFitTypeDd.Value;
             app.arcFitMethod = app.ArcFitMethodDd.Value;
             app.arcRansacMaxDist = app.ArcRansacMaxDistEf.Value;
             app.lineFitMethod = app.LineFitMethodDd.Value;
             app.lineFitMaxDist = app.LineFitMaxDistEf.Value;
 
-            app.paramMethod = app.ParamMethodDd.Value;
-
             app.Msg = 'All the parameters are set. Click ''Plot'' to plot the data.';
             InfoTaValueChanged(app,true);
         end
 
         % Value changed function: reset the parameters
-        function ToolResetBtnPushed(app,event)
+        function ToolFitResetBtnPushed(app,event)
             % Reset all the values to the default
             resetToolfitParams(app);
 
@@ -508,74 +573,134 @@ classdef upm_toolpath < matlab.apps.AppBase
             InfoTaValueChanged(app,true);
         end
 
-        % Value changed function: plot the tool file data
-        function ToolPlotBtnPushed(app,event)
-            % ensure the workspace directory and tool file path have been difined
-            if isempty(app.workspaceDir)
-                uialert(app.UIFigure,{'Invalid workspace directory:', ...
-                    'workspace directory should not be empty'},'Alert Message');
-                return;
-            elseif isempty(app.toolPathName)
-                uialert(app.UIFigure,{'Invalid tool file name:', ...
-                    'tool file name should not be empty'},'Alert Message');
-                return;
-            end
-            % get rid of the header of the csv file
-            numHeader = 0;
-            tooltipFile = fopen(app.toolPathName);
-            while ~feof(tooltipFile)
-                tmpLine = fgets(tooltipFile);
-                % if the line begins with %d%d or -%d, then break
-                if ~isnan(str2double(tmpLine(1:2)))
-                    break;
-                end
-                numHeader = numHeader + 1;
-            end
-            fclose(tooltipFile);
-            app.toolOri = importdata(app.toolPathName,',',numHeader);
-            app.toolOri = app.toolOri.data;
-            app.toolOri(:,3) = [];
-            app.toolOri = app.toolOri';
-
-            % unit conversion (now: app.toolUnit, aim: app.unit)
-            unitList = {'m','mm','\mum','nm'};
-            presUnit = find(strcmp(unitList,app.toolUnit),1);
-            aimUnit = find(strcmp(unitList,app.unit),1);
-            app.toolOri = 1000^(aimUnit - presUnit)*app.toolOri;
-
-            % plot the importing results
-            plot(app.ToolDataAxes,app.toolOri(1,:),app.toolOri(2,:),'.','MarkerSize',2);
-            hold(app.ToolDataAxes,'on');
-            grid(app.ToolDataAxes,'on');
-            xlabel(app.ToolDataAxes,['x (',app.unit,')']);
-            ylabel(app.ToolDataAxes,['y (',app.unit,')']);
-            app.Msg = 'Tool data is successfully loaded.';
-            InfoTaValueChanged(app,true);
-        end
-
-        % Value changed function: transfer the parameters to the main program
-        function Tool2DLineBtnPushed(app,event)
-            selection = uiconfirm(app.UIFigure,'Continue to fit the tool tip?',...
+        function S1ToolExtract2DLineBtnPushed(app,event)
+            selection = uiconfirm(app.UIFigure, ...
+                'Continue to fit the tool tip of 2D line format?', ...
                 'Confirmation');
             switch selection
                 case 'OK'
-                    toolDataFile = S1ToolExtract2DLineBtnPushed(app,true);
-                    toolFitCheck(app,toolDataFile);
-                    app.Tool2DLineBtnBtn.Enable = 'off';
+                    s1_toolExtract_2Dline;
+                    app.S1ToolExtract2DLineBtn.Enable = 'off';
+                    app.S1ToolExtract3DLineBtn.Enable = 'off';
+                    app.S1ToolExtractSurfBtn.Enable = 'off';
+                    app.S1ToolModelBtn.Enable = 'on';
                 case 'Cancel'
                     return
             end
         end
 
+        function S1ToolExtract3DLineBtnPushed(app,event)
+            selection = uiconfirm(app.UIFigure, ...
+                'Continue to fit the tool tip of 3D line format?', ...
+                'Confirmation');
+            switch selection
+                case 'OK'
+                    s1_toolExtract_3Dline;
+                    app.S1ToolExtract2DLineBtn.Enable = 'off';
+                    app.S1ToolExtract3DLineBtn.Enable = 'off';
+                    app.S1ToolExtractSurfBtn.Enable = 'off';
+                    app.S1ToolModelBtn.Enable = 'on';
+                case 'Cancel'
+                    return;
+            end
+        end
+
+        function S1ToolExtractSurfBtnPushed(app,event)
+            selection = uiconfirm(app.UIFigure, ...
+                'Continue to fit the tool tip of surface format?', ...
+                'Confirmation');
+            switch selection
+                case 'OK'
+                    s1_toolExtract_surf;
+                    app.S1ToolExtract2DLineBtn.Enable = 'off';
+                    app.S1ToolExtract3DLineBtn.Enable = 'off';
+                    app.S1ToolExtractSurfBtn.Enable = 'off';
+                    app.S1ToolModelBtn.Enable = 'on';
+                case 'Cancel'
+                    return;
+            end
+        end
+
+        % Value changed function: plot the tool file data
+        function ToolfitPlotBtnPushed(app,event)
+            ToolDataAxesClearBtnPushed(app,event);
+            % plot the importing results
+            plot(app.ToolDataAxes,app.toolFit(2,:),app.toolFit(3,:), ...
+                'Color',[0,0.45,0.74],'LineWidth',0.75); % tool edge scatters
+            hold(app.ToolDataAxes,'on');
+            theta = (pi/2 - app.openAngle/2):0.01:(pi/2 + app.openAngle/2);
+            xtmp = app.radius*cos(theta);
+            ytmp = app.radius*sin(theta);
+            plot(app.ToolDataAxes,xtmp,ytmp,'Color',[0.85,0.33,0.10], ...
+                'LineWidth',1,'LineStyle','--'); % tool edge circle
+            scatter(app.ToolDataAxes,0,0, ...
+                'MarkerFaceColor',[0.85,0.33,0.10], ...
+                'MarkerEdgeColor',[0.85,0.33,0.10]); % tool edge center
+            grid(app.ToolDataAxes,'on');
+            xlabel(app.ToolDataAxes,['x (',app.unit,')']);
+            ylabel(app.ToolDataAxes,['y (',app.unit,')']);
+            title(app.ToolDataAxes,'Tool Fit Results');
+            app.Msg = 'Tool data is successfully loaded.';
+            InfoTaValueChanged(app,true);
+            clear theta xtmp ytmp;
+        end
+
+
+        function S1Tool2DBtnPushed(app,event)
+            s1_tool2D;
+        end
+
+        function S1Tool3DBtnPushed(app,event)
+            s1_tool3D;
+        end
+
+        function ToolinterpResetBtnPushed(app,event)
+            app.ParamMethodDd.Value = app.paramMethodDefault;
+            app.paramMethod = app.ParamMethodDd.Value;
+        end
+
+        function ToolinterpUpdateBtnPushed(app,event)
+            app.paramMethod = app.ParamMethodDd.Value;
+        end
+
+        function S1ToolModelBtnPushed(app,event)
+            selection = uiconfirm(app.UIFigure, ...
+                'Continue to fit the tool tip of 2D line format?', ...
+                'Confirmation');
+            switch selection
+                case 'OK'
+                    s1_toolModel;
+                    toolFitCheck(app);
+                case 'Cancel'
+                    return
+            end
+        end
+
+        function ToolinterpPlotBtnPushed(app,event)
+            ToolDataAxesClearBtnPushed(app,event);
+            % plot the importing results
+            plot(app.ToolDataAxes,app.toolFit(2,:),app.toolFit(3,:), ...
+                '--.','MarkerSize',8,'Color',[0,0.447,0.741]);
+            hold(app.ToolDataAxes,'on');
+            plot(app.ToolDataAxes,app.toolData.toolCpts(2,:),app.toolData.toolCpts(3,:), ...
+                'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
+            plot(app.ToolDataAxes,app.toolData.toolEdgePt(2,:),app.toolData.toolEdgePt(3,:), ...
+                'Color',[0.635,0.078,0.184]);
+            legend(app.ToolDataAxes,'Measured Pts','Control Pts', ...
+                'Fitting Pts','Location','best');
+            axis(app.ToolDataAxes,'on');
+            % grid(app.ToolDataAxes,'on');
+            xlabel(app.ToolDataAxes,['x (',app.unit,')']);
+            ylabel(app.ToolDataAxes,['y (',app.unit,')']);
+            title(app.ToolDataAxes,'Tool Interpolation Results');
+            app.Msg = 'Tool data is successfully loaded.';
+            InfoTaValueChanged(app,true);
+        end
+
         % Value changed function: cancel the process with nothing to be saved
-        function ToolCancelBtnPushed(app,event)
-            app.ToolFileEf.Value = '';
-            app.toolPathName = '';
-            app.toolData = [];
-            resetToolfitParams(app);
+        function ToolDataAxesClearBtnPushed(app,event)
             cla(app.ToolDataAxes,'reset');
-            title(app.ToolDataAxes,'tool original data');
-            app.CheckToolLamp.Color = 'r';
+            title(app.ToolDataAxes,'');
         end
 
         % Button down function: shift to the surface tab, and refresh the message
@@ -743,26 +868,6 @@ classdef upm_toolpath < matlab.apps.AppBase
         end
 
         % --------------------------Function Execution--------------------------
-        function S1Tool2DBtnPushed(app,event)
-            s1_tool2D;
-        end
-
-        function S1Tool3DBtnPushed(app,event)
-            s1_tool3D;
-        end
-
-        function toolDataFile = S1ToolExtract2DLineBtnPushed(app,event)
-            s1_toolExtract_2Dline;
-        end
-
-        function toolDataFile = S1ToolExtract3DLineBtnPushed(app,event)
-            s1_toolExtract_3Dline;
-        end
-
-        function S1ToolExtractSurfBtnPushed(app,event)
-            s1_toolExtract_surf;
-        end
-
         function S2DesignSimulAsphericConcentricBtnPushed(app,event)
             s2_design_simul_aspheric_concentric
         end
@@ -911,77 +1016,81 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.ToolTb.ButtonDownFcn = createCallbackFcn(app,@ToolTbButtonDown,true);
 
             % Manage tool processing layout
-            ToolTbGl = uigridlayout(app.ToolTb,[3,4]);
-            ToolTbGl.RowHeight = {'fit','1x','fit'};
+            ToolTbGl = uigridlayout(app.ToolTb,[2,4]);
+            ToolTbGl.RowHeight = {'1x','fit'};
             ToolTbGl.ColumnWidth = {'2x','1x','1x','1x'};
             % the elements of the cell array can be 'fit', fixed pixels, or '1x' '2x'
             %   'fit': to adjust the size to show the whole text, or basedon the default size
             %   fixed pixels: the size is fixed at the number of pixels
             %   variables ('2x'): to fill the remaining space, and the number is a
             %   weight for dividing up the remaining space among all variables
-                 
-            % ------------------------Tool data importing layout------------------------
-            ToolFileGl = uigridlayout(ToolTbGl,[1,3]);
-            ToolFileGl.Layout.Row = 1;
-            ToolFileGl.Layout.Column = [1,4];
-            ToolFileGl.ColumnWidth = {'fit','1x','fit'};
-            ToolFileGl.Padding = [0,0,0,0];
-            
-            ToolFileLb = uilabel(ToolFileGl,'Text','Tool data path:');
-            ToolFileLb.Layout.Row = 1;
-            ToolFileLb.Layout.Column = 1;
-            
-            app.ToolFileEf = uieditfield(ToolFileGl,'text');
-            app.ToolFileEf.Layout.Row = 1;
-            app.ToolFileEf.Layout.Column = 2;
-            app.ToolFileEf.ValueChangedFcn = createCallbackFcn(app,@ToolFileEfValueChanged,true);
-            
-            app.ToolFileBtn = uibutton(ToolFileGl,'push','Text','Choose');
-            app.ToolFileBtn.Layout.Row = 1;
-            app.ToolFileBtn.Layout.Column = 3;
-            app.ToolFileBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFileBtnPushed,true);
 
             % ------------------------Parameter editing tabgroup------------------------
             % Create the parameter selection tab group
             ParamTabgroup = uitabgroup(ToolTbGl,'SelectedTab',app.ParamTabToolImport);
-            ParamTabgroup.Layout.Row = [2,3];
+            ParamTabgroup.Layout.Row = [1,2];
             ParamTabgroup.Layout.Column = 1;
 
             % ---------Data Import parameter selection---------
             app.ParamTabToolImport = uitab(ParamTabgroup,'Title','Data Import','Scrollable','on');
-            ParamTabToolImportGl = uigridlayout(app.ParamTabToolImport,[2,2]);
-            ParamTabToolImportGl.RowHeight = {'fit','fit'};
-            ParamTabToolImportGl.ColumnWidth = {'fit','1x'};
-            ParamTabToolImportGl.Scrollable = 'on';
+            ParamTabToolImportGl = uigridlayout(app.ParamTabToolImport,[5,3]);
+            ParamTabToolImportGl.RowHeight = {'fit','2x','fit','fit','1x'};
+            ParamTabToolImportGl.ColumnWidth = {'1x','1x','1x'};
+
+            % Create the tool path selection 
+            ToolFileLb = uilabel(ParamTabToolImportGl,'Text','Tool data path:');
+            ToolFileLb.Layout.Row = 1;
+            ToolFileLb.Layout.Column = 1;
+            app.ToolFileEf = uieditfield(ParamTabToolImportGl,'text');
+            app.ToolFileEf.Layout.Row = 2;
+            app.ToolFileEf.Layout.Column = [1,3];
+            app.ToolFileEf.ValueChangedFcn = createCallbackFcn(app,@ToolFileEfValueChanged,true);
+            app.ToolFileBtn = uibutton(ParamTabToolImportGl,'push','Text','Choose');
+            app.ToolFileBtn.Layout.Row = 3;
+            app.ToolFileBtn.Layout.Column = 1;
+            app.ToolFileBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFileBtnPushed,true);
 
             % Create the tool data unit selection label and dropdown box
             ToolUnitLB = uilabel(ParamTabToolImportGl,'Text','Tool Data unit');
-            ToolUnitLB.Layout.Row = 1;
+            ToolUnitLB.Layout.Row = 4;
             ToolUnitLB.Layout.Column = 1;
             app.ToolUnitDd = uidropdown(ParamTabToolImportGl,'Items',{'m','mm','\mum','nm'}, ...
                 'Value',app.toolUnitDefault,'BackgroundColor',[1,1,1]);
-            app.ToolUnitDd.Layout.Row = 1;
-            app.ToolUnitDd.Layout.Column = 2;
-% 修改！！！
-            % Create the reset button for tool fitting process
-            app.ToolImportResetBtn = uibutton(ParamTabToolImportGl,'push','Text','Reset','Visible','on');
-            app.ToolImportResetBtn.Layout.Row = 2;
-            app.ToolImportResetBtn.Layout.Column = 1;
-            app.ToolImportResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportResetBtnPushed,true);
-% 修改！！！
-            % Create the update button for tool fitting process
-            app.ToolImportUpdateBtn = uibutton(ParamTabToolImportGl,'push','Text','Update','Visible','on');
-            app.ToolImportUpdateBtn.Layout.Row = 2;
-            app.ToolImportUpdateBtn.Layout.Column = 2;
-            app.ToolImportUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportUpdateBtnPushed,true);
+            app.ToolUnitDd.Layout.Row = 4;
+            app.ToolUnitDd.Layout.Column = [2,3];
+
+            % Create the reset button for tool importing process
+            app.ToolimportResetBtn = uibutton(ParamTabToolImportGl,'push','Text','Reset','Visible','on');
+            app.ToolimportResetBtn.Layout.Row = 5;
+            app.ToolimportResetBtn.Layout.Column = 3;
+            app.ToolimportResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportResetBtnPushed,true);
+
+            % Create the update button for tool importing process
+            app.ToolimportUpdateBtn = uibutton(ParamTabToolImportGl,'push','Text','Update','Visible','on');
+            app.ToolimportUpdateBtn.Layout.Row = 5;
+            app.ToolimportUpdateBtn.Layout.Column = 1;
+            app.ToolimportUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportUpdateBtnPushed,true);
+
+            % Create the plot button for tool importing process
+            app.ToolimportPlotBtn = uibutton(ParamTabToolImportGl,'push','Text',{'Plot ','(Orig)'});
+            app.ToolimportPlotBtn.Layout.Row = 5;
+            app.ToolimportPlotBtn.Layout.Column = 2;
+            app.ToolimportPlotBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportPlotBtnPushed,true);
+
+            % Create the cancle and clear button for the imported tool ploting
+%             app.ToolImportCancelBtn = uibutton(ParamTabToolImportGl,'push','Text','Plot (Orig)');
+%             app.ToolImportCancelBtn.Layout.Row = 3;
+%             app.ToolImportCancelBtn.Layout.Column = 2;
+%             app.ToolImportCancelBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportCancelBtnPushed,true);
 
             % ---------Tool fitting parameter selection---------
             app.ParamTabToolfit = uitab(ParamTabgroup,'Title','Tool fit','Scrollable','on');
-            ParamTabToolfitGl = uigridlayout(app.ParamTabToolfit,[2,1]);
-            ParamTabToolfitGl.RowHeight = {'1x','fit'};
+            ParamTabToolfitGl = uigridlayout(app.ParamTabToolfit,[3,1]);
+            ParamTabToolfitGl.RowHeight = {'1x','fit','fit'};
             ParamTabToolfitGl.ColumnWidth = {'1x'};
 
             ParamTabToolfitParamGl = uigridlayout(ParamTabToolfitGl,[6,2]);
+            ParamTabToolfitParamGl.Layout.Row = 1;
             ParamTabToolfitParamGl.RowHeight = {'fit','fit','fit','fit','fit','fit'};
             ParamTabToolfitParamGl.ColumnWidth = {'fit','1x'};
             ParamTabToolfitParamGl.Scrollable = 'on';
@@ -1043,7 +1152,20 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.LineFitMaxDistEf.Enable = "off";
             app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
 
+            % Create the reset button for tool fitting process
+            app.ToolfitResetBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Reset','Visible','on');
+            app.ToolfitResetBtn.Layout.Row = 6;
+            app.ToolfitResetBtn.Layout.Column = 1;
+            app.ToolfitResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFitResetBtnPushed,true);
+
+            % Create the update button for tool fitting process
+            app.ToolfitUpdateBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Update','Visible','on');
+            app.ToolfitUpdateBtn.Layout.Row = 6;
+            app.ToolfitUpdateBtn.Layout.Column = 2;
+            app.ToolfitUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFitUpdateBtnPushed,true);
+
             ParamTabToolfitExeGl = uigridlayout(ParamTabToolfitGl,[1,3]);
+            ParamTabToolfitExeGl.Layout.Row = 2;
             ParamTabToolfitExeGl.RowHeight = {'fit'};
             ParamTabToolfitExeGl.ColumnWidth = {'1x','1x','1x'};
             ParamTabToolfitExeGl.Scrollable = 'on';
@@ -1067,19 +1189,11 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.S1ToolExtractSurfBtn.Layout.Column = 3;
             app.S1ToolExtractSurfBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1ToolExtractSurfBtnPushed,true);
-% 修改！！！
-            % Create the reset button for tool fitting process
-            app.ToolFitResetBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Reset','Visible','on');
-            app.ToolFitResetBtn.Layout.Row = 6;
-            app.ToolFitResetBtn.Layout.Column = 1;
-            app.ToolFitResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFitResetBtnPushed,true);
-% 修改！！！
-            % Create the update button for tool fitting process
-            app.ToolFitUpdateBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Update','Visible','on');
-            app.ToolFitUpdateBtn.Layout.Row = 6;
-            app.ToolFitUpdateBtn.Layout.Column = 2;
-            app.ToolFitUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFitUpdateBtnPushed,true);
 
+            % button to plot the tool data
+            app.ToolfitPlotBtn = uibutton(ParamTabToolfitGl,'push','Text','Plot (Fit)');
+            app.ToolfitPlotBtn.Layout.Row = 3;
+            app.ToolfitPlotBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolfitPlotBtnPushed,true);
 
             % ---------Tool Edge Modification parameter selection---------
             app.ParamTabToolmod = uitab(ParamTabgroup,'Title','E.g. Fit','Scrollable','on');
@@ -1112,9 +1226,9 @@ classdef upm_toolpath < matlab.apps.AppBase
 
             % ---------Tool Interpolation parameter selection---------
             app.ParamTabToolinterp = uitab(ParamTabgroup,'Title','Tool Interpolation','Scrollable','on');
-            ParamTabToolinterpGl = uigridlayout(app.ParamTabToolinterp,[3,2]);
-            ParamTabToolinterpGl.RowHeight = {'fit','fit','fit'};
-            ParamTabToolinterpGl.ColumnWidth = {'fit','1x'};
+            ParamTabToolinterpGl = uigridlayout(app.ParamTabToolinterp,[4,2]);
+            ParamTabToolinterpGl.RowHeight = {'fit','fit','fit','fit'};
+            ParamTabToolinterpGl.ColumnWidth = {'1x','1x'};
             ParamTabToolinterpGl.Scrollable = 'on';
 
             % Create the B-spline parametric method label and dropdown box
@@ -1126,28 +1240,32 @@ classdef upm_toolpath < matlab.apps.AppBase
                 'Value',app.paramMethodDefault,'BackgroundColor',[1,1,1]);
             app.ParamMethodDd.Layout.Row = 1;
             app.ParamMethodDd.Layout.Column = 2;
-% 修改！！！
-            % Create the reset button
-            app.ToolInterpResetBtn = uibutton(ParamTabToolinterpGl,'push','Text','Reset','Visible','on');
-            app.ToolInterpResetBtn.Layout.Row = 2;
-            app.ToolInterpResetBtn.Layout.Column = 1;
-            app.ToolInterpResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolInterpResetBtnPushed,true);
-% 修改！！！
-            % Create the update button
-            app.ToolInterpUpdateBtn = uibutton(ParamTabToolinterpGl,'push','Text','Update','Visible','on');
-            app.ToolInterpUpdateBtn.Layout.Row = 2;
-            app.ToolInterpUpdateBtn.Layout.Column = 2;
-            app.ToolInterpUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolInterpUpdateBtnPushed,true);
 
-% 修改！！！
+            % Create the reset button
+            app.ToolinterpResetBtn = uibutton(ParamTabToolinterpGl,'push','Text','Reset','Visible','on');
+            app.ToolinterpResetBtn.Layout.Row = 2;
+            app.ToolinterpResetBtn.Layout.Column = 1;
+            app.ToolinterpResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolinterpResetBtnPushed,true);
+
+            % Create the update button
+            app.ToolinterpUpdateBtn = uibutton(ParamTabToolinterpGl,'push','Text','Update','Visible','on');
+            app.ToolinterpUpdateBtn.Layout.Row = 2;
+            app.ToolinterpUpdateBtn.Layout.Column = 2;
+            app.ToolinterpUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolinterpUpdateBtnPushed,true);
+
             % button to execute s1_toolModel.m
             app.S1ToolModelBtn = uibutton(ParamTabToolinterpGl,'push','WordWrap','on', ...
-                'Text','s1_toolModel');
+                'Text','Interpolation','Enable','off');
             app.S1ToolModelBtn.Layout.Row = 3;
             app.S1ToolModelBtn.Layout.Column = [1,2];
             app.S1ToolModelBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1ToolModelBtnPushed,true);
 
+            % button to plot the interpolation result
+            app.ToolinterpPlotBtn = uibutton(ParamTabToolinterpGl,'Text','Plot Interpolation');
+            app.ToolinterpPlotBtn.Layout.Row = 4;
+            app.ToolinterpPlotBtn.Layout.Column = [1,2];
+            app.ToolinterpPlotBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolinterpPlotBtnPushed,true);
 
 
             % ------------------------Ploting axes------------------------
@@ -1156,30 +1274,13 @@ classdef upm_toolpath < matlab.apps.AppBase
             % xlabel(app.UIAxes, 'X');
             % ylabel(app.UIAxes, 'Y');
             % zlabel(app.UIAxes, 'Z');
-            app.ToolDataAxes.Layout.Row = 2;
+            app.ToolDataAxes.Layout.Row = 1;
             app.ToolDataAxes.Layout.Column = [2,4];
 
-            app.ToolPlotBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Extract & Plot');
-            app.ToolPlotBtn.Layout.Row = 3;
-            app.ToolPlotBtn.Layout.Column = 2;
-            app.ToolPlotBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolPlotBtnPushed,true);
-
-            % ------------------------Ending process------------------------
-            app.Tool2DLineBtnBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Enter');
-            app.Tool2DLineBtnBtn.Layout.Row = 3;
-            app.Tool2DLineBtnBtn.Layout.Column = 3;
-            app.Tool2DLineBtnBtn.ButtonPushedFcn = createCallbackFcn(app,@Tool2DLineBtnPushed,true);
-            
-            app.Tool3DLineBtnBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Enter');
-            app.Tool3DLineBtnBtn.Layout.Row = 3;
-            app.Tool3DLineBtnBtn.Layout.Column = 3;
-            app.Tool3DLineBtnBtn.Visible = 'off';
-            app.Tool3DLineBtnBtn.ButtonPushedFcn = createCallbackFcn(app,@Tool2DLineBtnPushed,true);
-
-            app.ToolCancelBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Cancel');
-            app.ToolCancelBtn.Layout.Row = 3;
-            app.ToolCancelBtn.Layout.Column = 4;
-            app.ToolCancelBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolCancelBtnPushed,true);
+            app.ToolDataAxesClearBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Cancel');
+            app.ToolDataAxesClearBtn.Layout.Row = 2;
+            app.ToolDataAxesClearBtn.Layout.Column = 4;
+            app.ToolDataAxesClearBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolDataAxesClearBtnPushed,true);
 
             % ------------------------------------------------------------------------
             % ---------------------------Surface Processing---------------------------

@@ -3,27 +3,36 @@
 % "s1_tool3D.m" or "s1_toolExtract_line.m"
 
 %% data importing
-if exist('toolFit','var')
+if exist('app','var')
+    isAPP = true;
     toolFit = app.toolFit;
     openAngle = app.openAngle;
     radius = app.radius;
-    textFontSize = app.textFontSize;
-    textFontType = app.textFontType;
+    textFontSize = app.fontSize;
+    textFontType = app.fontName;
     unit = app.unit;
     paramMethod = app.paramMethod;
     workspaceDir = app.workspaceDir;
+
+    fitOpts.toolFitType = app.toolFitType;
+    fitOpts.arcRansacMaxDist = app.arcRansacMaxDist;
+    fitOpts.arcFitMethod = app.arcFitMethod;
+    fitOpts.lineFitMaxDist = app.lineFitMaxDist;
+    fitOpts.lineFitMethod = app.lineFitMethod;
+else
+    isAPP = false;
 end
 
 %% 分离轮廓误差和波纹度误差
 % Cartesian coordinate to cylindrical coordinate
-toolTheta = atan2(toolFit(2,:),toolFit(1,:));
+toolTheta = atan2(toolFit(3,:),toolFit(2,:));
 toolR = vecnorm(toolFit,2,1);
 
 % plot the geometric error
 figure('name','Tool Geometric Error');
 t = tiledlayout(2,1);
 nexttile;
-plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.5); % tool edge scatters
+plot(toolFit(2,:),toolFit(3,:),'Color',[0,0.45,0.74],'LineWidth',0.5); % tool edge scatters
 hold on; axis equal;
 theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
 xtmp = radius*cos(theta);
@@ -74,8 +83,6 @@ k = 3; % degree of the B-spline
 u = 0:0.0002:1;
 nPts = length(u);
 
-nCPts = size(toolFit,2);
-toolFit = [zeros(1,nCPts);toolFit];
 % B-spline interpolate in the polar coordinate
 [toolEdgePt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...
     'paramMethod',paramMethod,'cptsType','Cartesian'); 
@@ -154,12 +161,16 @@ switch toolFileType
         save(toolDataFile,"Comments","unit","fitOpts","paramMethod", ... % comments and notes
             "center","radius","openAngle", ... % tool fitting results
             "toolEdgeNorm","toolDirect","cutDirect","toolBform", ... % tool interpolation results
-            "toolEdgePt","toolFit"); % auxiliary data
+            "toolEdgePt","toolCpts","toolFit"); % auxiliary data
         % toolEdgePt, toolCpts, toolFit are useless in the following process at present
     otherwise
         toolDataFile = fullfile(toolDirName,toolFileName);
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);
+end
+
+if isAPP
+    app.toolDataFile = toolDataFile;
 end
 
 %%

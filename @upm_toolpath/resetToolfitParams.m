@@ -1,7 +1,4 @@
 function resetToolfitParams(app)
-    app.ToolUnitDd.Value = app.toolUnitDefault;
-    app.toolUnit = app.ToolUnitDd.Value;
-
     app.ToolFitTypeDd.Value = app.toolFitTypeDefault;
     app.toolFitType = app.ToolFitTypeDd.Value;
     app.ArcFitMethodDd.Value = app.arcFitMethodDefault;
@@ -19,9 +16,8 @@ function resetToolfitParams(app)
     app.LineFitMaxDistEf.Enable = "off";
     app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
 
-    app.ParamMethodDd.Value = app.paramMethodDefault;
-    app.paramMethod = app.ParamMethodDd.Value;
-
-    app.Tool2DLineBtnBtn.Enable = 'on';
-    app.Tool3DLineBtnBtn.Enable = 'on';
+    app.S1ToolExtract2DLineBtn.Enable = 'on';
+    app.S1ToolExtract3DLineBtn.Enable = 'on';
+    app.S1ToolExtractSurfBtn.Enable = 'on';
+    app.S1ToolModelBtn.Enable = 'off';
 end
