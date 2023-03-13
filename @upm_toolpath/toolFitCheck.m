@@ -16,7 +16,7 @@ function toolFitCheck(app)
         app.toolDataFile = fullfile(dirName,fileName);
     end
     app.toolData = load(app.toolDataFile);
-    app.RStepEf.Value = app.toolData.radius;
+    app.RStepEf.Value = app.toolData.radius/2;
     app.Msg = 'Tool tip is interpolated successfully.';
     InfoTaValueChanged(app,true);
     app.CheckToolLamp.Color = 'g';

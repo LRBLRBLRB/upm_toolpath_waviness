@@ -1,5 +1,5 @@
-function [toolQuad,toolPathPt,toolContactU,surfPt,varargout] = surfpos(toolEdge, ...
-    toolPathPt,toolPathNorm,toolPathDir,surfFunc,surfNormFunc,options)
+function [toolPathPt,toolQuat,toolContactU,curvePt,varargout] = curvepos( ...
+    curveFunc,curveFy,toolEdge,toolPathPt,toolPathNorm,options)
 % Description:
 %   Solve the tool pose and the tool tip pose using the tangent relationship 
 %   of tool tip and surface, with the tool axis unchanged.
@@ -22,12 +22,11 @@ function [toolQuad,toolPathPt,toolContactU,surfPt,varargout] = surfpos(toolEdge,
 %   surfPt      (3,1)   the position of the surface contact point
 
 arguments
+    curveFunc function_handle
+    curveFy function_handle
     toolEdge
-    toolPathPt (3,1)
-    toolPathNorm (3,1)
-    toolPathDir (3,1)
-    surfFunc function_handle
-    surfNormFunc function_handle
+    toolPathPt (:,1)
+    toolPathNorm (3,1) = [0;0;-1]
     options.iniDisplay {mustBeMember(options.iniDisplay,{'none','off', ...
         'iter','iter-detailed','final','final-detailed'})} = 'none'
     options.finalDisplay {mustBeMember(options.finalDisplay,{'none','off', ...
@@ -41,37 +40,39 @@ end
 R = toolEdge.radius;
 
 %% Initial value of iteration
-    function F1 = ini2solve(x,toolPathXY)
-        % Notice: x(3) actually equals to the z value of the tool
-        % path point!!!
-        surfNorm = surfNormFunc(toolPathXY(1),toolPathXY(2));
-        F1(1) = toolPathXY(1) - x(1) + R*surfNorm(1);
-        F1(2) = toolPathXY(2) - x(2) + R*surfNorm(2);
-        F1(3) = x(3) - surfFunc(x(1),x(2)) + R*surfNorm(3);
+    function F1 = ini2solve(x,toolpathxy)
+        % the x and y coordinates of the toolpath has been given by the
+        % input, while tooltip's x & y and the z value of the toolpath
+        % need to be solved. so x = [tooltip_y; toolpath_z].
+        curveNorm = [curveFy(x(1));-1];
+        curveNorm = curveNorm./norm(curveNorm);
+        F1(1) = toolpathxy - x(1) + R*curveNorm(1);
+        % F1(2) = toolpathx(2) - x(2) + R*curveNorm(1);
+        F1(2) = x(end) - curveFunc(x(1)) + R*curveNorm(1);
     end
 
 optimOpts1 = optimoptions('fsolve', ...
     'Display',options.iniDisplay, ...
     'UseParallel',options.useParallel);
 
-surfPt = fsolve(@(toolTip)ini2solve(toolTip,toolPathPt(1:2)), ...
-    [toolPathPt(1:2);surfFunc(toolPathPt(1),toolPathPt(2))], ...
-    optimOpts1);
-toolPathPt(3) = surfPt(3);
+curvePt = fsolve(@(x)ini2solve(x,toolPathPt(2)), ...
+    [toolPathPt(2:3)],optimOpts1);
+toolPathPt(end) = curvePt(end);
+% curvePt(end) = curveFunc(curvePt(1));
 
 %% rotation transform
 % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
 toolRot = axesRot(toolEdge.toolEdgeNorm,toolEdge.cutDirect, ...
-        toolPathNorm,toolPathDir,'');
+        toolPathNorm,[0;0;1],'');
 toolEdgeRotate = toolRigid(toolEdge,toolRot,[0;0;0]);
-toolQuad = rotm2quat(toolRot);
+toolQuat = rotm2quat(toolRot);
 
 %% find the contact point on the tool edge
-    function F2 = final2solve(x,toolPathXY)
+    function F2 = final2solve(x,toolpathx)
         % surfNorm = surfNormFunc(toolPathXY(1),toolPathXY(2));
-        toolEdge1 = toolRigid(toolEdgeRotate,eye(3),[toolPathXY;x]);
+        toolEdge1 = toolRigid(toolEdgeRotate,eye(3),[toolpathx;x]);
         toolEdgeList = fnval(toolEdge1.toolBform,uQ);
-        toolEdgeDist = dist2surf(toolEdgeList,surfFunc, ...
+        toolEdgeDist = dist2curve(toolEdgeList(2:3,:),curveFunc,curveFy, ...
             'CalculateType','Lagrange-Multiplier', ...
             'DisplayType','none');
         F2 = min(toolEdgeDist);
@@ -83,17 +84,18 @@ optimOpts2 = optimoptions('fsolve', ...
     'FunctionTolerance',options.finalFuncTol, ...
     'StepTolerance',options.finalStepTol, ...
     'UseParallel',options.useParallel);
-toolPathZ = fsolve(@(x)final2solve(x,toolPathPt(1:2)),toolPathPt(3),optimOpts2);
-toolPathPt(3) = toolPathZ;
+toolPathZ = fsolve(@(x)final2solve(x,toolPathPt(1:2)),toolPathPt(end),optimOpts2);
+toolPathPt(end) = toolPathZ;
 
-surfNorm0 = surfNormFunc(toolPathPt(1),toolPathPt(2));
+curveNorm0 = [0;curveFy(curvePt(1));-1];
+curveNorm0 = curveNorm0./norm(curveNorm0);
 toolEdgeTrans = toolRigid(toolEdgeRotate,eye(3),toolPathPt);
 toolEdgeList0 = fnval(toolEdgeTrans.toolBform,uQ);
-[surfPtDistList,surfPtList] = dist2surf(toolEdgeList0,surfFunc, ...
-    'CalculateType','Lagrange-Multiplier');
+[surfPtDistList,surfPtList] = dist2curve(toolEdgeList0(2:3,:), ...
+    curveFunc,curveFy,'CalculateType','Lagrange-Multiplier');
 [varargout{1},Ind] = min(surfPtDistList);
-surfPt = surfPtList(:,Ind);
-[toolContactU,~,~] = toolPtInv(toolEdgeRotate.toolBform,surfNorm0,1e-3, ...
+curvePt = [0;surfPtList(:,Ind)];
+[toolContactU,~,~] = toolPtInv(toolEdgeRotate.toolBform,curveNorm0,1e-3, ...
     "Type",'TangentPlane',"Radius",toolEdgeRotate.radius);
 % toolContactU = 0.5;
 end

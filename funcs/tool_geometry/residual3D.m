@@ -83,7 +83,7 @@ end
 
 % method 2: to simulate the runin process to get the projection tool edge
 % the tool path point projection on the plane of tool path 1
-if all(abs(toolPt2(1:2) - toolPt3(1:2)) < 1e-1) % toolPt2 and toolPt3 remains the same position
+if all(abs(toolPt2(1:2) - toolPt3(1:2)) < 1e-4*toolRadius) % toolPt2 and toolPt3 remains the same position
     toolPtProj = toolPt2;
     if norm(toolNorm2 - toolNorm1) < norm(toolNorm3 - toolNorm1)
         toolNormProj = toolNorm2;

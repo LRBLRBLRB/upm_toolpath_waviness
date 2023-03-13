@@ -95,11 +95,11 @@ toolRadius = toolData.radius; % fitted tool radius
         peakPtOutTmp = zeros(3,loopPtNumLast + loopPtNumTmp);
     
         % calculate the residual height of the loop and the inner nearest loop
-        angle = [conTheta1,atan2(toolPathPtRes(2,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp), ...
-            toolPathPtRes(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp))];
+        angle = [conTheta1,wrapTo2Pi(atan2(toolPathPtRes(2,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp), ...
+            toolPathPtRes(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp)))];
         % inner side of each point on the tool path
         angleIn = angle(1:loopPtNumLast);
-        for indIn1 = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
+        parfor indIn1 = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
             angleDel = angleIn - angle(indIn1);
             [indIn2,indIn3] = getInnerLoopToolPathIndex(angleIn,angleDel);
             % if isempty(angleN(angleDel >= 0))

@@ -57,7 +57,26 @@ switch postType
         end
     case 2
         %% case 2: post-processing to export the axial position
-        p
+        axisC = atan2(2*(spiralQuat(:,2).*spiralQuat(:,3) - spiralQuat(:,1).*spiralQuat(:,4)), ...
+            2*(spiralQuat(:,1).^2 + spiralQuat(:,3).^2) - 1);
+        axisB = atan2(-2*(spiralQuat(:,2).*spiralQuat(:,4) + spiralQuat(:,1).*spiralQuat(:,3)), ...
+            2*(spiralQuat(:,1).^2 + spiralQuat(:,4).^2) - 1);
+        axisZ = (spiralPath(3,:).')./cos(axisB);
+        axisX = axisZ.*sin(axisB).*cos(axisC) - spiralPath(1,:).';
+        axisY = axisZ.*sin(axisB).*sin(axisC) - spiralPath(2,:).';
+
+        % put in the .nc file
+        [ncFname,ncPath,ncInd] = uiputfile( ...
+            {'*.nc','Numerical control files(*.nc)';'*.*','All files'}, ...
+            'Enter the file to save the CNC code',['spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.nc']);
+        ncFile = fullfile(ncPath,ncFname);
+        ncFid = fopen(ncFile,'w');
+        fprintf(ncFid,'( CUTTING BLOCK )\nG93 F%d',feedRate);
+        for ii = 1:length(axisC)
+            fprintf(ncFid,'GOTO/%f,%f,%f,%f,%f,%f\n', ...
+                spiralPath(1,ii),spiralPath(2,ii),spiralPath(3,ii), ...
+                spiralNorm(1,ii),spiralNorm(2,ii),spiralNorm(3,ii));
+        end
 end
 
 %%

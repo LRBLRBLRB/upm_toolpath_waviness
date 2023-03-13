@@ -14,8 +14,6 @@ if isAPP
     textFontSize = app.fontSize;
     textFontType = app.fontName;
 
-    toolData = app.toolData;
-
     % machining paramters
     cutDirection = app.cutDirection;
     spindleDirection = app.spindleDirection;
@@ -24,7 +22,6 @@ if isAPP
     toolData = app.toolData;
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = app.maxIter;
-    rMax = app.rMax;
     arcLength = app.arcLength;
     maxAngPtDist = app.maxAngPtDist;
     angularLength = app.angularLength;
@@ -36,6 +33,7 @@ if isAPP
     surfMesh = app.surfMesh;
     Geometry2DCell = app.Geometry2DCell;
     surfType = app.surfType;
+    rMax = app.rMax;
     
     msgOpts.Default = 'Cancel and quit';
     msgOpts.Interpreter = 'tex';
@@ -76,7 +74,9 @@ else
     toolName = fullfile(dirName,fileName);
     % toolName = 'output_data\tool\toolTheo_3D.mat';
     toolData = load(toolName);
-    
+%     toolData.radius = 1000*toolData.radius;
+%     toolData.toolBform.coefs = 1000*toolData.toolBform.coefs;
+
     % surface data import
     default = false;
     if default
@@ -114,52 +114,20 @@ else
         surfFy = diff(surfFunc,y);
         surfDomain = [-A*R/4,A*R/4;-B*R/4,B*R/4];
         rMax = max(surfDomain(1,2),surfDomain(2,2));
+        % rMax = 5;
         % sampling density
         spar = 501;
-        surfCenter = [0;0;sqrt(C^2*(R.^2-R/4.^2))]; % concentric circle center
-        conR = linspace(0,R/4,spar); % concentric radius vector
+        % surfCenter = [0;0;sqrt(C^2*(R.^2-R/4.^2))]; % concentric circle center
+        conR = linspace(0,rMax,spar); % concentric radius vector
         conTheta0 = linspace(0,2*pi,spar);
         [rMesh,thetaMesh] = meshgrid(conR,conTheta0);
-        surfMesh(:,:,1) = A*rMesh.*cos(thetaMesh);
-        surfMesh(:,:,2) = B*rMesh.*sin(thetaMesh);
+        % surfMesh(:,:,1) = A*rMesh.*cos(thetaMesh);
+        % surfMesh(:,:,2) = B*rMesh.*sin(thetaMesh);
+        surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
+        surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
         surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
         % save('input_data/surface/ellipsoidAray.mat', ...
         %    "surfMesh","surfNorm","surfCenter");
-    end
-
-    % normal direction & cutting direction of the surface mesh
-
-    [surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...
-        surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
-
-    fig1 = figure('Name','original xyz scatters of the surface (sparsely)');
-    surf( ...
-        surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-        'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-    hold on;
-%     quiver3(surfMesh(1:10:end,1:10:end,1), ...
-%         surfMesh(1:10:end,1:10:end,2), ...
-%         surfMesh(1:10:end,1:10:end,3), ...
-%         surfNormIni(1:10:end,1:10:end,1), ...
-%         surfNormIni(1:10:end,1:10:end,2), ...
-%         surfNormIni(1:10:end,1:10:end,3), ...
-%         'AutoScale','on','Color',[0.85,0.33,0.10], ...
-%         'DisplayName','Normal Vectors');
-    legend('Original Points','Orthogonal direction','Location','northeast');
-    % axis equal;
-    set(gca,'FontSize',textFontSize,'FontName',textFontType);
-    xlabel(['x (',unit,')']);
-    ylabel(['y (',unit,')']);
-    zlabel(['z (',unit,')']);
-
-    % interaction
-    msgfig = msgbox('Surface was generated successfully!','Exit','help','non-modal');
-    uiwait(msgfig);
-    msgfig = questdlg({'Surface was generated successfully!', ...
-        'Ready to continue?'}, ...
-        'Surface Generation','OK & continue','Cancel & quit','OK & continue');
-    if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-        return;
     end
     
     surfType = '3D';
@@ -177,9 +145,44 @@ else
     angularLength = 6*pi/180;
 end
 
+% plot the initial surface
+[surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
+
+fig1 = figure('Name','original xyz scatters of the surface (sparsely)');
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+hold on;
+%     quiver3(surfMesh(1:10:end,1:10:end,1), ...
+%         surfMesh(1:10:end,1:10:end,2), ...
+%         surfMesh(1:10:end,1:10:end,3), ...
+%         surfNormIni(1:10:end,1:10:end,1), ...
+%         surfNormIni(1:10:end,1:10:end,2), ...
+%         surfNormIni(1:10:end,1:10:end,3), ...
+%         'AutoScale','on','Color',[0.85,0.33,0.10], ...
+%         'DisplayName','Normal Vectors');
+legend('Original Points','Orthogonal direction','Location','northeast');
+% axis equal;
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
+
+% interaction
+msgfig = msgbox('Surface was generated successfully!','Exit','help','non-modal');
+uiwait(msgfig);
+msgfig = questdlg({'Surface was generated successfully!', ...
+    'Ready to continue?'}, ...
+    'Surface Generation','OK & continue','Cancel & quit','OK & continue');
+if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    return;
+end
+
 % pre-processing
 surfNormSym = [surfFx;surfFy;-1];
 surfNormSym = surfNormSym./norm(surfNormSym);
+syms x y;
 surfNormFunc = matlabFunction(surfNormSym,'Vars',{x,y});
 
 % switch spindleDirection
@@ -283,10 +286,10 @@ for ii = 1:accumPtNum(end)
         toolCutDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
         toolNormDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
     end
-    plot3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii)); hold on;
-    quiver3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii), ...
-        toolCutDirect(1,ii),toolCutDirect(2,ii),toolCutDirect(3,ii), ...
-        'AutoScale','on');
+    % plot3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii)); hold on;
+    % quiver3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii), ...
+    %     toolCutDirect(1,ii),toolCutDirect(2,ii),toolCutDirect(3,ii), ...
+    %     'AutoScale','on');
     
 %     toolSp1 = toolSp;
 %     toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolSp.coefs + toolVec(:,ii);

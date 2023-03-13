@@ -247,7 +247,7 @@ res = 5*aimRes*ones(2,accumPtNum(end)); % the residual height, initialized with 
 % figure;
 % calculate the 1st loop of the tool path
 parfor ii = 1:accumPtNum(end)
-    [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolPos( ...
+    [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolpos( ...
         toolData,surfPt(:,ii),surfNorm(:,ii),[0;0;-1],surfDirect(:,ii));
     if isCollision(ii) == false
         toolPathPt(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.center + toolVec(:,ii);
@@ -324,7 +324,7 @@ while true
         toolCutDirectTmp = zeros(3,loopPtNumTmp);
         toolNormDirectTmp = zeros(3,loopPtNumTmp);
         parfor ii = 1:loopPtNumTmp
-            [toolQuatTmp(ii,:),toolVecTmp(:,ii),toolContactUTmp(ii)] = toolPos( ...
+            [toolQuatTmp(ii,:),toolVecTmp(:,ii),toolContactUTmp(ii)] = toolpos( ...
                 toolData,surfPtTmp(:,ii),surfNormTmp(:,ii),[0;0;-1],surfDirectTmp(:,ii));
             toolPathPtTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.center + toolVecTmp(:,ii);
             toolCutDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.cutDirect;

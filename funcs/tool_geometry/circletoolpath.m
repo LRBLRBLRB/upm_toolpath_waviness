@@ -1,4 +1,4 @@
-function circletoolpath(r0,toolData,delta,surfFunc,surfNormFunc, ...
+function circletoolpath(r0,toolData,delta0,surfFunc,surfNormFunc, ...
     angularDiscrete,conThetaBound,maxAngPtDist,arcLength,angularLength, ...
     aimRes,rMax,tRes0)
 %     loopPtNum,accumPtNum,toolREach,surfPt,surfNorm,surfDirect, ...
@@ -98,7 +98,7 @@ toolRadius = toolData.radius; % fitted tool radius
         angle = atan2(toolPathPtRes(2,:),toolPathPtRes(1,:));
         % inner side of each point on the tool path
         angleIn = angle(1:loopPtNumLast);
-        parfor indIn1 = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
+        for indIn1 = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
             angleDel = angleIn - angle(indIn1);
             [indIn2,indIn3] = getInnerLoopToolPathIndex(angleIn,angleDel);
             % if isempty(angleN(angleDel >= 0))
@@ -127,6 +127,9 @@ toolRadius = toolData.radius; % fitted tool radius
         % if residual height does not satisfy the reqiurement
         maxRes = max(resTmp(1,loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp),[],"all");
         diffRes = maxRes - aimRes;
+        if maxRes == Inf
+            error('The radius %d is too large to fit the surface',r);
+        end
 %         if maxRes < aimRes
 %             break;
 %         else
@@ -140,9 +143,9 @@ toolRadius = toolData.radius; % fitted tool radius
 opt1 = optimset('Display','iter','MaxIter',50,'PlotFcns',{@optimplotx,@optimplotfval}, ...
     'TolFun',1,'TolX',1e-3);
 
-opt2 = optimoptions('fsolve','Algorithm','trust-region-dogleg', ...
+opt2 = optimoptions('fsolve','Algorithm','levenberg-marquardt', ...
     'Display','iter-detailed','PlotFcn',{@optimplotx,@optimplotfval}, ...
-    'MaxIterations',100,'FunctionTolerance',1,'StepTolerance',1e-2);
+    'MaxIterations',100,'FunctionTolerance',1e-6,'StepTolerance',1e-6);
 
 while true
     tic
@@ -165,11 +168,11 @@ while true
     toolCutDirectTmp = [];
     peakPtInTmp = [];
 
-    [r1,diffRes1] = fzero(@iterfunc,r0,opt1);
+%     [r1,diffRes1] = fzero(@iterfunc,r0,opt1);
 
     % [r2,diffRes2] = fminsearch(@iterfunc,r0,opt1);
 
-    % [r3,diffRes3] = fsolve(@iterfunc,r0,opt2);
+    [r1,~] = fsolve(@iterfunc,r0,opt2);
 
 
     % outer side of each point in the tool path
@@ -234,9 +237,12 @@ while true
     fprintf('r remains %f.\n\n',r1);
     fprintf('No.%d\tElapsed time is %f seconds.\n-----\n',length(loopPtNum),toc);
     if r1 > rMax, break; end
-    % delta = toolREach(end) - toolREach(end-1);
-%     delta = rStep;
-    r0 = r1 + delta;
+%     if toolREach(end) - toolREach(end-1) > 0
+%         delta = toolREach(end) - toolREach(end-1);
+%     else
+%         delta = delta0;
+%     end
+    r0 = r1 + delta0;
 %     iter = 1;
 end
 

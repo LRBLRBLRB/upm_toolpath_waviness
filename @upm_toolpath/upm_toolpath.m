@@ -17,12 +17,12 @@ classdef upm_toolpath < matlab.apps.AppBase
         ImportCell              = {'Point Cloud','Mesh'}
         Geometry2DCell          = {'Rotating Paraboloid','Aspheric'}
         Geometry3DCell          = {'Ellipsoid','Function-Based'}
-        cutDirectionDefault     = 'Center to Edge'
+        cutDirectionDefault     = 'Edge to Center'
         spindleDirectionDefault = 'Counterclockwise'
         angularDiscreteDefault  = 'Constant Arc'
-        aimResDefault           = 0.05
+        aimResDefault           = 0.0005
         rStepDefault            = 0.2
-        maxIterDefault          = 10
+        maxIterDefault          = 50
         arcLengthDefault        = 0.03
         maxAngPtDistDefault     = 6*pi/180
         angularLengthDefault    = 6*pi/180
@@ -109,13 +109,14 @@ classdef upm_toolpath < matlab.apps.AppBase
         OptimParamFeedTab       matlab.ui.container.Tab
         OptimUpdateBtn          matlab.ui.control.Button
         OptimResetBtn           matlab.ui.control.Button
+        OptimAsphericBtn        matlab.ui.control.Button
+        OptimFreeformBtn        matlab.ui.control.Button
         InfoTa                  matlab.ui.control.TextArea
         MsgState                logical
         Msg                     char
         MsgNum                  int16
         S2DesignSimulAsphericConcentricBtn  matlab.ui.control.Button
         S2DesignSimulFreeformBtn            matlab.ui.control.Button
-        S4OptimAsphericConcentricBtn        matlab.ui.control.Button
     end
 
     % properties for the opening app
@@ -151,8 +152,8 @@ classdef upm_toolpath < matlab.apps.AppBase
         surfPathName                char
         surfPt              (3,:)   double
         surfFuncs                   function_handle
-        surfFx                      function_handle
-        surfFy                      function_handle
+        surfFx                      sym
+        surfFy                      sym
         surfPlotSpar        (1,1)   double
         surfMesh            (:,:,3) double
 
@@ -861,8 +862,14 @@ classdef upm_toolpath < matlab.apps.AppBase
             InfoTaValueChanged(app,true);
         end
         
-        function S4OptimAsphericConcentricBtnPushed(app,event)
-            s4_optim_aspheric_concentric;
+        function OptimAsphericBtnPushed(app,event)
+            s4_optim_2Diter_concentric_iter;
+            app.Msg = 'Toolpath optimization is successfully finished.';
+            InfoTaValueChanged(app,true);
+        end
+
+        function OptimFreeformBtnPushed(app,event)
+            s4_optim_3Dsolve_concentric_iter;
             app.Msg = 'Toolpath optimization is successfully finished.';
             InfoTaValueChanged(app,true);
         end
@@ -1351,7 +1358,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.SurfaceCancelBtn.ButtonPushedFcn = createCallbackFcn(app,@SurfaceCancelBtnPushed,true);
 
             % ------------------------------------------------------------------------
-            % --------------------------Optimization Process--------------------------
+            % ------------------------- Optimization Process -------------------------
             % ------------------------------------------------------------------------
 
             app.OptimTb = uitab(app.FigureTbGp,'Title','Optimization');
@@ -1362,6 +1369,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             OptimTbGl.RowHeight = {'fit','fit'};
             OptimTbGl.ColumnWidth = {'1x','1x'};
 
+            % ------------------------- Optim- Condition Check Area -------------------------
             CheckGl = uigridlayout(OptimTbGl,[1,2],'Padding',[0,0,0,0]);
             CheckGl.Layout.Row = 1;
             CheckGl.Layout.Column = [1,2];
@@ -1395,6 +1403,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.CheckSurfLamp.Layout.Row = 1;
             app.CheckSurfLamp.Layout.Column = 2;
 
+            % ------------------------- Optim- Parameters Selection -------------------------
             OptimParamPn = uipanel(OptimTbGl,'Title','Edit Parameters', ...
                 'TitlePosition','centertop');
             OptimParamPn.Layout.Row = 2;
@@ -1531,12 +1540,26 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.OptimUpdateBtn.Layout.Column = 2;
             app.OptimUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@OptimUpdateBtnPushed,true);
 
-            app.S4OptimAsphericConcentricBtn = uibutton(OptimTbGl,'push','WordWrap','on', ...
+            % --------------
+            Op0timProcessGl = uigridlayout(OptimTbGl,[2,1]);
+            Op0timProcessGl.Scrollable = 'on';
+            Op0timProcessGl.RowHeight = {'fit','fit'};
+            Op0timProcessGl.Layout.Row = 2;
+            Op0timProcessGl.Layout.Column = 2;
+
+            app.OptimAsphericBtn = uibutton(Op0timProcessGl,'push','WordWrap','on', ...
                 'Text','s4_optim_aspheric_concentric');
-            app.S4OptimAsphericConcentricBtn.Layout.Row = 2;
-            app.S4OptimAsphericConcentricBtn.Layout.Column = 2;
-            app.S4OptimAsphericConcentricBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@S4OptimAsphericConcentricBtnPushed,true);
+            app.OptimAsphericBtn.Layout.Row = 1;
+            % app.OptimAsphericBtn.Layout.Column = 2;
+            app.OptimAsphericBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@OptimAsphericBtnPushed,true);
+
+            app.OptimFreeformBtn = uibutton(Op0timProcessGl,'push','WordWrap','on', ...
+                'Text','optim_freeform_concentric');
+            app.OptimFreeformBtn.Layout.Row = 2;
+            % app.OptimFreeformBtn.Layout.Column = 2;
+            app.OptimFreeformBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@OptimFreeformBtnPushed,true);
 
             % ------------------------------------------------------------------------
             % ---------------------------Program Processing---------------------------
