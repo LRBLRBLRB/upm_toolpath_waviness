@@ -5,8 +5,8 @@ function [dist,ptProj] = dist2curve(pt,curveFunc,curveFunc_y,options)
 % the normal vector, then the distance will be positive.
 %
 % pt         (3,:) the points set, the distance of which would be calculated 
-% surfFunc   sym   the surface function, i.e., surfFunc = f(x,y,z) = 0
-% surfFunc_x 
+% curveFunc  sym   the surface function, i.e., surfFunc = f(x,y,z) = 0
+% curveFunc_y 
 % options    
 
 % 问题：这里针对并行运算（多个初值同时求解）的优化是否正确？
@@ -49,5 +49,5 @@ end
 end
 
 function F = eqs2solve(Q,P,func,func_x)
-    F = (P(1,:) - Q(1,:)) + func_x(Q(1,:)) .* (P(end,:) - func(Q(1,:)));
+    F = func_x(Q(1,:)).*(P(1,:) - Q(1,:)) + (P(2,:) - func(Q(1,:)));
 end

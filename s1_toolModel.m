@@ -34,7 +34,7 @@ t = tiledlayout(2,1);
 nexttile;
 plot(toolFit(2,:),toolFit(3,:),'Color',[0,0.45,0.74],'LineWidth',0.5); % tool edge scatters
 hold on; axis equal;
-theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
+theta = (-pi/2 - openAngle/2):0.01:(-pi/2 + openAngle/2);
 xtmp = radius*cos(theta);
 ytmp = radius*sin(theta);
 plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
@@ -45,7 +45,7 @@ title('Tool contour');
 legend('tool edge','tool fitting arc','Location','northeast');
 
 nexttile;
-plot(toolTheta*180/pi - 90,toolR - radius); hold on;
+plot(toolTheta*180/pi + 90,toolR - radius); hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlim([-openAngle*180/pi/2,openAngle*180/pi/2]);
 title('Tool geometric error');
@@ -76,7 +76,7 @@ title(t,'Tool Geometric Error');
 % xlabel('central angle \theta(°)');
 % grid on;
 
-clear xtmp ytmp theta xLim; % 删除画图的临时变量
+% clear xtmp ytmp theta xLim; % 删除画图的临时变量
 
 %% 车刀轮廓插值 two methods to interpolate
 k = 3; % degree of the B-spline
@@ -135,9 +135,9 @@ legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 
 %% save the tool interpolation results
 center = [0;0;0];
-toolEdgeNorm = [0;0;1];
+toolEdgeNorm = [0;0;-1];
 cutDirect = [1;0;0];
-toolDirect = [0;1;0];
+toolDirect = [0;-1;0];
 pause(1);
 [toolFileName,toolDirName,toolFileType] = uiputfile({ ...
         '*.mat','MAT-file(*.mat)'; ...

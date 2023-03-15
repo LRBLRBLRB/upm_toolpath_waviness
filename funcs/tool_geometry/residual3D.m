@@ -1,5 +1,5 @@
 function [res,peakPt,uLim1] = residual3D(toolPt,toolNorm,toolCutDir, ...
-    toolContactU,toolSp,toolRadius,uLim1,varargin)
+    toolContactU,toolData,toolRadius,uLim1,varargin)
 % to calculate the residual height among the adjacent tool points.
 %
 % Usage:
@@ -77,6 +77,8 @@ switch nargin
         error('Invalid input. Not enough or tool many input parameters');
 end
 
+toolSp = toolData.toolBform;
+
 %% tool point and orientation projection
 % method 1: to project the closest point and its tool edge to the current one
 % toolPtProj = ptOnPlane(toolPt1,toolPt2,toolCutDir1);
@@ -109,10 +111,10 @@ else
 end
 
 %% rigid transform of tool edge from the standard place to the corresponding
-R1 = axesRot([0;0;1],[1;0;0],toolNorm1,toolCutDir1,'zx');
+R1 = axesRot(toolData.toolEdgeNorm,toolData.cutDirect,toolNorm1,toolCutDir1,'zx');
 toolSp1 = toolSp;
 toolSp1.coefs = R1*toolSp.coefs + toolPt1;
-RProj = axesRot([0;0;1],[1;0;0],toolNormProj,toolCutDirProj,'zx');
+RProj = axesRot(toolData.toolEdgeNorm,toolData.cutDirect,toolNormProj,toolCutDirProj,'zx');
 toolSpProj = toolSp;
 toolSpProj.coefs = RProj*toolSp.coefs + toolPtProj;
 

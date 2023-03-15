@@ -50,7 +50,7 @@ end
 
 %% rigid transform: to get the standardized tool profile
 n = size(scatterOri,2);
-rotAng = pi/2 - atan2(circ2D.arcVec(2),circ2D.arcVec(1));
+rotAng = -pi/2 - atan2(circ2D.arcVec(2),circ2D.arcVec(1));
 rotMat = rotz(rotAng);
 rotMat = rotMat(1:2,1:2);
 scatterDst = rotMat*(scatterPlane(1:2,:) - ndgrid(circ2D.center,1:n));

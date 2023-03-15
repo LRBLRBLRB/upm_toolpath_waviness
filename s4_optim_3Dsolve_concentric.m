@@ -247,22 +247,22 @@ res = 5*aimRes*ones(2,accumPtNum(end)); % the residual height, initialized with 
 % figure;
 % calculate the 1st loop of the tool path
 parfor ii = 1:accumPtNum(end)
-    [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = toolpos( ...
+    [toolQuat(ii,:),toolVec(:,ii),toolContactU(ii),isCollision(ii)] = tooltippos( ...
         toolData,surfPt(:,ii),surfNorm(:,ii),[0;0;-1],surfDirect(:,ii));
     if isCollision(ii) == false
         toolPathPt(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.center + toolVec(:,ii);
         toolCutDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
         toolNormDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
     end
-    % plot3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii)); hold on;
-    % quiver3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii), ...
-    %     toolCutDirect(1,ii),toolCutDirect(2,ii),toolCutDirect(3,ii), ...
-    %     'AutoScale','on');
-    % toolSp1 = toolSp;
-    % toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolSp.coefs + toolVec(:,ii);
-    % Q = fnval(toolSp1,uLim(1,ii):0.01:uLim(2,ii));
-    % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
-    % xlabel('x'); ylabel('y'); axis equal; hold on;
+%     plot3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii)); hold on;
+%     quiver3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii), ...
+%         toolCutDirect(1,ii),toolCutDirect(2,ii),toolCutDirect(3,ii), ...
+%         'AutoScale','on');
+%     toolSp1 = toolSp;
+%     toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolSp.coefs + toolVec(:,ii);
+%     Q = fnval(toolSp1,uLim(1,ii):0.01:uLim(2,ii));
+%     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+%     xlabel('x'); ylabel('y'); axis equal; hold on;
 end
 
 fprintf('No.1\tElapsed time is %f seconds.\n-----\n',toc(t1));
@@ -324,7 +324,7 @@ while true
         toolCutDirectTmp = zeros(3,loopPtNumTmp);
         toolNormDirectTmp = zeros(3,loopPtNumTmp);
         parfor ii = 1:loopPtNumTmp
-            [toolQuatTmp(ii,:),toolVecTmp(:,ii),toolContactUTmp(ii)] = toolpos( ...
+            [toolQuatTmp(ii,:),toolVecTmp(:,ii),toolContactUTmp(ii)] = tooltippos( ...
                 toolData,surfPtTmp(:,ii),surfNormTmp(:,ii),[0;0;-1],surfDirectTmp(:,ii));
             toolPathPtTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.center + toolVecTmp(:,ii);
             toolCutDirectTmp(:,ii) = quat2rotm(toolQuatTmp(ii,:))*toolData.cutDirect;
@@ -366,7 +366,7 @@ while true
         angle = atan2(toolPathPtRes(2,:),toolPathPtRes(1,:));
         % inner side of each point on the tool path
         angleN = angle(1:loopPtNumLast);
-        for ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
+        parfor ii = loopPtNumLast + 1:loopPtNumLast + loopPtNumTmp
             angleDel = angleN - angle(ii);
             [ind2,ind3] = getInnerLoopToolPathIndex(angleN,angleDel);
             % if isempty(angleN(angleDel >= 0))
@@ -380,7 +380,7 @@ while true
             % ind3 = find(angleN == max(angleN(angleDel < 0)));
             [resTmp(1,ii),peakPtInTmp(:,ii),uLimTmp(:,ii)] = residual3D( ...
                 toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
-                toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
+                toolData,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
 
             % debug
             % plot3(toolPathPtRes(1,ii),toolPathPtRes(2,ii),toolPathPtRes(3,ii), ...
@@ -424,7 +424,7 @@ while true
         % ind3 = loopPtNumLast + find(angleN == max(angleN(angleDel < 0)));
         [resTmp(2,ii),peakPtOutTmp(:,ii),uLimTmp(:,ii)] = residual3D( ...
             toolPathPtRes,toolNormDirectRes,toolCutDirectRes,toolContactURes, ...
-            toolSp,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
+            toolData,toolRadius,uLimTmp(:,ii),ii,ind2,ind3);
 
         % debug
 %         plot3(toolPathPtRes(1,ii),toolPathPtRes(2,ii),toolPathPtRes(3,ii), ...
@@ -435,7 +435,7 @@ while true
 %         Q = fnval(toolSp1,uLimTmp(1,ii):0.01:uLimTmp(2,ii));
 %         plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1);
     end
-    
+
     % then store the data of this loop
     loopPtNum = [loopPtNum,loopPtNumTmp];
     accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNumTmp];

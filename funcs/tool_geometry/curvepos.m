@@ -24,8 +24,8 @@ function [toolPathPt,toolQuat,toolContactU,curvePt,varargout] = curvepos( ...
 arguments
     curveFunc function_handle
     curveFy function_handle
-    toolEdge
-    toolPathPt (:,1)
+    toolEdge struct
+    toolPathPt (3,1)
     toolPathNorm (3,1) = [0;0;-1]
     options.iniDisplay {mustBeMember(options.iniDisplay,{'none','off', ...
         'iter','iter-detailed','final','final-detailed'})} = 'none'
@@ -48,7 +48,7 @@ R = toolEdge.radius;
         curveNorm = curveNorm./norm(curveNorm);
         F1(1) = toolpathxy - x(1) + R*curveNorm(1);
         % F1(2) = toolpathx(2) - x(2) + R*curveNorm(1);
-        F1(2) = x(end) - curveFunc(x(1)) + R*curveNorm(1);
+        F1(2) = x(2) - curveFunc(x(1)) + R*curveNorm(2);
     end
 
 optimOpts1 = optimoptions('fsolve', ...
@@ -56,14 +56,14 @@ optimOpts1 = optimoptions('fsolve', ...
     'UseParallel',options.useParallel);
 
 curvePt = fsolve(@(x)ini2solve(x,toolPathPt(2)), ...
-    [toolPathPt(2:3)],optimOpts1);
+    toolPathPt(2:3),optimOpts1);
 toolPathPt(end) = curvePt(end);
 % curvePt(end) = curveFunc(curvePt(1));
 
 %% rotation transform
 % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
 toolRot = axesRot(toolEdge.toolEdgeNorm,toolEdge.cutDirect, ...
-        toolPathNorm,[0;0;1],'');
+        toolPathNorm,[-1;0;0],'');
 toolEdgeRotate = toolRigid(toolEdge,toolRot,[0;0;0]);
 toolQuat = rotm2quat(toolRot);
 
@@ -95,6 +95,11 @@ toolEdgeList0 = fnval(toolEdgeTrans.toolBform,uQ);
     curveFunc,curveFy,'CalculateType','Lagrange-Multiplier');
 [varargout{1},Ind] = min(surfPtDistList);
 curvePt = [0;surfPtList(:,Ind)];
+
+if abs(ini2solve([curvePt(2);toolPathPt(3)],toolPathPt(2))) > toolEdge.radius
+    error('The curvature of the present on the surface is too large to be machined by the tool.');
+end
+
 [toolContactU,~,~] = toolPtInv(toolEdgeRotate.toolBform,curveNorm0,1e-3, ...
     "Type",'TangentPlane',"Radius",toolEdgeRotate.radius);
 % toolContactU = 0.5;

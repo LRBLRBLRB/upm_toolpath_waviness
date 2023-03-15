@@ -59,6 +59,8 @@ classdef add_surface < matlab.apps.AppBase
         EllipsoidCSpin          matlab.ui.control.Spinner
         EllipsoidDLb            matlab.ui.control.Label
         EllipsoidDSpin          matlab.ui.control.Spinner
+        BiconicRadioBtn         matlab.ui.control.RadioButton
+        BiconicBtnGl            matlab.ui.container.GridLayout
         SurfaceDomainPn         matlab.ui.container.Panel
         SurfaceDomainPnGl       matlab.ui.container.GridLayout
         SurfaceDomainDd         matlab.ui.control.DropDown
@@ -438,7 +440,7 @@ classdef add_surface < matlab.apps.AppBase
             app.ParaboloidBLb = uilabel(app.ParaboloidBtnGl,'Text','b');
             app.ParaboloidBLb.Layout.Row = 3;
             app.ParaboloidBLb.Layout.Column = 1;
-            app.ParaboloidBSpin = uispinner(app.ParaboloidBtnGl,'Value',0.96,'Limits',[-inf,inf]);
+            app.ParaboloidBSpin = uispinner(app.ParaboloidBtnGl,'Value',0,'Limits',[-inf,inf]);
             app.ParaboloidBSpin.Layout.Row = 3;
             app.ParaboloidBSpin.Layout.Column = [2,3];
 
@@ -575,6 +577,19 @@ classdef add_surface < matlab.apps.AppBase
             app.EllipsoidDSpin = uispinner(app.EllipsoidBtnGl,'Value',10/2*1000);
             app.EllipsoidDSpin.Layout.Row = 5;
             app.EllipsoidDSpin.Layout.Column = [2,4];
+
+            % ----------------------- biconic surface -----------------------
+            app.BiconicRadioBtn = uiradiobutton(app.Geometry3DBtnGp,'Text','Biconic','WordWrap','on', ...
+                'Position',[app.ButtonColumnInterval, ...
+                app.Geometry3DBtnGp.Position(4) - 3*app.ButtonHeight - 3*app.ButtonRowInterval, ...
+                app.ButtonWidth,app.ButtonHeight]);
+            app.BiconicBtnGl = uigridlayout(app.SurfaceGl,[5,4]);
+            app.BiconicBtnGl.Layout.Row = [1,2];
+            app.BiconicBtnGl.Layout.Column = [2,3];
+            app.BiconicBtnGl.RowHeight = {'fit','fit','fit','fit','fit'};
+            app.BiconicBtnGl.ColumnWidth = {'fit','1x','1x','fit'};
+            app.BiconicBtnGl.Visible = 'off';
+            app.BiconicBtnGl.Scrollable = 'on';
 
             % ----------------------- surface domain -----------------------
             app.SurfaceDomainPn = uipanel(app.SurfaceGl,'Title','Domain', ...

@@ -78,8 +78,10 @@ else
     toolData = load(toolName);
     
     % surface data import
+    A = tand(20)/(2*2000);
+    C = -2*2000*A;
     syms x y;
-    surfSym = 0.038*x.^2 + 0.038*y.^2 + 0.96;
+    surfSym = A*(x.^2 + y.^2) + C;
     surfFunc = matlabFunction(surfSym);
     surfFx = diff(surfFunc,x);
     surfFy = diff(surfFunc,y);
@@ -208,6 +210,7 @@ res = 5*aimRes; % the residual height, initialized with 5 times the standard aim
 [toolPathPt(:,1),toolQuat,toolContactU,surfPt] = curvepos( ...
     surfFuncr,surfFyr,toolData,toolPathPt(:,1),[0;0;-1]);
 toolNormDirect = quat2rotm(toolQuat)*toolData.toolEdgeNorm;
+fprintf('No.1\t toolpath point is calculated.\n-----\n');
 
 % the rest
 r = rStep;
@@ -216,13 +219,16 @@ iter = 1;
 delta = rStep;
 while r <= rMax
     ind = ind + 1;
-    toolPathPt(:,ind) = [0; ...
-        toolPathPt(2,ind - 1) + r; ...
-        surfFuncr(toolPathPt(2))];
+%     toolPathPt(:,ind) = [0;r;surfFuncr(r)];
+    surfPt(:,ind) = [0;r;surfFuncr(r)];
+    surfNorm = [0;surfFyr(r);-1];
+    surfNorm = surfNorm./norm(surfNorm);
     while iter <= maxIter
         % calculate the surfPt and toolpathPt from center to edge
-        [toolPathPt(:,ind),toolQuat(ind,:),toolContactU(ind),surfPt(:,ind)] = curvepos( ...
-            surfFuncr,surfFyr,toolData,toolPathPt(:,ind),[0;0;-1]);
+        [toolPathPt(:,ind),toolQuat(ind,:),toolContactU(ind)] = ...
+            curvetippos(toolData,surfPt(:,ind),surfNorm,[0;0;-1]);
+%         [toolPathPt(:,ind),toolQuat(ind,:),toolContactU(ind),surfPt(:,ind)] = curvepos( ...
+%             surfFuncr,surfFyr,toolData,toolPathPt(:,ind),[0;0;-1]);
         toolNormDirect(:,ind) = quat2rotm(toolQuat(ind,:))*toolData.toolEdgeNorm;
 
         % calculate the residual height of the loop and the inner nearest loop
@@ -231,15 +237,15 @@ while r <= rMax
         toolContactPt1 = fnval(toolSp1,toolContactU(ind));
         toolSp2 = toolSp;
         toolSp2.coefs = quat2rotm(toolQuat(ind - 1,:))*toolSp2.coefs + toolPathPt(:,ind - 1);
-        toolContactPt2 = fnval(toolSp1,toolContactU(ind - 1));
+        toolContactPt2 = fnval(toolSp2,toolContactU(ind - 1));
         [res(ind),peakPt(:,ind),uLim(1,ind),uLim(2,ind)] = residual2D_numeric(toolSp1,toolSp2,1e-3, ...
             toolContactPt1,toolContactPt2,'DSearchn');
 
         % if residual height does not satisfy the reqiurement
-        if max(res(ind)) < aimRes
+        if res(ind) < aimRes
             break;
         else
-            fprintf('\tIter %d: The maximum residual height is %f %cm.\n',iter,maxRes,char([956]));
+            fprintf('\tIter %d: The maximum residual height is %f %cm.\n',iter,max(res(ind)),char([956]));
             delta = delta/3;
             r = r - delta;
             iter = iter + 1;
@@ -252,6 +258,7 @@ while r <= rMax
     delta = rStep;
     r = r + delta;
     iter = 1;
+fprintf('No.%d\t toolpath point is calculated.\n-----\n',ind);
 end
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
