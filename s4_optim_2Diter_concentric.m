@@ -79,7 +79,7 @@ else
     
     % surface data import
     A = tand(20)/(2*2000);
-    C = -2*2000*A;
+    C = 0;
     syms x y;
     surfSym = A*(x.^2 + y.^2) + C;
     surfFunc = matlabFunction(surfSym);
@@ -208,7 +208,7 @@ res = 5*aimRes; % the residual height, initialized with 5 times the standard aim
 
 % the first toolpath pt
 [toolPathPt(:,1),toolQuat,toolContactU,surfPt] = curvepos( ...
-    surfFuncr,surfFyr,toolData,toolPathPt(:,1),[0;0;-1]);
+    surfFuncr,surfFyr,toolData,toolPathPt(:,1),[0;0;-1],[0;-1;0]);
 toolNormDirect = quat2rotm(toolQuat)*toolData.toolEdgeNorm;
 fprintf('No.1\t toolpath point is calculated.\n-----\n');
 
@@ -225,8 +225,9 @@ while r <= rMax
     surfNorm = surfNorm./norm(surfNorm);
     while iter <= maxIter
         % calculate the surfPt and toolpathPt from center to edge
+        % [0;-1;0]: edge to center
         [toolPathPt(:,ind),toolQuat(ind,:),toolContactU(ind)] = ...
-            curvetippos(toolData,surfPt(:,ind),surfNorm,[0;0;-1]);
+            curvetippos(toolData,surfPt(:,ind),surfNorm,[0;0;-1],[0;-1;0]);
 %         [toolPathPt(:,ind),toolQuat(ind,:),toolContactU(ind),surfPt(:,ind)] = curvepos( ...
 %             surfFuncr,surfFyr,toolData,toolPathPt(:,ind),[0;0;-1]);
         toolNormDirect(:,ind) = quat2rotm(toolQuat(ind,:))*toolData.toolEdgeNorm;

@@ -27,6 +27,11 @@ arguments
 end
 
 toolSp = toolData.toolBform; % B-form tool tip arc
+if rRange(2) > rRange(1)
+    toolDirect = [0;1;0];
+else
+    toolDirect = [0;-1;0];
+end
 
 uLim = [0;1]; % the interval of each toolpath
 peakPt = zeros(3,1);
@@ -39,7 +44,7 @@ res = 5*aimRes; % the residual height, initialized with 5 times the standard aim
         surfNorm = surfNorm./norm(surfNorm);
         % calculate the surfPt and toolpathPt from center to edge
         [toolPathPt(:,ind),toolQuat(ind,:),toolContactU(ind)] = ...
-            curvetippos(toolData,surfPt(:,ind),surfNorm,[0;0;-1]);
+            curvetippos(toolData,surfPt(:,ind),surfNorm,[0;0;-1],toolDirect);
         % toolNormDirect(:,ind) = quat2rotm(toolQuat(ind,:))*toolData.toolEdgeNorm;
 
         % calculate the residual height of the loop and the inner nearest loop
@@ -49,9 +54,15 @@ res = 5*aimRes; % the residual height, initialized with 5 times the standard aim
         toolSp2 = toolSp;
         toolSp2.coefs = quat2rotm(toolQuat(ind - 1,:))*toolSp2.coefs + toolPathPt(:,ind - 1);
         toolContactPt2 = fnval(toolSp2,toolContactU(ind - 1));
-        [res(ind),peakPt(:,ind),uLim(1,ind),uLim(2,ind - 1)] = residual2D_numeric(toolSp1,toolSp2,1e-3, ...
+        [res(ind),peakPt(:,ind),uLim1,uLim2] = residual2D_numeric(toolSp1,toolSp2,1e-3, ...
             toolContactPt1,toolContactPt2,'DSearchn');
-
+        if toolDirect(2) > 0
+            uLim(2,ind) = uLim1;
+            uLim(1,ind - 1) = uLim2;
+        else
+            uLim(1,ind) = uLim1;
+            uLim(2,ind - 1) = uLim2;
+        end
         diffRes = res(ind) - aimRes;
     end
 
@@ -62,6 +73,7 @@ opt2 = optimoptions('fsolve','Algorithm','levenberg-marquardt', ...
     'Display',options.radiusDisplay, ...
     'MaxIterations',options.maxIter,'FunctionTolerance',options.funcTol,'StepTolerance',options.xTol);
 % 'PlotFcn',{@optimplotx,@optimplotfval},
+
 r0 = rRange(1) + delta0;
 r = rRange(1) + delta0;
 ind = 2;
@@ -73,11 +85,13 @@ while (r - rRange(2))*delta0 < 0
     % [r,diffRes2] = fminsearch(@iterfunc,r0,opt1);
 
     r = fsolve(@iterfunc,r0,opt2);
-    if rRange(2) < rRange(1)
+    if uLim(1,ind-1) > uLim(2,ind-1)
        tmp = uLim(1,ind-1);
        uLim(1,ind-1) = uLim(2,ind-1);
        uLim(2,ind-1) = tmp;
     end
+
+    scatter(toolPathPt(2,ind),toolPathPt(3,ind));
     toolSp0 = toolSp;
     toolSp0.coefs = quat2rotm(toolQuat(ind,:))*toolSp0.coefs + toolPathPt(:,ind);
     toolPt0 = fnval(toolSp0,uLim(1,ind):0.001:uLim(2,ind));
@@ -87,6 +101,12 @@ while (r - rRange(2))*delta0 < 0
 
     ind = ind + 1;
     r0 = r + delta0;
+end
+
+if uLim(1,ind-1) > uLim(2,ind-1)
+   tmp = uLim(1,ind-1);
+   uLim(1,ind-1) = uLim(2,ind-1);
+   uLim(2,ind-1) = tmp;
 end
 
 end

@@ -1,4 +1,4 @@
-function [toolPathPt,toolQuat,toolContactU] = curvetippos(toolEdge,curvePt,curveNorm,toolPathNorm)
+function [toolPathPt,toolQuat,toolContactU] = curvetippos(toolEdge,curvePt,curveNorm,toolPathNorm,toolPathFeed)
 % usage: [toolPos,toolCutDirect,log] = toolPos(toolEdge,surfPt,surfNorm,designDirect,designNorm)
 %   Solve the tool pose using the tangent relationship of tool tip and
 %   surface, with the tool axis unchanged.
@@ -20,8 +20,8 @@ if size(curvePt,1) ~= 3 || size(toolPathNorm,1) ~= 3
 end
 
 % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
-toolRot = axesRot(toolEdge.toolEdgeNorm,toolEdge.cutDirect, ...
-    toolPathNorm,[-1,0,0],'');
+toolRot = axesRot(toolEdge.toolDirect,toolEdge.toolEdgeNorm, ...
+    toolPathFeed,toolPathNorm,'yz');
 toolEdge2 = toolRigid(toolEdge,toolRot,[0;0;0]);
 
 % find the contact point on the tool edge

@@ -1,5 +1,5 @@
 function [toolPathPt,toolQuat,toolContactU,curvePt,varargout] = curvepos( ...
-    curveFunc,curveFy,toolEdge,toolPathPt,toolPathNorm,options)
+    curveFunc,curveFy,toolEdge,toolPathPt,toolPathNorm,toolPathFeed,options)
 % Description:
 %   Solve the tool pose and the tool tip pose using the tangent relationship 
 %   of tool tip and surface, with the tool axis unchanged.
@@ -10,15 +10,20 @@ function [toolPathPt,toolQuat,toolContactU,curvePt,varargout] = curvepos( ...
 %   [toolQuad,toolPathPt,surfPt] = surfPos(toolEdge,toolPathPt, ...
 %       toolPathNorm,toolPathDir,surfFunc,surfNorm)
 % Inputs:
-%   toolEdge (structure) the edge model of the tool
-%   toolPathPt (3,1)    pose of the tool tip (the surface as well)+
-%   toolPathNorm (3,1)  the normal vector at the tool path point
-%   toolPathDir (3,1)   the cutting direction vector at the tool path point
-%   surfFunc     function_handle    surface function
-%   surfNormFunc function_handle    surface normal vector
+%   curveFunc
+%   curveFy 
+%   toolEdge struct the edge model of the tool
+%   toolPathPt (3,1) pose of the tool tip (the surface as well)
+%   toolPathNorm (3,1) the normal vector of the tool, whose default value 
+%       is [0;0;-1], i.e., the tool points towards the workpiece
+%   toolPathFeed (3,1) the feed direction of the tool. Ony [0;0;1] and
+%       [0;0;-1] can be chosen, which represent Center-to-edge and
+%       Edge-to-center feed, respectively
+%   options
 % Outputs:
-%   toolQuad    (1,4)   the quaternion of the tool
 %   toolPathPt  (3,1)   the position of the tool center
+%   toolQuat    (1,4)   the quaternion of the tool
+%   toolContactU (1,1)
 %   surfPt      (3,1)   the position of the surface contact point
 
 arguments
@@ -27,6 +32,7 @@ arguments
     toolEdge struct
     toolPathPt (3,1)
     toolPathNorm (3,1) = [0;0;-1]
+    toolPathFeed (3,1) = [0;-1;0]
     options.iniDisplay {mustBeMember(options.iniDisplay,{'none','off', ...
         'iter','iter-detailed','final','final-detailed'})} = 'none'
     options.finalDisplay {mustBeMember(options.finalDisplay,{'none','off', ...
@@ -62,8 +68,8 @@ toolPathPt(end) = curvePt(end);
 
 %% rotation transform
 % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
-toolRot = axesRot(toolEdge.toolEdgeNorm,toolEdge.cutDirect, ...
-        toolPathNorm,[-1;0;0],'');
+toolRot = axesRot(toolEdge.toolDirect,toolEdge.toolEdgeNorm, ...
+        toolPathFeed,toolPathNorm,'yz');
 toolEdgeRotate = toolRigid(toolEdge,toolRot,[0;0;0]);
 toolQuat = rotm2quat(toolRot);
 

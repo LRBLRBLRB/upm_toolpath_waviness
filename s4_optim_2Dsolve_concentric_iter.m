@@ -173,7 +173,7 @@ switch cutDirection
         surfNorm = [0;surfFyr(rRange(1));-1];
         surfNorm = surfNorm./norm(surfNorm);
         % the first toolpath pt
-        [toolPathPt,toolQuat,toolContactU] = curvetippos(toolData,surfPt,surfNorm,[0;0;-1]);
+        [toolPathPt,toolQuat,toolContactU] = curvetippos(toolData,surfPt,surfNorm,[0;0;-1],[0;-1;0]);
         toolNormDirect = quat2rotm(toolQuat)*toolData.toolEdgeNorm;
         fprintf('No.1\t toolpath point is calculated.\n-----\n');
     case 'Center to Edge'
@@ -183,7 +183,8 @@ switch cutDirection
         
         % the first toolpath pt
         [toolPathPt(:,1),toolQuat,toolContactU,surfPt] = curvepos( ...
-            surfFuncr,surfFyr,toolData,toolPathPt(:,1),[0;0;-1]);
+            surfFuncr,surfFyr,toolData,toolPathPt(:,1),[0;0;-1],[0;1;0], ...
+            'useParallel',true,'finalDisplay','iter-detailed');
         toolNormDirect = quat2rotm(toolQuat)*toolData.toolEdgeNorm;
         fprintf('No.1\t toolpath point is calculated.\n-----\n');
     otherwise
