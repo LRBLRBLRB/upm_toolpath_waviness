@@ -2,7 +2,7 @@
 % and to get the 3D point cloud of the tool tip
 
 %% 2D curve results
-isAPP = true;
+isAPP = false;
 if isAPP
     workspaceDir = app.workspaceDir;
     toolOri = app.toolOri;
@@ -131,7 +131,7 @@ fitOpts.arcFitdisplayType = 'iter-detailed';
 radius = circ2D.radius;
 openAngle = circ2D.openAng;
 
-% tool data resort & averaging
+% tool data resort & averaging (to avoid loops)
 toolAngle = atan2(toolFitUnsorted(2,:),toolFitUnsorted(1,:)); % polar angle of the tool point
 [~,sortInd] = sort(toolAngle,'descend');
 toolFit = toolFitUnsorted(:,sortInd);

@@ -1,4 +1,4 @@
-function [toolPathPt,toolQuat,toolContactU] = curvetippos(toolEdge,curvePt,curveNorm,toolPathNorm,toolPathFeed)
+function [toolPathPt,toolQuat,toolContactU] = curvetippos(toolEdge,curvePt,curveNorm,toolPathNorm,toolPathVec,options)
 % usage: [toolPos,toolCutDirect,log] = toolPos(toolEdge,surfPt,surfNorm,designDirect,designNorm)
 %   Solve the tool pose using the tangent relationship of tool tip and
 %   surface, with the tool axis unchanged.
@@ -13,16 +13,36 @@ function [toolPathPt,toolQuat,toolContactU] = curvetippos(toolEdge,curvePt,curve
 %   toolPathPt (3,1) the position of the tool center
 %   toolQuat    
 %   toolContactU
-
+arguments
+    toolEdge struct
+    curvePt (3,1) double
+    curveNorm (3,1)
+    toolPathNorm
+    toolPathVec = []
+    options.directionType {mustBeMember(options.directionType, ...
+        {'quaternion','norm-cut','norm-feed'})} = 'norm-cut'
+end
 
 if size(curvePt,1) ~= 3 || size(toolPathNorm,1) ~= 3
     error('Invalid input: the dimension goes wrong.');
 end
 
-% Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
-toolRot = axesRot(toolEdge.toolDirect,toolEdge.toolEdgeNorm, ...
-    toolPathFeed,toolPathNorm,'yz');
-toolEdge2 = toolRigid(toolEdge,toolRot,[0;0;0]);
+switch options.directionType
+    case 'norm-cut'
+        % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+        toolRot = axesRot(toolEdge.toolEdgeNorm,toolEdge.cutDirect, ...
+            toolPathNorm,toolPathVec,'zx');
+        toolEdge2 = toolRigid(toolEdge,toolRot,[0;0;0]);
+    case 'norm-feed'
+        % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+        toolRot = axesRot(toolEdge.toolDirect,toolEdge.toolEdgeNorm, ...
+            toolPathVec,toolPathNorm,'yz');
+        toolEdge2 = toolRigid(toolEdge,toolRot,[0;0;0]);
+    case 'quaternion'
+        % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+        toolRot = rotm2quat(toolPathNorm);
+        toolEdge2 = toolRigid(toolEdge,toolRot,[0;0;0]);
+end
 
 % find the contact point on the tool edge
 surfToolAng = vecAng(toolPathNorm,curveNorm,1);

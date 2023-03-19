@@ -131,15 +131,15 @@ ylabel(['z (',unit,')']);
 %     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
 %     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
 % hold on;
-% quiver3(surfMesh(1:10:end,1:10:end,1), ...
-%     surfMesh(1:10:end,1:10:end,2), ...
-%     surfMesh(1:10:end,1:10:end,3), ...
-%     surfNormIni(1:10:end,1:10:end,1), ...
-%     surfNormIni(1:10:end,1:10:end,2), ...
-%     surfNormIni(1:10:end,1:10:end,3), ...
-%     'AutoScale','on','Color',[0.85,0.33,0.10], ...
-%     'DisplayName','Normal Vectors');
-% legend('Original Points','Orthogonal direction','Location','northeast');
+% % quiver3(surfMesh(1:10:end,1:10:end,1), ...
+% %     surfMesh(1:10:end,1:10:end,2), ...
+% %     surfMesh(1:10:end,1:10:end,3), ...
+% %     surfNormIni(1:10:end,1:10:end,1), ...
+% %     surfNormIni(1:10:end,1:10:end,2), ...
+% %     surfNormIni(1:10:end,1:10:end,3), ...
+% %     'AutoScale','on','Color',[0.85,0.33,0.10], ...
+% %     'DisplayName','Normal Vectors');
+% % legend('Original Points','Orthogonal direction','Location','northeast');
 % set(gca,'FontSize',textFontSize,'FontName',textFontType);
 % xlabel(['x (',unit,')']);
 % ylabel(['y (',unit,')']);
@@ -161,58 +161,110 @@ tRes0 = tic;
 t1 = tic;
 
 % get the f(r) function of the surface
-surfFuncr = matlabFunction(subs(surfSym,x,0),'Vars',y);
-surfFyr = matlabFunction(subs(surfFy,x,0),'Vars',y);
+surfFuncr = matlabFunction(subs(surfSym,y,0),'Vars',x);
+surfFxr = matlabFunction(subs(surfFy,y,0),'Vars',x);
 
 switch cutDirection
     case 'Edge to Center'
         rRange = [rMax,0];
+        conThetaBound = [2*pi,0];
         rStep = -1*rStep;
         % initialize the cutting pts: the outest loop
-        surfPt = [0;rRange(1);surfFuncr(rRange(1))];
-        surfNorm = [0;surfFyr(rRange(1));-1];
+        surfPt = [rRange(1);0;surfFuncr(rRange(1))];
+        surfNorm = [surfFxr(rRange(1));0;-1];
         surfNorm = surfNorm./norm(surfNorm);
         % the first toolpath pt
-        [toolPathPt,toolQuat,toolContactU] = curvetippos(toolData,surfPt,surfNorm,[0;0;-1],[0;-1;0]);
-        toolNormDirect = quat2rotm(toolQuat)*toolData.toolEdgeNorm;
+        [curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,surfPt,surfNorm, ...
+            [0;0;-1],[0;-1;0],'directionType','norm-cut');
+        toolNormDirect = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
         fprintf('No.1\t toolpath point is calculated.\n-----\n');
     case 'Center to Edge'
         rRange = [0,rMax];
+        conThetaBound = [0,2*pi];
         % initialize the cutting pts: the rotation center is seen as the first loop
-        toolPathPt = [0;rRange(1);surfFuncr(rRange(1));];
+        curvePathPt = [0;rRange(1);surfFuncr(rRange(1));];
         
         % the first toolpath pt
-        [toolPathPt(:,1),toolQuat,toolContactU,surfPt] = curvepos( ...
-            surfFuncr,surfFyr,toolData,toolPathPt(:,1),[0;0;-1],[0;1;0], ...
+        [curvePathPt(:,1),curveQuat,curveContactU,surfPt] = curvepos( ...
+            surfFuncr,surfFxr,toolData,curvePathPt(:,1),[0;0;-1],[0;1;0], ...
             'useParallel',true,'finalDisplay','iter-detailed');
-        toolNormDirect = quat2rotm(toolQuat)*toolData.toolEdgeNorm;
+        toolNormDirect = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
         fprintf('No.1\t toolpath point is calculated.\n-----\n');
     otherwise
         errordlg('Invalid cut-direction value!','Parameter Error');
 end
         
 % the rest
-[toolPathPt,toolQuat,toolContactU,surfPt,res,peakPt,uLim] = ...
-    iterfunc_curvepath_solve(surfFuncr,surfFyr,toolData,toolPathPt, ...
-    toolQuat,toolContactU,surfPt,rStep,aimRes,rRange,"useParallel",true);
+[curvePathPt,curveQuat,curveContactU,surfPt,curveRes,curvePeakPt,curveULim] = ...
+    iterfunc_curvepath_solve(surfFuncr,surfFxr,toolData,curvePathPt, ...
+    curveQuat,curveContactU,surfPt,rStep,aimRes,rRange,"useParallel",true);
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
 
 %% plot the result above
 figure('Name','tool path optimization');
-rSpar = linspace(0,rMax,spar);
-plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))),'Color',[0,0.4470,0.7410]);
+tiledlayout(1,2);
+pos = get(gcf,'position');
+set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
+nexttile;
+plot(curvePathPt(1,:),curvePathPt(3,:),'.','Color',[0.8500,0.3250,0.0980]);
 hold on;
-plot(toolPathPt(2,:),toolPathPt(3,:),'.','Color',[0.8500,0.3250,0.0980]);
-for jj = 1:size(toolPathPt,2)
+plot(surfPt(1,:),surfPt(3,:),'.','Color',[0.9290,0.6940,0.1250]);
+plot(peakPt(1,:),peakPt(3,:),'.','Color',[0.850,0.3250,0.0980]);
+rSpar = linspace(0,rMax,spar);
+plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))),'Color',[0.7,0.7,0.7],'LineWidth',0.3);
+for jj = 1:size(curvePathPt,2)
     toolSp1 = toolData.toolBform;
-    toolSp1.coefs = quat2rotm(toolQuat(jj,:))*toolSp1.coefs + toolPathPt(:,jj);
-    toolSp1Pt = fnval(toolSp1,uLim(2,jj):0.01:uLim(1,jj));
-    plot(toolSp1Pt(2,:),toolSp1Pt(3,:),'Color',[0.6,0.6,0.6],'LineWidth',0.1);
+    toolSp1.coefs = quat2rotm(curveQuat(jj,:))*toolSp1.coefs + curvePathPt(:,jj);
+    toolSp1Pt = fnval(toolSp1,curveULim(1,jj):0.0001:curveULim(2,jj));
+    plot(toolSp1Pt(1,:),toolSp1Pt(3,:),'Color',[0,0.4470,0.7410],'LineWidth',0.5);
 end
+legend('tool path point','tool contact point','peak point','ideal surface','actual surface');
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
+
+nexttile;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.6,'LineStyle','none');
+hold on;
+% concentric toolpath for each loop
+spiralAngle0 = [];
+loopPtNum = [];
+accumPtNum = 0;
+res = [];
+uLim = [];
+for ii = 1:size(curvePathPt,2)
+    conTheta0 = linspace(conThetaBound(1),conThetaBound(2), ...
+        ceil(2*pi/min(maxAngPtDist,arcLength/curvePathPt(2,ii))) + 1);
+    conTheta0(end) = [];
+    spiralAngle0 = [spiralAngle0,conTheta0];
+    loopPtNum = [loopPtNum,length(conTheta0)];
+    accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNum(end)];
+    res = [res,curveRes(ii)*ones(1,loopPtNum(end))];
+    uLim = [uLim,ndgrid(curveULim(:,ii),1:loopPtNum(end))];
+end
+accumPtNum(1) = [];
+for ii = 1:length(spiralAngle0)
+    R = rotz(spiralAngle0(ii));
+    kk = find(ii <= accumPtNum,1);
+    loopQuat(ii,:) = rotm2quat(R);
+    toolPathPt(:,ii) = R*curvePathPt(:,kk);
+    peakPt(ii,:) = R*curvePeakPt(:,kk);
+    toolQuat(ii,:) = quatmul(curveQuat(kk,:),loopQuat(ii,:));
+end
+plotSpar = 1;
+plot3(toolPathPt(1,1:plotSpar:end), ...
+    toolPathPt(2,1:plotSpar:end), ...
+    toolPathPt(3,1:plotSpar:end), ...
+    '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
+
+s4_visualize_concentric; % res for two lines
 
 msgfig = questdlg({'Concentric tool path was generated successfully!', ...
     'Ready to continue?'}, ...

@@ -113,6 +113,11 @@ plot(toolFit(2,:),toolFit(3,:),'--.', ...
     'MarkerSize',8,'Color',[0,0.447,0.741]); hold on;
 plot(toolCpts(2,:),toolCpts(3,:),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
 plot(toolEdgePt(2,:),toolEdgePt(3,:),'Color',[0.635,0.078,0.184]);
+pt0 = fnval(toolBform,0);
+pt1 = fnval(toolBform,1);
+h = abs(pt1(2) - pt0(2))/10;
+text(pt0(2),pt0(3) + h/3,'u = 0','Color',[0.8500 0.3250 0.0980]);
+text(pt1(2),pt1(3) + h/3,'u = 1','Color',[0.8500 0.3250 0.0980]);
 axis equal
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['y(',unit,')']);

@@ -243,7 +243,7 @@ surfDirect = cutdirection(surfPt,[0;0;0],conTheta,'method','vertical'); % cuttin
 % calculate the 1st loop of the tool path
 % 这里可以直接只算一个然后直接旋转得到，不用每一个都算一遍的。而且为什么第一个这么慢？
 parfor ii = 1:accumPtNum(end)
-        [toolQuat(ii,:),toolPathPt(:,ii),toolContactU(ii),surfPt(:,ii)] = surfPos( ...
+        [toolQuat(ii,:),toolPathPt(:,ii),toolContactU(ii),surfPt(:,ii)] = toolpathpos( ...
             toolData,toolPathPt(:,ii),[0;0;-1],surfDirect(:,ii),surfFunc,surfNormFunc);
         toolCutDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
         toolNormDirect(:,ii) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;

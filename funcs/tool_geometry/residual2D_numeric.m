@@ -71,6 +71,7 @@ switch nargin
         res = norm(cross(cutPt1 - peakPt,cutPt2 - peakPt)) ...
             /norm(cutPt2 - cutPt1); 
     case {8,9}
+        peakPt(1) = [];
         cen1 = varargin{1};
         cen2 = varargin{2};
         vec1 = varargin{3};
