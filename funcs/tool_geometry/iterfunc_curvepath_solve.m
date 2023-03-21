@@ -20,7 +20,7 @@ arguments
     rRange (1,2) double
     options.algorithm {mustBeMember(options.algorithm, ...
         {'trust-region-dogleg','trust-region','levenberg-marquardt', ...
-        'fzero','search-bisection'})} = 'search-bisection'
+        'fzero','search-bisection','genetic','particle-swarm'})} = 'search-bisection'
     options.directionType {mustBeMember(options.directionType, ...
         {'quaternion','norm-cut','norm-feed'})} = 'norm-cut'
     options.radiusDisplay {mustBeMember(options.radiusDisplay,{'none','off', ...
@@ -106,8 +106,11 @@ while (r - rRange(2))*delta0 < 0
         case 'search-bisection'
             h = delta/50;
             r = mysearch(@iterfunc,r0,h,[r0 + delta,r],options.xTol);
-        case 'ga'
+        case 'genetic'
+            options.optimopt = optimoptions(options.optimopt);
+            r = ga(@iterfunc,1,[],[],[],[],r0 + delta,r,options.optimopt);
         case 'particle-swarm'
+            r = particleswarm(@iterfunc,1,r0 + delta,r,options.optimopt);
     end
     % [r,diffRes2] = fminsearch(@iterfunc,r0,opt1);
 
