@@ -107,7 +107,9 @@ while (r - rRange(2))*delta0 < 0
             h = delta/50;
             r = mysearch(@iterfunc,r0,h,[r0 + delta,r],options.xTol);
         case 'genetic'
-            options.optimopt = optimoptions(options.optimopt);
+            iniMat
+            options.optimopt = optimoptions('ga','UseParallel',true, ...
+                'InitialPopulationMatrix',iniMat);
             r = ga(@iterfunc,1,[],[],[],[],r0 + delta,r,options.optimopt);
         case 'particle-swarm'
             r = particleswarm(@iterfunc,1,r0 + delta,r,options.optimopt);
@@ -119,11 +121,11 @@ while (r - rRange(2))*delta0 < 0
 %         iterfunc(r0);
 %     end
 
-    if uLim(1,ind-1) > uLim(2,ind-1)
-       tmp = uLim(1,ind-1);
-       uLim(1,ind-1) = uLim(2,ind-1);
-       uLim(2,ind-1) = tmp;
-    end
+%     if uLim(1,ind-1) > uLim(2,ind-1)
+%        tmp = uLim(1,ind-1);
+%        uLim(1,ind-1) = uLim(2,ind-1);
+%        uLim(2,ind-1) = tmp;
+%     end
 
 %     scatter(toolPathPt(1,ind),toolPathPt(3,ind),36,[0.4940,0.1840,0.5560]);
 %     toolSp0 = toolSp;

@@ -137,6 +137,7 @@ curvePt = [rRange(1);0;curveFunc(rRange(1))];
 curveNorm = [curveFx(rRange(1));0;-1];
 curveNorm = curveNorm./norm(curveNorm);
 % the first toolpath pt
+% ---!!! the tool should be fixed just as the picture !!!---
 [curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
     [0;0;-1],[0;-1;0],'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
