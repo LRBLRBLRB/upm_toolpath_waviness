@@ -21,7 +21,6 @@ textFontType = 'Times New Roman';
 
 msgOpts.Default = 'Cancel and quit';
 msgOpts.Interpreter = 'tex';
-% msgOpts.modal = 'non-modal';
 % profile on
 tPar0 = tic;
 parObj = gcp;
