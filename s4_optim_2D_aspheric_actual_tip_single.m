@@ -200,10 +200,10 @@ while (r - rRange(2))*rStep < 0
         return;
     end
     if cutDirect(2) > 0
-        curveULim(2,ind) = uLim1;
+        curveULim(:,ind) = [0;uLim1];
         curveULim(1,ind - 1) = uLim2;
     else
-        curveULim(1,ind) = uLim1;
+        curveULim(:,ind) = [uLim1;1];
         curveULim(2,ind - 1) = uLim2;
     end
 
@@ -279,7 +279,7 @@ uLim = [];
 peakPt = [];
 for ii = 1:size(curvePathPt,2)
     conTheta0 = linspace(conThetaBound(1),conThetaBound(2), ...
-        ceil(2*pi/min(maxAngPtDist,arcLength/curvePathPt(1,ii))) + 1);
+        ceil(2*pi/min(maxAngPtDist,arcLength/abs(curvePathPt(1,ii)))) + 1);
     conTheta0(end) = [];
     toolPathAngle = [toolPathAngle,conTheta0];
     loopPtNum = [loopPtNum,length(conTheta0)];

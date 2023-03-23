@@ -136,6 +136,7 @@ rStep = -1*rStep;
 toolSp = toolData.toolBform; % B-form tool tip arc
 toolRadius = toolData.radius; % fitted tool radius
 toolCoefs = toolSp.coefs;
+
 if rRange(2) > rRange(1) % to ensure the rake face on top
     % if range(2) > rRange(1), then feed direction is center-to-edge, and
     % the toolDirect is [0;1;0]. So cut direction is [-1;0;0]
@@ -143,10 +144,6 @@ if rRange(2) > rRange(1) % to ensure the rake face on top
 else
     cutDirect = [0;-1;0];
 end
-
-curveULim = [0;1]; % the interval of each toolpath
-curvePeakPt = zeros(3,1);
-curveRes = 5*aimRes; % the residual height, initialized with 5 times the standard aimRes
 
 % initialize the cutting pts: the outest loop
 curvePt = [rRange(1);0;curveFunc(rRange(1))];
@@ -157,17 +154,20 @@ curveNorm = curveNorm./norm(curveNorm);
     [0;0;-1],[0;-1;0],'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
 
-%     scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
-%     toolSp0 = toolData.toolBform;
-%     toolSp0.coefs = quat2rotm(curveQuat(1,:))*toolSp0.coefs + curvePathPt(:,1);
-%     toolPt0 = fnval(toolSp0,0:0.001:1);
-%     toolContactPt0 = fnval(toolSp0,curveContactU(1));
-%     plot(toolPt0(1,:),toolPt0(3,:),'Color',[0.7,.7,.7]);
-%     scatter(toolContactPt0(1),toolContactPt0(3),18,[0.929,0.694,0.1250],"filled");
+    scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
+    toolSp0 = toolData.toolBform;
+    toolSp0.coefs = quat2rotm(curveQuat(1,:))*toolSp0.coefs + curvePathPt(:,1);
+    toolPt0 = fnval(toolSp0,0:0.001:1);
+    toolContactPt0 = fnval(toolSp0,curveContactU(1));
+    plot(toolPt0(1,:),toolPt0(3,:),'Color',[0.7,.7,.7]);
+    scatter(toolContactPt0(1),toolContactPt0(3),18,[0.929,0.694,0.1250],"filled");
 
 fprintf('No.1\t toolpath point is calculated.\n-----\n');
 
 % the rest
+curveULim = {[0;1]}; % the interval of each toolpath
+curvePeakPt = {zeros(3,1)};
+curveRes = {5*aimRes}; % the residual height, initialized with 5 times the standard aimRes
 r = rRange(1);
 ind = 1;
 while (r - rRange(2))*rStep < 0
@@ -176,6 +176,8 @@ while (r - rRange(2))*rStep < 0
     delta = sign(rStep)*delta;
     r = r + delta;
     ind = ind + 1;
+    curveRes{ind} = 5*aimRes;
+    curveULim{ind} = [0;1];
 
     surfPt(:,ind) = [r;0;curveFunc(r)];
     surfNorm = [curveFx(r);0;-1];
@@ -193,29 +195,24 @@ while (r - rRange(2))*rStep < 0
     toolSp2 = toolSp;
     toolSp2.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp2.coefs + curvePathPt(:,ind - 1);
     toolContactPt2 = fnval(toolSp2,curveContactU(ind - 1));
-    [curveRes(ind),curvePeakPt(:,ind),uLim1,uLim2] = residual2D_numeric(toolSp1,toolSp2,1e-4, ...
-        toolContactPt1,toolContactPt2,'DSearchn');
-    if isinf(curveRes(ind))
+
+    [curveRes{ind},curvePeakPt{ind},curveULim{ind},curveULim{ind - 1}] ...
+        = residual2D_multi(toolSp1,toolSp2,1e-5,curveULim{ind - 1});
+    
+    if isinf(curveRes{ind})
         fprintf('No intersection of the current tool path.\n');
         return;
     end
-    if cutDirect(2) > 0
-        curveULim(:,ind) = [0;uLim1];
-        curveULim(1,ind - 1) = uLim2;
-    else
-        curveULim(:,ind) = [uLim1;1];
-        curveULim(2,ind - 1) = uLim2;
-    end
 
-%         scatter(curvePathPt(1,ind),curvePathPt(3,ind),36,[0.4940,0.1840,0.5560]);
-%         scatter(curvePathPt(1,ind - 1),curvePathPt(3,ind - 1),36,[0.4940,0.1840,0.5560]);
-%         toolPt1 = fnval(toolSp1,0:0.001:1);
-%         plot(toolPt1(1,:),toolPt1(3,:),'Color',[0.7,.7,.70]);
-%         toolPt2 = fnval(toolSp2,0:0.001:1);
-%         plot(toolPt2(1,:),toolPt2(3,:),'Color',[0.7,.7,.70]);
-%         scatter(toolContactPt1(1),toolContactPt1(3),18,[0.929,0.694,0.1250],"filled");
-%         scatter(toolContactPt2(1),toolContactPt2(3),18,[0.929,0.694,0.1250],"filled");
-%         scatter(curvePeakPt(1,ind),curvePeakPt(3,ind),18,[0.850,0.325,0.0980],"filled");
+        scatter(curvePathPt(1,ind),curvePathPt(3,ind),36,[0.4940,0.1840,0.5560]);
+        scatter(curvePathPt(1,ind - 1),curvePathPt(3,ind - 1),36,[0.4940,0.1840,0.5560]);
+        toolPt1 = fnval(toolSp1,0:0.001:1);
+        plot(toolPt1(1,:),toolPt1(3,:),'Color',[0.7,.7,.70]);
+        toolPt2 = fnval(toolSp2,0:0.001:1);
+        plot(toolPt2(1,:),toolPt2(3,:),'Color',[0.7,.7,.70]);
+        scatter(toolContactPt1(1),toolContactPt1(3),18,[0.929,0.694,0.1250],"filled");
+        scatter(toolContactPt2(1),toolContactPt2(3),18,[0.929,0.694,0.1250],"filled");
+        scatter(curvePeakPt{ind}(1,:),curvePeakPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
 
     fprintf('No.%d\t toolpath point is calculated.\n-----\n',ind);
 end
