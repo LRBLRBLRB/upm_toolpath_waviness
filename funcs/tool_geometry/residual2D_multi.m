@@ -58,26 +58,43 @@ s2 = fnval(sp2,u2);
 % get the indices of the local minimum points
 cmp1 = find(diff(sign(diff(dist))) > 0) + 1;
 range = mean(vecnorm(diff(s1,1,2),2,1));
-% get the indices of the intersection points, 
-% i.e., the local minimals which is close enough to both sp1 and sp2
+% cmp2: the indices of the intersection points, 
+%   i.e., the local minimals which is close enough to both sp1 and sp2
 cmp2 = cmp1(dist(cmp1) < range);
 % exclude the tagent case
 diff1 = diff(s1,1,2);
 der1 = diff1(3,:)./diff1(1,:);
 diff2 = diff(s2,1,2);
 der2 = diff2(3,:)./diff2(1,:);
-for ii = 1:length(cmp2)
-    % 比较每个交点前后10个点处两条tool tip的切线斜率之差
-    abs(der1(index(cmp2(ii))) - der2(cmp2(ii)))
+% edxclude the case that two local minimals are the same
+MultiInter = find(diff(cmp2) <= 10);
+[num,ari] = arithmeticsequences(MultiInter);
+cmp2clear = [];
+for jj = 1:num
+    % mid: the middle point among the same intersection point set
+    midInter = round((MultiInter(ari(1,jj)) + MultiInter(ari(2,jj)) + 1)/2); 
+    same = MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1;
+    [minInter,sameInd] = min(abs(der1(index(cmp2(same))) - der2(cmp2(same))));
+    minInd = same(sameInd);
+    if minInter < 1e-3 % abs(der1(index(cmp2(midInter))) - der2(cmp2(midInter))) < 1e-3
+        cmp2clear = [cmp2clear,MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1];
+    else
+        cmp2clear = [cmp2clear,MultiInter(ari(1,jj)):minInd - 1,minInd + 1:MultiInter(ari(2,jj)) + 1];
+    end
 end
-cmp2(diff(cmp2) <= 10) = []; % edxclude the case that two local minimals are the same
+
+% for ii = 1:length(cmp2)
+%     % 比较每个交点前后10个点处两条tool tip的切线斜率之差
+%     abs(der1(index(cmp2(ii))) - der2(cmp2(ii)))
+% end
+cmp2(cmp2clear) = [];
 
 uInter2 = u2(cmp2);
 uInter1 = u1(index(cmp2));
 res = dist(cmp2);
 peakPt = 0.5*(s1(:,index(cmp2)) + s2(:,cmp2));
 
-fig = figure('WindowState','maximized');
+fig = figure('WindowState','normal');
 tiledlayout(2,2);
 nexttile(1,[1 2]);
 plot(s1(1,:),s1(3,:),'LineWidth',1.5,'Color',[0,0.4470,0.7410]);

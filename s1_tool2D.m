@@ -101,15 +101,15 @@ xLim = 1.1*max(toolFit(1,:));
 quiver(-xLim,0,2*xLim,0,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % X axis
 hold on;
 text(0.9*xLim,-.05*radius,'x');
-quiver(0,-0.2*radius,0,1.3*radius,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % Y axis
-text(0.05*xLim,1.05*radius,'y');
+quiver(0,0.2*radius,0,-1.3*radius,'AutoScale','off','Color',[0,0,0],'MaxHeadSize',0.1); % Y axis
+text(0.05*xLim,-1.05*radius,'y');
 plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.75); % tool edge scatters
-theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
+theta = (-pi/2 - openAngle/2):0.01:(-pi/2 + openAngle/2);
 xtmp = radius*cos(theta);
 ytmp = radius*sin(theta);
 plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
 scatter(0,0,'MarkerFaceColor',[0.85,0.33,0.10],'MarkerEdgeColor',[0.85,0.33,0.10]); % tool edge center
-quiver(0,0,0,0.5*radius,'AutoScale','off','Color',[0.93,0.69,0.13], ...
+quiver(0,0,0,-0.5*radius,'AutoScale','off','Color',[0.93,0.69,0.13], ...
     'LineWidth',2.5,'MaxHeadSize',0.3); % tool edge normal
 line([0,xtmp(1)],[0,ytmp(1)],'LineStyle','--','Color',[0.85,0.33,0.10]);
 line([0,xtmp(end)],[0,ytmp(end)],'LineStyle','--','Color',[0.85,0.33,0.10]);
@@ -123,6 +123,9 @@ title('Tool fitting result');
 legend('','','tool edge','tool fitting arc','tool center', ...
     'tool normal vector','Location','northeast');
 clear xtmp ytmp theta; % 删除画图的临时变量
+
+nCPts = size(toolFit,2);
+toolFit = [zeros(1,nCPts);toolFit];
 
 %% tool modelling
 s1_toolModel

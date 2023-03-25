@@ -68,7 +68,7 @@ surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
 cutDirection = 'Edge to Center'; % 'Center to Edge'
 spindleDirection = 'Counterclockwise'; % 'Clockwise'
 angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-aimRes = 0.5;
+aimRes = 0.3;
 rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
 maxIter = 100;
 arcLength = 30;
@@ -179,12 +179,12 @@ while (r - rRange(2))*rStep < 0
     curveRes{ind} = 5*aimRes;
     curveULim{ind} = [0;1];
 
-    surfPt(:,ind) = [r;0;curveFunc(r)];
+    curvePt(:,ind) = [r;0;curveFunc(r)];
     surfNorm = [curveFx(r);0;-1];
     surfNorm = surfNorm./norm(surfNorm);
     % calculate the surfPt and toolpathPt from center to edge
     [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind)] = ...
-        curvetippos(toolData,surfPt(:,ind),surfNorm,[0;0;-1],cutDirect, ...
+        curvetippos(toolData,curvePt(:,ind),surfNorm,[0;0;-1],cutDirect, ...
         "directionType",'norm-cut');
     % toolNormDirect(:,ind) = quat2rotm(toolQuat(ind,:))*toolData.toolEdgeNorm;
 
@@ -229,27 +229,37 @@ nexttile;
 plot(curvePathPt(1,:),curvePathPt(3,:),'.','Color',[0.4940,0.1840,0.5560]);
 hold on;
 plot(curvePt(1,:),curvePt(3,:),'.','Color',[0.9290,0.6940,0.1250]);
-plot(curvePeakPt(1,:),curvePeakPt(3,:),'.','Color',[0.850,0.3250,0.0980]);
 rSpar = linspace(0,rMax,spar);
 plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))),'Color',[0.7,0.7,0.7],'LineWidth',0.3);
 for jj = 1:size(curvePathPt,2)
+    plot(curvePeakPt{jj}(1,:),curvePeakPt{jj}(3,:),'.','Color',[0.850,0.3250,0.0980]);
     toolSp1 = toolData.toolBform;
     toolSp1.coefs = quat2rotm(curveQuat(jj,:))*toolSp1.coefs + curvePathPt(:,jj);
-    toolSp1Pt = fnval(toolSp1,0:0.0001:curveULim(1,jj));
+    toolSp1Pt = fnval(toolSp1,0:0.0001:curveULim{jj}(1,1));
     toolSp1Pt(3,end) = NaN;
     patch('XData',toolSp1Pt(1,:),'YData',toolSp1Pt(3,:), ...
         'EdgeColor',[0,0.4470,0.7410],'EdgeAlpha',0.1, ...
         'LineWidth',0.5,'LineStyle','-');
-    toolSp1Pt = fnval(toolSp1,curveULim(1,jj):0.0001:curveULim(2,jj));
+    for ii = 1:size(curveULim{jj},2) - 1
+        toolSp1Pt = fnval(toolSp1,curveULim{jj}(1,ii):0.0001:curveULim{jj}(2,ii));
+        plot(toolSp1Pt(1,:),toolSp1Pt(3,:),'Color',[0,0.4470,0.7410], ...
+            'LineWidth',0.5);
+        toolSp1Pt = fnval(toolSp1,curveULim{jj}(2,ii):0.0001:curveULim{jj}(1,ii + 1));
+        toolSp1Pt(3,end) = NaN;
+        patch('XData',toolSp1Pt(1,:),'YData',toolSp1Pt(3,:), ...
+            'EdgeColor',[0,0.4470,0.7410],'EdgeAlpha',0.1, ...
+            'LineWidth',0.5,'LineStyle','-');
+    end
+    toolSp1Pt = fnval(toolSp1,curveULim{jj}(1,end):0.0001:curveULim{jj}(2,end));
     plot(toolSp1Pt(1,:),toolSp1Pt(3,:),'Color',[0,0.4470,0.7410], ...
         'LineWidth',0.5);
-    toolSp1Pt = fnval(toolSp1,curveULim(2,jj):0.0001:1);
+    toolSp1Pt = fnval(toolSp1,curveULim{jj}(2,end):0.0001:1);
     toolSp1Pt(3,end) = NaN;
     patch('XData',toolSp1Pt(1,:),'YData',toolSp1Pt(3,:), ...
         'EdgeColor',[0,0.4470,0.7410],'EdgeAlpha',0.1, ...
         'LineWidth',0.5,'LineStyle','-');
 end
-legend('tool path point','tool contact point','peak point','ideal surface','','actual surface');
+legend('tool path point','tool contact point','ideal surface','peak point','','actual surface');
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
@@ -264,54 +274,54 @@ hold on;
 % cb.Label.String = ['Height (',unit,')'];
 
 % concentric toolpath for each loop
-toolPathAngle = [];
-loopPtNum = [];
-accumPtNum = 0;
-toolNAccum = [];
-toolQuat = [];
-toolNormDirect = [];
-toolCutDirect = [];
-res = [];
-uLim = [];
-peakPt = [];
-for ii = 1:size(curvePathPt,2)
-    conTheta0 = linspace(conThetaBound(1),conThetaBound(2), ...
-        ceil(2*pi/min(maxAngPtDist,arcLength/abs(curvePathPt(1,ii)))) + 1);
-    conTheta0(end) = [];
-    toolPathAngle = [toolPathAngle,conTheta0];
-    loopPtNum = [loopPtNum,length(conTheta0)];
-    accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNum(end)];
-    toolNAccum = [toolNAccum,ii*ones(1,loopPtNum(end))];
-    res = [res,curveRes(ii)*ones(1,loopPtNum(end))];
-    uLim = [uLim,ndgrid(curveULim(:,ii),1:loopPtNum(end))];
-end
-accumPtNum(1) = [];
-for ii = 1:length(toolPathAngle)
-    R = rotz(toolPathAngle(ii));
-    kk = find(ii <= accumPtNum,1);
-    loopQuat(ii,:) = rotm2quat(R);
-    toolPathPt(:,ii) = R*curvePathPt(:,kk);
-    peakPt(ii,:) = R*curvePeakPt(:,kk);
-    toolQuat(ii,:) = quatmul(curveQuat(kk,:),loopQuat(ii,:));
-    toolNormDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
-    toolCutDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
-end
-plotSpar = 1;
-plot3(toolPathPt(1,1:plotSpar:end), ...
-    toolPathPt(2,1:plotSpar:end), ...
-    toolPathPt(3,1:plotSpar:end), ...
-    '.','MarkerSize',6,'Color',[0.850,0.3250,0.0980]);
-
-grid on;
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% set(gca,'ZDir','reverse');
-xlabel(['x (',unit,')']);
-ylabel(['y (',unit,')']);
-zlabel(['z (',unit,')']);
-axis equal;
-% legend('tool center point','tool cutting direction', ...
-%     'tool spindle direction','','tool edge','Location','northeast');
-% legend('designed surface','tool center point','tool edge','Location','northeast');
+% toolPathAngle = [];
+% loopPtNum = [];
+% accumPtNum = 0;
+% toolNAccum = [];
+% toolQuat = [];
+% toolNormDirect = [];
+% toolCutDirect = [];
+% res = [];
+% uLim = [];
+% peakPt = [];
+% for ii = 1:size(curvePathPt,2)
+%     conTheta0 = linspace(conThetaBound(1),conThetaBound(2), ...
+%         ceil(2*pi/min(maxAngPtDist,arcLength/abs(curvePathPt(1,ii)))) + 1);
+%     conTheta0(end) = [];
+%     toolPathAngle = [toolPathAngle,conTheta0];
+%     loopPtNum = [loopPtNum,length(conTheta0)];
+%     accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNum(end)];
+%     toolNAccum = [toolNAccum,ii*ones(1,loopPtNum(end))];
+%     res = [res,curveRes(ii)*ones(1,loopPtNum(end))];
+%     uLim = [uLim,ndgrid(curveULim(:,ii),1:loopPtNum(end))];
+% end
+% accumPtNum(1) = [];
+% for ii = 1:length(toolPathAngle)
+%     R = rotz(toolPathAngle(ii));
+%     kk = find(ii <= accumPtNum,1);
+%     loopQuat(ii,:) = rotm2quat(R);
+%     toolPathPt(:,ii) = R*curvePathPt(:,kk);
+%     peakPt(ii,:) = R*curvePeakPt(:,kk);
+%     toolQuat(ii,:) = quatmul(curveQuat(kk,:),loopQuat(ii,:));
+%     toolNormDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
+%     toolCutDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
+% end
+% plotSpar = 1;
+% plot3(toolPathPt(1,1:plotSpar:end), ...
+%     toolPathPt(2,1:plotSpar:end), ...
+%     toolPathPt(3,1:plotSpar:end), ...
+%     '.','MarkerSize',6,'Color',[0.850,0.3250,0.0980]);
+% 
+% grid on;
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% % set(gca,'ZDir','reverse');
+% xlabel(['x (',unit,')']);
+% ylabel(['y (',unit,')']);
+% zlabel(['z (',unit,')']);
+% axis equal;
+% % legend('tool center point','tool cutting direction', ...
+% %     'tool spindle direction','','tool edge','Location','northeast');
+% % legend('designed surface','tool center point','tool edge','Location','northeast');
 
 
 
