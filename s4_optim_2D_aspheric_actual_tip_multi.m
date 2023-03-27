@@ -68,7 +68,7 @@ surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
 cutDirection = 'Edge to Center'; % 'Center to Edge'
 spindleDirection = 'Counterclockwise'; % 'Clockwise'
 angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-aimRes = 0.3;
+aimRes = 0.2;
 rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
 maxIter = 100;
 arcLength = 30;
@@ -90,11 +90,11 @@ hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
-% nexttile;
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-% hold on;
+nexttile;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+hold on;
 %     quiver3(surfMesh(1:10:end,1:10:end,1), ...
 %         surfMesh(1:10:end,1:10:end,2), ...
 %         surfMesh(1:10:end,1:10:end,3), ...
@@ -105,10 +105,10 @@ ylabel(['z (',unit,')']);
 %         'DisplayName','Normal Vectors');
 %     legend('Original Points','Orthogonal direction','Location','northeast');
 % axis equal;
-% set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% xlabel(['x (',unit,')']);
-% ylabel(['y (',unit,')']);
-% zlabel(['z (',unit,')']);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
 
 % interaction
 msgfig = msgbox('Surface was generated successfully!','Exit','help','non-modal');
@@ -154,20 +154,21 @@ curveNorm = curveNorm./norm(curveNorm);
     [0;0;-1],[0;-1;0],'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
 
-    scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
-    toolSp0 = toolData.toolBform;
-    toolSp0.coefs = quat2rotm(curveQuat(1,:))*toolSp0.coefs + curvePathPt(:,1);
-    toolPt0 = fnval(toolSp0,0:0.001:1);
-    toolContactPt0 = fnval(toolSp0,curveContactU(1));
-    plot(toolPt0(1,:),toolPt0(3,:),'Color',[0.7,.7,.7]);
-    scatter(toolContactPt0(1),toolContactPt0(3),18,[0.929,0.694,0.1250],"filled");
+%     scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
+%     toolSp0 = toolData.toolBform;
+%     toolSp0.coefs = quat2rotm(curveQuat(1,:))*toolSp0.coefs + curvePathPt(:,1);
+%     toolPt0 = fnval(toolSp0,0:0.001:1);
+%     toolContactPt0 = fnval(toolSp0,curveContactU(1));
+%     plot(toolPt0(1,:),toolPt0(3,:),'Color',[0.7,.7,.7]);
+%     scatter(toolContactPt0(1),toolContactPt0(3),18,[0.929,0.694,0.1250],"filled");
 
 fprintf('No.1\t toolpath point is calculated.\n-----\n');
 
 % the rest
 curveULim = {[0;1]}; % the interval of each toolpath
-curvePeakPt = {zeros(3,1)};
-curveRes = {5*aimRes}; % the residual height, initialized with 5 times the standard aimRes
+curvePeakPt = zeros(5,1);
+curveInterPt = {zeros(3,1)};
+curveRes = 5*aimRes; % the residual height, initialized with 5 times the standard aimRes
 r = rRange(1);
 ind = 1;
 while (r - rRange(2))*rStep < 0
@@ -176,7 +177,6 @@ while (r - rRange(2))*rStep < 0
     delta = sign(rStep)*delta;
     r = r + delta;
     ind = ind + 1;
-    curveRes{ind} = 5*aimRes;
     curveULim{ind} = [0;1];
 
     curvePt(:,ind) = [r;0;curveFunc(r)];
@@ -196,23 +196,25 @@ while (r - rRange(2))*rStep < 0
     toolSp2.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp2.coefs + curvePathPt(:,ind - 1);
     toolContactPt2 = fnval(toolSp2,curveContactU(ind - 1));
 
-    [curveRes{ind},curvePeakPt{ind},curveULim{ind},curveULim{ind - 1}] ...
-        = residual2D_multi(toolSp1,toolSp2,1e-5,curveULim{ind - 1});
-    
-    if isinf(curveRes{ind})
+    [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim{ind}, ...
+        curveULim{ind - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
+        curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
+    curvePeakPt(5,ind) = curvePeakPt(5,ind) + ind;
+
+    if isinf(curveRes(ind))
         fprintf('No intersection of the current tool path.\n');
         return;
     end
 
-        scatter(curvePathPt(1,ind),curvePathPt(3,ind),36,[0.4940,0.1840,0.5560]);
-        scatter(curvePathPt(1,ind - 1),curvePathPt(3,ind - 1),36,[0.4940,0.1840,0.5560]);
-        toolPt1 = fnval(toolSp1,0:0.001:1);
-        plot(toolPt1(1,:),toolPt1(3,:),'Color',[0.7,.7,.70]);
-        toolPt2 = fnval(toolSp2,0:0.001:1);
-        plot(toolPt2(1,:),toolPt2(3,:),'Color',[0.7,.7,.70]);
-        scatter(toolContactPt1(1),toolContactPt1(3),18,[0.929,0.694,0.1250],"filled");
-        scatter(toolContactPt2(1),toolContactPt2(3),18,[0.929,0.694,0.1250],"filled");
-        scatter(curvePeakPt{ind}(1,:),curvePeakPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
+%         scatter(curvePathPt(1,ind),curvePathPt(3,ind),36,[0.4940,0.1840,0.5560]);
+%         scatter(curvePathPt(1,ind - 1),curvePathPt(3,ind - 1),36,[0.4940,0.1840,0.5560]);
+%         toolPt1 = fnval(toolSp1,0:0.001:1);
+%         plot(toolPt1(1,:),toolPt1(3,:),'Color',[0.7,.7,.70]);
+%         toolPt2 = fnval(toolSp2,0:0.001:1);
+%         plot(toolPt2(1,:),toolPt2(3,:),'Color',[0.7,.7,.70]);
+%         scatter(toolContactPt1(1),toolContactPt1(3),18,[0.929,0.694,0.1250],"filled");
+%         scatter(toolContactPt2(1),toolContactPt2(3),18,[0.929,0.694,0.1250],"filled");
+%         scatter(curveInterPt{ind}(1,:),curveInterPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
 
     fprintf('No.%d\t toolpath point is calculated.\n-----\n',ind);
 end
@@ -232,7 +234,7 @@ plot(curvePt(1,:),curvePt(3,:),'.','Color',[0.9290,0.6940,0.1250]);
 rSpar = linspace(0,rMax,spar);
 plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))),'Color',[0.7,0.7,0.7],'LineWidth',0.3);
 for jj = 1:size(curvePathPt,2)
-    plot(curvePeakPt{jj}(1,:),curvePeakPt{jj}(3,:),'.','Color',[0.850,0.3250,0.0980]);
+    plot(curveInterPt{jj}(1,:),curveInterPt{jj}(3,:),'.','Color',[0.850,0.3250,0.0980]);
     toolSp1 = toolData.toolBform;
     toolSp1.coefs = quat2rotm(curveQuat(jj,:))*toolSp1.coefs + curvePathPt(:,jj);
     toolSp1Pt = fnval(toolSp1,0:0.0001:curveULim{jj}(1,1));
@@ -274,58 +276,64 @@ hold on;
 % cb.Label.String = ['Height (',unit,')'];
 
 % concentric toolpath for each loop
-% toolPathAngle = [];
-% loopPtNum = [];
-% accumPtNum = 0;
-% toolNAccum = [];
-% toolQuat = [];
-% toolNormDirect = [];
-% toolCutDirect = [];
-% res = [];
-% uLim = [];
-% peakPt = [];
-% for ii = 1:size(curvePathPt,2)
-%     conTheta0 = linspace(conThetaBound(1),conThetaBound(2), ...
-%         ceil(2*pi/min(maxAngPtDist,arcLength/abs(curvePathPt(1,ii)))) + 1);
-%     conTheta0(end) = [];
-%     toolPathAngle = [toolPathAngle,conTheta0];
-%     loopPtNum = [loopPtNum,length(conTheta0)];
-%     accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNum(end)];
-%     toolNAccum = [toolNAccum,ii*ones(1,loopPtNum(end))];
-%     res = [res,curveRes(ii)*ones(1,loopPtNum(end))];
-%     uLim = [uLim,ndgrid(curveULim(:,ii),1:loopPtNum(end))];
-% end
-% accumPtNum(1) = [];
-% for ii = 1:length(toolPathAngle)
-%     R = rotz(toolPathAngle(ii));
-%     kk = find(ii <= accumPtNum,1);
-%     loopQuat(ii,:) = rotm2quat(R);
-%     toolPathPt(:,ii) = R*curvePathPt(:,kk);
-%     peakPt(ii,:) = R*curvePeakPt(:,kk);
-%     toolQuat(ii,:) = quatmul(curveQuat(kk,:),loopQuat(ii,:));
-%     toolNormDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
-%     toolCutDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
-% end
-% plotSpar = 1;
-% plot3(toolPathPt(1,1:plotSpar:end), ...
-%     toolPathPt(2,1:plotSpar:end), ...
-%     toolPathPt(3,1:plotSpar:end), ...
-%     '.','MarkerSize',6,'Color',[0.850,0.3250,0.0980]);
-% 
-% grid on;
-% set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% % set(gca,'ZDir','reverse');
-% xlabel(['x (',unit,')']);
-% ylabel(['y (',unit,')']);
-% zlabel(['z (',unit,')']);
-% axis equal;
-% % legend('tool center point','tool cutting direction', ...
-% %     'tool spindle direction','','tool edge','Location','northeast');
-% % legend('designed surface','tool center point','tool edge','Location','northeast');
+toolPathAngle = [];
+loopPtNum = [];
+accumPtNum = 0;
+toolNAccum = [];
+toolRAccum = [];
+toolQuat = [];
+toolNormDirect = [];
+toolCutDirect = [];
+toolContactU = [];
+res = [];
+peakPt = [];
+uLim = {zeros(2,0)};
+interPt = {zeros(3,0)};
+for ii = 1:size(curvePathPt,2)
+    conTheta0 = linspace(conThetaBound(1),conThetaBound(2), ...
+        ceil(2*pi/min(maxAngPtDist,arcLength/abs(curvePathPt(1,ii)))) + 1);
+    conTheta0(end) = [];
+    toolPathAngle = [toolPathAngle,conTheta0];
+    loopPtNum = [loopPtNum,length(conTheta0)];
+    accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNum(end)];
+    toolNAccum = [toolNAccum,ii*ones(1,loopPtNum(end))];
+    toolRAccum = [toolRAccum,curvePt(1,ii)*ones(1,loopPtNum(end))];
+    toolContactU = [toolContactU,curveContactU(ii)*ones(1,loopPtNum(end))];
+    res = [res,curveRes(ii)*ones(1,loopPtNum(end))];
+end
+accumPtNum(1) = [];
+for ii = 1:length(toolPathAngle)
+    R = rotz(toolPathAngle(ii));
+    kk = find(ii <= accumPtNum,1);
+    loopQuat(ii,:) = rotm2quat(R);
+    toolPathPt(:,ii) = R*curvePathPt(:,kk);
+    peakPt(1:3,ii) = R*curvePeakPt(1:3,kk);
+    peakPt(4:5,ii) = curvePeakPt(4:5,kk);
+    uLim{ii} = curveULim{kk};
+    interPt{ii} = R*curveInterPt{kk};
+    toolQuat(ii,:) = quatmul(curveQuat(kk,:),loopQuat(ii,:));
+    surfPt(:,ii) = R*curvePt(:,kk);
+    toolNormDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
+    toolCutDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
+end
+plotSpar = 1;
+plot3(toolPathPt(1,1:plotSpar:end), ...
+    toolPathPt(2,1:plotSpar:end), ...
+    toolPathPt(3,1:plotSpar:end), ...
+    '.','MarkerSize',6,'Color',[0.850,0.3250,0.0980]);
 
+grid on;
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% set(gca,'ZDir','reverse');
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
+axis equal;
+% legend('tool center point','tool cutting direction', ...
+%     'tool spindle direction','','tool edge','Location','northeast');
+% legend('designed surface','tool center point','tool edge','Location','northeast');
 
-
-% s4_visualize_concentric;
+s6_visualize_concentric_multi;
 
 msgfig = questdlg({'Concentric tool path was generated successfully!', ...
     'Ready to continue?'}, ...
@@ -337,23 +345,20 @@ end
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
 
-% cut direction change doesn't affect the concentric tool path
-switch cutDirection
-    case 'Edge to Center'
-    case 'Center to Edge'
-end
-
 % cubic spline approximation
 % the function between the numeric label of tool path and surf radius R
+toolREach = curvePt(1,:);
 Fr = csape(accumPtNum,toolREach,[1,1]);
-% accumPtNumlength = [0,accumPtNum];
-% loopRLength = [0,loopR];
-% Fr = csape(accumPtNumlength,loopRLength); 
+
+toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
+rTheta = csape(toolNoTheta,toolREach,[1,1]);
 
 figure('Name','Feed Rate Smoothing');
+tiledlayout(2,1);
+nexttile;
 scatter(accumPtNum,toolREach);
-hold on; grid on;
-fnplt(Fr,'r',[accumPtNum(1),accumPtNum(end)]);
+hold on;
+fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]);
 plot(1:accumPtNum(end),toolRAccum);
 % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
 %     'Color',[0.929,0.694,0.1250]);
@@ -361,24 +366,53 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel('Loop Accumulating Point Number');
 ylabel(['Radius of the Loop (',unit,')']);
 legend('No.-R scatters','csape result','Concentric result');
+nexttile;
+scatter(toolNoTheta,toolREach);
+hold on;
+fnplt(rTheta,'r',[toolPathAngle(accumPtNum(1) + 1),toolPathAngle(end)+2*pi*toolNAccum(end)]);
+plot(toolPathAngle + 2*pi*toolNAccum,toolRAccum);
+% line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
+%     'Color',[0.929,0.694,0.1250]);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel('Accumulating Toolpath Angle');
+ylabel(['Radius of the Loop (',unit,')']);
+legend('\theta-R scatters','csape result','Concentric result');
+% save the feed rate curve
+[smoothFileName,smoothDirName,smoothFileType] = uiputfile({ ...
+    '*.mat','MAT-file(*.mat)'; ...
+    '*.txt','text-file(.txt)';...
+    '*.*','all file(*.*)';...
+    }, ...
+    'Select the directory and filename to save the surface concentric tool path', ...
+    fullfile(workspaceDir,['toolPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
+smoothName = fullfile(smoothDirName,smoothFileName);
+switch smoothFileType
+    case 0
+        msgfig = msgbox("No approximation saved","Warning","warn","non-modal");
+        uiwait(msgfig);
+    case 1
+        Comments = cell2mat(inputdlg( ...
+            'Enter Comment of the feed rate smoothing processing:', ...
+            'Saving Comments', ...
+            [5 60], ...
+            string(datestr(now))));
+        save(smoothName,"Comments","Fr","rTheta");
+end
+
 
 %% spiral tool path generation with the smoothing result
+% initialize the spiral path
+spiralPath0 = zeros(3,accumPtNum(end)); % the spiral tool path & orientation
+spiralNorm0 = zeros(3,accumPtNum(end));
+spiralCut0 = zeros(3,accumPtNum(end));
+spiralQuat0 = zeros(accumPtNum(end),4);
+spiralContactU0 = zeros(1,accumPtNum(end));
+
 interpR = fnval(Fr,1:accumPtNum(end));
 interpR(1:accumPtNum(1)) = 0;
-spiralPtNum = loopPtNum;
 accumPtNumlength = [0,accumPtNum];
+
 numLoop = length(accumPtNum);
-
-% initialize the spiral path
-spiralPath = zeros(3,accumPtNum(end)); % the spiral tool path
-spiralNorm = zeros(3,accumPtNum(end));
-spiralCutDir = zeros(3,accumPtNum(end));
-spiralPath(:,1:accumPtNum(1)) = toolPathPt(:,1:accumPtNum(1));
-spiralNorm(:,1:accumPtNum(1)) = toolNormDirect(:,1:accumPtNum(1));
-spiralCutDir(:,1:accumPtNum(1)) = toolCutDirect(:,1:accumPtNum(1));
-
-% the concentric angle of each tool path
-angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 
 % video capture & debug
 % figure('Name','concentric-to-spiral debug & video');
@@ -391,22 +425,31 @@ angle = atan2(toolPathPt(2,:),toolPathPt(1,:));
 % plot3(spiralPath(1,1:accumPtNum(1)),spiralPath(2,1:accumPtNum(1)), ...
 %     spiralPath(3,1:accumPtNum(1)),'.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 
+tSpiral0 = tic;
+
+% initialize for the first loop
+spiralPath0(:,1:accumPtNum(1)) = toolPathPt(:,1:accumPtNum(1));
+spiralNorm0(:,1:accumPtNum(1)) = toolNormDirect(:,1:accumPtNum(1));
+spiralCut0(:,1:accumPtNum(1)) = toolCutDirect(:,1:accumPtNum(1));
+spiralQuat0(1:accumPtNum(1),:) = toolQuat(1:accumPtNum(1),:);
+spiralContactU0(1:accumPtNum(1)) = toolContactU(1:accumPtNum(1));
 % for each loop, shift the tool path point by decreasing the radius
 for kk = 2:numLoop % begin with the 2nd loop
-    angleN = angle(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
+    angleN = toolPathAngle(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
     for indInterp = accumPtNum(kk - 1) + 1:accumPtNum(kk)
         % Method 1: get the (x,y) by interpolation and use residual3D to get z
         % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
         % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
 
         % Method 2: get the inner closest point and linearly interpolate them
-        angleDel = angleN - angle(indInterp);
+        angleDel = angleN - toolPathAngle(indInterp);
         [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel); % get the closest tol point in the inner loop
         ind1 = ind1 + accumPtNumlength(kk - 1); % get the index of the closest in the whole list
         ind2 = ind2 + accumPtNumlength(kk - 1);
-        [spiralPath(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
-            interpR(indInterp),toolPathPt,toolNormDirect,toolCutDirect,toolRAccum,indInterp,ind1,ind2);
-
+        [spiralPath0(:,indInterp),spiralContactU0(indInterp),spiralQuat0(indInterp,:)] = toolInterp( ...
+            interpR(indInterp),toolRAccum,indInterp,ind1,ind2,toolPathPt,toolContactU,toolQuat,toolCutDirect(:,indInterp));
+        spiralNorm0(:,indInterp) = quat2rotm(spiralQuat0(indInterp,:))*toolData.toolEdgeNorm;
+        spiralCut0(:,indInterp) = quat2rotm(spiralQuat0(indInterp,:))*toolData.cutDirect;
         % test & debug & video
         % plot3(spiralPath(1,indInterp),spiralPath(2,indInterp),spiralPath(3,indInterp), ...
         %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
@@ -418,25 +461,92 @@ for kk = 2:numLoop % begin with the 2nd loop
     end
 end
 
-% numLoop = numLoop + 1;
-% accumPtNumlength = [0,accumPtNum];
-% for kk = 3:numLoop % begin with the 2nd loop
-%     for jj = 1:accumPtNumlength(kk)
-%         % Method 1: get the (x,y) by interpolation and use residual3D to get z
-%         % tmpPt = toolPathPt(1:2,accumPtNum(kk) + jj);
-%         % tmpSpiral = tmpPt + tmpPt/norm(tmpPt)*(loopR(kk) - fnval(Fr,accumPtNum(kk) + jj));
-% 
-%         % Method 2: get the inner closest point and linearly interpolate them
-%         indInterp = accumPtNumlength(kk - 1) + jj;
-%         angleN = angle(accumPtNumlength(kk - 2) + 1:accumPtNumlength(kk - 1));
-%         angleDel = angleN - angleN(indInterp);
-%         [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel);
-%         [spiralPath(:,indInterp),spiralNorm(:,indInterp),spiralCutDir(:,indInterp)] = toolInterp( ...
-%             toolPathPt,toolNormDirect,toolCutDirect,toolR,ind1,ind2,indInterp);
-%     end
-% end
+% elliminate the first loop, which focuses on the z=0 point
+spiralPath0(:,1:accumPtNum(1) - 1) = [];
+spiralNorm0(:,1:accumPtNum(1) - 1) = [];
+spiralCut0(:,1:accumPtNum(1) - 1) = [];
+spiralQuat0(1:accumPtNum(1) - 1,:) = [];
+spiralContactU0(1:accumPtNum(1) - 1) = [];
 
-% spiral tool path result
+% change the spiral tool path to constant arc length one
+spiralAngle0 = toolPathAngle + 2*pi*toolNAccum;
+spiralAngle0(:,1:accumPtNum(1) - 1) = [];
+if strcmp(angularDiscrete,'Constant Arc')
+    [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
+        spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},toolData,'interpType','linear'); % spiralQuat0,
+    spiralNorm = spiralVec{1};
+    spiralCut = spiralVec{2};
+else
+    spiralAngle = spiralAngle0;
+    spiralPath = spiralPath0;
+    spiralNorm = spiralNorm0;
+    spiralCut = spiralCut0;
+    spiralQuat = spiralQuat0;
+    spiralContactU = spiralContactU0;
+end
+spiralPtNum = length(spiralAngle);
+
+% [tEq,fEq,vecEq] = arclengthparam(arcLength,toolThetaEach,toolREach,{},'algorithm','lq-fitting');
+
+tSpiral = toc(tSpiral0);
+fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSpiral);
+
+%% Spiral Residual height calculation of the spiral tool path
+spiralRes = 5*aimRes*ones(1,spiralPtNum);
+spiralPeakPt = zeros(6,spiralPtNum);
+spiralULim = [zeros(1,spiralPtNum);ones(1,spiralPtNum)];
+tSpiralRes0 = tic;
+parfor ind1 = 1:spiralPtNum
+    % inner ulim & residual height
+    ind2 = find(spiralAngle >= spiralAngle(ind1) - 2*pi,1,'first');
+    ind3 = find(spiralAngle < spiralAngle(ind1) - 2*pi,1,'last');
+    if isempty(ind2) || isempty(ind3)
+%         ind2 = find(spiralAngle >= spiralAngle(ind1) + pi,1,'first');
+%         ind3 = find(spiralAngle < spiralAngle(ind1) + pi,1,'last');
+%         [tmpres1,ptres1,spiralULim(:,ind1)] = residual3D( ...
+%             spiralPath,spiralNorm,spiralCut,spiralContactU, ...
+%             toolSp,toolRadius,spiralULim(:,ind1),ind1,ind2,ind3);
+        tmpres1 = 5*aimRes;
+        ptres1 = zeros(3,1);
+    else
+        [tmpres1,ptres1,spiralULim(:,ind1)] = residual3D_multi( ...
+            spiralPath,spiralNorm,spiralCut,spiralContactU, ...
+            toolSp,toolRadius,spiralULim(:,ind1),ind1,ind2,ind3);
+    end
+
+    % outer ulim & residual height
+    ind2 = find(spiralAngle >= spiralAngle(ind1) + 2*pi,1,'first');
+    ind3 = find(spiralAngle < spiralAngle(ind1) + 2*pi,1,'last');
+    if isempty(ind2) || isempty(ind3)
+        tmpres2 = 5*aimRes;
+        ptres2 = zeros(3,1);
+    else
+        [tmpres2,ptres2,spiralULim(:,ind1)] = residual3D( ...
+            spiralPath,spiralNorm,spiralCut,spiralContactU, ...
+            toolSp,toolRadius,spiralULim(:,ind1),ind1,ind2,ind3);
+    end
+    
+    spiralRes(:,ind1) = [tmpres1;tmpres2];
+    spiralPeakPt(:,ind1) = [ptres1;ptres2];
+    
+    if spiralRes(:,ind1) > 5
+        1;
+    end
+    % debug
+    % plot3(toolPathPtRes(1,ii),toolPathPtRes(2,ii),toolPathPtRes(3,ii), ...
+    %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
+    % toolSp1 = toolSp;
+    % R1 = axesRot([0;0;1],[1;0;0],toolNormDirectRes(:,ii),toolCutDirectRes(:,ii),'zx');
+    % toolSp1.coefs = R1*toolSp.coefs + toolPathPtRes(:,ii);
+    % Q = fnval(toolSp1,uLimTmp(1,ii):0.01:uLimTmp(2,ii));
+    % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1);
+end
+
+tSpiralRes = toc(tSpiralRes0);
+fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
+
+%% spiral tool path result
+% plot the result
 figure('Name','Spiral tool path result');
 tPlot0 = tic;
 plotSpar = 1;
@@ -451,14 +561,13 @@ surf( ...
 colormap('summer');
 cb = colorbar;
 cb.Label.String = ['Height (',unit,')'];
-toolCoefs = toolSp.coefs;
-parfor ii = 1:ptNum
-    toolSp1 = toolSp;
-    toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
-    Q = fnval(toolSp1,uLim(1,ii):0.05:uLim(2,ii));
-
-    plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
-end
+% toolCoefs = toolSp.coefs;
+% parfor ii = 1:ptNum
+%     toolSp1 = toolSp;
+%     toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
+%     Q = fnval(toolSp1,uLim(1,ii):0.05:uLim(2,ii));
+%     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+% end
 % axis equal;
 grid on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
@@ -466,12 +575,14 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
-legend('tool center point','','tool edge','Location','northeast');
+legend('tool center point','','Location','northeast'); % 'tool edge',
 tPlot = toc(tPlot0);
 fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
 
 % sprial tool path error
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+s4_visualize_spiral;
+
+msgfig = msgbox('Spiral tool path was generated successfully!','Success','help','non-modal');
 
 %% Comparison: directly generate the spiral tool path
 % 实际上，这种显然更好。用上面的那种方法，会导致不是真正的等弧长，而且在交接段会突然减速，动力学应该会影响表面质量

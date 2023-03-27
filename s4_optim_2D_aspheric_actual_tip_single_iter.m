@@ -13,8 +13,8 @@ clc;
 addpath(genpath('funcs'));
 % global variables
 % global textFontSize textFontType;
-workspaceDir = 'workspace\20221020-tooltip\tooltip fitting result';
-% workspaceDir = 'workspace\20220925-contrast\nagayama_concentric';
+% workspaceDir = 'workspace\20221020-tooltip\tooltip fitting result';
+workspaceDir = 'workspace\20220925-contrast\nagayama_concentric';
 unit = '\mum';
 textFontSize = 12;
 textFontType = 'Times New Roman';
@@ -158,10 +158,12 @@ fprintf('No.1\t toolpath point is calculated.\n-----\n');
 %     'MaxIterations',50,'FunctionTolerance',1e-6,'StepTolerance',1e-6); % fsolve options
 % % 'PlotFcn',{@optimplotx,@optimplotfval},
 
+% opt = optimoptions('ga','UseParallel',true);
+
 [curvePathPt,curveQuat,curveContactU,curvePt,curveRes,curvePeakPt,curveULim] = ...
     iterfunc_curvepath_solve(curveFunc,curveFx,toolData,curvePathPt, ...
     curveQuat,curveContactU,curvePt,rStep,aimRes,rRange, ...
-    'algorithm','search-bisection','directionType','norm-cut');
+    'algorithm','genetic','directionType','norm-cut');
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
 
