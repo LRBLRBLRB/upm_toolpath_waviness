@@ -1,4 +1,4 @@
-function [toolPathPt,toolQuat,curvePt] = radiuspos( ...
+function [toolPathPt,toolQuat,toolContactU,curvePt] = radiuspos( ...
     curveFunc,curveFx,radius,toolPathPt,toolPathNorm,toolPathFeed,options)
 % Description:
 %   Solve the tool pose and the tool tip pose using the tangent relationship 
@@ -66,4 +66,7 @@ toolRot = axesRot([0;-1;0],[0;0;-1], ...
         toolPathFeed,toolPathNorm,'yz');
 toolQuat = rotm2quat(toolRot);
 
+curveNorm0 = [curveFx(curvePt(1));-1];
+curveNorm0 = curveNorm0./norm(curveNorm0);
+toolContactU = atan2(curveNorm0(end),curveNorm0(1));
 end

@@ -79,7 +79,7 @@ for jj = 1:num
     [minInter,sameInd] = min(abs(der1(index(cmp(same))) - der2(cmp(same))));
     minInd = same(sameInd);
     maxInter = max(abs(der1(index(cmp(same))) - der2(cmp(same))));
-    if maxInter/minInter > 5 % abs(der1(index(cmp2(midInter))) - der2(cmp2(midInter))) < 1e-3
+    if maxInter/minInter > 10 % abs(der1(index(cmp2(midInter))) - der2(cmp2(midInter))) < 1e-3
         % the repeated points are tagent points
         cmp2clear = [cmp2clear,MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1];
     else
@@ -92,25 +92,29 @@ end
 %     % 比较每个交点前后10个点处两条tool tip的切线斜率之差
 %     abs(der1(index(cmp2(ii))) - der2(cmp2(ii)))
 % end
-cmp(cmp2clear) = [];
+cmp2 = cmp;
+cmp2(cmp2clear) = [];
 
 % eliminate the tagent case
-cmptan = abs(der1(index(cmp)) - der2(cmp));
+cmptan = abs(der1(index(cmp2)) - der2(cmp2));
 meantan = mean(cmptan);
 istan0 = find(meantan./cmptan > 5); % test the differentiate of each intersection point
 istan = zeros(1,length(istan0));
 for ii = 1:length(istan0)
-    vec0 = s1(:,index(cmp(ii))) - s2(:,cmp(ii));
-    vec1 = s1(:,index(cmp(ii) + round(1e-3/eps))) - s2(:,cmp(ii) + round(1e-3/eps));
-    vec2 = s1(:,index(cmp(ii) - round(1e-3/eps))) - s2(:,cmp(ii) - round(1e-3/eps));
+    vec0 = s1(:,index(cmp2(istan0(ii)))) - s2(:,cmp2(istan0(ii)));
+    vecInd1 = min([cmp2(istan0(ii)) + round(1e-3/eps),length(index)]);
+    vec1 = s1(:,index(vecInd1)) - s2(:,vecInd1);
+    vecInd2 = max([cmp2(istan0(ii)) - round(1e-3/eps),1]);
+    vec2 = s1(:,index(vecInd2)) - s2(:,vecInd2);
     istan(ii) = dot(vec0,vec1) * dot(vec0,vec2) > 0;
 end
-cmp(istan0) = [];
+cmp3 = cmp2;
+cmp3(istan0(find(istan))) = [];
 
 % calculate the intersection points
-uInter2 = u2(cmp);
-uInter1 = u1(index(cmp));
-interPt = 0.5*(s1(:,index(cmp)) + s2(:,cmp));
+uInter2 = u2(cmp3);
+uInter1 = u1(index(cmp3));
+interPt = 0.5*(s1(:,index(cmp3)) + s2(:,cmp3));
 
 % % eliminate the intersection points that are beyond the curve area
 % %   the projection of vec{pt1 -> interPt} to vec{pt1 -> pt2}
@@ -123,7 +127,7 @@ interPt = 0.5*(s1(:,index(cmp)) + s2(:,cmp));
 % interPt(:,isRange) = [];
 
 %% u range
-if ~mod(length(cmp),2)
+if ~mod(length(cmp3),2)
     warning('Something wrong in the intersection point calculation process.\n');
     res = 0;
     peakPt = [];

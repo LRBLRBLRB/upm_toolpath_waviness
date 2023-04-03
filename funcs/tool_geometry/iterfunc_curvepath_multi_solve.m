@@ -1,6 +1,6 @@
 function [curvePathPt,curveQuat,curveContactU,curvePt,curveRes, ...
     curvePeakPt,curveInterPt,curveULim] = iterfunc_curvepath_multi_solve( ...
-    surfFuncr,surfFxr,toolData,curvePathPt,curveQuat,curveContactU,curvePt, ...
+    surfFunc,surfFx,toolData,curvePathPt,curveQuat,curveContactU,curvePt, ...
     delta0,aimRes,rRange,options)
 %ITERFUNC_CURVEPATH_MULTI_SOLVE the objective function of the iterative 
 %process to calculate the concentric toolpath of the aspheric surface, 
@@ -9,8 +9,8 @@ function [curvePathPt,curveQuat,curveContactU,curvePt,curveRes, ...
 % no need to use the global variables
 
 arguments
-    surfFuncr function_handle
-    surfFxr function_handle
+    surfFunc function_handle
+    surfFx function_handle
     toolData struct
     curvePathPt (3,1) double
     curveQuat (1,4) double
@@ -48,8 +48,8 @@ curveRes = 5*aimRes; % the residual height, initialized with 5 times the standar
 
     function diffRes = iterfunc(r)
         curveULim{ind} = [0;1];
-        curvePt(:,ind) = [r;0;curveFunc(r)];
-        surfNorm = [curveFx(r);0;-1];
+        curvePt(:,ind) = [r;0;surfFunc(r)];
+        surfNorm = [surfFx(r);0;-1];
         surfNorm = surfNorm./norm(surfNorm);
         % calculate the surfPt and toolpathPt from center to edge
         [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind)] = ...
@@ -65,8 +65,8 @@ curveRes = 5*aimRes; % the residual height, initialized with 5 times the standar
         toolSp2.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp2.coefs + curvePathPt(:,ind - 1);
         toolContactPt2 = fnval(toolSp2,curveContactU(ind - 1));
     
-        [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim{ind}, ...
-            curveULim{ind - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
+        [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim1, ...
+            curveULim2] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
             curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
         curvePeakPt(5,ind) = curvePeakPt(5,ind) + ind;
     
@@ -92,12 +92,14 @@ curveRes = 5*aimRes; % the residual height, initialized with 5 times the standar
 r = rRange(1);
 ind = 1;
 while (r - rRange(2))*delta0 < 0
+    curveULim1 = [];
+    curveULim2 = [];
     ind = ind + 1;
     tic
     % initial value
-    delta = 2*sqrt((2*toolData.radius*aimRes - aimRes^2))*cos(atan(curveFx(r)));
+    delta = 2*sqrt((2*toolData.radius*aimRes - aimRes^2))*cos(atan(surfFx(r)));
     % direction to iterate
-    delta = sign(rStep)*delta;
+    delta = sign(delta0)*delta;
     r0 = r + delta;
 
     % iteration process
@@ -109,37 +111,36 @@ while (r - rRange(2))*delta0 < 0
             [r,diffRes1] = fzero(@iterfunc,r0,options.optimopt);
         case 'search-bisection'
             h = delta/50;
-            r = mysearch(@iterfunc,r0,h,[r0 + delta,r],options.xTol);
+            r = mysearch(@iterfunc,r0,h,[r0 + delta,r],options.optimopt.XTol);
         case 'genetic'
             % 'InitialPopulationMatrix',iniMat
-            options.optimopt = optimoptions(options.optimopt,'UseParallel',true, ...
+            options.optimopt = optimoptions(options.optimopt, ...
                 'PlotFcn',{'gaplotscorediversity','gaplotselection','gaplotgenealogy'});
-            r = ga(@iterfunc,1,[],[],[],[],r0 + delta,r,options.optimopt);
+            r = ga(@(x)abs(iterfunc(x)),1,[],[],[],[],r0 + delta,r,[],options.optimopt);
         case 'particle-swarm'
-            r = particleswarm(@iterfunc,1,r0 + delta,r,options.optimopt);
+            options.optimopt = optimoptions(options.optimopt,'PlotFcn','pswplotbestf');
+            r = particleswarm(@(x)abs(iterfunc(x)),1,r0 + delta,r,options.optimopt);
     end
     % [r,diffRes2] = fminsearch(@iterfunc,r0,opt1);
 
-%     if isempty(r) || isnan(r)
-%         r = r0;
-%         iterfunc(r0);
-%     end
+    curveULim{ind} = curveULim1;
+    curveULim{ind - 1} = curveULim2;
 
-%     if uLim(1,ind-1) > uLim(2,ind-1)
-%        tmp = uLim(1,ind-1);
-%        uLim(1,ind-1) = uLim(2,ind-1);
-%        uLim(2,ind-1) = tmp;
-%     end
-
-%         scatter(curvePathPt(1,ind),curvePathPt(3,ind),36,[0.4940,0.1840,0.5560]);
-%         scatter(curvePathPt(1,ind - 1),curvePathPt(3,ind - 1),36,[0.4940,0.1840,0.5560]);
-%         toolPt1 = fnval(toolSp1,0:0.001:1);
-%         plot(toolPt1(1,:),toolPt1(3,:),'Color',[0.7,.7,.70]);
-%         toolPt2 = fnval(toolSp2,0:0.001:1);
-%         plot(toolPt2(1,:),toolPt2(3,:),'Color',[0.7,.7,.70]);
-%         scatter(toolContactPt1(1),toolContactPt1(3),18,[0.929,0.694,0.1250],"filled");
-%         scatter(toolContactPt2(1),toolContactPt2(3),18,[0.929,0.694,0.1250],"filled");
-%         scatter(curveInterPt{ind}(1,:),curveInterPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
+        scatter(curvePathPt(1,ind),curvePathPt(3,ind),36,[0.4940,0.1840,0.5560]);
+        scatter(curvePathPt(1,ind - 1),curvePathPt(3,ind - 1),36,[0.4940,0.1840,0.5560]);
+        toolSp10 = toolSp;
+        toolSp10.coefs = quat2rotm(curveQuat(ind,:))*toolSp10.coefs + curvePathPt(:,ind);
+        toolContactPt10 = fnval(toolSp10,curveContactU(ind));
+        toolSp20 = toolSp;
+        toolSp20.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp20.coefs + curvePathPt(:,ind - 1);
+        toolContactPt20 = fnval(toolSp20,curveContactU(ind - 1));
+        toolPt1 = fnval(toolSp10,0:0.001:1);
+        plot(toolPt1(1,:),toolPt1(3,:),'Color',[0.7,.7,.70]);
+        toolPt2 = fnval(toolSp20,0:0.001:1);
+        plot(toolPt2(1,:),toolPt2(3,:),'Color',[0.7,.7,.70]);
+        scatter(toolContactPt10(1),toolContactPt10(3),18,[0.929,0.694,0.1250],"filled");
+        scatter(toolContactPt20(1),toolContactPt20(3),18,[0.929,0.694,0.1250],"filled");
+        scatter(curveInterPt{ind}(1,:),curveInterPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
 
     fprintf('-----\nNo.%d\t toolpath point at [r = %f] is calculated within %fs.\n-----\n',ind,r,toc);
 end

@@ -19,11 +19,17 @@ textFontType = 'Times New Roman';
 
 msgOpts.Default = 'Cancel and quit';
 msgOpts.Interpreter = 'tex';
+
+workspaceDir = 'workspace\20220925-contrast\nagayama_concentric';
+diaryFile = fullfile('workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
+% diary diaryFile;
+% diary on;
+
 % profile on
-tPar0 = tic;
-parObj = gcp;
-tPar = toc(tPar0);
-fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
+% tPar0 = tic;
+% parObj = gcp;
+% tPar = toc(tPar0);
+% fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
 
 radius = 190;
 
@@ -112,24 +118,24 @@ curveFx = matlabFunction(subs(surfFx,y,0),'Vars',x);
 
 rRange = [rMax,0];
 rStep = -1*rStep;
+
 % initialize the cutting pts: the outest loop
-curvePathPt = [rRange(1);0;curveFunc(rRange(1))];
+curvePt = [rRange(1);0;curveFunc(rRange(1))];
 curveNorm = [curveFx(rRange(1));0;-1];
 curveNorm = curveNorm./norm(curveNorm);
 % the first toolpath pt
 % ---!!! the tool should be fixed just as the picture !!!---
-[curvePathPt,curveQuat,curvePt] = radiuspos(curveFunc,curveFx, ...
-    radius,curvePathPt,[0;0;-1],[0;-1;0]);
+[curvePathPt,curveQuat,curveContactU] = radiustippos(radius,curvePt,curveNorm, ...
+    [0;0;-1],[0;-1;0],'directionType','norm-feed');
 curvePathNorm = quat2rotm(curveQuat)*[0;0;-1];
 fprintf('No.1\t toolpath point is calculated.\n-----\n');
 
 %     scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
-%     toolSp0 = toolData.toolBform;
-%     toolSp0.coefs = quat2rotm(curveQuat(1,:))*toolSp0.coefs + curvePathPt(:,1);
-%     toolPt0 = fnval(toolSp0,0:0.001:1);
-%     toolContactPt0 = fnval(toolSp0,curveContactU(1));
+%     toolThe0 = 0:0.01:2*pi;
+%     toolPt0(1,:) = curvePathPt(1,1) + radius*cos(toolThe0);
+%     toolPt0(3,:) = curvePathPt(3,1) + radius*sin(toolThe0);
 %     plot(toolPt0(1,:),toolPt0(3,:),'Color',[0.7,.7,.7]);
-%     scatter(toolContactPt0(1),toolContactPt0(3),18,[0.929,0.694,0.1250],"filled");
+%     axis equal
 
 % the rest
 % opt = optimset('Display','iter','MaxIter',50,'TolFun',1e-6,'TolX',1e-6); % fzero options
@@ -138,13 +144,37 @@ fprintf('No.1\t toolpath point is calculated.\n-----\n');
 %     'MaxIterations',50,'FunctionTolerance',1e-6,'StepTolerance',1e-6); % fsolve options
 % % 'PlotFcn',{@optimplotx,@optimplotfval},
 
-% opt = optimoptions('ga','UseParallel',true);
+opt = optimoptions('ga','UseParallel',true,'Display','diagnose');
 
-[curvePathPt,curveQuat,curvePt,curveRes] = iterfunc_curvepath_radius_res( ...
-    curveFunc,curveFx,radius,curvePathPt,curveQuat,curvePt, ...
-    rStep,aimRes,rRange); % ,'algorithm','genetic','optimopt',opt);
+% opt = optimoptions('particleswarm','UseParallel',true,'Display','iter');
+
+[curvePathPt,curveQuat,curveContactU,curvePt,curveRes,curveULim] = ...
+    iterfunc_curvepath_radius_res(curveFunc,curveFx,radius,curvePathPt,curveQuat, ...
+    curveContactU,curvePt,rStep,aimRes,rRange,'algorithm','genetic','optimopt',opt);
+
+% calculate the center point
+if curvePathPt(1,end) < 0
+    tic;
+    curvePathPt(1,end) = 0;
+    [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind),curvePt(:,ind)] = ...
+    radiuspos(curveFunc,curveFx,radius,curvePathPt(:,ind),[0;0;-1],[0;-1;0]);
+
+    % calculate the residual height of the loop and the inner nearest loop
+    a = norm(curvePathPt(:,ind) - curvePathPt(:,ind - 1));
+    curveRes(ind) = radius - sqrt(radius^2 - a^2/4);
+    Norm = norm(curveResPathPt(:,ind) - curveResPathPt(:,ind - 1));
+    peakPt = 1/2*(curveResPathPt(:,ind) + curveResPathPt(:,ind - 1)) + sqrt(radius^2 - Norm^2/4) ...
+        *roty(-90,'deg')*(curveResPathPt(:,ind) - curveResPathPt(:,ind - 1))/Norm;    
+    vec1 = curveResPathPt(:,ind) - peakPt;
+    curveRes(1,ind) = atan2(vec1(end),vec1(1));
+    vec2 = curveResPathPt(:,ind - 1) - peakPt;
+    curveRes(2,ind - 1) = atan2(vec2(end),vec2(1));
+    fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',ind,toc);
+end
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
+
+% diary off;
 
 %% plot the result above
 figure('Name','tool path optimization');
@@ -189,7 +219,7 @@ toolCutDirect = [];
 res = [];
 uLim = [];
 peakPt = [];
-for ii = 1:size(curvePathPt,2)
+for ii = 1:size(curvePathPt,2) - 1
     conTheta0 = linspace(conThetaBound(1),conThetaBound(2), ...
         ceil(2*pi/min(maxAngPtDist,arcLength/curvePathPt(1,ii))) + 1);
     conTheta0(end) = [];
@@ -200,6 +230,15 @@ for ii = 1:size(curvePathPt,2)
     res = [res,curveRes(ii)*ones(1,loopPtNum(end))];
     uLim = [uLim,ndgrid(curveULim(:,ii),1:loopPtNum(end))];
 end
+conTheta0 = linspace(conThetaBound(1),conThetaBound(2), ...
+    ceil(2*pi/maxAngPtDist) + 1);
+conTheta0(end) = [];
+toolPathAngle = [toolPathAngle,conTheta0];
+loopPtNum = [loopPtNum,length(conTheta0)];
+accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNum(end)];
+toolNAccum = [toolNAccum,(ii + 1)*ones(1,loopPtNum(end))];
+res = [res,curveRes(ii + 1)*ones(1,loopPtNum(end))];
+uLim = [uLim,ndgrid(curveULim(:,ii + 1),1:loopPtNum(end))];
 accumPtNum(1) = [];
 for ii = 1:length(toolPathAngle)
     R = rotz(toolPathAngle(ii));
@@ -208,8 +247,8 @@ for ii = 1:length(toolPathAngle)
     toolPathPt(:,ii) = R*curvePathPt(:,kk);
     peakPt(ii,:) = R*curvePeakPt(:,kk);
     toolQuat(ii,:) = quatmul(curveQuat(kk,:),loopQuat(ii,:));
-    toolNormDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
-    toolCutDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
+%     toolNormDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
+%     toolCutDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
 end
 plotSpar = 1;
 plot3(toolPathPt(1,1:plotSpar:end), ...
@@ -222,7 +261,7 @@ ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 % spiralAngle0 = toolPathAngle;
 
-s4_visualize_concentric; % res for two lines
+s6_visualize_concentric; % res for two lines
 
 msgfig = questdlg({'Concentric tool path was generated successfully!', ...
     'Ready to continue?'}, ...

@@ -35,18 +35,25 @@ while true
         case 'Residual height'
             tRes0 = tic;
             plotNum = 1000;
-            resLine = [res(1,:),res(2,:)];
-            peakPtLine = [peakPt(1:3,:),peakPt(4:6,:)];
-            xPlot = linspace(min(peakPtLine(1,:)),max(peakPtLine(1,:)),plotNum);
-            yPlot = linspace(min(peakPtLine(2,:)),max(peakPtLine(2,:)),plotNum);
-            [xMesh,yMesh] = meshgrid(xPlot,yPlot);
-            % elliminate the smaller residual height at the same peak
-            [resUnique,peakPtUnique] = groupsummary(resLine',peakPtLine(1:2,:)',@max);
-            resMaxInd = find(resUnique == max(resUnique));
-            resUnique(resMaxInd) = [];
-            peakPtUnique{1}(resMaxInd) = [];
-            peakPtUnique{2}(resMaxInd) = [];
-            resMesh = griddata(peakPtUnique{1},peakPtUnique{2},resUnique,xMesh,yMesh);
+            if size(res,1) == 1
+                xPlot = linspace(min(peakPtUnique{1}),max(peakPtUnique{1}),plotNum);
+                yPlot = linspace(min(peakPtUnique{2}),max(peakPtUnique{2}),plotNum);
+                [xMesh,yMesh] = meshgrid(xPlot,yPlot);
+                resMesh = griddata(peakPt(1,:),peakPt(2,:),res,xMesh,yMesh);
+            else
+                resLine = [res(1,:),res(2,:)];
+                peakPtLine = [peakPt(1:3,:),peakPt(4:6,:)];
+                xPlot = linspace(min(peakPtLine(1,:)),max(peakPtLine(1,:)),plotNum);
+                yPlot = linspace(min(peakPtLine(2,:)),max(peakPtLine(2,:)),plotNum);
+                [xMesh,yMesh] = meshgrid(xPlot,yPlot);
+                % elliminate the smaller residual height at the same peak
+                [resUnique,peakPtUnique] = groupsummary(resLine',peakPtLine(1:2,:)',@max);
+                resMaxInd = find(resUnique == max(resUnique));
+                resUnique(resMaxInd) = [];
+                peakPtUnique{1}(resMaxInd) = [];
+                peakPtUnique{2}(resMaxInd) = [];
+                resMesh = griddata(peakPtUnique{1},peakPtUnique{2},resUnique,xMesh,yMesh);
+            end
             figure('Name','Residual height map');
             pos = get(gcf,'position');
             set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
@@ -82,21 +89,37 @@ while true
             toolPathList = [];
             tSimul0 = tic;
             % figure;
-            parfor ii = 1:accumPtNum(end) % each tool path point
-                toolSp = toolData.toolBform;
-                toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
-                tmp = fnval(toolSp,uLimRound(1,ii):stepLength:uLimRound(2,ii));
-                % Q{jj} = tmp;
-                toolPathList = [toolPathList,tmp];
-                % plot3(tmp(1,:),tmp(2,:),tmp(3,:),'b.'); hold on;
+            if exist('toolData','var')
+                parfor ii = 1:accumPtNum(end) % each tool path point
+                    toolSp = toolData.toolBform;
+                    toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
+                    tmp = fnval(toolSp,uLimRound(1,ii):stepLength:uLimRound(2,ii));
+                    % Q{jj} = tmp;
+                    toolPathList = [toolPathList,tmp];
+                    % plot3(tmp(1,:),tmp(2,:),tmp(3,:),'b.'); hold on;
+                end
+                plotNum = 1000;
+                xPlot = linspace(min(toolPathList(1,:)),max(toolPathList(1,:)),plotNum);
+                yPlot = linspace(min(toolPathList(2,:)),max(toolPathList(2,:)),plotNum);
+                [xMesh,yMesh] = meshgrid(xPlot,yPlot);
+                % elliminate the smaller residual height at the same peak
+                [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@mean);
+                zMesh = griddata(toolPathXYUnique{1},toolPathXYUnique{2},toolPathZUnique,xMesh,yMesh);
+            else
+                parfor ii = 1:accumPtNum(end) % each tool path point
+                    toolThe0 = uLimRound(2,ii):stepLength:uLimRound(1,ii);
+                    tmp = toolPathPt(1,ii) + radius*cos(toolThe0);
+                    % Q{jj} = tmp;
+                    toolPathList = [toolPathList,tmp];
+                    % plot3(tmp(1,:),tmp(2,:),tmp(3,:),'b.'); hold on;
+                end
+                plotNum = 1000;
+                xPlot = linspace(min(toolPathList(1,:)),max(toolPathList(1,:)),plotNum);
+                yPlot = linspace(min(toolPathList(2,:)),max(toolPathList(2,:)),plotNum);
+                [xMesh,yMesh] = meshgrid(xPlot,yPlot);
+                % elliminate the smaller residual height at the same peak
+                zMesh = griddata(toolPathList(1,:),toolPathList(2,:),toolPathList(3,:),xMesh,yMesh);
             end
-            plotNum = 1000;
-            xPlot = linspace(min(toolPathList(1,:)),max(toolPathList(1,:)),plotNum);
-            yPlot = linspace(min(toolPathList(2,:)),max(toolPathList(2,:)),plotNum);
-            [xMesh,yMesh] = meshgrid(xPlot,yPlot);
-            % elliminate the smaller residual height at the same peak
-            [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@mean);
-            zMesh = griddata(toolPathXYUnique{1},toolPathXYUnique{2},toolPathZUnique,xMesh,yMesh);
             % calculate the error based on the designed surface
             z0Mesh = griddata(surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3),xMesh,yMesh);
             % 这里有更好的仿真方式：每个点都计算到设计曲面的距离，而不是沿z方向的距离！！！！

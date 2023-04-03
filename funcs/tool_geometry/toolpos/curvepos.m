@@ -1,5 +1,5 @@
 function [toolPathPt,toolQuat,toolContactU,curvePt,varargout] = curvepos( ...
-    curveFunc,curveFy,toolEdge,toolPathPt,toolPathNorm,toolPathFeed,options)
+    curveFunc,curveFx,toolEdge,toolPathPt,toolPathNorm,toolPathFeed,options)
 % Description:
 %   Solve the tool pose and the tool tip pose using the tangent relationship 
 %   of tool tip and surface, with the tool axis unchanged.
@@ -28,7 +28,7 @@ function [toolPathPt,toolQuat,toolContactU,curvePt,varargout] = curvepos( ...
 
 arguments
     curveFunc function_handle
-    curveFy function_handle
+    curveFx function_handle
     toolEdge struct
     toolPathPt (3,1)
     toolPathNorm (3,1) = [0;0;-1]
@@ -50,7 +50,7 @@ R = toolEdge.radius;
         % the x and y coordinates of the toolpath has been given by the
         % input, while tooltip's x & y and the z value of the toolpath
         % need to be solved. so x = [tooltip_y; toolpath_z].
-        curveNorm = [curveFy(x(1));-1];
+        curveNorm = [curveFx(x(1));-1];
         curveNorm = curveNorm./norm(curveNorm);
         F1(1) = toolpathxy - x(1) + R*curveNorm(1);
         % F1(2) = toolpathx(2) - x(2) + R*curveNorm(1);
@@ -78,7 +78,7 @@ toolQuat = rotm2quat(toolRot);
         % surfNorm = surfNormFunc(toolPathXY(1),toolPathXY(2));
         toolEdge1 = toolRigid(toolEdgeRotate,eye(3),[toolpathx;x]);
         toolEdgeList = fnval(toolEdge1.toolBform,uQ);
-        toolEdgeDist = dist2curve(toolEdgeList(2:3,:),curveFunc,curveFy, ...
+        toolEdgeDist = dist2curve(toolEdgeList(2:3,:),curveFunc,curveFx, ...
             'CalculateType','Lagrange-Multiplier', ...
             'DisplayType','none');
         F2 = min(toolEdgeDist);
@@ -93,12 +93,12 @@ optimOpts2 = optimoptions('fsolve', ...
 toolPathZ = fsolve(@(x)final2solve(x,toolPathPt(1:2)),toolPathPt(end),optimOpts2);
 toolPathPt(end) = toolPathZ;
 
-curveNorm0 = [0;curveFy(curvePt(1));-1];
+curveNorm0 = [0;curveFx(curvePt(1));-1];
 curveNorm0 = curveNorm0./norm(curveNorm0);
 toolEdgeTrans = toolRigid(toolEdgeRotate,eye(3),toolPathPt);
 toolEdgeList0 = fnval(toolEdgeTrans.toolBform,uQ);
 [surfPtDistList,surfPtList] = dist2curve(toolEdgeList0(2:3,:), ...
-    curveFunc,curveFy,'CalculateType','Lagrange-Multiplier');
+    curveFunc,curveFx,'CalculateType','Lagrange-Multiplier');
 [varargout{1},Ind] = min(surfPtDistList);
 curvePt = [0;surfPtList(:,Ind)];
 
