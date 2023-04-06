@@ -56,65 +56,84 @@ s2 = s2(:,isRange2);
 % same as the above dsearchn function
 [index,dist] = dsearchn(s1',s2');
 % get the indices of the local minimum points
-cmp = find(diff(sign(diff(dist))) > 0) + 1; % length = size(s2,2)
+cmp1 = find(diff(sign(diff(dist))) > 0) + 1; % length = size(s2,2)
 
 range = mean(vecnorm(diff(s1,1,2),2,1));
 % cmp2: the indices of the intersection points, 
 %   i.e., the local minimals which is close enough to both sp1 and sp2
-cmp = cmp(dist(cmp) < range);
+cmp1 = cmp1(dist(cmp1) < range);
 
 %% eliminate the redundant cases
 diff1 = diff(s1,1,2);
 der1 = diff1(3,:)./diff1(1,:);
 diff2 = diff(s2,1,2);
 der2 = diff2(3,:)./diff2(1,:);
+
 % edxclude the case that two local minimals are the same
-MultiInter = find(diff(cmp) <= 10);
+cmp2 = cmp1;
+MultiInter = find(diff(cmp2) <= 10);
 [num,ari] = arithmeticsequences(MultiInter);
 cmp2clear = [];
 for jj = 1:num
     % mid: the middle point among the same intersection point set
     midInter = round((MultiInter(ari(1,jj)) + MultiInter(ari(2,jj)) + 1)/2); 
     same = MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1;
-    [minInter,sameInd] = min(abs(der1(index(cmp(same))) - der2(cmp(same))));
+    [minInter,sameInd] = min(abs(der1(index(cmp2(same))) - der2(cmp2(same))));
     minInd = same(sameInd);
-    maxInter = max(abs(der1(index(cmp(same))) - der2(cmp(same))));
-    if maxInter/minInter > 10 % abs(der1(index(cmp2(midInter))) - der2(cmp2(midInter))) < 1e-3
-        % the repeated points are tagent points
-        cmp2clear = [cmp2clear,MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1];
-    else
+    maxInter = max(abs(der1(index(cmp2(same))) - der2(cmp2(same))));
+%     if maxInter/minInter > 5 % abs(der1(index(cmp2(midInter))) - der2(cmp2(midInter))) < 1e-3
+%         % the repeated points are tagent points
+%         cmp2clear = [cmp2clear,MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1];
+%     else
         % the repeated points are not tagent points
         cmp2clear = [cmp2clear,MultiInter(ari(1,jj)):minInd - 1,minInd + 1:MultiInter(ari(2,jj)) + 1];
-    end
+%     end
 end
 
 % for ii = 1:length(cmp2)
 %     % 比较每个交点前后10个点处两条tool tip的切线斜率之差
 %     abs(der1(index(cmp2(ii))) - der2(cmp2(ii)))
 % end
-cmp2 = cmp;
 cmp2(cmp2clear) = [];
 
 % eliminate the tagent case
-cmptan = abs(der1(index(cmp2)) - der2(cmp2));
-meantan = mean(cmptan);
-istan0 = find(meantan./cmptan > 5); % test the differentiate of each intersection point
-istan = zeros(1,length(istan0));
-for ii = 1:length(istan0)
-    vec0 = s1(:,index(cmp2(istan0(ii)))) - s2(:,cmp2(istan0(ii)));
-    vecInd1 = min([cmp2(istan0(ii)) + round(1e-3/eps),length(index)]);
-    vec1 = s1(:,index(vecInd1)) - s2(:,vecInd1);
-    vecInd2 = max([cmp2(istan0(ii)) - round(1e-3/eps),1]);
-    vec2 = s1(:,index(vecInd2)) - s2(:,vecInd2);
-    istan(ii) = dot(vec0,vec1) * dot(vec0,vec2) > 0;
-end
 cmp3 = cmp2;
-cmp3(istan0(find(istan))) = [];
+istan = 1;
+while any(istan)
+    cmptan = abs(der1(index(cmp3)) - der2(cmp3));
+    maxtan = max(cmptan);
+    istan0 = find(maxtan./cmptan > 2); % test the differentiate of each intersection point
+    istan = zeros(1,length(istan0));
+    cmp3tmp = [1;cmp3;length(dist)];
+    for ii = 1:length(istan0)
+    %     vec0 = s1(:,index(cmp2(istan0(ii)))) - s2(:,cmp2(istan0(ii)));
+    %     vecInd1 = min([cmp2(istan0(ii)) + round(5e-4/eps),length(index)]);
+    %     vec1 = s1(:,index(vecInd1)) - s2(:,vecInd1);
+    %     vecInd2 = max([cmp2(istan0(ii)) - round(5e-4/eps),1]);
+    %     vec2 = s1(:,index(vecInd2)) - s2(:,vecInd2);
+    %     istan(ii) = dot(vec1,vec2) > 0;
+%         vecInd1 = round((cmp3tmp(istan0(ii) + 1) + cmp3tmp(istan0(ii)))/2);
+%         vec1 = s1(:,index(vecInd1)) - s2(:,vecInd1);
+%         vecInd2 = round((cmp3tmp(istan0(ii) + 2) + cmp3tmp(istan0(ii) + 1))/2);
+%         vec2 = s1(:,index(vecInd2)) - s2(:,vecInd2);
+%         istan(ii) = dot(vec1,vec2) > 0;
+
+        % vec0 = sign(pt2Line(s1(:,index(cmp2(istan0(ii)))),pt1,pt2) ...
+        %     - pt2Line(s2(:,cmp2(istan0(ii))),pt1,pt2));
+        vecInd1 = round((cmp3tmp(istan0(ii) + 1) + cmp3tmp(istan0(ii)))/2);
+        vec1 = sign(pt2Line(s1(:,index(vecInd1)),pt1,pt2) - pt2Line(s2(:,vecInd1),pt1,pt2));
+        vecInd2 = round((cmp3tmp(istan0(ii) + 2) + cmp3tmp(istan0(ii) + 1))/2);
+        vec2 = sign(pt2Line(s1(:,index(vecInd2)),pt1,pt2) - pt2Line(s2(:,vecInd2),pt1,pt2));
+        istan(ii) = vec1*vec2 > 0;
+    end
+    cmp3(istan0(find(istan))) = [];
+end
 
 % calculate the intersection points
-uInter2 = u2(cmp3);
-uInter1 = u1(index(cmp3));
-interPt = 0.5*(s1(:,index(cmp3)) + s2(:,cmp3));
+cmp = cmp3;
+uInter2 = u2(cmp);
+uInter1 = u1(index(cmp));
+interPt = 0.5*(s1(:,index(cmp)) + s2(:,cmp));
 
 % % eliminate the intersection points that are beyond the curve area
 % %   the projection of vec{pt1 -> interPt} to vec{pt1 -> pt2}
@@ -127,7 +146,7 @@ interPt = 0.5*(s1(:,index(cmp3)) + s2(:,cmp3));
 % interPt(:,isRange) = [];
 
 %% u range
-if ~mod(length(cmp3),2)
+if ~mod(length(cmp),2)
     warning('Something wrong in the intersection point calculation process.\n');
     res = 0;
     peakPt = [];

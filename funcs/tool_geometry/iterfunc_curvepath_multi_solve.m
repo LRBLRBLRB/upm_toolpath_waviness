@@ -49,6 +49,10 @@ curveRes = 5*aimRes; % the residual height, initialized with 5 times the standar
     function diffRes = iterfunc(r)
         curveULim{ind} = [0;1];
         curvePt(:,ind) = [r;0;surfFunc(r)];
+        if abs(curvePt(1,ind) -  curvePt(1,ind - 1)) < 1e-3
+            diffRes = - aimRes;
+            return;
+        end
         surfNorm = [surfFx(r);0;-1];
         surfNorm = surfNorm./norm(surfNorm);
         % calculate the surfPt and toolpathPt from center to edge
@@ -60,15 +64,15 @@ curveRes = 5*aimRes; % the residual height, initialized with 5 times the standar
         % calculate the residual height of the loop and the inner nearest loop
         toolSp1 = toolSp;
         toolSp1.coefs = quat2rotm(curveQuat(ind,:))*toolSp1.coefs + curvePathPt(:,ind);
-        toolContactPt1 = fnval(toolSp1,curveContactU(ind));
+        % toolContactPt1 = fnval(toolSp1,curveContactU(ind));
         toolSp2 = toolSp;
         toolSp2.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp2.coefs + curvePathPt(:,ind - 1);
-        toolContactPt2 = fnval(toolSp2,curveContactU(ind - 1));
+        % toolContactPt2 = fnval(toolSp2,curveContactU(ind - 1));
     
         [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim1, ...
             curveULim2] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
             curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
-        curvePeakPt(5,ind) = curvePeakPt(5,ind) + ind;
+        % curvePeakPt(5,ind) = curvePeakPt(5,ind) + ind;
     
         if isinf(curveRes(ind))
             fprintf('No intersection of the current tool path.\n');
@@ -110,7 +114,7 @@ while (r - rRange(2))*delta0 < 0
         case 'fzero'
             [r,diffRes1] = fzero(@iterfunc,r0,options.optimopt);
         case 'search-bisection'
-            h = delta/50;
+            h = delta/20;
             r = mysearch(@iterfunc,r0,h,[r0 + delta,r],options.optimopt.XTol);
         case 'genetic'
             % 'InitialPopulationMatrix',iniMat

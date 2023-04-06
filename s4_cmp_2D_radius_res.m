@@ -156,20 +156,20 @@ opt = optimoptions('ga','UseParallel',true,'Display','diagnose');
 if curvePathPt(1,end) < 0
     tic;
     curvePathPt(1,end) = 0;
-    [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind),curvePt(:,ind)] = ...
-    radiuspos(curveFunc,curveFx,radius,curvePathPt(:,ind),[0;0;-1],[0;-1;0]);
+    [curvePathPt(:,end),curveQuat(end,:),curveContactU(end),curvePt(:,end)] = ...
+    radiuspos(curveFunc,curveFx,radius,curvePathPt(:,end),[0;0;-1],[0;-1;0]);
 
     % calculate the residual height of the loop and the inner nearest loop
-    a = norm(curvePathPt(:,ind) - curvePathPt(:,ind - 1));
-    curveRes(ind) = radius - sqrt(radius^2 - a^2/4);
-    Norm = norm(curveResPathPt(:,ind) - curveResPathPt(:,ind - 1));
-    peakPt = 1/2*(curveResPathPt(:,ind) + curveResPathPt(:,ind - 1)) + sqrt(radius^2 - Norm^2/4) ...
-        *roty(-90,'deg')*(curveResPathPt(:,ind) - curveResPathPt(:,ind - 1))/Norm;    
-    vec1 = curveResPathPt(:,ind) - peakPt;
-    curveRes(1,ind) = atan2(vec1(end),vec1(1));
-    vec2 = curveResPathPt(:,ind - 1) - peakPt;
-    curveRes(2,ind - 1) = atan2(vec2(end),vec2(1));
-    fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',ind,toc);
+    a = norm(curvePathPt(:,end) - curvePathPt(:,end - 1));
+    curveRes(end) = radius - sqrt(radius^2 - a^2/4);
+    Norm = norm(curveResPathPt(:,end) - curveResPathPt(:,end - 1));
+    peakPt = 1/2*(curveResPathPt(:,end) + curveResPathPt(:,end - 1)) + sqrt(radius^2 - Norm^2/4) ...
+        *roty(-90,'deg')*(curveResPathPt(:,end) - curveResPathPt(:,end - 1))/Norm;    
+    vec1 = curveResPathPt(:,end) - peakPt;
+    curveRes(1,end) = atan2(vec1(end),vec1(1));
+    vec2 = curveResPathPt(:,end - 1) - peakPt;
+    curveRes(2,end - 1) = atan2(vec2(end),vec2(1));
+    fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
 end
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));

@@ -41,6 +41,7 @@ else
     fprintf('%d\t%f\t%f\n',ii,b,tmp);
     while tmp < 0
         ii = ii + 1;
+        a = b;
         b = b + h;
 %         tmp0 = tmp;
         tmp = f(b);

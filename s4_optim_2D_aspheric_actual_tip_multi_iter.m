@@ -18,8 +18,8 @@ textFontType = 'Times New Roman';
 msgOpts.Default = 'Cancel and quit';
 msgOpts.Interpreter = 'tex';
 
-workspaceDir = 'workspace\20220925-contrast\nagayama_concentric';
-% workspaceDir = 'workspace\20221020-tooltip\tooltip fitting result';
+% workspaceDir = 'workspace\20220925-contrast\nagayama_concentric';
+workspaceDir = 'workspace\20221020-tooltip\tooltip fitting result';
 diaryFile = fullfile('workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
 % diary diaryFile;
 % diary on;
@@ -178,20 +178,19 @@ opt.XTol = 1e-6;
 if curvePathPt(1,end) < 0
     tic;
     curvePathPt(1,end) = 0;
-    [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind),curvePt(:,ind)] = ...
-    curvepos(curveFunc,curveFx,radius,curvePathPt(:,ind),[0;0;-1],[0;-1;0]);
+    [curvePathPt(:,end),curveQuat(end,:),curveContactU(end),curvePt(:,end)] = ...
+    curvepos(curveFunc,curveFx,toolData,curvePathPt(:,end),[0;0;-1],[0;-1;0]);
 
     % calculate the residual height of the loop and the inner nearest loop
-    a = norm(curvePathPt(:,ind) - curvePathPt(:,ind - 1));
-    curveRes(ind) = radius - sqrt(radius^2 - a^2/4);
-    Norm = norm(curveResPathPt(:,ind) - curveResPathPt(:,ind - 1));
-    peakPt = 1/2*(curveResPathPt(:,ind) + curveResPathPt(:,ind - 1)) + sqrt(radius^2 - Norm^2/4) ...
-        *roty(-90,'deg')*(curveResPathPt(:,ind) - curveResPathPt(:,ind - 1))/Norm;    
-    vec1 = curveResPathPt(:,ind) - peakPt;
-    curveRes(1,ind) = atan2(vec1(end),vec1(1));
-    vec2 = curveResPathPt(:,ind - 1) - peakPt;
-    curveRes(2,ind - 1) = atan2(vec2(end),vec2(1));
-    fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',ind,toc);
+    toolSp1 = toolSp;
+    toolSp1.coefs = quat2rotm(curveQuat(end,:))*toolSp1.coefs + curvePathPt(:,end);
+    toolSp2 = toolSp;
+    toolSp2.coefs = quat2rotm(curveQuat(end - 1,:))*toolSp2.coefs + curvePathPt(:,end - 1);
+    [curveRes(end),curvePeakPt(:,end),curveInterPt{end},curveULim{end}, ...
+        curveULim{end - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
+        curvePt(:,end),curvePt(:,end - 1),curveULim{end - 1});
+    % curvePeakPt(5,end) = curvePeakPt(5,end) + length(curveContactU);
+    fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
 end
 
 
@@ -265,6 +264,7 @@ toolCutDirect = [];
 toolContactU = [];
 res = [];
 peakPt = [];
+peakPlace = [];
 uLim = {zeros(2,0)};
 interPt = {zeros(3,0)};
 for ii = 1:size(curvePathPt,2)
@@ -278,6 +278,7 @@ for ii = 1:size(curvePathPt,2)
     toolRAccum = [toolRAccum,curvePt(1,ii)*ones(1,loopPtNum(end))]; % the loop radius of each tool path
     toolContactU = [toolContactU,curveContactU(ii)*ones(1,loopPtNum(end))]; % the B-spline parameter of the contact point
     res = [res,curveRes(ii)*ones(1,loopPtNum(end))]; % the residual height of each tool point and its closest point on the previous loop 
+    peakPlace = [peakPlace,peakPt(5,ii)*ones(1,loopPtNum(end))];
 end
 accumPtNum(1) = [];
 for ii = 1:length(toolPathAngle)
@@ -289,7 +290,8 @@ for ii = 1:length(toolPathAngle)
     toolNormDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.toolEdgeNorm;
     toolCutDirect(ii,:) = quat2rotm(toolQuat(ii,:))*toolData.cutDirect;
     peakPt(1:3,ii) = R*curvePeakPt(1:3,kk); % the concentric peak point and its state
-    peakPt(4:5,ii) = curvePeakPt(4:5,kk);
+    peakPt(4,ii) = curvePeakPt(4,kk);
+    peakPt(5,ii) = curvePeakPt(5,kk);
     uLim{ii} = curveULim{kk}; % the u limitation of the tool tip of each tool path point
     interPt{ii} = R*curveInterPt{kk}; % the intersection point of each tool path point
     surfPt(:,ii) = R*curvePt(:,kk); % the contact point of each tool path point
@@ -407,7 +409,7 @@ tSpiral0 = tic;
 % for each loop, shift the tool path point by decreasing the radius
 for kk = 1:numLoop - 1 % begin with the 1st loop
     angleN = toolPathAngle(accumPtNumlength(kk) + 1:accumPtNumlength(kk + 1));
-    for indInterp = accumPtNum(kk) + 1:accumPtNum(kk - 1)
+    for indInterp = accumPtNum(kk) + 1:accumPtNum(kk + 1)
         %get the inner closest point and linearly interpolate them
         angleDel = angleN - toolPathAngle(indInterp);
         [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel); % get the closest tol point in the inner loop
@@ -429,15 +431,15 @@ for kk = 1:numLoop - 1 % begin with the 1st loop
 end
 
 % elliminate the first loop, which focuses on the z=0 point
-spiralPath0(:,1:accumPtNum(1) - 1) = [];
-spiralNorm0(:,1:accumPtNum(1) - 1) = [];
-spiralCut0(:,1:accumPtNum(1) - 1) = [];
-spiralQuat0(1:accumPtNum(1) - 1,:) = [];
-spiralContactU0(1:accumPtNum(1) - 1) = [];
+spiralPath0(:,accumPtNum(end - 1) + 1:accumPtNum(end)) = [];
+spiralNorm0(:,accumPtNum(end - 1) + 1:accumPtNum(end)) = [];
+spiralCut0(:,accumPtNum(end - 1) + 1:accumPtNum(end)) = [];
+spiralQuat0(accumPtNum(end - 1) + 1:accumPtNum(end),:) = [];
+spiralContactU0(accumPtNum(end - 1) + 1:accumPtNum(end)) = [];
 
 % change the spiral tool path to constant arc length one
 spiralAngle0 = toolPathAngle + 2*pi*toolNAccum;
-spiralAngle0(:,1:accumPtNum(1) - 1) = [];
+spiralAngle0(:,accumPtNum(end - 1) + 1:accumPtNum(end)) = [];
 if strcmp(angularDiscrete,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
         spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},toolData,'interpType','linear'); % spiralQuat0,
@@ -460,8 +462,9 @@ fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSp
 
 %% Spiral Residual height calculation of the spiral tool path
 spiralRes = 5*aimRes*ones(1,spiralPtNum);
-spiralPeakPt = zeros(6,spiralPtNum);
-spiralULim = [zeros(1,spiralPtNum);ones(1,spiralPtNum)];
+spiralPeakPt = zeros(5,spiralPtNum);
+spiraqlInterPt = cell(1,spiralPtNum);
+spiralULim = cell(1,spiralPtNum);
 tSpiralRes0 = tic;
 parfor ind1 = 1:spiralPtNum
     % inner ulim & residual height
