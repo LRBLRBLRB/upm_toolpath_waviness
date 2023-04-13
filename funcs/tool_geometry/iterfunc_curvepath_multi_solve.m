@@ -114,16 +114,17 @@ while (r - rRange(2))*delta0 < 0
         case 'fzero'
             [r,diffRes1] = fzero(@iterfunc,r0,options.optimopt);
         case 'search-bisection'
-            h = delta/20;
+            h = delta/50;
             r = mysearch(@iterfunc,r0,h,[r0 + delta,r],options.optimopt.XTol);
+        case 'traverse-bisection'
         case 'genetic'
             % 'InitialPopulationMatrix',iniMat
-            options.optimopt = optimoptions(options.optimopt, ...
-                'PlotFcn',{'gaplotscorediversity','gaplotselection','gaplotgenealogy'});
-            r = ga(@(x)abs(iterfunc(x)),1,[],[],[],[],r0 + delta,r,[],options.optimopt);
+%             options.optimopt = optimoptions(options.optimopt, ...
+%                 'PlotFcn',{'gaplotscorediversity','gaplotselection','gaplotgenealogy'});
+            r = ga(@(x)abs(iterfunc(x)),1,[],[],[],[],r0,r - aimRes,[],options.optimopt);
         case 'particle-swarm'
             options.optimopt = optimoptions(options.optimopt,'PlotFcn','pswplotbestf');
-            r = particleswarm(@(x)abs(iterfunc(x)),1,r0 + delta,r,options.optimopt);
+            r = particleswarm(@(x)abs(iterfunc(x)),1,r0 + delta,r - aimRes,options.optimopt);
     end
     % [r,diffRes2] = fminsearch(@iterfunc,r0,opt1);
 
@@ -146,7 +147,7 @@ while (r - rRange(2))*delta0 < 0
         scatter(toolContactPt20(1),toolContactPt20(3),18,[0.929,0.694,0.1250],"filled");
         scatter(curveInterPt{ind}(1,:),curveInterPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
 
-    fprintf('-----\nNo.%d\t toolpath point at [r = %f] is calculated within %fs.\n-----\n',ind,r,toc);
+    fprintf('No.%d\t toolpath point at [r = %f] is calculated within %fs.\n-----\n',ind,r,toc);
 end
 
 end

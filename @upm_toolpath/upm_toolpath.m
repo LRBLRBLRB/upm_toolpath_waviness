@@ -441,9 +441,17 @@ classdef upm_toolpath < matlab.apps.AppBase
                         numHeader = numHeader + 1;
                     end
                     fclose(tooltipFile);
-                    app.toolOri = importdata(app.toolPathName,',',numHeader);
-                    app.toolOri = app.toolOri.data;
+                    [~,~,fileExt] = fileparts(app.toolPathName);
+                    if strcmp(fileExt,'.csv')
+                        app.toolOri = importdata(app.toolPathName,',',numHeader);
+                    else
+                        app.toolOri = importdata(app.toolPathName,' ',numHeader);
+                    end
+                    if size(app.toolOri,2) ~= 3
+                        app.toolOri = app.toolOri.data;
+                    end
                     app.toolOri(:,3) = [];
+                    app.toolOri = sortrows(app.toolOri,1,'ascend');
                     app.toolOri = app.toolOri';
 
                     app.Msg = 'Please select the parameters and click ''Update''.';

@@ -2,7 +2,7 @@
 % and to get the 3D point cloud of the tool tip
 
 %% 2D curve results
-isAPP = false;
+isAPP = true;
 if isAPP
     workspaceDir = app.workspaceDir;
     toolOri = app.toolOri;
@@ -22,7 +22,8 @@ else
     
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
-    workspaceDir = 'workspace/20221020-tooltip';
+    % workspaceDir = 'workspace/20221020-tooltip';
+    workspaceDir = 'workspace/20221015-tooltip';
     fitOpts.toolFitType = 'lineArc';
     fitOpts.arcRansacMaxDist = 1e-3;
     fitOpts.arcFitMethod = 'levenberg-marquardt';
@@ -34,7 +35,7 @@ else
     textFontType = 'Times New Roman';
 
     isTest = false;
-    isSelf = false;
+    isSelf = true;
     if isTest
         cx0 = 0*1000; % unit: mu m
         cy0 = 0*1000; % unit: mu m
@@ -91,10 +92,18 @@ else
             numHeader = numHeader + 1;
         end
         fclose(tooltipFile);
-        toolOri = importdata(pathName,',',numHeader);
-        toolOri = toolOri.data;
+        if strcmp(pathName(end - 2:end),'csv')
+            toolOri = importdata(pathName,',',numHeader);
+        else
+            toolOri = importdata(pathName,' ',numHeader);
+        end
+        if size(toolOri,2) ~= 3
+            toolOri = toolOri.data;
+        end
         toolOri(:,3) = [];
+        toolOri = sortrows(toolOri,1,'ascend');
         toolOri = toolOri';
+
     end
 end
 

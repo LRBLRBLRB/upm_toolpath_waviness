@@ -76,17 +76,20 @@ MultiInter = find(diff(cmp2) <= 10);
 cmp2clear = [];
 for jj = 1:num
     % mid: the middle point among the same intersection point set
-    midInter = round((MultiInter(ari(1,jj)) + MultiInter(ari(2,jj)) + 1)/2); 
-    same = MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1;
-    [minInter,sameInd] = min(abs(der1(index(cmp2(same))) - der2(cmp2(same))));
-    minInd = same(sameInd);
-    maxInter = max(abs(der1(index(cmp2(same))) - der2(cmp2(same))));
+    midInter = round((MultiInter(ari(1,jj)) + MultiInter(ari(2,jj)) + 1)/2);
+    closeInter = MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1;
+    [~,closeInd] = min(dist(cmp2(closeInter)));
+%     same = MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1;
+%     [minInter,sameInd] = min(abs(der1(index(cmp2(same))) - der2(cmp2(same))));
+%     minInd = same(sameInd);
+%     maxInter = max(abs(der1(index(cmp2(same))) - der2(cmp2(same))));
 %     if maxInter/minInter > 5 % abs(der1(index(cmp2(midInter))) - der2(cmp2(midInter))) < 1e-3
 %         % the repeated points are tagent points
 %         cmp2clear = [cmp2clear,MultiInter(ari(1,jj)):MultiInter(ari(2,jj)) + 1];
 %     else
         % the repeated points are not tagent points
-        cmp2clear = [cmp2clear,MultiInter(ari(1,jj)):minInd - 1,minInd + 1:MultiInter(ari(2,jj)) + 1];
+        cmp2clear = [cmp2clear,MultiInter(ari(1,jj)):closeInter(1) + closeInd - 2, ...
+            closeInter(1) + closeInd:MultiInter(ari(2,jj)) + 1];
 %     end
 end
 
@@ -100,12 +103,12 @@ cmp2(cmp2clear) = [];
 cmp3 = cmp2;
 istan = 1;
 while any(istan)
-    cmptan = abs(der1(index(cmp3)) - der2(cmp3));
-    maxtan = max(cmptan);
-    istan0 = find(maxtan./cmptan > 2); % test the differentiate of each intersection point
-    istan = zeros(1,length(istan0));
+%     cmptan = abs(der1(index(cmp3)) - der2(cmp3));
+%     maxtan = max(cmptan);
+%     istan0 = find(maxtan./cmptan > 1); % test the differentiate of each intersection point
+    istan = zeros(length(cmp3),1);
     cmp3tmp = [1;cmp3;length(dist)];
-    for ii = 1:length(istan0)
+    for ii = 1:length(cmp3)
     %     vec0 = s1(:,index(cmp2(istan0(ii)))) - s2(:,cmp2(istan0(ii)));
     %     vecInd1 = min([cmp2(istan0(ii)) + round(5e-4/eps),length(index)]);
     %     vec1 = s1(:,index(vecInd1)) - s2(:,vecInd1);
@@ -120,13 +123,21 @@ while any(istan)
 
         % vec0 = sign(pt2Line(s1(:,index(cmp2(istan0(ii)))),pt1,pt2) ...
         %     - pt2Line(s2(:,cmp2(istan0(ii))),pt1,pt2));
-        vecInd1 = round((cmp3tmp(istan0(ii) + 1) + cmp3tmp(istan0(ii)))/2);
-        vec1 = sign(pt2Line(s1(:,index(vecInd1)),pt1,pt2) - pt2Line(s2(:,vecInd1),pt1,pt2));
-        vecInd2 = round((cmp3tmp(istan0(ii) + 2) + cmp3tmp(istan0(ii) + 1))/2);
-        vec2 = sign(pt2Line(s1(:,index(vecInd2)),pt1,pt2) - pt2Line(s2(:,vecInd2),pt1,pt2));
+        if ii == 1
+            vecInd1 = cmp3tmp(ii);
+        else
+            vecInd1 = round((cmp3tmp(ii) + cmp3tmp(ii + 1))/2);
+        end
+        vec1 = pt2Line(s1(:,index(vecInd1)),pt1,pt2) - pt2Line(s2(:,vecInd1),pt1,pt2);
+        if ii == length(cmp3)
+            vecInd2 = cmp3tmp(ii + 2);
+        else
+            vecInd2 = round((cmp3tmp(ii + 1) + cmp3tmp(ii + 2))/2);
+        end
+        vec2 = pt2Line(s1(:,index(vecInd2)),pt1,pt2) - pt2Line(s2(:,vecInd2),pt1,pt2);
         istan(ii) = vec1*vec2 > 0;
     end
-    cmp3(istan0(find(istan))) = [];
+    cmp3(find(istan)) = [];
 end
 
 % calculate the intersection points
@@ -184,6 +195,11 @@ end
 peakPt = peakPtTmp(:,resInd);
 peakPt(4) = peakUTmp(resInd);
 peakPt(5) = -1*(resInd > kk);
+
+%% another method to get the residual height
+
+
+
 
 %% plot the intersection results
 fig = figure('WindowState','maximized');

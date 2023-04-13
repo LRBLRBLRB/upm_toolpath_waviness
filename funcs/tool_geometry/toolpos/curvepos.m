@@ -41,6 +41,8 @@ arguments
     options.finalStepTol {mustBePositive} = 1e-3
     options.uQTol {mustBePositive} = 1e-3
     options.useParallel logical = false
+    options.directionType {mustBeMember(options.directionType, ...
+        {'quaternion','norm-cut','norm-feed'})} = 'norm-cut'
 end
 
 R = toolEdge.radius;
@@ -67,10 +69,22 @@ toolPathPt(end) = curvePt(end);
 % curvePt(end) = curveFunc(curvePt(1));
 
 %% rotation transform
-% Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
-toolRot = axesRot(toolEdge.toolDirect,toolEdge.toolEdgeNorm, ...
-        toolPathFeed,toolPathNorm,'yz');
-toolEdgeRotate = toolRigid(toolEdge,toolRot,[0;0;0]);
+switch options.directionType
+    case 'norm-cut'
+        % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+        toolRot = axesRot(toolEdge.toolEdgeNorm,toolEdge.cutDirect, ...
+            toolPathNorm,toolPathFeed,'zx');
+        toolEdgeRotate = toolRigid(toolEdge,toolRot,[0;0;0]);
+    case 'norm-feed'
+        % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+        toolRot = axesRot(toolEdge.toolDirect,toolEdge.toolEdgeNorm, ...
+            toolPathFeed,toolPathNorm,'yz');
+        toolEdgeRotate = toolRigid(toolEdge,toolRot,[0;0;0]);
+    case 'quaternion'
+        % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+        toolRot = rotm2quat(toolPathNorm);
+        toolEdgeRotate = toolRigid(toolEdge,toolRot,[0;0;0]);
+end
 toolQuat = rotm2quat(toolRot);
 
 %% find the contact point on the tool edge
@@ -78,7 +92,7 @@ toolQuat = rotm2quat(toolRot);
         % surfNorm = surfNormFunc(toolPathXY(1),toolPathXY(2));
         toolEdge1 = toolRigid(toolEdgeRotate,eye(3),[toolpathx;x]);
         toolEdgeList = fnval(toolEdge1.toolBform,uQ);
-        toolEdgeDist = dist2curve(toolEdgeList(2:3,:),curveFunc,curveFx, ...
+        toolEdgeDist = dist2curve(toolEdgeList(1:2:end,:),curveFunc,curveFx, ...
             'CalculateType','Lagrange-Multiplier', ...
             'DisplayType','none');
         F2 = min(toolEdgeDist);
@@ -93,16 +107,16 @@ optimOpts2 = optimoptions('fsolve', ...
 toolPathZ = fsolve(@(x)final2solve(x,toolPathPt(1:2)),toolPathPt(end),optimOpts2);
 toolPathPt(end) = toolPathZ;
 
-curveNorm0 = [0;curveFx(curvePt(1));-1];
+curveNorm0 = [curveFx(curvePt(1));0;-1];
 curveNorm0 = curveNorm0./norm(curveNorm0);
 toolEdgeTrans = toolRigid(toolEdgeRotate,eye(3),toolPathPt);
 toolEdgeList0 = fnval(toolEdgeTrans.toolBform,uQ);
-[surfPtDistList,surfPtList] = dist2curve(toolEdgeList0(2:3,:), ...
+[surfPtDistList,surfPtList] = dist2curve(toolEdgeList0(1:2:end,:), ...
     curveFunc,curveFx,'CalculateType','Lagrange-Multiplier');
 [varargout{1},Ind] = min(surfPtDistList);
-curvePt = [0;surfPtList(:,Ind)];
+curvePt = [surfPtList(1,Ind);0;surfPtList(2,Ind)];
 
-if abs(ini2solve([curvePt(2);toolPathPt(3)],toolPathPt(2))) > toolEdge.radius
+if abs(ini2solve([curvePt(1);toolPathPt(3)],toolPathPt(1))) > toolEdge.radius
     error('The curvature of the present on the surface is too large to be machined by the tool.');
 end
 

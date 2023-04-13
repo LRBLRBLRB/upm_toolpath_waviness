@@ -94,8 +94,8 @@ switch options.toolFitType
     case 'lineArc'
         % get the start and end point of the line
         fprintf(['Please select the points of the two edges of the tool tip: \n' ...
-            'The first is the end point of the left one, ' ...
-            'while the other is the start point of the right.\n']);
+            'The first two is the interval of the left one, ' ...
+            'while the other two is that of the right.\n']);
         % we have three methods to get the points
         % [lineX,lineY] = ginput(2);
         % [lineX,lineY] = getpts(fig1);
@@ -103,10 +103,10 @@ switch options.toolFitType
 
         isContinue = 0;
         while ~isContinue
-            lineMid = ginput(2);
+            lineMid = ginput(4);
             fprintf('\nSuccessfully selected!\n\n')
-            leftPts = scatterOri(:,scatterOri(1,:) < lineMid(1,1));
-            rightPts = scatterOri(:,scatterOri(1,:) > lineMid(2,1));
+            leftPts = scatterOri(:,(scatterOri(1,:) > lineMid(1,1)) & (scatterOri(1,:) < lineMid(2,1)));
+            rightPts = scatterOri(:,(scatterOri(1,:) > lineMid(3,1)) & (scatterOri(1,:) < lineMid(4,1)));
             if strcmp(options.lineFitMethod,'ransac')
                 % ------------ransac line fitting to remove outlieres & lsc arc fitting------------
                 % ransac line fitting
@@ -128,16 +128,18 @@ switch options.toolFitType
                 % plot the line fitting process
                 figure('Name','Line Fitting of the Tool Tip Arc');
                 plot(leftPts(1,leftInlierIdx),leftPoly(1)*leftPts(1,leftInlierIdx) + leftPoly(2), ...
-                    '.','Color',[0.9290    0.6940    0.1250],'MarkerSize',8); hold on;
+                    '.','Color',[0.8500    0.3250    0.0980],'MarkerSize',8); hold on;
                 plot(rightPts(1,rightInlierIdx),rightPoly(1)*rightPts(1,rightInlierIdx) + rightPoly(2), ...
                     '.','Color',[0.9290    0.6940    0.1250],'MarkerSize',8);
                 plot(scatterOri(1,:),scatterOri(2,:),'LineWidth',0.5,'Color',[0    0.4470    0.7410]);
                 yLim = get(gca,'YLim');
-                line([lineMid(1,1),lineMid(1,1)],[yLim(1),yLim(2)],'Color',[0.8500    0.3250    0.0980]);
-                line([lineMid(2,1),lineMid(2,1)],[yLim(1),yLim(2)],'Color',[0.8500    0.3250    0.0980]);
+                line([lineMid(1,1),lineMid(1,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
+                line([lineMid(2,1),lineMid(2,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
+                line([lineMid(3,1),lineMid(3,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
+                line([lineMid(4,1),lineMid(4,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
                 grid on; axis equal;
 
-                % Least Square Fitting Based on the Inliers
+                % circle boundary
                 circIdx(1) = find(leftInlierIdx,1,"last");
                 circIdx(2) = size(scatterOri,2) - find(flipud(rightInlierIdx),1,"last");
             else
@@ -154,13 +156,16 @@ switch options.toolFitType
                 % plot the line fitting process
                 figShow = figure('Name','Line Fitting of the Tool Tip Arc');
                 plot(scatterOri(1,leftInlierIdx),leftPoly(1)*scatterOri(1,leftInlierIdx) + leftPoly(2), ...
-                    '.','Color',[0.9290    0.6940    0.1250],'MarkerSize',8); hold on;
+                    '.','Color',[0.8500    0.3250    0.0980],'MarkerSize',8); hold on;
                 plot(scatterOri(1,rightInlierIdx),rightPoly(1)*scatterOri(1,rightInlierIdx) + rightPoly(2), ...
-                    '.','Color',[0.9290    0.6940    0.1250],'MarkerSize',8);
-                plot(scatterOri(1,:),scatterOri(2,:),'LineWidth',0.5,'Color',[0    0.4470    0.7410]);
+                    '.','Color',[0.929,0.694,0.1250],'MarkerSize',8);
+                plot(scatterOri(1,:),scatterOri(2,:),'.','MarkerSize',1, ...
+                    'LineWidth',0.5,'Color',[0    0.4470    0.7410]);
                 yLim = get(gca,'YLim');
-                line([lineMid(1,1),lineMid(1,1)],[yLim(1),yLim(2)],'Color',[0.8500    0.3250    0.0980]);
-                line([lineMid(2,1),lineMid(2,1)],[yLim(1),yLim(2)],'Color',[0.8500    0.3250    0.0980]);
+                line([lineMid(1,1),lineMid(1,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
+                line([lineMid(2,1),lineMid(2,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
+                line([lineMid(3,1),lineMid(3,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
+                line([lineMid(4,1),lineMid(4,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
                 grid on; axis equal;
 
                 % Least Square Fitting Based on the Inliers
@@ -169,7 +174,36 @@ switch options.toolFitType
             end
             [isContinue,lineFitMaxDist] = checkextractfig(lineFitMaxDist,figShow);
         end
+
         scatterOri = scatterOri(:,circIdx(1):circIdx(2));
+        hPlot1 = plot(scatterOri(1,:),scatterOri(2,:),'.','MarkerSize',8,'Color',[0.4660    0.6740    0.1880]);
+        xlim = get(gca,'XLim');
+        ylim = get(gca,'YLim');
+        set(gca,"XLim",xlim,'YLim',ylim);
+        isContinue = 0;
+        while ~isContinue
+            fprintf('Please select the useless area of original data: \n');
+            disableDefaultInteractivity(gca);
+            k = waitforbuttonpress; % 等待鼠标按下
+            point1 = get(gca,'CurrentPoint'); % 鼠标按下了
+            finalRect = rbbox; %
+            point2 = get(gca,'CurrentPoint'); % 鼠标松开了
+            point1 = point1(1,1:2); % 提取出两个点
+            point2 = point2(1,1:2);
+            p1 = min(point1,point2); % 计算位置
+            p2 = max(point1,point2);
+            offset = abs(point1 - point2); % offset(1)表示宽，offset(2)表示高
+            boxDel(1,:) = [p1(1), p1(1) + offset(1), p1(1) + offset(1), p1(1), p1(1)];
+            boxDel(2,:) = [p1(2), p1(2), p1(2) + offset(2), p1(2) + offset(2), p1(2)];
+            hplot = plot(boxDel(1,:),boxDel(2,:),'r'); %在原图上显示截取的区域
+            clearInd = (scatterOri(1,:) >= p1(1)) & (scatterOri(1,:) <= p2(1)) ...
+                & (scatterOri(2,:) >= p1(2)) & scatterOri(2,:) <= p2(2);
+            scatterOri(:,clearInd) = [];
+            [isContinue] = checkextractcir(hplot);
+            delete(hPlot1);
+            hPlot1 = plot(scatterOri(1,:),scatterOri(2,:),'.','MarkerSize',8,'Color',[0.4660    0.6740    0.1880]);
+        end
+        fprintf('\nSuccessfully selected!\n\n');
         varargout{1} = lineFitMaxDist;
 end
 

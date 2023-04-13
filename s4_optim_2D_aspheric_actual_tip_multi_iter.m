@@ -19,7 +19,8 @@ msgOpts.Default = 'Cancel and quit';
 msgOpts.Interpreter = 'tex';
 
 % workspaceDir = 'workspace\20220925-contrast\nagayama_concentric';
-workspaceDir = 'workspace\20221020-tooltip\tooltip fitting result';
+% workspaceDir = 'workspace\20221020-tooltip\tooltip fitting result';
+workspaceDir = 'workspace\20221015-tooptip\tooltip_result';
 diaryFile = fullfile('workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
 % diary diaryFile;
 % diary on;
@@ -71,7 +72,7 @@ surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
 cutDirection = 'Edge to Center'; % 'Center to Edge'
 spindleDirection = 'Counterclockwise'; % 'Clockwise'
 angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-aimRes = 0.5;
+aimRes = 0.2;
 rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
 maxIter = 100;
 arcLength = 30;
@@ -168,7 +169,8 @@ fprintf('No.1\t toolpath point is calculated.\n-----\n');
 
 opt.XTol = 1e-6;
 
-% opt = optimoptions('ga','UseParallel',false,'Display','diagnose');
+% opt = optimoptions('ga','UseParallel',false,'Display','iter', ...
+%     'MaxGenerations',10,'FitnessLimit',aimRes*0.5);
 
 [curvePathPt,curveQuat,curveContactU,curvePt,curveRes,curvePeakPt, ...
     curveInterPt,curveULim] = iterfunc_curvepath_multi_solve(curveFunc,curveFx, ...
@@ -278,7 +280,7 @@ for ii = 1:size(curvePathPt,2)
     toolRAccum = [toolRAccum,curvePt(1,ii)*ones(1,loopPtNum(end))]; % the loop radius of each tool path
     toolContactU = [toolContactU,curveContactU(ii)*ones(1,loopPtNum(end))]; % the B-spline parameter of the contact point
     res = [res,curveRes(ii)*ones(1,loopPtNum(end))]; % the residual height of each tool point and its closest point on the previous loop 
-    peakPlace = [peakPlace,peakPt(5,ii)*ones(1,loopPtNum(end))];
+    peakPlace = [peakPlace,curvePeakPt(5,ii)*ones(1,loopPtNum(end))];
 end
 accumPtNum(1) = [];
 for ii = 1:length(toolPathAngle)
