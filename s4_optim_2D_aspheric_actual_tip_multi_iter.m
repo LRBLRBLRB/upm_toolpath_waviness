@@ -25,6 +25,11 @@ diaryFile = fullfile('workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')])
 % diary diaryFile;
 % diary on;
 
+tPar0 = tic;
+parObj = gcp;
+tPar = toc(tPar0);
+fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
+
 %% concentric surface generation / import
 % tool data import
 [fileName,dirName] = uigetfile({ ...
@@ -70,7 +75,7 @@ surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
 
 % machining paramters
 cutDirection = 'Edge to Center'; % 'Center to Edge'
-spindleDirection = 'Clockwise'; % 'Counterclockwise'
+spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
 angularDiscrete = 'Constant Arc'; % 'Constant Angle'
 aimRes = 0.2;
 rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
@@ -476,22 +481,30 @@ end
 spiralPtNum = length(spiralAngle);
 
 % [tEq,fEq,vecEq] = arclengthparam(arcLength,toolThetaEach,toolREach,{},'algorithm','lq-fitting');
-figure;
-plot3(spiralPath(1,:),spiralPath(2,:),spiralPath(3,:), ...
-    'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
-    'Marker','.','MarkerSize',6);
-hold on;
-surf( ...
-    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
+% figure;
+% plot3(spiralPath(1,:),spiralPath(2,:),spiralPath(3,:), ...
+%     'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
+%     'Marker','.','MarkerSize',6);
+% hold on;
+% surf( ...
+%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+%     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
 
 tSpiral = toc(tSpiral0);
 fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSpiral);
 
+msgfig = questdlg({'Spiral tool path was generated successfully!', ...
+    'Ready to continue to simulate?'}, ...
+    'Spiral tool path Generation','OK & continue','Cancel & quit','OK & continue');
+if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    return;
+end
+
 %% Spiral Residual height calculation of the spiral tool path
 spiralRes = 5*aimRes*ones(2,spiralPtNum);
 spiralPeakPt = zeros(10,spiralPtNum);
-spiralInterPt = cell(2,spiralPtNum);
+spiralInterPtIn = cell(1,spiralPtNum);
+spiralInterPtOut = cell(1,spiralPtNum);
 spiralULim = cell(1,spiralPtNum);
 tSpiralRes0 = tic;
 
@@ -503,8 +516,8 @@ tSpiralRes0 = tic;
 
 parfor ind1 = 1:spiralPtNum
     % inner ulim & residual height
-    ind2 = find(spiralAngle >= spiralAngle(ind1) - 2*pi,1,'first');
-    ind3 = find(spiralAngle < spiralAngle(ind1) - 2*pi,1,'last');
+    ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,'first');
+    ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,'last');
     if isempty(ind2) || isempty(ind3)
 %         ind2 = find(spiralAngle >= spiralAngle(ind1) + pi,1,'first');
 %         ind3 = find(spiralAngle < spiralAngle(ind1) + pi,1,'last');
@@ -515,7 +528,7 @@ parfor ind1 = 1:spiralPtNum
         tmpRes1 = 5*aimRes;
         tmpPeak1 = zeros(5,1);
     else
-        [tmpRes1,tmpPeak1,tmpInter1,spiralULim{ind1}] = ...
+        [tmpRes1,tmpPeak1,spiralInterPtIn{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
             toolData,toolRadius,spiralULim{ind1},ind1,ind2,ind3);
     end
@@ -541,14 +554,13 @@ parfor ind1 = 1:spiralPtNum
 %         quiver3(spiralPath(1,ind3),spiralPath(2,ind3),spiralPath(3,ind3), ...
 %             spiralCut(1,ind3),spiralCut(2,ind3),spiralCut(3,ind3));
 
-        [tmpRes2,tmpPeak2,tmpInter2,spiralULim{ind1}] = ...
+        [tmpRes2,tmpPeak2,spiralInterPtOut{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
             toolData,toolRadius,spiralULim{ind1},ind1,ind2,ind3);
     end
     
     spiralRes(:,ind1) = [tmpRes1;tmpRes2];
     spiralPeakPt(:,ind1) = [tmpPeak1;tmpPeak2];
-    spiralInterPt{:,ind1} = {tmpInter1;tmpInter2};
 
 %     if spiralRes(:,ind1) > 5
 %         1;
