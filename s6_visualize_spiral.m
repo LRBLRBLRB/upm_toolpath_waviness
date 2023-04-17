@@ -29,7 +29,8 @@ while true
                         string(datestr(now))));
                     save(spiralPathName,"Comments","spiralAngle", ...
                         "spiralPath","spiralQuat","spiralNorm","spiralCut", ...
-                        "spiralULim","spiralRes",'spiralPeakPt');
+                        "spiralULim","spiralRes",'spiralPeakPt', ...
+                        'spiralInterPtIn','spiralInterPtOut');
             end
             return;
         case 'Spiral path error'

@@ -20,7 +20,7 @@ msgOpts.Interpreter = 'tex';
 
 % workspaceDir = 'workspace\20220925-contrast\nagayama_concentric';
 % workspaceDir = 'workspace\20221020-tooltip\tooltip fitting result';
-workspaceDir = 'workspace\20221015-tooptip\tooltip_result';
+workspaceDir = 'workspace\20230417';
 diaryFile = fullfile('workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
 % diary diaryFile;
 % diary on;
@@ -60,7 +60,8 @@ surfSym = A*(x.^2 + y.^2) + C;
 surfFunc = matlabFunction(surfSym);
 surfFx = diff(surfFunc,x);
 surfFy = diff(surfFunc,y);
-surfDomain = [-2000,2000;-2000,2000];
+surfDomain = [-1000,1000;-1000,1000];
+surfDomain = 1.1*surfDomain;
 rMax = max(surfDomain(1,2),surfDomain(2,2));
 % sampling density
 spar = 501;
@@ -615,7 +616,7 @@ tPlot = toc(tPlot0);
 fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
 
 % sprial tool path error
-s4_visualize_spiral;
+s6_visualize_spiral;
 
 msgfig = msgbox('Spiral tool path was generated successfully!','Success','help','non-modal');
 
