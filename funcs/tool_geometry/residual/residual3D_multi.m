@@ -1,5 +1,5 @@
-function [res,peakPt,interPt,uLim1,uLim2] = residual3D_multi(toolPt,toolNorm,toolCutDir, ...
-    toolContactU,toolData,toolRadius,uLim1,uLim2,varargin)
+function [res,peakPt,interPt,uLim] = residual3D_multi(toolPt,toolNorm,toolCutDir, ...
+    toolContactU,toolData,toolRadius,uLim,varargin)
 % to calculate the residual height among the adjacent tool points.
 %
 % Usage:
@@ -121,19 +121,26 @@ toolSpProj.coefs = RProj*toolSp.coefs + toolPtProj;
 %% to solve the residual height between toolSp1 and toolSpProj
 toolContactPt1 = fnval(toolSp1,toolContactU1);
 toolContactPtProj = fnval(toolSpProj,toolContactUProj);
-[res,peakPt,interPt,uLim1,uLim2] = residual2D_multi(toolSp1,toolSpProj, ...
-    1e-5,toolContactPt1,toolContactPtProj,uLim2);
 
+if isempty(uLim)
+    uLim2 = [0;1];
+    % the current point has not been calculated
+    [res,peakPt,interPt,uLim,~] = residual2D_multi(toolSp1,toolSpProj, ...
+        1e-5,toolContactPt1,toolContactPtProj,uLim2);
+else
+    uLim = [0;1];
+    % the current point has been calculated once
+    [res,peakPt,interPt,~,uLim] = residual2D_multi(toolSp1,toolSpProj, ...
+        1e-5,toolContactPt1,toolContactPtProj,uLim);
+end
 
 %% to update the valid U range of the two toolpath
-if norm(toolPt1(1:2)) < norm(toolPtProj(1:2))
-    % the projection point stays outside the current point
-    uLim1(2) = min(u1,uLim1(2));
-%     uLim2(1) = max(uProj,uLim2(1));
-else
-    % the projection point stays inside the current point
-    uLim1(1) = max(u1,uLim1(1));
-%     uLim2(2) = min(uProj,uLim2(2));
-end
+% if norm(toolPt1(1:2)) < norm(toolPtProj(1:2))
+%     % the projection point stays outside the current point
+%     uLim
+% else
+%     % the projection point stays inside the current point
+%     uLim
+% end
 
 end

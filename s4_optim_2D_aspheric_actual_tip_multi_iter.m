@@ -61,7 +61,7 @@ surfFunc = matlabFunction(surfSym);
 surfFx = diff(surfFunc,x);
 surfFy = diff(surfFunc,y);
 surfDomain = [-1000,1000;-1000,1000];
-surfDomain = 1.1*surfDomain;
+surfDomain = 1.05*surfDomain;
 rMax = max(surfDomain(1,2),surfDomain(2,2));
 % sampling density
 spar = 501;
@@ -78,10 +78,10 @@ surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
 cutDirection = 'Edge to Center'; % 'Center to Edge'
 spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
 angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-aimRes = 0.2;
+aimRes = 1;
 rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
 maxIter = 100;
-arcLength = 30;
+arcLength = 5;
 maxAngPtDist = 6*pi/180;
 angularLength = 6*pi/180;
 

@@ -131,21 +131,21 @@ while (r - rRange(2))*delta0 < 0
     curveULim{ind} = curveULim1;
     curveULim{ind - 1} = curveULim2;
 
-        scatter(curvePathPt(1,ind),curvePathPt(3,ind),36,[0.4940,0.1840,0.5560]);
-        scatter(curvePathPt(1,ind - 1),curvePathPt(3,ind - 1),36,[0.4940,0.1840,0.5560]);
-        toolSp10 = toolSp;
-        toolSp10.coefs = quat2rotm(curveQuat(ind,:))*toolSp10.coefs + curvePathPt(:,ind);
-        toolContactPt10 = fnval(toolSp10,curveContactU(ind));
-        toolSp20 = toolSp;
-        toolSp20.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp20.coefs + curvePathPt(:,ind - 1);
-        toolContactPt20 = fnval(toolSp20,curveContactU(ind - 1));
-        toolPt1 = fnval(toolSp10,0:0.001:1);
-        plot(toolPt1(1,:),toolPt1(3,:),'Color',[0.7,.7,.70]);
-        toolPt2 = fnval(toolSp20,0:0.001:1);
-        plot(toolPt2(1,:),toolPt2(3,:),'Color',[0.7,.7,.70]);
-        scatter(toolContactPt10(1),toolContactPt10(3),18,[0.929,0.694,0.1250],"filled");
-        scatter(toolContactPt20(1),toolContactPt20(3),18,[0.929,0.694,0.1250],"filled");
-        scatter(curveInterPt{ind}(1,:),curveInterPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
+%         scatter(curvePathPt(1,ind),curvePathPt(3,ind),36,[0.4940,0.1840,0.5560]);
+%         scatter(curvePathPt(1,ind - 1),curvePathPt(3,ind - 1),36,[0.4940,0.1840,0.5560]);
+%         toolSp10 = toolSp;
+%         toolSp10.coefs = quat2rotm(curveQuat(ind,:))*toolSp10.coefs + curvePathPt(:,ind);
+%         toolContactPt10 = fnval(toolSp10,curveContactU(ind));
+%         toolSp20 = toolSp;
+%         toolSp20.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp20.coefs + curvePathPt(:,ind - 1);
+%         toolContactPt20 = fnval(toolSp20,curveContactU(ind - 1));
+%         toolPt1 = fnval(toolSp10,0:0.001:1);
+%         plot(toolPt1(1,:),toolPt1(3,:),'Color',[0.7,.7,.70]);
+%         toolPt2 = fnval(toolSp20,0:0.001:1);
+%         plot(toolPt2(1,:),toolPt2(3,:),'Color',[0.7,.7,.70]);
+%         scatter(toolContactPt10(1),toolContactPt10(3),18,[0.929,0.694,0.1250],"filled");
+%         scatter(toolContactPt20(1),toolContactPt20(3),18,[0.929,0.694,0.1250],"filled");
+%         scatter(curveInterPt{ind}(1,:),curveInterPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
 
     fprintf('No.%d\t toolpath point at [r = %f] is calculated within %fs.\n-----\n',ind,r,toc);
 end
