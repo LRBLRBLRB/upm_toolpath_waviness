@@ -4,7 +4,7 @@ classdef upm_toolpath < matlab.apps.AppBase
     % Default properties
     properties (Constant)
         workspaceDirDefault     = 'D:\Code\2021-11_ToolWaviness\upm_toolpath_waviness\workspace';
-        unitDefault             = 'mm'
+        unitDefault             = '\mum'
         toolUnitDefault         = 'mm'
         fontNameDefault         = 'Times New Roman'
         fontSizeDefault         = 12
@@ -444,10 +444,10 @@ classdef upm_toolpath < matlab.apps.AppBase
                     [~,~,fileExt] = fileparts(app.toolPathName);
                     if strcmp(fileExt,'.csv')
                         app.toolOri = importdata(app.toolPathName,',',numHeader);
-                    else
+                    else % .txt
                         app.toolOri = importdata(app.toolPathName,' ',numHeader);
                     end
-                    if size(app.toolOri,2) ~= 3
+                    if size(app.toolOri,2) ~= 3 && size(app.toolOri,2) ~= 2
                         app.toolOri = app.toolOri.data;
                     end
                     app.toolOri(:,3) = [];

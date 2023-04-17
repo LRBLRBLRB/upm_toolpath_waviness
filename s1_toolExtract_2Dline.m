@@ -94,10 +94,10 @@ else
         fclose(tooltipFile);
         if strcmp(pathName(end - 2:end),'csv')
             toolOri = importdata(pathName,',',numHeader);
-        else
+        else % .txt
             toolOri = importdata(pathName,' ',numHeader);
         end
-        if size(toolOri,2) ~= 3
+        if size(toolOri,2) ~= 3 && size(toolOri,2) ~= 2
             toolOri = toolOri.data;
         end
         toolOri(:,3) = [];
