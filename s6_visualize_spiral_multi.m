@@ -38,7 +38,7 @@ while true
             spiralResLine = [spiralRes(1,:),spiralRes(2,:)];
             spiralPeakPtLine = [spiralPeakPt(1:3,:),spiralPeakPt(6:8,:)];
             spiralResMaxInd = find(spiralResLine == 5*aimRes);
-            spiralResLine(spiralResMaxInd) = [];
+            spiralResLine(spiralResMaxInd) = [];v,
             spiralPeakPtLine(:,spiralResMaxInd) = [];
             xPlot = linspace(min(spiralPeakPtLine(1,:)),max(spiralPeakPtLine(1,:)),plotNum);
             yPlot = linspace(min(spiralPeakPtLine(2,:)),max(spiralPeakPtLine(2,:)),plotNum);
@@ -76,18 +76,26 @@ while true
             tResError = toc(tResError0);
             fprintf('The time spent in the residual map process is %fs.\n',tResError);
         case 'Machining simulation'
-            stepLength = 0.001;
-            uLimRound = round(spiralULim,2);
+            stepNum = 3;
             spiralPathList = [];
             tSimul0 = tic;
+            toolCoefs = toolData.toolBform.coefs;
             parfor ii = 1:spiralPtNum % each tool path point
                 toolSp = toolData.toolBform;
                 toolSp.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
                 for jj = 1:size(spiralULim{ii},2) - 1
-                tmp = fnval(toolSp,spiralULim{ii}(1,jj):stepLength:spiralULim{ii}(2,jj));
-                % Q{jj} = tmp;
-                spiralPathList = [spiralPathList,tmp];
+                    uLimRound = round(spiralULim{ii},stepNum);
+                    tmp = fnval(toolSp,uLimRound(1,jj):10^(-1*stepNum):uLimRound(2,jj));
+                    % Q{jj} = tmp;
+                    spiralPathList = [spiralPathList,tmp];
+                end
             end
+            % get rid of the begin and the last ones
+            spiralR = vecnorm(spiralPathList(1:2,:),2,1);
+            rDomain = abs(surfDomain(1,2));
+            rBeyond = spiralR > rDomain;
+            spiralPathList(:,rBeyond) = [];
+
             plotNum = 1000;
             xPlot = linspace(min(spiralPathList(1,:)),max(spiralPathList(1,:)),plotNum);
             yPlot = linspace(min(spiralPathList(2,:)),max(spiralPathList(2,:)),plotNum);

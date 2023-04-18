@@ -202,7 +202,7 @@ switch options.cutDirection
                 vecOut{ii} = [vecOut{ii},vec{ii}(:,indOri)];
             end
             if exist('quatOut','var')
-                quatOut = [quatOut;quat];
+                quatOut = [quatOut;quat(indOri,:)];
             end
         end
     case 'Center to Edge'

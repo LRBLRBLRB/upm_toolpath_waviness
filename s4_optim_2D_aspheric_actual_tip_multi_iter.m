@@ -60,7 +60,7 @@ surfSym = A*(x.^2 + y.^2) + C;
 surfFunc = matlabFunction(surfSym);
 surfFx = diff(surfFunc,x);
 surfFy = diff(surfFunc,y);
-surfDomain = [-1000,1000;-1000,1000];
+surfDomain = [-2000,2000;-2000,2000];
 surfDomain = 1.05*surfDomain;
 rMax = max(surfDomain(1,2),surfDomain(2,2));
 % sampling density
@@ -78,10 +78,10 @@ surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
 cutDirection = 'Edge to Center'; % 'Center to Edge'
 spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
 angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-aimRes = 1;
+aimRes = 2;
 rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
 maxIter = 100;
-arcLength = 5;
+arcLength = 50;
 maxAngPtDist = 6*pi/180;
 angularLength = 6*pi/180;
 
@@ -155,13 +155,13 @@ curveNorm = curveNorm./norm(curveNorm);
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
 
 
-    scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
-    toolSp0 = toolData.toolBform;
-    toolSp0.coefs = quat2rotm(curveQuat(1,:))*toolSp0.coefs + curvePathPt(:,1);
-    toolPt0 = fnval(toolSp0,0:0.001:1);
-    toolContactPt0 = fnval(toolSp0,curveContactU(1));
-    plot(toolPt0(1,:),toolPt0(3,:),'Color',[0.7,.7,.7]);
-    scatter(toolContactPt0(1),toolContactPt0(3),18,[0.929,0.694,0.1250],"filled");
+%     scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
+%     toolSp0 = toolData.toolBform;
+%     toolSp0.coefs = quat2rotm(curveQuat(1,:))*toolSp0.coefs + curvePathPt(:,1);
+%     toolPt0 = fnval(toolSp0,0:0.001:1);
+%     toolContactPt0 = fnval(toolSp0,curveContactU(1));
+%     plot(toolPt0(1,:),toolPt0(3,:),'Color',[0.7,.7,.7]);
+%     scatter(toolContactPt0(1),toolContactPt0(3),18,[0.929,0.694,0.1250],"filled");
 
 fprintf('No.1\t toolpath point is calculated.\n-----\n');
 
@@ -329,14 +329,14 @@ axis equal;
 %     'tool spindle direction','','tool edge','Location','northeast');
 % legend('designed surface','tool center point','tool edge','Location','northeast');
 
-s6_visualize_concentric_multi;
-
-msgfig = questdlg({'Concentric tool path was generated successfully!', ...
-    'Ready to continue?'}, ...
-    'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
-if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    return;
-end
+% s6_visualize_concentric_multi;
+% 
+% msgfig = questdlg({'Concentric tool path was generated successfully!', ...
+%     'Ready to continue?'}, ...
+%     'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
+% if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+%     return;
+% end
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
@@ -374,26 +374,26 @@ xlabel('Accumulating Toolpath Angle');
 ylabel(['Radius of the Loop (',unit,')']);
 legend('\theta-R scatters','csape result','Concentric result');
 % save the feed rate curve
-[smoothFileName,smoothDirName,smoothFileType] = uiputfile({ ...
-    '*.mat','MAT-file(*.mat)'; ...
-    '*.txt','text-file(.txt)';...
-    '*.*','all file(*.*)';...
-    }, ...
-    'Select the directory and filename to save the surface concentric tool path', ...
-    fullfile(workspaceDir,['feedRate',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
-smoothName = fullfile(smoothDirName,smoothFileName);
-switch smoothFileType
-    case 0
-        msgfig = msgbox("No approximation saved","Warning","warn","non-modal");
-        uiwait(msgfig);
-    case 1
-        Comments = cell2mat(inputdlg( ...
-            'Enter Comment of the feed rate smoothing processing:', ...
-            'Saving Comments', ...
-            [5 60], ...
-            string(datestr(now))));
-        save(smoothName,"Comments","Fr","rTheta");
-end
+% [smoothFileName,smoothDirName,smoothFileType] = uiputfile({ ...
+%     '*.mat','MAT-file(*.mat)'; ...
+%     '*.txt','text-file(.txt)';...
+%     '*.*','all file(*.*)';...
+%     }, ...
+%     'Select the directory and filename to save the surface concentric tool path', ...
+%     fullfile(workspaceDir,['feedRate',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
+% smoothName = fullfile(smoothDirName,smoothFileName);
+% switch smoothFileType
+%     case 0
+%         msgfig = msgbox("No approximation saved","Warning","warn","non-modal");
+%         uiwait(msgfig);
+%     case 1
+%         Comments = cell2mat(inputdlg( ...
+%             'Enter Comment of the feed rate smoothing processing:', ...
+%             'Saving Comments', ...
+%             [5 60], ...
+%             string(datestr(now))));
+%         save(smoothName,"Comments","Fr","rTheta");
+% end
 
 
 %% spiral tool path generation with the smoothing result
@@ -494,12 +494,12 @@ spiralPtNum = length(spiralAngle);
 tSpiral = toc(tSpiral0);
 fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSpiral);
 
-msgfig = questdlg({'Spiral tool path was generated successfully!', ...
-    'Ready to continue to simulate?'}, ...
-    'Spiral tool path Generation','OK & continue','Cancel & quit','OK & continue');
-if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    return;
-end
+% msgfig = questdlg({'Spiral tool path was generated successfully!', ...
+%     'Ready to continue to simulate?'}, ...
+%     'Spiral tool path Generation','OK & continue','Cancel & quit','OK & continue');
+% if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+%     return;
+% end
 
 %% Spiral Residual height calculation of the spiral tool path
 spiralRes = 5*aimRes*ones(2,spiralPtNum);
@@ -515,7 +515,7 @@ tSpiralRes0 = tic;
 %     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
 % hold on;
 
-parfor ind1 = 1:spiralPtNum
+for ind1 = 1:spiralPtNum
     % inner ulim & residual height
     ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,'first');
     ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,'last');
@@ -616,7 +616,7 @@ tPlot = toc(tPlot0);
 fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
 
 % sprial tool path error
-s6_visualize_spiral;
+s6_visualize_spiral_multi;
 
 msgfig = msgbox('Spiral tool path was generated successfully!','Success','help','non-modal');
 
