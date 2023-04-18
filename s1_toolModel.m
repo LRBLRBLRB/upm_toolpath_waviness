@@ -2,18 +2,39 @@
 % tool tip arc based on the data that is extracted and analyzed in the file
 % "s1_tool3D.m" or "s1_toolExtract_line.m"
 
+%% data importing
+if exist('app','var')
+    isAPP = true;
+    toolFit = app.toolFit;
+    openAngle = app.openAngle;
+    radius = app.radius;
+    textFontSize = app.fontSize;
+    textFontType = app.fontName;
+    unit = app.unit;
+    paramMethod = app.paramMethod;
+    workspaceDir = app.workspaceDir;
+
+    fitOpts.toolFitType = app.toolFitType;
+    fitOpts.arcRansacMaxDist = app.arcRansacMaxDist;
+    fitOpts.arcFitMethod = app.arcFitMethod;
+    fitOpts.lineFitMaxDist = app.lineFitMaxDist;
+    fitOpts.lineFitMethod = app.lineFitMethod;
+else
+    isAPP = false;
+end
+
 %% 分离轮廓误差和波纹度误差
 % Cartesian coordinate to cylindrical coordinate
-toolTheta = atan2(toolFit(2,:),toolFit(1,:));
+toolTheta = atan2(toolFit(3,:),toolFit(2,:));
 toolR = vecnorm(toolFit,2,1);
 
 % plot the geometric error
 figure('name','Tool Geometric Error');
 t = tiledlayout(2,1);
 nexttile;
-plot(toolFit(1,:),toolFit(2,:),'Color',[0,0.45,0.74],'LineWidth',0.5); % tool edge scatters
+plot(toolFit(2,:),toolFit(3,:),'Color',[0,0.45,0.74],'LineWidth',0.5); % tool edge scatters
 hold on; axis equal;
-theta = (pi/2 - openAngle/2):0.01:(pi/2 + openAngle/2);
+theta = (-pi/2 - openAngle/2):0.01:(-pi/2 + openAngle/2);
 xtmp = radius*cos(theta);
 ytmp = radius*sin(theta);
 plot(xtmp,ytmp,'Color',[0.85,0.33,0.10],'LineWidth',1,'LineStyle','--'); % tool edge circle
@@ -24,7 +45,7 @@ title('Tool contour');
 legend('tool edge','tool fitting arc','Location','northeast');
 
 nexttile;
-plot(toolTheta*180/pi - 90,toolR - radius); hold on;
+plot(toolTheta*180/pi + 90,toolR - radius); hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlim([-openAngle*180/pi/2,openAngle*180/pi/2]);
 title('Tool geometric error');
@@ -55,15 +76,13 @@ title(t,'Tool Geometric Error');
 % xlabel('central angle \theta(°)');
 % grid on;
 
-clear xtmp ytmp theta xLim; % 删除画图的临时变量
+% clear xtmp ytmp theta xLim; % 删除画图的临时变量
 
 %% 车刀轮廓插值 two methods to interpolate
 k = 3; % degree of the B-spline
 u = 0:0.0002:1;
 nPts = length(u);
 
-nCPts = size(toolFit,2);
-toolFit = [zeros(1,nCPts);toolFit];
 % B-spline interpolate in the polar coordinate
 [toolEdgePt,toolBform] = bsplinePts_spapi(toolFit,k,u, ...
     'paramMethod',paramMethod,'cptsType','Cartesian'); 
@@ -94,6 +113,11 @@ plot(toolFit(2,:),toolFit(3,:),'--.', ...
     'MarkerSize',8,'Color',[0,0.447,0.741]); hold on;
 plot(toolCpts(2,:),toolCpts(3,:),'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
 plot(toolEdgePt(2,:),toolEdgePt(3,:),'Color',[0.635,0.078,0.184]);
+pt0 = fnval(toolBform,0);
+pt1 = fnval(toolBform,1);
+h = abs(pt1(2) - pt0(2))/10;
+text(pt0(2),pt0(3) + h/3,'u = 0','Color',[0.8500 0.3250 0.0980]);
+text(pt1(2),pt1(3) + h/3,'u = 1','Color',[0.8500 0.3250 0.0980]);
 axis equal
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['y(',unit,')']);
@@ -116,9 +140,9 @@ legend('Measured Pts','Control Pts','Fitting Pts','Location','best');
 
 %% save the tool interpolation results
 center = [0;0;0];
-toolEdgeNorm = [0;0;1];
+toolEdgeNorm = [0;0;-1];
 cutDirect = [1;0;0];
-toolDirect = [0;1;0];
+toolDirect = [0;-1;0];
 pause(1);
 [toolFileName,toolDirName,toolFileType] = uiputfile({ ...
         '*.mat','MAT-file(*.mat)'; ...
@@ -142,12 +166,16 @@ switch toolFileType
         save(toolDataFile,"Comments","unit","fitOpts","paramMethod", ... % comments and notes
             "center","radius","openAngle", ... % tool fitting results
             "toolEdgeNorm","toolDirect","cutDirect","toolBform", ... % tool interpolation results
-            "toolEdgePt","toolFit"); % auxiliary data
+            "toolEdgePt","toolCpts","toolFit"); % auxiliary data
         % toolEdgePt, toolCpts, toolFit are useless in the following process at present
     otherwise
         toolDataFile = fullfile(toolDirName,toolFileName);
         msgfig = msgbox("File type error","Error","error","modal");
         uiwait(msgfig);
+end
+
+if isAPP
+    app.toolDataFile = toolDataFile;
 end
 
 %%

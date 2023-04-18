@@ -1,5 +1,7 @@
-function toolFitCheck(app,toolDataFile)
-    if isempty(toolDataFile)
+function toolFitCheck(app)
+%TOOLFITCHECK to get 
+
+    if isempty(app.toolDataFile)
         [fileName,dirName,fileType] = uigetfile({ ...
             '*.mat','MAT-files(*.mat)'; ...
             '*,*','all files(*.*)'}, ...
@@ -12,12 +14,10 @@ function toolFitCheck(app,toolDataFile)
             return;
         end
         app.toolDataFile = fullfile(dirName,fileName);
-    else
-        app.toolDataFile = toolDataFile;
     end
     app.toolData = load(app.toolDataFile);
-    app.RStepEf.Value = app.toolData.radius;
-    app.Msg = 'Tool tip is fitted successfully.';
+    app.RStepEf.Value = app.toolData.radius/2;
+    app.Msg = 'Tool tip is interpolated successfully.';
     InfoTaValueChanged(app,true);
     app.CheckToolLamp.Color = 'g';
 end

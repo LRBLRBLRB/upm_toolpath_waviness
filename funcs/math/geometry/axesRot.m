@@ -19,6 +19,7 @@ switch option
         R = [x2'*x1, y2'*x1, z2'*x1;
             x2'*y1, y2'*y1, z2'*y1;
             x2'*z1, y2'*z1, z2'*z1];
+        R = transpose(R);
     case 'yz'
         y1 = varargin{1}./norm(varargin{1});
         z1 = varargin{2}./norm(varargin{2});
@@ -31,6 +32,7 @@ switch option
         R = [x2'*x1, y2'*x1, z2'*x1;
             x2'*y1, y2'*y1, z2'*y1;
             x2'*z1, y2'*z1, z2'*z1];
+        R = transpose(R);
     case 'zx'
         z1 = varargin{1}./norm(varargin{1});
         x1 = varargin{2}./norm(varargin{2});
@@ -43,6 +45,7 @@ switch option
         R = [x2'*x1, y2'*x1, z2'*x1;
             x2'*y1, y2'*y1, z2'*y1;
             x2'*z1, y2'*z1, z2'*z1];
+        R = transpose(R);
     case 'xyz'
         x1 = varargin{1}./norm(varargin{1});
         y1 = varargin{2}./norm(varargin{2});
@@ -53,6 +56,7 @@ switch option
         R = [x2'*x1, y2'*x1, z2'*x1;
             x2'*y1, y2'*y1, z2'*y1;
             x2'*z1, y2'*z1, z2'*z1];
+        R = transpose(R);
     otherwise
         R1 = vecRot(varargin{1},varargin{3});
         varargin{1} = R1*varargin{1};
