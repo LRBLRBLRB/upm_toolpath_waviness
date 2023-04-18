@@ -81,7 +81,7 @@ angularDiscrete = 'Constant Arc'; % 'Constant Angle'
 aimRes = 2;
 rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
 maxIter = 100;
-arcLength = 50;
+arcLength = 30;
 maxAngPtDist = 6*pi/180;
 angularLength = 6*pi/180;
 
@@ -515,7 +515,7 @@ tSpiralRes0 = tic;
 %     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
 % hold on;
 
-for ind1 = 1:spiralPtNum
+parfor ind1 = 1:spiralPtNum
     % inner ulim & residual height
     ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,'first');
     ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,'last');
