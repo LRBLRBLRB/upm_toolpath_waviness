@@ -56,7 +56,7 @@ toolData.toolFit = 1000^(aimUnit - presUnit)*toolData.toolFit;
 A = tand(20)/(2*2000);
 C = 0;
 syms x y;
-surfSym = A*(x.^2 + y.^2) + C;
+surfSym = A.*(x.^2 + y.^2)./2 + C;
 surfFunc = matlabFunction(surfSym);
 surfFx = diff(surfFunc,x);
 surfFy = diff(surfFunc,y);

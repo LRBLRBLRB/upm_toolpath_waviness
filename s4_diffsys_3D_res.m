@@ -42,25 +42,28 @@ toolData.toolFit = 1000^(aimUnit - presUnit)*toolData.toolFit;
 %% load nc file
 [fileName,dirName] = uigetfile({ ...
     '*.nc;.pgm','CNC-files(*.nc,*pgm)'; ...
-    '*,*','all files(*.*)'}, ...
+    '*.txt','text-files(*.txt)'; ...
+    '*.*','all files(*.*)'}, ...
     'Select one cnc file', ...
     fullfile(workspaceDir,'tooltheo.mat'), ...
     'MultiSelect','off');
 
 cncName = fullfile(dirName,fileName);
-cncFid = fopen(cncName,'r');
-% load the X Z C data
-cncData = zeros(2,0);
-while ~feof(cncFid)
-    tmpLine = fgetl(cncFid);
-    % if the line begins with %d%d or -%d, then break
-    if strcmp(tmpLine,'(linking block)')
-        break;
-    end
-    cncData = [cncData,sscanf(tmpLine,'C%fX%fZ%f')];
-end
-% ncData = fscanf(fid,'X%fZ%f');
-fclose(cncFid);
+cncData = load(cncName);
+cncData = cncData.';
+% cncFid = fopen(cncName,'r');
+% % load the X Z C data
+% cncData = zeros(2,0);
+% while ~feof(cncFid)
+%     tmpLine = fgetl(cncFid);
+%     % if the line begins with %d%d or -%d, then break
+%     if strcmp(tmpLine,'(linking block)')
+%         break;
+%     end
+%     cncData = [cncData,sscanf(tmpLine,'C%fX%fZ%f')];
+% end
+% [ncData,nData] = fscanf(cncFid,'C%fX%fZ%f\n');
+% fclose(cncFid);
 
 % spiralNorm
 % spiralCut
@@ -70,11 +73,11 @@ fclose(cncFid);
 A = 0.091;
 C = -1*toolData.radius;
 syms x y;
-surfSym = A*(x.^2 + y.^2) + C;
+surfSym = A.*(x.^2 + y.^2)./2 + C;
 surfFunc = matlabFunction(surfSym);
 surfFx = diff(surfFunc,x);
 surfFy = diff(surfFunc,y);
-surfDomain = [-2,2;-2,2];
+surfDomain = [-5,5;-5,5];
 surfDomain = 1.05*surfDomain;
 rMax = max(surfDomain(1,2),surfDomain(2,2));
 % sampling density
@@ -105,6 +108,15 @@ for ii = 1:length(angAdd)
     spiralAngle(angAdd(ii) + 1:end) = spiralAngle(angAdd(ii) + 1:end) + 2*pi;
 end
 
+
+figure;
+xxx = linspace(0,surfDomain(1,2),1000);
+zzz = A*xxx.^2 + C;
+plot(xxx,zzz);
+hold on;
+curvePath = cncData(:,angAdd);
+plot(curvePath(2,:),curvePath(3,:));
+
 spiralPath(3,:) = cncData(3,:);
 
 spiralPath(1,1) = cncData(2,1);
@@ -120,7 +132,9 @@ figure;
 surf(surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
 hold on;
-plot3(spiralPath(1,:),spiralPath(2,:),spiralPath(3,:),'.-','Color',[0.8500 0.3250 0.0980]);
+plot3(spiralPath(1,:),spiralPath(2,:),spiralPath(3,:),'-','Color',[0.8500 0.3250 0.0980],'LineWidth',0.1);
+
+
 % for ii = 1:spiralPtNum
 %     toolSp1 = toolData.toolBform;
 %     toolSp1.coefs = toolSp1.coefs + spiralPath(:,ii);

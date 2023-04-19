@@ -37,10 +37,13 @@ else
     end
 end
 
+feedRate = 0.001;
+
+
 %% generate the 5-axis tool path from original data
 % toolpath should be saved in "x y z i j k" format
 
-spiralAngle = 180/pi*spiralAngle; % rad -> deg
+spiralAngle1 = 180/pi*spiralAngle0; % rad -> deg
 spiralPath1 = 0.001*spiralPath0; % um -> mm
 postType = 2;
 switch postType
@@ -66,19 +69,26 @@ switch postType
 %         axisX = axisZ.*sin(axisB).*cos(axisC) - spiralPath1(1,:).';
 %         axisY = axisZ.*sin(axisB).*sin(axisC) - spiralPath1(2,:).';
 
-        axisC = (wrapTo2Pi(spiralAngle));
+        axisC = (wrapTo360(spiralAngle1));
         axisZ = spiralPath1(3,:);
         axisX = vecnorm(spiralPath1(1:2,:),2,1);
 
+        % zero point of the C axis
+        if axisC(1) ~= 0
+            axisC = axisC - axisC(1);
+            axisC = wrapTo360(axisC);
+        end
+        
         % put in the .nc file
         [ncFname,ncPath,ncInd] = uiputfile( ...
             {'*.nc','Numerical control files(*.nc)';'*.*','All files'}, ...
             'Enter the file to save the CNC code',['spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.nc']);
         ncFile = fullfile(ncPath,ncFname);
         ncFid = fopen(ncFile,'w');
-        fprintf(ncFid,'( CUTTING BLOCK )\nG93 F%d',feedRate);
+%         fprintf(ncFid,'( CUTTING BLOCK )\nG93 F%d\n',feedRate);
         for ii = 1:length(axisC)
-            fprintf(ncFid,'C%f X%f Z%f',axisC(ii),axisX(ii),axisZ(ii));
+            fprintf(ncFid,'C%f X%f Z%f\n',axisC(ii),axisX(ii),axisZ(ii));
+%             fprintf(ncFid,'%f %f %f\n',axisC(ii),axisX(ii),axisZ(ii));
 %             fprintf(ncFid,'GOTO/%f,%f,%f,%f,%f,%f\n', ...
 %                 spiralPath1(1,ii),spiralPath1(2,ii),spiralPath1(3,ii), ...
 %                 spiralNorm(1,ii),spiralNorm(2,ii),spiralNorm(3,ii));
