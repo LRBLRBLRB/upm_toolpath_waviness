@@ -53,14 +53,15 @@ toolData.toolEdgePt = 1000^(aimUnit - presUnit)*toolData.toolEdgePt;
 toolData.toolFit = 1000^(aimUnit - presUnit)*toolData.toolFit;
 
 % surface data import
-A = tand(20)/(2*2000);
+% A = tand(20)/(2*2000);
+A = 0.091/1000/(1000^(aimUnit - presUnit));
 C = 0;
 syms x y;
-surfSym = A*(x.^2 + y.^2) + C;
+surfSym = A*(x.^2 + y.^2)/2 + C;
 surfFunc = matlabFunction(surfSym);
 surfFx = diff(surfFunc,x);
 surfFy = diff(surfFunc,y);
-surfDomain = [-2000,2000;-2000,2000];
+surfDomain = [-1000,1000;-1000,1000];
 surfDomain = 1.05*surfDomain;
 rMax = max(surfDomain(1,2),surfDomain(2,2));
 % sampling density
@@ -78,12 +79,12 @@ surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
 cutDirection = 'Edge to Center'; % 'Center to Edge'
 spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
 angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-aimRes = 2;
+aimRes = 0.5;
 rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
 maxIter = 100;
-arcLength = 30;
-maxAngPtDist = 6*pi/180;
-angularLength = 6*pi/180;
+arcLength = 20;
+maxAngPtDist = 0.5*pi/180;
+angularLength = 0.5*pi/180;
 
 % plot the importing result
 [surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...
@@ -163,7 +164,8 @@ curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
 %     plot(toolPt0(1,:),toolPt0(3,:),'Color',[0.7,.7,.7]);
 %     scatter(toolContactPt0(1),toolContactPt0(3),18,[0.929,0.694,0.1250],"filled");
 
-fprintf('No.1\t toolpath point is calculated.\n-----\n');
+t1O = toc(t1);
+fprintf('-----\nNo.1\t toolpath point at [r = %d] is calculated within %fs.\n-----\n',curvePathPt(1,1),t1O);
 
 % the rest
 % opt = optimset('Display','iter','MaxIter',50,'TolFun',1e-6,'TolX',1e-6); % fzero options
@@ -325,18 +327,18 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 axis equal;
-% legend('tool center point','tool cutting direction', ...
-%     'tool spindle direction','','tool edge','Location','northeast');
-% legend('designed surface','tool center point','tool edge','Location','northeast');
+legend('tool center point','tool cutting direction', ...
+    'tool spindle direction','','tool edge','Location','northeast');
+legend('designed surface','tool center point','tool edge','Location','northeast');
 
-% s6_visualize_concentric_multi;
-% 
-% msgfig = questdlg({'Concentric tool path was generated successfully!', ...
-%     'Ready to continue?'}, ...
-%     'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
-% if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-%     return;
-% end
+s6_visualize_concentric_multi;
+
+msgfig = questdlg({'Concentric tool path was generated successfully!', ...
+    'Ready to continue?'}, ...
+    'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
+if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    return;
+end
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
@@ -482,14 +484,23 @@ end
 spiralPtNum = length(spiralAngle);
 
 % [tEq,fEq,vecEq] = arclengthparam(arcLength,toolThetaEach,toolREach,{},'algorithm','lq-fitting');
-% figure;
-% plot3(spiralPath(1,:),spiralPath(2,:),spiralPath(3,:), ...
-%     'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
-%     'Marker','.','MarkerSize',6);
-% hold on;
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
+figure;
+plot3(spiralPath(1,:),spiralPath(2,:),spiralPath(3,:), ...
+    'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
+    'Marker','.','MarkerSize',6);
+hold on;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
+
+figure;
+plot3(spiralPath0(1,:),spiralPath0(2,:),spiralPath0(3,:), ...
+    'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
+    'Marker','.','MarkerSize',6);
+hold on;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
 
 tSpiral = toc(tSpiral0);
 fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSpiral);
