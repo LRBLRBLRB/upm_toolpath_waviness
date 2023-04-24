@@ -1,17 +1,17 @@
 % The file is aimed to deal with the data measured by the Zygo white light interferometer, 
 % and regenerate the measured surface
 
-close all;
-clear;
+% close all;
+% clear;
 % clc;
 addpath(genpath('funcs'));
 if ~(exist('workspaceDir','var'))
     workspaceDir = '..\workspace\20230417';
-    surfUnit = '\mum';
-    unit = '\mum';
+    surfUnit = 'um';
+    unit = 'um';
     textFontSize = 12;
     textFontType = 'Times New Roman';
-    unitList = {'m','mm','\mum','nm'};
+    unitList = {'m','mm','um','nm'};
     presUnit = find(strcmp(unitList,surfUnit),1);
     aimUnit = find(strcmp(unitList,unit),1);
 end
@@ -61,18 +61,66 @@ switch surfFileType
         surfData
     case 2
         % case for the .xyz data
-        fid = fopen(surfFilePath);
-
-        surfData
+        surfData = loadXYZ(surfFilePath,1000,1000,8.70983e-07,'um','um');
+%         surfData = zygo_xyz(surfFilePath);
     case 3
-        % case for the mat data exported from datx files
+        % case for the txt data files
         surfData = load(surfFilePath);
     case 4
+        % case for the mat data exported from datx files
+        surfDataStruct = load(surfFilePath);
+        surfData = zeros([size(surfDataStruct.mh),3]);
+        [surfData(:,:,2),surfData(:,:,1)] = meshgrid(surfDataStruct.vx,surfDataStruct.vy);
+        surfData(:,:,3) = surfDataStruct.mh;
+        % unit convertion
+        xyUnit0 = find(strcmp(unitList,surfDataStruct.XYunit),1); % default unit is milimeter
+        zUnit0 = find(strcmp(unitList,surfDataStruct.Zunit),1); % default unit is meter
+        aimUnit = find(strcmp(unitList,unit),1);
+        surfData(:,:,1:2) = 1000^(aimUnit - xyUnit0)*surfData(:,:,1:2);
+        surfData(:,:,3) = 1000^(aimUnit - zUnit0)*surfData(:,:,3);
 end
+
+%         [surfFileName,surfDirName,surfFileType] = uigetfile({ ...
+%             '*.datx','data-files(*.datx)'; ...
+%             '*.xyz','xyz-files(*.xyz)'; ...
+%             '*.txt','text files(*.txt)'; ...
+%             '*.mat','MATLAB data files(*.mat)'; ...
+%             '*.*','all files(*.*)'}, ...
+%             'Select one zygo data file', ...
+%             fullfile(workspaceDir), ...
+%             'MultiSelect','off');
+%         surfFilePath1 = fullfile(surfDirName,surfFileName);
+%         surfDataStruct1 = load(surfFilePath1);
+%         [surfData1(:,:,1),surfData1(:,:,2)] = meshgrid(surfDataStruct1.vx,surfDataStruct1.vy);
+%         surfData1(:,:,3) = surfDataStruct1.mh;
 
 
 % plot the original result
 figure('Name','1 Zygo original result');
+% surf( ...
+%     surfData(:,:,1),surfData(:,:,2),surfData(:,:,3), ...
+%     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+% hold on;
+surf( ...
+    surfData.X,surfData.Y,surfData.Z, ...
+    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+% surf( ...
+%     surfData1(:,:,1),surfData1(:,:,2),surfData1(:,:,3), ...
+%     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
+
+% point cloud 
+
+% pcregisterndt
+% pcregistericp
+
+
+
+% fit the theoretical surface
+% z = A.*((x - x0).^2 + (y - y0).^2)./2 + C + z0;
 
 
 
