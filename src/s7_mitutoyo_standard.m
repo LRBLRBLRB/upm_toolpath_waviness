@@ -1,7 +1,7 @@
 % The file is aimed to deal with the data measured by the Mitutoyo formtracer, 
 % and regenerate the measured surface.
 
-close all;
+% close all;
 clear;
 % clc;
 addpath(genpath('funcs'));

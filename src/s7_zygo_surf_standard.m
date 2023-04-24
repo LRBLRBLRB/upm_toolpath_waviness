@@ -126,7 +126,7 @@ zlabel(['z (',unit,')']);
 surfDataPC = pointCloud(surfData);
 surfMeshPC = pointCloud(surfMesh);
 % low-pass filter 
-gridStep = 0.01; % down sampling
+gridStep = 0.1; % down sampling
 surfDataPC = pcdownsample(surfDataPC,'gridAverage',gridStep);
 surfMeshPC = pcdownsample(surfMeshPC,'gridAverage',gridStep);
 [surfRot,surfDataPC,rmse] = pcregistericp(surfDataPC,surfMeshPC);
@@ -158,6 +158,10 @@ surf(surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
 
 
 %% surface error calculation
+deltaZ = surfData(:,:,3) - surfFunc(surfData(:,:,1),surfData(:,:,2));
+Sa = mean(abs(deltaZ));
+Sz
+Sq = max(deltaZ,[],'all') - min(deltaZ,[],'all');
 
 
 
