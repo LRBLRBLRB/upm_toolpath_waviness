@@ -1,4 +1,4 @@
-function T = icp_yq(P,Q)
+function [R,T] = icp_yq(P,Q)
 % 读取源点云数据P
 P0 = P;
 %读取目标点云数据Q
@@ -17,7 +17,7 @@ while d > 1
     %%
     %寻找点云数据P中点Pi的对应点Qi
     %使用欧式距离最近的点作为对应点
-    for i=1:n
+    parfor i=1:n
         difference=Q-P(i,:);       %坐标差值
         difference=difference.^2;
         distance=sum(difference,2);
