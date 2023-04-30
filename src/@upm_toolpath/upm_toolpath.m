@@ -206,6 +206,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                 case 1
                     app.SurfaceDetailTa.Value{5} = ['    R: ',num2str(app.surfDomain),' (',app.unit,')'];
             end
+            
             % Re-enable the AddSurface buttion
             app.AddSurfaceBtn.Enable = 'on';
         end
