@@ -206,7 +206,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                 case 1
                     app.SurfaceDetailTa.Value{5} = ['    R: ',num2str(app.surfDomain),' (',app.unit,')'];
             end
-            
+
             % Re-enable the AddSurface buttion
             app.AddSurfaceBtn.Enable = 'on';
         end
@@ -236,11 +236,6 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.MsgNum = 1;
             app.Msg = 'APP is successfully initialized!';
             InfoTaValueChanged(app,true);
-%             app.WorkspaceDirEf.Value = 'workspace';
-%             [app.MsgState,app.Msg] = mkdir('workspace');
-%             if ~app.MsgState
-%                 InfoTaValueChanged(app,true)
-%             end
             resetCommonParams(app);
             resetToolfitParams(app);
             resetSurfaceParams(app);
@@ -862,25 +857,25 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.FigureToolbar = uitoolbar(app.UIFigure);
 
             app.AxisEqualPushtool = uipushtool(app.FigureToolbar, ...
-                'Icon','resources/image/AxisEqualPushtool.svg');
+                'Icon','@upm_toolpath/image/AxisEqualPushtool.svg');
             app.AxisEqualPushtool.ClickedCallback = createCallbackFcn( ...
                 app,@AxisEqualPushtoolClicked,true);
             app.AxisEqualPushtool.Tooltip = 'Set the axis of the current figure equal';
 
             app.CloseAllFigurePushtool = uipushtool(app.FigureToolbar, ...
-                'Icon','resources/image/CloseAllFigure.svg');
+                'Icon','@upm_toolpath/image/CloseAllFigure.svg');
             app.CloseAllFigurePushtool.ClickedCallback = createCallbackFcn( ...
                 app,@CloseAllFigurePushtoolClicked,true);
             app.CloseAllFigurePushtool.Tooltip = 'Close all the figures';
 
             app.BoldInfoToggletool = uitoggletool(app.FigureToolbar, ...
-                'Icon','resources/image/Bold.svg','Separator','on');
+                'Icon','@upm_toolpath/image/Bold.svg','Separator','on');
             app.BoldInfoToggletool.ClickedCallback = createCallbackFcn( ...
                 app,@BoldInfoToggletoolClicked,true);
             app.BoldInfoToggletool.Tooltip = 'Bold/Normalize the infomation.';
 
             app.TopToggletool = uitoggletool(app.FigureToolbar, ...
-                'Icon','resources/image/top.svg');
+                'Icon','@upm_toolpath/image/top.svg');
             app.TopToggletool.ClickedCallback = createCallbackFcn( ...
                 app,@TopToggletoolClicked,true);
             app.CloseAllFigurePushtool.Tooltip = 'Put the APP on top';
@@ -1243,7 +1238,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                 'Text','Add Geometry');
             app.AddSurfaceBtn.Layout.Row = 1;
             app.AddSurfaceBtn.Layout.Column = [1,2];
-            app.AddSurfaceBtn.Icon = 'resources/image/AddSurf1.svg';
+            app.AddSurfaceBtn.Icon = '@upm_toolpath/image/AddSurf1.svg';
             app.AddSurfaceBtn.ButtonPushedFcn = createCallbackFcn(app,@AddSurfaceBtnPushed,true);
 
             SurfacePlotSparLb = uilabel(SurfaceTbGl,'Text','Plot Discretization:');
@@ -1490,7 +1485,7 @@ classdef upm_toolpath < matlab.apps.AppBase
 
             app.Optim2DSingleBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
                 'Text',{'tool path optimization';'2D aspheric surface';'single-interaction & solve'}, ...
-                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_single.svg', ...
+                'Icon','@upm_toolpath/image/s4_optim_2D_aspheric_actual_tip_single.svg', ...
                 'IconAlignment','top');
             app.Optim2DSingleBtn.Layout.Row = 1;
             app.Optim2DSingleBtn.Layout.Column = 1;
@@ -1499,7 +1494,7 @@ classdef upm_toolpath < matlab.apps.AppBase
 
             app.Optim2DSingleIterBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
                 'Text',{'tool path optimization';'2D aspheric surface';'single-interaction & iter'}, ...
-                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_single_iter.svg', ...
+                'Icon','@upm_toolpath/image/s4_optim_2D_aspheric_actual_tip_single_iter.svg', ...
                 'IconAlignment','top');
             app.Optim2DSingleIterBtn.Layout.Row = 1;
             app.Optim2DSingleIterBtn.Layout.Column = 2;
@@ -1508,7 +1503,7 @@ classdef upm_toolpath < matlab.apps.AppBase
 
             app.Optim2DMultiBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
                 'Text',{'tool path optimization';'2D aspheric surface';'multi-interaction & solve'}, ...
-                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_multi.svg', ...
+                'Icon','@upm_toolpath/image/s4_optim_2D_aspheric_actual_tip_multi.svg', ...
                 'IconAlignment','top');
             app.Optim2DMultiBtn.Layout.Row = 2;
             app.Optim2DMultiBtn.Layout.Column = 1;
@@ -1517,7 +1512,7 @@ classdef upm_toolpath < matlab.apps.AppBase
 
             app.Optim2DMultiIterBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
                 'Text',{'tool path optimization';'2D aspheric surface';'multi-interaction & iter'}, ...
-                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_multi_iter.svg', ...
+                'Icon','@upm_toolpath/image/s4_optim_2D_aspheric_actual_tip_multi_iter.svg', ...
                 'IconAlignment','top');
             app.Optim2DMultiIterBtn.Layout.Row = 2;
             app.Optim2DMultiIterBtn.Layout.Column = 2;
@@ -1577,12 +1572,12 @@ classdef upm_toolpath < matlab.apps.AppBase
             OptimGl.RowHeight = {'1x'};
             OptimGl.ColumnWidth = {'fit','1x','fit','1x','fit'};
 
-            OptimArrow1 = uiimage(OptimGl,'ImageSource','resources/image/RightArrow6.svg', ...
+            OptimArrow1 = uiimage(OptimGl,'ImageSource','@upm_toolpath/image/RightArrow6.svg', ...
                 'ScaleMethod','stretch');
             OptimArrow1.Layout.Row = 1;
             OptimArrow1.Layout.Column = 2;
 
-            OptimArrow2 = uiimage(OptimGl,'ImageSource','resources/image/RightArrow6.svg', ...
+            OptimArrow2 = uiimage(OptimGl,'ImageSource','@upm_toolpath/image/RightArrow6.svg', ...
                 'ScaleMethod','stretch');
             OptimArrow2.Layout.Row = 1;
             OptimArrow2.Layout.Column = 4;
