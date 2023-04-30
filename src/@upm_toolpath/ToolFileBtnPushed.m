@@ -55,7 +55,7 @@ function ToolFileBtnPushed(app,event)
             else
                 app.toolData = [];
             end
-        case {'.csv','.xls','.xlsx'}
+        case {'.csv'}
             %% tool data file that has not been processed by mmt software
             % get rid of the header of the csv file
             numHeader = 0;
@@ -69,12 +69,7 @@ function ToolFileBtnPushed(app,event)
                 numHeader = numHeader + 1;
             end
             fclose(tooltipFile);
-            [~,~,fileExt] = fileparts(app.toolPathName);
-            if strcmp(fileExt,'.csv')
-                app.toolOri = importdata(app.toolPathName,',',numHeader);
-            else % .txt
-                app.toolOri = importdata(app.toolPathName,' ',numHeader);
-            end
+            app.toolOri = importdata(app.toolPathName,',',numHeader);
             if size(app.toolOri,2) ~= 3 && size(app.toolOri,2) ~= 2
                 app.toolOri = app.toolOri.data;
             end
@@ -88,6 +83,8 @@ function ToolFileBtnPushed(app,event)
             app.toolOri = importdata(app.toolPathName,' ',0);
             app.toolOri = sortrows(app.toolOri,1,'ascend');
             app.toolOri = app.toolOri';
+            
+            app.Msg = 'Please select the parameters and click ''Update''.';
     end
     InfoTaValueChanged(app,true);
 end

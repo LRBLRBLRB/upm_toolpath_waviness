@@ -474,6 +474,17 @@ classdef upm_toolpath < matlab.apps.AppBase
             end
         end
 
+        % Value changed function: reset the parameters
+        function ToolFitResetBtnPushed(app,event)
+            % Reset all the values to the default
+            resetToolfitParams(app);
+
+            % Report the infomation
+            app.Msg = ['All the parameters in Tool File Processing are reset.', ... 
+                'Modify them and click ''Update'' to set.'];
+            InfoTaValueChanged(app,true);
+        end
+
         % Value changed function: update the selection selection
         function ToolFitUpdateBtnPushed(app,event)
             app.toolFitType = app.ToolFitTypeDd.Value;
@@ -483,17 +494,6 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.lineFitMaxDist = app.LineFitMaxDistEf.Value;
 
             app.Msg = 'All the parameters are set. Click ''Plot'' to plot the data.';
-            InfoTaValueChanged(app,true);
-        end
-
-        % Value changed function: reset the parameters
-        function ToolFitResetBtnPushed(app,event)
-            % Reset all the values to the default
-            resetToolfitParams(app);
-
-            % Report the infomation
-            app.Msg = ['All the parameters in Tool File Processing are reset.', ... 
-                'Modify them and click ''Update'' to set.'];
             InfoTaValueChanged(app,true);
         end
 
@@ -835,7 +835,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.UIFigure = uifigure('Name','Tool Data & Parameters Input', ...
                 'WindowStyle','alwaysontop','WindowState','normal','Visible','off');
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app,@UIFigureCloseReq,true);
-            app.UIFigure.Resize = `"on";
+            app.UIFigure.Resize = "on";
             app.UIFigure.Position = [500,500,800,600];
             app.UIFigure.Scrollable = "on";
             % app.UIFigure.
@@ -896,7 +896,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.WorkspaceDirBtn.Layout.Column = 3;
             app.WorkspaceDirBtn.ButtonPushedFcn = createCallbackFcn(app,@WorkspaceDirBtnPushed,true);
             
-            % Create the font name selection label and dropdown box
+            %%%%%%%%% Create the font name selection label and dropdown box
             FontNameLb = uilabel(WorkspaceDirGl,'Text','Ploting font type');
             FontNameLb.Layout.Row = 1;
             FontNameLb.Layout.Column = 4;
@@ -906,7 +906,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.FontNameDd.Layout.Column = 5;
             app.FontNameDd.ValueChangedFcn = createCallbackFcn(app,@FontNameDdValueChanged,true);
             
-            % Create the font size selection label and editfield box
+            %%%%%%%%% Create the font size selection label and editfield box
             FontSizeLb = uilabel(WorkspaceDirGl,'Text','Ploting font size');
             FontSizeLb.Layout.Row = 2;
             FontSizeLb.Layout.Column = 4;
@@ -916,7 +916,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.FontSizeEf.Layout.Column = 5;
             app.FontSizeEf.ValueChangedFcn = createCallbackFcn(app,@FontSizeEfValueChanged,true);
             
-            % Create the unit selection label and dropdown box
+            %%%%%%%%% Create the unit selection label and dropdown box
             UnitLB = uilabel(WorkspaceDirGl,'Text','Project unit');
             UnitLB.Layout.Row = 1;
             UnitLB.Layout.Column = 6;
@@ -926,7 +926,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.UnitDd.Layout.Column = 7;
             app.UnitDd.ValueChangedFcn = createCallbackFcn(app,@UnitDdValueChanged,true);
             
-            % ---Create the reset button---
+            %%%%%%%%% ---Create the reset button---
             app.CommonResetBtn = uibutton(WorkspaceDirGl,'push','Text','Reset','Visible','on');
             app.CommonResetBtn.Layout.Row = 2;
             app.CommonResetBtn.Layout.Column = [6,7];
@@ -942,6 +942,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             % --------------------------Tool File Processing--------------------------
             % ------------------------------------------------------------------------
 
+            %%%%%%%%% tool bar object
             app.ToolTb = uitab(app.FigureTbGp,'Title','Tool Processing');
             app.ToolTb.ButtonDownFcn = createCallbackFcn(app,@ToolTbButtonDown,true);
 
@@ -967,7 +968,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             ParamTabToolImportGl.RowHeight = {'fit','2x','fit','fit','1x'};
             ParamTabToolImportGl.ColumnWidth = {'1x','1x','1x'};
 
-            % Create the tool path selection 
+            %%%%%%%%% Create the tool path selection 
             ToolFileLb = uilabel(ParamTabToolImportGl,'Text','Tool data path:');
             ToolFileLb.Layout.Row = 1;
             ToolFileLb.Layout.Column = 1;
@@ -989,19 +990,19 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.ToolUnitDd.Layout.Row = 4;
             app.ToolUnitDd.Layout.Column = [2,3];
 
-            % Create the reset button for tool importing process
+            %%%%%%%%% Create the reset button for tool importing process
             app.ToolimportResetBtn = uibutton(ParamTabToolImportGl,'push','Text','Reset','Visible','on');
             app.ToolimportResetBtn.Layout.Row = 5;
             app.ToolimportResetBtn.Layout.Column = 3;
             app.ToolimportResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportResetBtnPushed,true);
 
-            % Create the update button for tool importing process
+            %%%%%%%%% Create the update button for tool importing process
             app.ToolimportUpdateBtn = uibutton(ParamTabToolImportGl,'push','Text','Update','Visible','on');
             app.ToolimportUpdateBtn.Layout.Row = 5;
             app.ToolimportUpdateBtn.Layout.Column = 1;
             app.ToolimportUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportUpdateBtnPushed,true);
 
-            % Create the plot button for tool importing process
+            %%%%%%%%% Create the plot button for tool importing process
             app.ToolimportPlotBtn = uibutton(ParamTabToolImportGl,'push','Text',{'Plot ','(Orig)'});
             app.ToolimportPlotBtn.Layout.Row = 5;
             app.ToolimportPlotBtn.Layout.Column = 2;
@@ -1025,7 +1026,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             ParamTabToolfitParamGl.ColumnWidth = {'fit','1x'};
             ParamTabToolfitParamGl.Scrollable = 'on';
 
-            % Create the tool fitting type label and dropdown box
+            %%%%%%%%% Create the tool fitting type label and dropdown box
             ToolFitTypeLb = uilabel(ParamTabToolfitParamGl,'Text','Tool fitting type');
             ToolFitTypeLb.Layout.Row = 1;
             ToolFitTypeLb.Layout.Column = 1;
@@ -1082,13 +1083,13 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.LineFitMaxDistEf.Enable = "off";
             app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
 
-            % Create the reset button for tool fitting process
+            %%%%%%%%% Create the reset button for tool fitting process
             app.ToolfitResetBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Reset','Visible','on');
             app.ToolfitResetBtn.Layout.Row = 6;
             app.ToolfitResetBtn.Layout.Column = 1;
             app.ToolfitResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFitResetBtnPushed,true);
 
-            % Create the update button for tool fitting process
+            %%%%%%%%% Create the update button for tool fitting process
             app.ToolfitUpdateBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Update','Visible','on');
             app.ToolfitUpdateBtn.Layout.Row = 6;
             app.ToolfitUpdateBtn.Layout.Column = 2;
@@ -1099,28 +1100,29 @@ classdef upm_toolpath < matlab.apps.AppBase
             ParamTabToolfitExeGl.RowHeight = {'fit'};
             ParamTabToolfitExeGl.ColumnWidth = {'1x','1x','1x'};
             ParamTabToolfitExeGl.Scrollable = 'on';
-            % button to execute s1_toolExtract_2Dline.m
+
+            %%%%%%%%% button to execute s1_toolExtract_2Dline.m
             app.S1ToolExtract2DLineBtn = uibutton(ParamTabToolfitExeGl,'push','WordWrap','on', ...
                 'Text',{'Extract&Fit','(2D-Line)'},'FontWeight','bold');
             app.S1ToolExtract2DLineBtn.Layout.Column = 1;
             app.S1ToolExtract2DLineBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1ToolExtract2DLineBtnPushed,true);
 
-            % button to execute s1_toolExtract_3Dline.m
+            %%%%%%%%% button to execute s1_toolExtract_3Dline.m
             app.S1ToolExtract3DLineBtn = uibutton(ParamTabToolfitExeGl,'push','WordWrap','on', ...
                 'Text',{'Extract&Fit','(3D-Line)'});
             app.S1ToolExtract3DLineBtn.Layout.Column = 2;
             app.S1ToolExtract3DLineBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1ToolExtract3DLineBtnPushed,true);
 
-            % button to execute s1_toolExtract_surf.m
+            %%%%%%%%% button to execute s1_toolExtract_surf.m
             app.S1ToolExtractSurfBtn = uibutton(ParamTabToolfitExeGl,'push','WordWrap','on', ...
                 'Text',{'Extract&Fit','(3D-Surf)'});
             app.S1ToolExtractSurfBtn.Layout.Column = 3;
             app.S1ToolExtractSurfBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1ToolExtractSurfBtnPushed,true);
 
-            % button to plot the tool data
+            %%%%%%%%% button to plot the tool data
             app.ToolfitPlotBtn = uibutton(ParamTabToolfitGl,'push','Text','Plot (Fit)');
             app.ToolfitPlotBtn.Layout.Row = 3;
             app.ToolfitPlotBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolfitPlotBtnPushed,true);
@@ -1137,7 +1139,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             toolModLb.Layout.Row = 1;
             toolModLb.Layout.Column = [1,2];
 
-            % button to execute s1_tool2D.m
+            %%%%%%%%% button to execute s1_tool2D.m
             app.S1Tool2DBtn = uibutton(ParamTabToolmodGl,'push','WordWrap','on', ...
                 'Text',{'Example Fit','(2D Data)'});
             app.S1Tool2DBtn.Layout.Row = 2;
@@ -1145,14 +1147,13 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.S1Tool2DBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1Tool2DBtnPushed,true);
 
-            % button to execute s1_tool3D.m
+            %%%%%%%%% button to execute s1_tool3D.m
             app.S1Tool3DBtn = uibutton(ParamTabToolmodGl,'push','WordWrap','on', ...
                 'Text',{'Example Fit','(3D Data)'});
             app.S1Tool3DBtn.Layout.Row = 2;
             app.S1Tool3DBtn.Layout.Column = 2;
             app.S1Tool3DBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1Tool3DBtnPushed,true);
-
 
             % ---------Tool Interpolation parameter selection---------
             app.ParamTabToolinterp = uitab(ParamTabgroup,'Title','Tool Interpolation','Scrollable','on');
@@ -1171,13 +1172,13 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.ParamMethodDd.Layout.Row = 1;
             app.ParamMethodDd.Layout.Column = 2;
 
-            % Create the reset button
+            %%%%%%%%% Create the reset button
             app.ToolinterpResetBtn = uibutton(ParamTabToolinterpGl,'push','Text','Reset','Visible','on');
             app.ToolinterpResetBtn.Layout.Row = 2;
             app.ToolinterpResetBtn.Layout.Column = 1;
             app.ToolinterpResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolinterpResetBtnPushed,true);
 
-            % Create the update button
+            %%%%%%%%% Create the update button
             app.ToolinterpUpdateBtn = uibutton(ParamTabToolinterpGl,'push','Text','Update','Visible','on');
             app.ToolinterpUpdateBtn.Layout.Row = 2;
             app.ToolinterpUpdateBtn.Layout.Column = 2;

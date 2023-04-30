@@ -24,12 +24,15 @@ else
     % global textFontSize textFontType unit fitMethod paramMethod;
     % workspaceDir = '../workspace/20221020-tooltip';
     workspaceDir = '../workspace/20230424';
-    unit = 'mm';
+    unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
 
+    toolUnit = 'mm';
+    
+    % tool process parameters
     fitOpts.toolFitType = 'lineArc';
-    fitOpts.arcRansacMaxDist = 1e-3;
+    fitOpts.arcRansacMaxDist = 1e-2;
     fitOpts.arcFitMethod = 'levenberg-marquardt';
     fitOpts.lineFitMaxDist = 1e-3;
     fitOpts.lineFitMethod = 'polyfit';
@@ -51,23 +54,9 @@ else
 %                 /length(theta));
 %         clear theta r;
 
-    optsInput.Resize = 'on';
-    optsInput.WindowStyle = 'normal';
-    optsInput.Interpreter = 'tex';
-    toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
-        'Unit','Font type in figure','Font size in figure'}, ...
-        'Tool Processing Input', ...
-        [1 50; 1 50; 1 50; 1 50; 1 50], ...
-        {'lineArc','centripetal','\mu m','Times New Roman','14'},optsInput);
-    fitOpts.toolFitType = toolInput{1};
-    paramMethod = toolInput{2};
-    unit = toolInput{3};
-    textFontType = toolInput{4};
-    textFontSize = str2double(toolInput{5});
     % tool measurement file loading
     [fileName,dirName] = uigetfile({ ...
         '*.csv','Comma-Separated Values-files(*.csv)'; ...
-        '*.mat','MAT-files(*.mat)'; ...
         '*.txt','text-files(*.txt)'; ...
         '*.*','all files(*.*)'...
         }, ...
@@ -76,29 +65,40 @@ else
         'MultiSelect','off');
     pathName = fullfile(dirName,fileName);
 
-    % get rid of the header of the csv file
-    numHeader = 0;
-    tooltipFile = fopen(pathName);
-    while ~feof(tooltipFile)
-        tmpLine = fgets(tooltipFile);
-        % if the line begins with %d%d or -%d, then break
-        if ~isnan(str2double(tmpLine(1:2)))
-            break;
-        end
-        numHeader = numHeader + 1;
+    [~,~,fileExt] = fileparts(pathName);
+    switch fileExt
+        case {'.csv'}
+            % get rid of the header of the csv file
+            numHeader = 0;
+            tooltipFile = fopen(pathName);
+            while ~feof(tooltipFile)
+                tmpLine = fgets(tooltipFile);
+                % if the line begins with %d%d or -%d, then break
+                if ~isnan(str2double(tmpLine(1:2)))
+                    break;
+                end
+                numHeader = numHeader + 1;
+            end
+            fclose(tooltipFile);
+            toolOri = importdata(pathName,',',numHeader);
+            if size(toolOri,2) ~= 3 && size(toolOri,2) ~= 2
+                toolOri = toolOri.data;
+            end
+            toolOri(:,3) = [];
+            toolOri = sortrows(toolOri,1,'ascend');
+            toolOri = toolOri';
+        case {'.txt'}
+            % tool data file that has been processed in mmt software
+            toolOri = importdata(pathName,' ',0);
+            toolOri = sortrows(toolOri,1,'ascend');
+            toolOri = toolOri';
     end
-    fclose(tooltipFile);
-    if strcmp(pathName(end - 2:end),'csv')
-        toolOri = importdata(pathName,',',numHeader);
-    else % .txt
-        toolOri = importdata(pathName,' ',numHeader);
-    end
-    if size(toolOri,2) ~= 3 && size(toolOri,2) ~= 2
-        toolOri = toolOri.data;
-    end
-    toolOri(:,3) = [];
-    toolOri = sortrows(toolOri,1,'ascend');
-    toolOri = toolOri';
+
+    % unit convertion
+    unitList = {'m','mm','\mum','nm'};
+    presUnit = find(strcmp(unitList,toolUnit),1);
+    aimUnit = find(strcmp(unitList,unit),1);
+    toolOri = 1000^(aimUnit - presUnit)*toolOri;
 end
 
 %% plot the importing result
