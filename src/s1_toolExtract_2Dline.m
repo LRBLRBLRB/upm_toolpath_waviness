@@ -2,7 +2,7 @@
 % and to get the 3D point cloud of the tool tip
 
 %% 2D curve results
-isAPP = true;
+isAPP = false;
 if isAPP
     workspaceDir = app.workspaceDir;
     toolOri = app.toolOri;
@@ -23,88 +23,82 @@ else
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
     % workspaceDir = '../workspace/20221020-tooltip';
-    workspaceDir = '../workspace/20221015-tooltip';
+    workspaceDir = '../workspace/20230424';
+    unit = 'mm';
+    textFontSize = 12;
+    textFontType = 'Times New Roman';
+
     fitOpts.toolFitType = 'lineArc';
     fitOpts.arcRansacMaxDist = 1e-3;
     fitOpts.arcFitMethod = 'levenberg-marquardt';
     fitOpts.lineFitMaxDist = 1e-3;
     fitOpts.lineFitMethod = 'polyfit';
     paramMethod = 'centripetal';
-    unit = 'mm';
-    textFontSize = 12;
-    textFontType = 'Times New Roman';
 
-    isTest = false;
-    isSelf = true;
-    if isTest
-        cx0 = 0*1000; % unit: mu m
-        cy0 = 0*1000; % unit: mu m
-        r0 = 0.1*1000; % unit: mu m
-        noise = 0.03;
-        theta = linspace(0,2*pi/3,200);
-        r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
-        toolOri(1,:) = r.*cos(theta) + cx0;
-        toolOri(2,:) = r.*sin(theta) + cy0;
-        toolOri(3,:) = zeros(1,length(theta));
-        rmse0 = sqrt(...
-                    sum(...
-                        ((toolOri(1,:) - cx0).^2 + (toolOri(2,:) - cy0).^2 - r0^2).^2) ...
-                /length(theta));
-        clear theta r;
-    else
-        if isSelf
-            optsInput.Resize = 'on';
-            optsInput.WindowStyle = 'normal';
-            optsInput.Interpreter = 'tex';
-            toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
-                'Unit','Font type in figure','Font size in figure'}, ...
-                'Tool Processing Input', ...
-                [1 50; 1 50; 1 50; 1 50; 1 50], ...
-                {'lineArc','centripetal','\mu m','Times New Roman','14'},optsInput);
-            fitOpts.toolFitType = toolInput{1};
-            paramMethod = toolInput{2};
-            unit = toolInput{3};
-            textFontType = toolInput{4};
-            textFontSize = str2double(toolInput{5});
-            % tool measurement file loading
-            [fileName,dirName] = uigetfile({ ...
-                '*.csv','Comma-Separated Values-files(*.csv)'; ...
-                '*.mat','MAT-files(*.mat)'; ...
-                '*.txt','text-files(*.txt)'; ...
-                '*.*','all files(*.*)'...
-                }, ...
-                'Select one tool tip measurement data', ...
-                workspaceDir, ...
-                'MultiSelect','off');
-            pathName = fullfile(dirName,fileName);
-        else
-            pathName = fullfile(workspaceDir,"tooltip result/20221019-strategy-2+40-5.csv");
-        end
-        % get rid of the header of the csv file
-        numHeader = 0;
-        tooltipFile = fopen(pathName);
-        while ~feof(tooltipFile)
-            tmpLine = fgets(tooltipFile);
-            % if the line begins with %d%d or -%d, then break
-            if ~isnan(str2double(tmpLine(1:2)))
-                break;
-            end
-            numHeader = numHeader + 1;
-        end
-        fclose(tooltipFile);
-        if strcmp(pathName(end - 2:end),'csv')
-            toolOri = importdata(pathName,',',numHeader);
-        else % .txt
-            toolOri = importdata(pathName,' ',numHeader);
-        end
-        if size(toolOri,2) ~= 3 && size(toolOri,2) ~= 2
-            toolOri = toolOri.data;
-        end
-        toolOri(:,3) = [];
-        toolOri = sortrows(toolOri,1,'ascend');
-        toolOri = toolOri';
+%         % imitation of the tool measurement file
+%         cx0 = 0*1000; % unit: mu m
+%         cy0 = 0*1000; % unit: mu m
+%         r0 = 0.1*1000; % unit: mu m
+%         noise = 0.03;
+%         theta = linspace(0,2*pi/3,200);
+%         r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
+%         toolOri(1,:) = r.*cos(theta) + cx0;
+%         toolOri(2,:) = r.*sin(theta) + cy0;
+%         toolOri(3,:) = zeros(1,length(theta));
+%         rmse0 = sqrt(...
+%                     sum(...
+%                         ((toolOri(1,:) - cx0).^2 + (toolOri(2,:) - cy0).^2 - r0^2).^2) ...
+%                 /length(theta));
+%         clear theta r;
 
+    optsInput.Resize = 'on';
+    optsInput.WindowStyle = 'normal';
+    optsInput.Interpreter = 'tex';
+    toolInput = inputdlg({'Tool fitting method','Tool parameterization method', ...
+        'Unit','Font type in figure','Font size in figure'}, ...
+        'Tool Processing Input', ...
+        [1 50; 1 50; 1 50; 1 50; 1 50], ...
+        {'lineArc','centripetal','\mu m','Times New Roman','14'},optsInput);
+    fitOpts.toolFitType = toolInput{1};
+    paramMethod = toolInput{2};
+    unit = toolInput{3};
+    textFontType = toolInput{4};
+    textFontSize = str2double(toolInput{5});
+    % tool measurement file loading
+    [fileName,dirName] = uigetfile({ ...
+        '*.csv','Comma-Separated Values-files(*.csv)'; ...
+        '*.mat','MAT-files(*.mat)'; ...
+        '*.txt','text-files(*.txt)'; ...
+        '*.*','all files(*.*)'...
+        }, ...
+        'Select one tool tip measurement data', ...
+        workspaceDir, ...
+        'MultiSelect','off');
+    pathName = fullfile(dirName,fileName);
+
+    % get rid of the header of the csv file
+    numHeader = 0;
+    tooltipFile = fopen(pathName);
+    while ~feof(tooltipFile)
+        tmpLine = fgets(tooltipFile);
+        % if the line begins with %d%d or -%d, then break
+        if ~isnan(str2double(tmpLine(1:2)))
+            break;
+        end
+        numHeader = numHeader + 1;
     end
+    fclose(tooltipFile);
+    if strcmp(pathName(end - 2:end),'csv')
+        toolOri = importdata(pathName,',',numHeader);
+    else % .txt
+        toolOri = importdata(pathName,' ',numHeader);
+    end
+    if size(toolOri,2) ~= 3 && size(toolOri,2) ~= 2
+        toolOri = toolOri.data;
+    end
+    toolOri(:,3) = [];
+    toolOri = sortrows(toolOri,1,'ascend');
+    toolOri = toolOri';
 end
 
 %% plot the importing result
