@@ -21,6 +21,9 @@ if exist('app','var')
     fitOpts.lineFitMethod = app.lineFitMethod;
 else
     isAPP = false;
+    if exist('paramMethod','var')
+        paramMethod = 'centripetal';
+    end
 end
 
 %% 分离轮廓误差和波纹度误差

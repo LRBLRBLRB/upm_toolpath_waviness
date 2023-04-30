@@ -109,8 +109,10 @@ classdef upm_toolpath < matlab.apps.AppBase
         OptimParamFeedTab       matlab.ui.container.Tab
         OptimUpdateBtn          matlab.ui.control.Button
         OptimResetBtn           matlab.ui.control.Button
-        OptimAsphericBtn        matlab.ui.control.Button
-        OptimFreeformBtn        matlab.ui.control.Button
+        Optim2DSingleBtn        matlab.ui.control.Button
+        Optim2DSingleIterBtn    matlab.ui.control.Button
+        Optim2DMultiBtn         matlab.ui.control.Button
+        Optim2DMultiIterBtn     matlab.ui.control.Button
         InfoTa                  matlab.ui.control.TextArea
         MsgState                logical
         Msg                     char
@@ -372,93 +374,8 @@ classdef upm_toolpath < matlab.apps.AppBase
         end
         
         % Value changed function: to choose the tool file path
-        function ToolFileBtnPushed(app,event)
-            if isempty(app.workspaceDir)
-                uialert(app.UIFigure, ...
-                    'Workspace directory doesn''t exist, please choose one first!', ...
-                    'Alert Message','CloseFcn',createCallbackFcn(app,@WorkspaceDirBtnPushed,true));
-                return
-            end
-            [fileName,dirName] = uigetfile({ ...
-                '*.csv','Comma-Separated-Values files(*.csv)'; ...
-                '*.xls;*.xlsx','Excel worksheet files(*.xls,*.xlsx)'; ...
-                '*.mat','MAT files(*.mat)'; ...
-                '*.txt','Text files(*.txt)'; ...
-                '*.*','all files(*.*)'...
-                }, ...
-                'Select One Tool Tip Measurement Data', ...
-                app.workspaceDir, ...
-                'MultiSelect','off');
-            app.toolPathName = fullfile(dirName,fileName);
-            app.ToolFileEf.Value = app.toolPathName;
-            [~,~,fileExt] = fileparts(app.toolPathName);
-            switch fileExt
-                case {'.mat'}
-                    app.toolData = load(app.toolPathName);
-                    % if the tool interpolation result is loaded, then plot it
-                    % directly; else get the original data from the file
-                    if isfield(app.toolData,'toolBform')
-                        app.toolUnit = app.toolData.unit;
-                        app.ToolUnitDd.Value = app.toolUnit;
-                        plot(app.ToolDataAxes, ...
-                            app.toolData.toolFit(2,:),app.toolData.toolFit(3,:), ...
-                            '--.','MarkerSize',8,'Color',[0,0.447,0.741]);
-                        hold(app.ToolDataAxes,'on');
-                        plot(app.ToolDataAxes, ...
-                            app.toolData.toolBform.coefs(2,:),app.toolData.toolBform.coefs(3,:), ...
-                            'x','Color',[0.32,0.55,0.19],'MarkerSize',5);
-                        plot(app.ToolDataAxes, ...
-                            app.toolData.toolEdgePt(2,:),app.toolData.toolEdgePt(3,:), ...
-                            'Color',[0.635,0.078,0.184]);
-                        axis(app.ToolDataAxes,'equal');
-                        set(app.ToolDataAxes,'FontSize',app.fontSize, ...
-                            'FontName',app.fontName);
-                        xlabel(app.ToolDataAxes,['y(',app.toolUnit,')']);
-                        ylabel(app.ToolDataAxes,['z(',app.toolUnit,')']);
-                        legend(app.ToolDataAxes, ...
-                            'Measured Pts','Control Pts','Fitting Pts','Location','best');
-                        app.CheckToolLamp.Color = 'g';
-                        app.Msg = 'tool Data has been loaded.';
-                        InfoTaValueChanged(app,true);
-    %                     app.ParamTabToolfit.HandleVisibility = 'off';
-    %                     app.ParamTabToolmod.HandleVisibility = 'off';
-    %                     app.ParamTabToolinterp.HandleVisibility = 'off';
-    
-                        app.Msg = 'Tool proces finished. Continue to load surface.';
-                    else
-                        app.toolData = [];
-                    end
-                case {'.csv','.xls','.xlsx'}
-                    % get rid of the header of the csv file
-                    numHeader = 0;
-                    tooltipFile = fopen(app.toolPathName);
-                    while ~feof(tooltipFile)
-                        tmpLine = fgets(tooltipFile);
-                        % if the line begins with %d%d or -%d, then break
-                        if ~isnan(str2double(tmpLine(1:2)))
-                            break;
-                        end
-                        numHeader = numHeader + 1;
-                    end
-                    fclose(tooltipFile);
-                    [~,~,fileExt] = fileparts(app.toolPathName);
-                    if strcmp(fileExt,'.csv')
-                        app.toolOri = importdata(app.toolPathName,',',numHeader);
-                    else % .txt
-                        app.toolOri = importdata(app.toolPathName,' ',numHeader);
-                    end
-                    if size(app.toolOri,2) ~= 3 && size(app.toolOri,2) ~= 2
-                        app.toolOri = app.toolOri.data;
-                    end
-                    app.toolOri(:,3) = [];
-                    app.toolOri = sortrows(app.toolOri,1,'ascend');
-                    app.toolOri = app.toolOri';
-
-                    app.Msg = 'Please select the parameters and click ''Update''.';
-            end
-            InfoTaValueChanged(app,true);
-        end
-
+        ToolFileBtnPushed(app,event);
+        
         % Button Value changed function: tool import reset
         function ToolImportResetBtnPushed(app,event)
             app.ToolUnitDd.Value = app.toolUnitDefault;
@@ -559,6 +476,17 @@ classdef upm_toolpath < matlab.apps.AppBase
             end
         end
 
+        % Value changed function: reset the parameters
+        function ToolFitResetBtnPushed(app,event)
+            % Reset all the values to the default
+            resetToolfitParams(app);
+
+            % Report the infomation
+            app.Msg = ['All the parameters in Tool File Processing are reset.', ... 
+                'Modify them and click ''Update'' to set.'];
+            InfoTaValueChanged(app,true);
+        end
+
         % Value changed function: update the selection selection
         function ToolFitUpdateBtnPushed(app,event)
             app.toolFitType = app.ToolFitTypeDd.Value;
@@ -568,17 +496,6 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.lineFitMaxDist = app.LineFitMaxDistEf.Value;
 
             app.Msg = 'All the parameters are set. Click ''Plot'' to plot the data.';
-            InfoTaValueChanged(app,true);
-        end
-
-        % Value changed function: reset the parameters
-        function ToolFitResetBtnPushed(app,event)
-            % Reset all the values to the default
-            resetToolfitParams(app);
-
-            % Report the infomation
-            app.Msg = ['All the parameters in Tool File Processing are reset.', ... 
-                'Modify them and click ''Update'' to set.'];
             InfoTaValueChanged(app,true);
         end
 
@@ -870,14 +787,26 @@ classdef upm_toolpath < matlab.apps.AppBase
             InfoTaValueChanged(app,true);
         end
         
-        function OptimAsphericBtnPushed(app,event)
-            s4_optim_2Diter_concentric_iter;
+        function Optim2DSingleBtnPushed(app,event)
+            s4_optim_2D_aspheric_actual_tip_single;
             app.Msg = 'Toolpath optimization is successfully finished.';
             InfoTaValueChanged(app,true);
         end
-
-        function OptimFreeformBtnPushed(app,event)
-            s4_optim_3Dsolve_concentric_iter;
+        
+        function Optim2DSingleIterBtnPushed(app,event)
+            s4_optim_2D_aspheric_actual_tip_single_iter;
+            app.Msg = 'Toolpath optimization is successfully finished.';
+            InfoTaValueChanged(app,true);
+        end
+        
+        function Optim2DMultiBtnPushed(app,event)
+            s4_optim_2D_aspheric_actual_tip_multi;
+            app.Msg = 'Toolpath optimization is successfully finished.';
+            InfoTaValueChanged(app,true);
+        end
+        
+        function Optim2DMultiIterBtnPushed(app,event)
+            s4_optim_2D_aspheric_actual_tip_multi_iter;
             app.Msg = 'Toolpath optimization is successfully finished.';
             InfoTaValueChanged(app,true);
         end
@@ -921,7 +850,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                 'WindowStyle','alwaysontop','WindowState','normal','Visible','off');
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app,@UIFigureCloseReq,true);
             app.UIFigure.Resize = "on";
-            app.UIFigure.Position = [500,500,800,600];
+            app.UIFigure.Position = [500,500,800,700];
             app.UIFigure.Scrollable = "on";
             % app.UIFigure.
 
@@ -932,25 +861,25 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.FigureToolbar = uitoolbar(app.UIFigure);
 
             app.AxisEqualPushtool = uipushtool(app.FigureToolbar, ...
-                'Icon','resource/image/AxisEqualPushtool.svg');
+                'Icon','resources/image/AxisEqualPushtool.svg');
             app.AxisEqualPushtool.ClickedCallback = createCallbackFcn( ...
                 app,@AxisEqualPushtoolClicked,true);
             app.AxisEqualPushtool.Tooltip = 'Set the axis of the current figure equal';
 
             app.CloseAllFigurePushtool = uipushtool(app.FigureToolbar, ...
-                'Icon','resource/image/CloseAllFigure.svg');
+                'Icon','resources/image/CloseAllFigure.svg');
             app.CloseAllFigurePushtool.ClickedCallback = createCallbackFcn( ...
                 app,@CloseAllFigurePushtoolClicked,true);
             app.CloseAllFigurePushtool.Tooltip = 'Close all the figures';
 
             app.BoldInfoToggletool = uitoggletool(app.FigureToolbar, ...
-                'Icon','resource/image/Bold.svg','Separator','on');
+                'Icon','resources/image/Bold.svg','Separator','on');
             app.BoldInfoToggletool.ClickedCallback = createCallbackFcn( ...
                 app,@BoldInfoToggletoolClicked,true);
             app.BoldInfoToggletool.Tooltip = 'Bold/Normalize the infomation.';
 
             app.TopToggletool = uitoggletool(app.FigureToolbar, ...
-                'Icon','resource/image/top.svg');
+                'Icon','resources/image/top.svg');
             app.TopToggletool.ClickedCallback = createCallbackFcn( ...
                 app,@TopToggletoolClicked,true);
             app.CloseAllFigurePushtool.Tooltip = 'Put the APP on top';
@@ -981,7 +910,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.WorkspaceDirBtn.Layout.Column = 3;
             app.WorkspaceDirBtn.ButtonPushedFcn = createCallbackFcn(app,@WorkspaceDirBtnPushed,true);
             
-            % Create the font name selection label and dropdown box
+            %%%%%%%%% Create the font name selection label and dropdown box
             FontNameLb = uilabel(WorkspaceDirGl,'Text','Ploting font type');
             FontNameLb.Layout.Row = 1;
             FontNameLb.Layout.Column = 4;
@@ -991,7 +920,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.FontNameDd.Layout.Column = 5;
             app.FontNameDd.ValueChangedFcn = createCallbackFcn(app,@FontNameDdValueChanged,true);
             
-            % Create the font size selection label and editfield box
+            %%%%%%%%% Create the font size selection label and editfield box
             FontSizeLb = uilabel(WorkspaceDirGl,'Text','Ploting font size');
             FontSizeLb.Layout.Row = 2;
             FontSizeLb.Layout.Column = 4;
@@ -1001,7 +930,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.FontSizeEf.Layout.Column = 5;
             app.FontSizeEf.ValueChangedFcn = createCallbackFcn(app,@FontSizeEfValueChanged,true);
             
-            % Create the unit selection label and dropdown box
+            %%%%%%%%% Create the unit selection label and dropdown box
             UnitLB = uilabel(WorkspaceDirGl,'Text','Project unit');
             UnitLB.Layout.Row = 1;
             UnitLB.Layout.Column = 6;
@@ -1011,7 +940,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.UnitDd.Layout.Column = 7;
             app.UnitDd.ValueChangedFcn = createCallbackFcn(app,@UnitDdValueChanged,true);
             
-            % ---Create the reset button---
+            %%%%%%%%% ---Create the reset button---
             app.CommonResetBtn = uibutton(WorkspaceDirGl,'push','Text','Reset','Visible','on');
             app.CommonResetBtn.Layout.Row = 2;
             app.CommonResetBtn.Layout.Column = [6,7];
@@ -1027,7 +956,8 @@ classdef upm_toolpath < matlab.apps.AppBase
             % --------------------------Tool File Processing--------------------------
             % ------------------------------------------------------------------------
 
-            app.ToolTb = uitab(app.FigureTbGp,'Title','Tool Processing');
+            %%%%%%%%% tool bar object
+            app.ToolTb = uitab(app.FigureTbGp,'Title','Tool Processing','Scrollable','on');
             app.ToolTb.ButtonDownFcn = createCallbackFcn(app,@ToolTbButtonDown,true);
 
             % Manage tool processing layout
@@ -1052,7 +982,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             ParamTabToolImportGl.RowHeight = {'fit','2x','fit','fit','1x'};
             ParamTabToolImportGl.ColumnWidth = {'1x','1x','1x'};
 
-            % Create the tool path selection 
+            %%%%%%%%% Create the tool path selection 
             ToolFileLb = uilabel(ParamTabToolImportGl,'Text','Tool data path:');
             ToolFileLb.Layout.Row = 1;
             ToolFileLb.Layout.Column = 1;
@@ -1074,19 +1004,19 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.ToolUnitDd.Layout.Row = 4;
             app.ToolUnitDd.Layout.Column = [2,3];
 
-            % Create the reset button for tool importing process
+            %%%%%%%%% Create the reset button for tool importing process
             app.ToolimportResetBtn = uibutton(ParamTabToolImportGl,'push','Text','Reset','Visible','on');
             app.ToolimportResetBtn.Layout.Row = 5;
             app.ToolimportResetBtn.Layout.Column = 3;
             app.ToolimportResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportResetBtnPushed,true);
 
-            % Create the update button for tool importing process
+            %%%%%%%%% Create the update button for tool importing process
             app.ToolimportUpdateBtn = uibutton(ParamTabToolImportGl,'push','Text','Update','Visible','on');
             app.ToolimportUpdateBtn.Layout.Row = 5;
             app.ToolimportUpdateBtn.Layout.Column = 1;
             app.ToolimportUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolImportUpdateBtnPushed,true);
 
-            % Create the plot button for tool importing process
+            %%%%%%%%% Create the plot button for tool importing process
             app.ToolimportPlotBtn = uibutton(ParamTabToolImportGl,'push','Text',{'Plot ','(Orig)'});
             app.ToolimportPlotBtn.Layout.Row = 5;
             app.ToolimportPlotBtn.Layout.Column = 2;
@@ -1110,7 +1040,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             ParamTabToolfitParamGl.ColumnWidth = {'fit','1x'};
             ParamTabToolfitParamGl.Scrollable = 'on';
 
-            % Create the tool fitting type label and dropdown box
+            %%%%%%%%% Create the tool fitting type label and dropdown box
             ToolFitTypeLb = uilabel(ParamTabToolfitParamGl,'Text','Tool fitting type');
             ToolFitTypeLb.Layout.Row = 1;
             ToolFitTypeLb.Layout.Column = 1;
@@ -1167,13 +1097,13 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.LineFitMaxDistEf.Enable = "off";
             app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
 
-            % Create the reset button for tool fitting process
+            %%%%%%%%% Create the reset button for tool fitting process
             app.ToolfitResetBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Reset','Visible','on');
             app.ToolfitResetBtn.Layout.Row = 6;
             app.ToolfitResetBtn.Layout.Column = 1;
             app.ToolfitResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFitResetBtnPushed,true);
 
-            % Create the update button for tool fitting process
+            %%%%%%%%% Create the update button for tool fitting process
             app.ToolfitUpdateBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Update','Visible','on');
             app.ToolfitUpdateBtn.Layout.Row = 6;
             app.ToolfitUpdateBtn.Layout.Column = 2;
@@ -1184,28 +1114,29 @@ classdef upm_toolpath < matlab.apps.AppBase
             ParamTabToolfitExeGl.RowHeight = {'fit'};
             ParamTabToolfitExeGl.ColumnWidth = {'1x','1x','1x'};
             ParamTabToolfitExeGl.Scrollable = 'on';
-            % button to execute s1_toolExtract_2Dline.m
+
+            %%%%%%%%% button to execute s1_toolExtract_2Dline.m
             app.S1ToolExtract2DLineBtn = uibutton(ParamTabToolfitExeGl,'push','WordWrap','on', ...
                 'Text',{'Extract&Fit','(2D-Line)'},'FontWeight','bold');
             app.S1ToolExtract2DLineBtn.Layout.Column = 1;
             app.S1ToolExtract2DLineBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1ToolExtract2DLineBtnPushed,true);
 
-            % button to execute s1_toolExtract_3Dline.m
+            %%%%%%%%% button to execute s1_toolExtract_3Dline.m
             app.S1ToolExtract3DLineBtn = uibutton(ParamTabToolfitExeGl,'push','WordWrap','on', ...
                 'Text',{'Extract&Fit','(3D-Line)'});
             app.S1ToolExtract3DLineBtn.Layout.Column = 2;
             app.S1ToolExtract3DLineBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1ToolExtract3DLineBtnPushed,true);
 
-            % button to execute s1_toolExtract_surf.m
+            %%%%%%%%% button to execute s1_toolExtract_surf.m
             app.S1ToolExtractSurfBtn = uibutton(ParamTabToolfitExeGl,'push','WordWrap','on', ...
                 'Text',{'Extract&Fit','(3D-Surf)'});
             app.S1ToolExtractSurfBtn.Layout.Column = 3;
             app.S1ToolExtractSurfBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1ToolExtractSurfBtnPushed,true);
 
-            % button to plot the tool data
+            %%%%%%%%% button to plot the tool data
             app.ToolfitPlotBtn = uibutton(ParamTabToolfitGl,'push','Text','Plot (Fit)');
             app.ToolfitPlotBtn.Layout.Row = 3;
             app.ToolfitPlotBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolfitPlotBtnPushed,true);
@@ -1222,7 +1153,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             toolModLb.Layout.Row = 1;
             toolModLb.Layout.Column = [1,2];
 
-            % button to execute s1_tool2D.m
+            %%%%%%%%% button to execute s1_tool2D.m
             app.S1Tool2DBtn = uibutton(ParamTabToolmodGl,'push','WordWrap','on', ...
                 'Text',{'Example Fit','(2D Data)'});
             app.S1Tool2DBtn.Layout.Row = 2;
@@ -1230,14 +1161,13 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.S1Tool2DBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1Tool2DBtnPushed,true);
 
-            % button to execute s1_tool3D.m
+            %%%%%%%%% button to execute s1_tool3D.m
             app.S1Tool3DBtn = uibutton(ParamTabToolmodGl,'push','WordWrap','on', ...
                 'Text',{'Example Fit','(3D Data)'});
             app.S1Tool3DBtn.Layout.Row = 2;
             app.S1Tool3DBtn.Layout.Column = 2;
             app.S1Tool3DBtn.ButtonPushedFcn = createCallbackFcn( ...
                 app,@S1Tool3DBtnPushed,true);
-
 
             % ---------Tool Interpolation parameter selection---------
             app.ParamTabToolinterp = uitab(ParamTabgroup,'Title','Tool Interpolation','Scrollable','on');
@@ -1256,13 +1186,13 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.ParamMethodDd.Layout.Row = 1;
             app.ParamMethodDd.Layout.Column = 2;
 
-            % Create the reset button
+            %%%%%%%%% Create the reset button
             app.ToolinterpResetBtn = uibutton(ParamTabToolinterpGl,'push','Text','Reset','Visible','on');
             app.ToolinterpResetBtn.Layout.Row = 2;
             app.ToolinterpResetBtn.Layout.Column = 1;
             app.ToolinterpResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolinterpResetBtnPushed,true);
 
-            % Create the update button
+            %%%%%%%%% Create the update button
             app.ToolinterpUpdateBtn = uibutton(ParamTabToolinterpGl,'push','Text','Update','Visible','on');
             app.ToolinterpUpdateBtn.Layout.Row = 2;
             app.ToolinterpUpdateBtn.Layout.Column = 2;
@@ -1301,7 +1231,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             % ---------------------------Surface Processing---------------------------
             % ------------------------------------------------------------------------
 
-            app.SurfaceTb = uitab(app.FigureTbGp,'Title','Surface Load');
+            app.SurfaceTb = uitab(app.FigureTbGp,'Title','Surface Load','Scrollable','on');
             app.SurfaceTb.ButtonDownFcn = createCallbackFcn(app,@SurfaceTbButtonDown,true);
 
             SurfaceTbGl = uigridlayout(app.SurfaceTb,[6,4]);
@@ -1312,7 +1242,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                 'Text','Add Geometry');
             app.AddSurfaceBtn.Layout.Row = 1;
             app.AddSurfaceBtn.Layout.Column = [1,2];
-            app.AddSurfaceBtn.Icon = 'resource/image/AddSurf1.svg';
+            app.AddSurfaceBtn.Icon = 'resources/image/AddSurf1.svg';
             app.AddSurfaceBtn.ButtonPushedFcn = createCallbackFcn(app,@AddSurfaceBtnPushed,true);
 
             SurfacePlotSparLb = uilabel(SurfaceTbGl,'Text','Plot Discretization:');
@@ -1376,6 +1306,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             OptimTbGl = uigridlayout(app.OptimTb,[2,2]);
             OptimTbGl.RowHeight = {'fit','fit'};
             OptimTbGl.ColumnWidth = {'1x','1x'};
+            OptimTbGl.Scrollable = 'on';
 
             % ------------------------- Optim- Condition Check Area -------------------------
             CheckGl = uigridlayout(OptimTbGl,[1,2],'Padding',[0,0,0,0]);
@@ -1549,37 +1480,60 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.OptimUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@OptimUpdateBtnPushed,true);
 
             % --------------
-            Op0timProcessGl = uigridlayout(OptimTbGl,[2,1]);
-            Op0timProcessGl.Scrollable = 'on';
-            Op0timProcessGl.RowHeight = {'fit','fit'};
-            Op0timProcessGl.Layout.Row = 2;
-            Op0timProcessGl.Layout.Column = 2;
+            OptimProcessGl = uigridlayout(OptimTbGl,[2,2]);
+            OptimProcessGl.Scrollable = 'on';
+            OptimProcessGl.RowHeight = {'1x','1x'};
+            OptimProcessGl.ColumnWidth = {'1x','1x'};
+            OptimProcessGl.Layout.Row = 2;
+            OptimProcessGl.Layout.Column = 2;
 
-            app.OptimAsphericBtn = uibutton(Op0timProcessGl,'push','WordWrap','on', ...
-                'Text','s4_optim_aspheric_concentric');
-            app.OptimAsphericBtn.Layout.Row = 1;
-            % app.OptimAsphericBtn.Layout.Column = 2;
-            app.OptimAsphericBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@OptimAsphericBtnPushed,true);
+            app.Optim2DSingleBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
+                'Text',{'tool path optimization';'2D aspheric surface';'single-interaction & solve'}, ...
+                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_single.svg', ...
+                'IconAlignment','top');
+            app.Optim2DSingleBtn.Layout.Row = 1;
+            app.Optim2DSingleBtn.Layout.Column = 1;
+            app.Optim2DSingleBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@Optim2DSingleBtnPushed,true);
 
-            app.OptimFreeformBtn = uibutton(Op0timProcessGl,'push','WordWrap','on', ...
-                'Text','optim_freeform_concentric');
-            app.OptimFreeformBtn.Layout.Row = 2;
-            % app.OptimFreeformBtn.Layout.Column = 2;
-            app.OptimFreeformBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@OptimFreeformBtnPushed,true);
+            app.Optim2DSingleIterBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
+                'Text',{'tool path optimization';'2D aspheric surface';'single-interaction & iter'}, ...
+                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_single_iter.svg', ...
+                'IconAlignment','top');
+            app.Optim2DSingleIterBtn.Layout.Row = 1;
+            app.Optim2DSingleIterBtn.Layout.Column = 2;
+            app.Optim2DSingleIterBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@Optim2DSingleIterBtnPushed,true);
+
+            app.Optim2DMultiBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
+                'Text',{'tool path optimization';'2D aspheric surface';'multi-interaction & solve'}, ...
+                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_multi.svg', ...
+                'IconAlignment','top');
+            app.Optim2DMultiBtn.Layout.Row = 2;
+            app.Optim2DMultiBtn.Layout.Column = 1;
+            app.Optim2DMultiBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@Optim2DMultiBtnPushed,true);
+
+            app.Optim2DMultiIterBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
+                'Text',{'tool path optimization';'2D aspheric surface';'multi-interaction & iter'}, ...
+                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_multi_iter.svg', ...
+                'IconAlignment','top');
+            app.Optim2DMultiIterBtn.Layout.Row = 2;
+            app.Optim2DMultiIterBtn.Layout.Column = 2;
+            app.Optim2DMultiIterBtn.FontWeight = 'bold';
+            app.Optim2DMultiIterBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@Optim2DMultiIterBtnPushed,true);
 
             % ------------------------------------------------------------------------
             % ---------------------------Program Processing---------------------------
             % ------------------------------------------------------------------------
 
-            app.ProgramTb = uitab(app.FigureTbGp,'Title','Program');
+            app.ProgramTb = uitab(app.FigureTbGp,'Title','Program','Scrollable','on');
             app.ProgramTb.ButtonDownFcn = createCallbackFcn(app,@ProgramTbButtonDown,true);
 
             ProgramGl = uigridlayout(app.ProgramTb,[4,2]);
             ProgramGl.RowHeight = {'1x','1x','1x','fit'};
             ProgramGl.ColumnWidth = {'1x','1x'};
-
 
             % ---------------------------simulation process---------------------------
             SimulatePn = uipanel(ProgramGl,'Visible','on', ...
@@ -1622,12 +1576,12 @@ classdef upm_toolpath < matlab.apps.AppBase
             OptimGl.RowHeight = {'1x'};
             OptimGl.ColumnWidth = {'fit','1x','fit','1x','fit'};
 
-            OptimArrow1 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
+            OptimArrow1 = uiimage(OptimGl,'ImageSource','resources/image/RightArrow6.svg', ...
                 'ScaleMethod','stretch');
             OptimArrow1.Layout.Row = 1;
             OptimArrow1.Layout.Column = 2;
 
-            OptimArrow2 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
+            OptimArrow2 = uiimage(OptimGl,'ImageSource','resources/image/RightArrow6.svg', ...
                 'ScaleMethod','stretch');
             OptimArrow2.Layout.Row = 1;
             OptimArrow2.Layout.Column = 4;
