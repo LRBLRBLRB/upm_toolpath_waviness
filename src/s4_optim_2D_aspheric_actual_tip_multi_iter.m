@@ -5,86 +5,124 @@
 % Step four: simulation of the machining surface
 % Step Five: generate the actual toolpath
 
-close all;
-clear;
-clc;
-addpath(genpath('funcs'));
-% global variables
-% global textFontSize textFontType;
-unit = '\mum';
-textFontSize = 12;
-textFontType = 'Times New Roman';
+isAPP = false;
+if isAPP
+    %% app-used
+    workspaceDir = app.workspaceDir;
+    unit = app.unit;
+    textFontSize = app.fontSize;
+    textFontType = app.fontName;
 
-msgOpts.Default = 'Cancel and quit';
-msgOpts.Interpreter = 'tex';
+    msgOpts.Default = 'Cancel and quit';
+    msgOpts.Interpreter = 'tex';
 
-% workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
-% workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
-workspaceDir = '..\workspace\20230417';
-diaryFile = fullfile('..\workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
-% diary diaryFile;
-% diary on;
+    tPar0 = tic;
+    parObj = gcp;
+    tPar = toc(tPar0);
+    fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
 
-tPar0 = tic;
-parObj = gcp;
-tPar = toc(tPar0);
-fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
+    % tool data import
+    toolData = app.toolData;
 
-%% concentric surface generation / import
-% tool data import
-[fileName,dirName] = uigetfile({ ...
-    '*.mat','MAT-files(*.mat)'; ...
-    '*,*','all files(*.*)'}, ...
-    'Select one tool edge data file', ...
-    fullfile(workspaceDir,'tooltheo.mat'), ...
-    'MultiSelect','off');
-toolName = fullfile(dirName,fileName);
-% toolName = 'output_data\tool\toolTheo_3D.mat';
-% tool data unit convertion
-toolData = load(toolName);
-unitList = {'m','mm','\mum','nm'};
-presUnit = find(strcmp(unitList,toolData.unit),1);
-aimUnit = find(strcmp(unitList,unit),1);
-toolData.center = 1000^(aimUnit - presUnit)*toolData.center;
-toolData.radius = 1000^(aimUnit - presUnit)*toolData.radius;
-toolData.toolBform.coefs = 1000^(aimUnit - presUnit)*toolData.toolBform.coefs;
-toolData.toolCpts = 1000^(aimUnit - presUnit)*toolData.toolCpts;
-toolData.toolEdgePt = 1000^(aimUnit - presUnit)*toolData.toolEdgePt;
-toolData.toolFit = 1000^(aimUnit - presUnit)*toolData.toolFit;
+    % surface import
+    surfFunc = app.surfFuncs;
+    surfFx = app.surfFx;
+    surfFy = app.surfFy;
+    surfDomain = app.surfDomain;
+    surfMesh = app.surfMesh;
+    rMax = app.rMax;
 
-% surface data import
-% A = tand(20)/(2*2000);
-A = 0.091/1000/(1000^(aimUnit - presUnit));
-C = 0;
-syms x y;
-surfSym = A.*(x.^2 + y.^2)./2 + C;
-surfFunc = matlabFunction(surfSym);
-surfFx = diff(surfFunc,x);
-surfFy = diff(surfFunc,y);
-surfDomain = [-1000,1000;-1000,1000];
-surfDomain = 1.05*surfDomain;
-rMax = max(surfDomain(1,2),surfDomain(2,2));
-% sampling density
-spar = 501;
-conR = linspace(0,rMax,spar); % concentric radius vector
-conTheta = linspace(0,2*pi,spar);
-[rMesh,thetaMesh] = meshgrid(conR,conTheta);
-surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
-surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
-surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
-% save('input_data/surface/ellipsoidAray.mat', ...
-%    "surfMesh","surfNorm","surfCenter");
-
-% machining paramters
-cutDirection = 'Edge to Center'; % 'Center to Edge'
-spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
-angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-aimRes = 0.5;
-rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
-maxIter = 100;
-arcLength = 20;
-maxAngPtDist = 0.5*pi/180;
-angularLength = 0.5*pi/180;
+    % machining paramters
+    cutDirection = app.cutDirection;
+    spindleDirection = app.spindleDirection;
+    angularDiscrete = app.angularDiscrete;
+    aimRes = app.aimRes;
+    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+    maxIter = app.maxIter;
+    arcLength = app.arcLength;
+    maxAngPtDist = app.maxAngPtDist;
+    angularLength = app.angularLength;
+else
+    %% function-used
+    close all;
+    clear;
+    clc;
+    addpath(genpath('funcs'));
+    % global variables
+    % workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
+    % workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
+    workspaceDir = '..\workspace\20230417';
+    unit = '\mum';
+    textFontSize = 12;
+    textFontType = 'Times New Roman';
+    
+    msgOpts.Default = 'Cancel and quit';
+    msgOpts.Interpreter = 'tex';
+    
+    diaryFile = fullfile('..\workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
+    % diary diaryFile;
+    % diary on;
+    
+    tPar0 = tic;
+    parObj = gcp;
+    tPar = toc(tPar0);
+    fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
+    
+    % tool data import
+    [fileName,dirName] = uigetfile({ ...
+        '*.mat','MAT-files(*.mat)'; ...
+        '*,*','all files(*.*)'}, ...
+        'Select one tool edge data file', ...
+        fullfile(workspaceDir,'tooltheo.mat'), ...
+        'MultiSelect','off');
+    toolName = fullfile(dirName,fileName);
+    % toolName = 'output_data\tool\toolTheo_3D.mat';
+    % tool data unit convertion
+    toolData = load(toolName);
+    unitList = {'m','mm','\mum','nm'};
+    presUnit = find(strcmp(unitList,toolData.unit),1);
+    aimUnit = find(strcmp(unitList,unit),1);
+    toolData.center = 1000^(aimUnit - presUnit)*toolData.center;
+    toolData.radius = 1000^(aimUnit - presUnit)*toolData.radius;
+    toolData.toolBform.coefs = 1000^(aimUnit - presUnit)*toolData.toolBform.coefs;
+    toolData.toolCpts = 1000^(aimUnit - presUnit)*toolData.toolCpts;
+    toolData.toolEdgePt = 1000^(aimUnit - presUnit)*toolData.toolEdgePt;
+    toolData.toolFit = 1000^(aimUnit - presUnit)*toolData.toolFit;
+    
+    % concentric surface generation / import
+    % A = tand(20)/(2*2000);
+    A = 0.091/1000/(1000^(aimUnit - presUnit));
+    C = 0;
+    syms x y;
+    surfSym = A.*(x.^2 + y.^2)./2 + C;
+    surfFunc = matlabFunction(surfSym);
+    surfFx = diff(surfFunc,x);
+    surfFy = diff(surfFunc,y);
+    surfDomain = [-1000,1000;-1000,1000];
+    surfDomain = 1.05*surfDomain;
+    rMax = max(surfDomain(1,2),surfDomain(2,2));
+    % sampling density
+    spar = 501;
+    conR = linspace(0,rMax,spar); % concentric radius vector
+    conTheta = linspace(0,2*pi,spar);
+    [rMesh,thetaMesh] = meshgrid(conR,conTheta);
+    surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
+    surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
+    surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
+    % save('input_data/surface/ellipsoidAray.mat', ...
+    %    "surfMesh","surfNorm","surfCenter");
+    
+    % machining paramters
+    cutDirection = 'Edge to Center'; % 'Center to Edge'
+    spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
+    angularDiscrete = 'Constant Arc'; % 'Constant Angle'
+    aimRes = 0.5;
+    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+    maxIter = 100;
+    arcLength = 20;
+    maxAngPtDist = 0.5*pi/180;
+    angularLength = 0.5*pi/180;
+end
 
 % plot the importing result
 [surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...

@@ -433,7 +433,7 @@ classdef add_surface < matlab.apps.AppBase
             app.ParaboloidALb = uilabel(app.ParaboloidBtnGl,'Text','a');
             app.ParaboloidALb.Layout.Row = 2;
             app.ParaboloidALb.Layout.Column = 1;
-            app.ParaboloidASpin = uispinner(app.ParaboloidBtnGl,'Value',0.038,'Limits',[-inf,inf]);
+            app.ParaboloidASpin = uispinner(app.ParaboloidBtnGl,'Value',0.091/1000,'Limits',[-inf,inf]);
             app.ParaboloidASpin.Layout.Row = 2;
             app.ParaboloidASpin.Layout.Column = [2,3];
 

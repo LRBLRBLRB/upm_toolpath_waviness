@@ -109,8 +109,10 @@ classdef upm_toolpath < matlab.apps.AppBase
         OptimParamFeedTab       matlab.ui.container.Tab
         OptimUpdateBtn          matlab.ui.control.Button
         OptimResetBtn           matlab.ui.control.Button
-        OptimAsphericBtn        matlab.ui.control.Button
-        OptimFreeformBtn        matlab.ui.control.Button
+        Optim2DSingleBtn        matlab.ui.control.Button
+        Optim2DSingleIterBtn    matlab.ui.control.Button
+        Optim2DMultiBtn         matlab.ui.control.Button
+        Optim2DMultiIterBtn     matlab.ui.control.Button
         InfoTa                  matlab.ui.control.TextArea
         MsgState                logical
         Msg                     char
@@ -785,14 +787,26 @@ classdef upm_toolpath < matlab.apps.AppBase
             InfoTaValueChanged(app,true);
         end
         
-        function OptimAsphericBtnPushed(app,event)
-            s4_optim_2Diter_concentric_iter;
+        function Optim2DSingleBtnPushed(app,event)
+            s4_optim_2D_aspheric_actual_tip_single;
             app.Msg = 'Toolpath optimization is successfully finished.';
             InfoTaValueChanged(app,true);
         end
-
-        function OptimFreeformBtnPushed(app,event)
-            s4_optim_3Dsolve_concentric_iter;
+        
+        function Optim2DSingleIterBtnPushed(app,event)
+            s4_optim_2D_aspheric_actual_tip_single_iter;
+            app.Msg = 'Toolpath optimization is successfully finished.';
+            InfoTaValueChanged(app,true);
+        end
+        
+        function Optim2DMultiBtnPushed(app,event)
+            s4_optim_2D_aspheric_actual_tip_multi;
+            app.Msg = 'Toolpath optimization is successfully finished.';
+            InfoTaValueChanged(app,true);
+        end
+        
+        function Optim2DMultiIterBtnPushed(app,event)
+            s4_optim_2D_aspheric_actual_tip_multi_iter;
             app.Msg = 'Toolpath optimization is successfully finished.';
             InfoTaValueChanged(app,true);
         end
@@ -836,7 +850,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                 'WindowStyle','alwaysontop','WindowState','normal','Visible','off');
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app,@UIFigureCloseReq,true);
             app.UIFigure.Resize = "on";
-            app.UIFigure.Position = [500,500,800,600];
+            app.UIFigure.Position = [500,500,800,700];
             app.UIFigure.Scrollable = "on";
             % app.UIFigure.
 
@@ -847,25 +861,25 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.FigureToolbar = uitoolbar(app.UIFigure);
 
             app.AxisEqualPushtool = uipushtool(app.FigureToolbar, ...
-                'Icon','resource/image/AxisEqualPushtool.svg');
+                'Icon','resources/image/AxisEqualPushtool.svg');
             app.AxisEqualPushtool.ClickedCallback = createCallbackFcn( ...
                 app,@AxisEqualPushtoolClicked,true);
             app.AxisEqualPushtool.Tooltip = 'Set the axis of the current figure equal';
 
             app.CloseAllFigurePushtool = uipushtool(app.FigureToolbar, ...
-                'Icon','resource/image/CloseAllFigure.svg');
+                'Icon','resources/image/CloseAllFigure.svg');
             app.CloseAllFigurePushtool.ClickedCallback = createCallbackFcn( ...
                 app,@CloseAllFigurePushtoolClicked,true);
             app.CloseAllFigurePushtool.Tooltip = 'Close all the figures';
 
             app.BoldInfoToggletool = uitoggletool(app.FigureToolbar, ...
-                'Icon','resource/image/Bold.svg','Separator','on');
+                'Icon','resources/image/Bold.svg','Separator','on');
             app.BoldInfoToggletool.ClickedCallback = createCallbackFcn( ...
                 app,@BoldInfoToggletoolClicked,true);
             app.BoldInfoToggletool.Tooltip = 'Bold/Normalize the infomation.';
 
             app.TopToggletool = uitoggletool(app.FigureToolbar, ...
-                'Icon','resource/image/top.svg');
+                'Icon','resources/image/top.svg');
             app.TopToggletool.ClickedCallback = createCallbackFcn( ...
                 app,@TopToggletoolClicked,true);
             app.CloseAllFigurePushtool.Tooltip = 'Put the APP on top';
@@ -943,7 +957,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             % ------------------------------------------------------------------------
 
             %%%%%%%%% tool bar object
-            app.ToolTb = uitab(app.FigureTbGp,'Title','Tool Processing');
+            app.ToolTb = uitab(app.FigureTbGp,'Title','Tool Processing','Scrollable','on');
             app.ToolTb.ButtonDownFcn = createCallbackFcn(app,@ToolTbButtonDown,true);
 
             % Manage tool processing layout
@@ -1217,7 +1231,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             % ---------------------------Surface Processing---------------------------
             % ------------------------------------------------------------------------
 
-            app.SurfaceTb = uitab(app.FigureTbGp,'Title','Surface Load');
+            app.SurfaceTb = uitab(app.FigureTbGp,'Title','Surface Load','Scrollable','on');
             app.SurfaceTb.ButtonDownFcn = createCallbackFcn(app,@SurfaceTbButtonDown,true);
 
             SurfaceTbGl = uigridlayout(app.SurfaceTb,[6,4]);
@@ -1228,7 +1242,7 @@ classdef upm_toolpath < matlab.apps.AppBase
                 'Text','Add Geometry');
             app.AddSurfaceBtn.Layout.Row = 1;
             app.AddSurfaceBtn.Layout.Column = [1,2];
-            app.AddSurfaceBtn.Icon = 'resource/image/AddSurf1.svg';
+            app.AddSurfaceBtn.Icon = 'resources/image/AddSurf1.svg';
             app.AddSurfaceBtn.ButtonPushedFcn = createCallbackFcn(app,@AddSurfaceBtnPushed,true);
 
             SurfacePlotSparLb = uilabel(SurfaceTbGl,'Text','Plot Discretization:');
@@ -1292,6 +1306,7 @@ classdef upm_toolpath < matlab.apps.AppBase
             OptimTbGl = uigridlayout(app.OptimTb,[2,2]);
             OptimTbGl.RowHeight = {'fit','fit'};
             OptimTbGl.ColumnWidth = {'1x','1x'};
+            OptimTbGl.Scrollable = 'on';
 
             % ------------------------- Optim- Condition Check Area -------------------------
             CheckGl = uigridlayout(OptimTbGl,[1,2],'Padding',[0,0,0,0]);
@@ -1465,37 +1480,60 @@ classdef upm_toolpath < matlab.apps.AppBase
             app.OptimUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@OptimUpdateBtnPushed,true);
 
             % --------------
-            Op0timProcessGl = uigridlayout(OptimTbGl,[2,1]);
-            Op0timProcessGl.Scrollable = 'on';
-            Op0timProcessGl.RowHeight = {'fit','fit'};
-            Op0timProcessGl.Layout.Row = 2;
-            Op0timProcessGl.Layout.Column = 2;
+            OptimProcessGl = uigridlayout(OptimTbGl,[2,2]);
+            OptimProcessGl.Scrollable = 'on';
+            OptimProcessGl.RowHeight = {'1x','1x'};
+            OptimProcessGl.ColumnWidth = {'1x','1x'};
+            OptimProcessGl.Layout.Row = 2;
+            OptimProcessGl.Layout.Column = 2;
 
-            app.OptimAsphericBtn = uibutton(Op0timProcessGl,'push','WordWrap','on', ...
-                'Text','s4_optim_aspheric_concentric');
-            app.OptimAsphericBtn.Layout.Row = 1;
-            % app.OptimAsphericBtn.Layout.Column = 2;
-            app.OptimAsphericBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@OptimAsphericBtnPushed,true);
+            app.Optim2DSingleBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
+                'Text',{'tool path optimization';'2D aspheric surface';'single-interaction & solve'}, ...
+                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_single.svg', ...
+                'IconAlignment','top');
+            app.Optim2DSingleBtn.Layout.Row = 1;
+            app.Optim2DSingleBtn.Layout.Column = 1;
+            app.Optim2DSingleBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@Optim2DSingleBtnPushed,true);
 
-            app.OptimFreeformBtn = uibutton(Op0timProcessGl,'push','WordWrap','on', ...
-                'Text','optim_freeform_concentric');
-            app.OptimFreeformBtn.Layout.Row = 2;
-            % app.OptimFreeformBtn.Layout.Column = 2;
-            app.OptimFreeformBtn.ButtonPushedFcn = createCallbackFcn( ...
-                app,@OptimFreeformBtnPushed,true);
+            app.Optim2DSingleIterBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
+                'Text',{'tool path optimization';'2D aspheric surface';'single-interaction & iter'}, ...
+                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_single_iter.svg', ...
+                'IconAlignment','top');
+            app.Optim2DSingleIterBtn.Layout.Row = 1;
+            app.Optim2DSingleIterBtn.Layout.Column = 2;
+            app.Optim2DSingleIterBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@Optim2DSingleIterBtnPushed,true);
+
+            app.Optim2DMultiBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
+                'Text',{'tool path optimization';'2D aspheric surface';'multi-interaction & solve'}, ...
+                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_multi.svg', ...
+                'IconAlignment','top');
+            app.Optim2DMultiBtn.Layout.Row = 2;
+            app.Optim2DMultiBtn.Layout.Column = 1;
+            app.Optim2DMultiBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@Optim2DMultiBtnPushed,true);
+
+            app.Optim2DMultiIterBtn = uibutton(OptimProcessGl,'push','WordWrap','on', ...
+                'Text',{'tool path optimization';'2D aspheric surface';'multi-interaction & iter'}, ...
+                'Icon','resources/image/s4_optim_2D_aspheric_actual_tip_multi_iter.svg', ...
+                'IconAlignment','top');
+            app.Optim2DMultiIterBtn.Layout.Row = 2;
+            app.Optim2DMultiIterBtn.Layout.Column = 2;
+            app.Optim2DMultiIterBtn.FontWeight = 'bold';
+            app.Optim2DMultiIterBtn.ButtonPushedFcn = createCallbackFcn( ...
+                app,@Optim2DMultiIterBtnPushed,true);
 
             % ------------------------------------------------------------------------
             % ---------------------------Program Processing---------------------------
             % ------------------------------------------------------------------------
 
-            app.ProgramTb = uitab(app.FigureTbGp,'Title','Program');
+            app.ProgramTb = uitab(app.FigureTbGp,'Title','Program','Scrollable','on');
             app.ProgramTb.ButtonDownFcn = createCallbackFcn(app,@ProgramTbButtonDown,true);
 
             ProgramGl = uigridlayout(app.ProgramTb,[4,2]);
             ProgramGl.RowHeight = {'1x','1x','1x','fit'};
             ProgramGl.ColumnWidth = {'1x','1x'};
-
 
             % ---------------------------simulation process---------------------------
             SimulatePn = uipanel(ProgramGl,'Visible','on', ...
@@ -1538,12 +1576,12 @@ classdef upm_toolpath < matlab.apps.AppBase
             OptimGl.RowHeight = {'1x'};
             OptimGl.ColumnWidth = {'fit','1x','fit','1x','fit'};
 
-            OptimArrow1 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
+            OptimArrow1 = uiimage(OptimGl,'ImageSource','resources/image/RightArrow6.svg', ...
                 'ScaleMethod','stretch');
             OptimArrow1.Layout.Row = 1;
             OptimArrow1.Layout.Column = 2;
 
-            OptimArrow2 = uiimage(OptimGl,'ImageSource','resource/image/RightArrow6.svg', ...
+            OptimArrow2 = uiimage(OptimGl,'ImageSource','resources/image/RightArrow6.svg', ...
                 'ScaleMethod','stretch');
             OptimArrow2.Layout.Row = 1;
             OptimArrow2.Layout.Column = 4;
