@@ -942,11 +942,11 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             app.CommonResetBtn.Layout.Column = [6,7];
             app.CommonResetBtn.ButtonPushedFcn = createCallbackFcn(app,@CommonResetButtonPushed,true);
 
-
-            % figure tab
+            % figure tab group
             app.FigureTbGp = uitabgroup(FigureGl,'SelectedTab',app.ToolTb);
             app.FigureTbGp.Layout.Row = 2;
             app.FigureTbGp.Layout.Column = 1;
+            app.FigureTbGp.ContextMenu
             
             % ------------------------------------------------------------------------
             % --------------------------Tool File Processing--------------------------
