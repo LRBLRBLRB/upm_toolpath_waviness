@@ -180,7 +180,7 @@ switch options.toolFitType
         xlim = get(gca,'XLim');
         ylim = get(gca,'YLim');
         set(gca,"XLim",xlim,'YLim',ylim);
-        isContinue = 0;
+        isContinue = checkextractcir();
         while ~isContinue
             fprintf('Please select the useless area of original data: \n');
             disableDefaultInteractivity(gca);

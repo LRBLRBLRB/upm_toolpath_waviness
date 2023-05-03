@@ -1,5 +1,9 @@
 function isContinue = checkextractcir(hPlot)
 
+if nargin == 0
+    hPlot = [];
+end
+
 fig = uifigure('Name','Check the useless extraction', ...
                 'WindowStyle','alwaysontop','Visible','off');
 fig.CloseRequestFcn = @(app,event)fig_close_req(app);

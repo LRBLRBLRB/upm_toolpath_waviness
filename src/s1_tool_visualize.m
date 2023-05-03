@@ -1,6 +1,6 @@
 % to show the tool measuring data
 %% 2D curve results
-close all;
+% close all;
 clear; clc;
 isAPP = false;
 addpath(genpath('funcs'));
@@ -26,6 +26,7 @@ while true
         workspaceDir, ...
         'MultiSelect','off');
     pathName = fullfile(dirName,fileName);
+    workspaceDir = dirName;
     
     [~,~,fileExt] = fileparts(pathName);
     switch fileExt
@@ -62,8 +63,14 @@ while true
     aimUnit = find(strcmp(unitList,unit),1);
     toolOri = 1000^(aimUnit - presUnit)*toolOri;
     
-    %% plot the importing result
-    fig1 = figure('Name','Original tool data');
+    %% plot the importing result.
+    dispInd = strfind(dirName,'workspace');
+    if isempty(dispInd)
+        dispFileName = fileName;
+    else
+        dispFileName = fullfile(dirName(dispInd + 10:end),fileName);
+    end
+    fig1 = figure('Name',dispFileName);
     ax1 = plot(toolOri(1,:),toolOri(2,:),'.','MarkerSize',2);
     hold on;
     grid on;
