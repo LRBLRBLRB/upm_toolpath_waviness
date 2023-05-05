@@ -214,7 +214,7 @@ end
 
 %% rigid transform
 n = size(scatterOri,2);
-rotAng = -pi/2 - atan2(circ2D.arcVec(2),circ2D.arcVec(1));
+rotAng = -90 - atan2d(circ2D.arcVec(2),circ2D.arcVec(1));
 rotMat = rotz(rotAng);
 rotMat = rotMat(1:2,1:2);
 scatterDst = rotMat*(scatterOri - ndgrid(circ2D.center,1:n));

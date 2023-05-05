@@ -23,7 +23,7 @@ else
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
     % workspaceDir = '../workspace/20221020-tooltip';
-    workspaceDir = '../workspace/20230424';
+    workspaceDir = '../workspace';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';

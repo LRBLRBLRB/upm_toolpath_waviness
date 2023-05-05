@@ -51,7 +51,7 @@ else
     % global variables
     % workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
     % workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
-    workspaceDir = '..\workspace\20230417';
+    workspaceDir = '..\workspace\20230424';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -116,7 +116,7 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 0.5;
+    aimRes = 1;
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     arcLength = 20;
@@ -139,7 +139,7 @@ hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
-% nexttile;
+nexttile;
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
@@ -339,7 +339,7 @@ for ii = 1:size(curvePathPt,2)
 end
 accumPtNum(1) = [];
 for ii = 1:length(toolPathAngle)
-    R = rotz(toolPathAngle(ii));
+    R = rotz(toolPathAngle(ii)/pi*180);
     kk = find(ii <= accumPtNum,1);
     loopQuat(ii,:) = rotm2quat(R);
     toolPathPt(:,ii) = R*curvePathPt(:,kk); % the concentric tool path point
