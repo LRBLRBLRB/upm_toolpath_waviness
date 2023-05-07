@@ -47,50 +47,12 @@ switch options.toolFitType
         
         fitLineFcn = @(pts) arcFit2D(pts','displayType','off');  % fit function
         evalLineFcn = ...   % distance evaluation function
-          @(mdl, pts) abs(vecnorm(pts - (mdl{1})',2,2) - mdl{2});
-        
-        % test whetger the functions above is true
-        % cx0 = 0*1000; % unit: mu m
-        % cy0 = 0*1000; % unit: mu m
-        % r0 = 0.1*1000; % unit: mu m
-        % noise = 0.03;
-        % theta = (linspace(0,2*pi/3,200))';
-        % r = r0*(1 - noise + 2*noise*rand(length(theta),1));
-        % oriPts(1,:) = r.*cos(theta) + cx0;
-        % oriPts(2,:) = r.*sin(theta) + cy0;
-        % rmse0 = sqrt(...
-        %             sum(...
-        %                 ((oriPts(1,:) - cx0).^2 + (oriPts(2,:) - cy0).^2 - r0^2).^2) ...
-        %         /length(theta));
-        % fitCirc = fitLineFcn(oriPts');
-        % figure('Name','Function Testification');
-        % plot(oriPts(1,:),oriPts(2,:),'.','Color',[0,0.45,0.74]); hold on;
-        % % plot the fitting center of the circle
-        % scatter(fitCirc{1}(1),fitCirc{1}(2),36,[0.6350,0.0780,0.1840],'filled');
-        % quiver(fitCirc{1}(1),fitCirc{1}(2), ...
-        %     0.6*fitCirc{2}*fitCirc{4}(1),0.6*fitCirc{2}*fitCirc{4}(2), ...
-        %     'filled','Color',[0.6350,0.0780,0.1840]);
-        % % plot the fitting circle
-        % scaThe = linspace(0,2*pi);
-        % scat(1,:) = fitCirc{2}*cos(scaThe) + fitCirc{1}(1);
-        % scat(2,:) = fitCirc{2}*sin(scaThe) + fitCirc{1}(2);
-        % plot(scat(1,:),scat(2,:),'k--','LineWidth',1);
-        % % plot the fitting arc
-        % R = rotz(atan2(fitCirc{4}(2),fitCirc{4}(1)) - 0.5*fitCirc{3});
-        % scaThe = linspace(0,fitCirc{3});
-        % scat(1,:) = fitCirc{2}*cos(scaThe);
-        % scat(2,:) = fitCirc{2}*sin(scaThe);
-        % circFit = R(1:2,1:2)*scat + fitCirc{1};
-        % plot(circFit(1,:),circFit(2,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',3);
-        % hold off;
-        % grid on;
-        % axis equal
-        % evalPer = evalLineFcn(fitCirc,oriPts');
-        % evalSum = sum(evalLineFcn(fitCirc,toolOri));
-        
+          @(mdl, pts) abs(vecnorm(pts - (mdl.center)',2,2) - mdl.radius);
+                
         [~,inlierInd] = ransac(scatterOri',fitLineFcn,evalLineFcn, ...
           sampleSz,arcRansacMaxDist);
         scatterOri = scatterOri(:,inlierInd);
+        varargout{1} = [];
     case 'lineArc'
         % get the start and end point of the line
         fprintf(['Please select the points of the two edges of the tool tip: \n' ...
@@ -210,6 +172,47 @@ end
 % tool tip arc fitting
 [circ2D,RMSE] = arcFit2D(scatterOri, ...
     'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType);
+
+% test whetger the ransac function defined above is true
+function testRansac()
+    cx0 = 0*1000; % unit: mu m
+    cy0 = 0*1000; % unit: mu m
+    r0 = 0.1*1000; % unit: mu m
+    noise = 0.03;
+    theta = (linspace(0,2*pi/3,200))';
+    r = r0*(1 - noise + 2*noise*rand(length(theta),1));
+    oriPts(1,:) = r.*cos(theta) + cx0;
+    oriPts(2,:) = r.*sin(theta) + cy0;
+    rmse0 = sqrt(...
+                sum(...
+                    ((oriPts(1,:) - cx0).^2 + (oriPts(2,:) - cy0).^2 - r0^2).^2) ...
+            /length(theta));
+    fitCirc = fitLineFcn(oriPts');
+    figure('Name','Function Testification');
+    plot(oriPts(1,:),oriPts(2,:),'.','Color',[0,0.45,0.74]); hold on;
+    % plot the fitting center of the circle
+    scatter(fitCirc.center(1),fitCirc.center(2),36,[0.6350,0.0780,0.1840],'filled');
+    quiver(fitCirc.center(1),fitCirc.center(2), ...
+        0.6*fitCirc.radius*fitCirc.startV(1),0.6*fitCirc.radius*fitCirc.endV(2), ...
+        'filled','Color',[0.6350,0.0780,0.1840]);
+    % plot the fitting circle
+    scaThe = linspace(0,2*pi);
+    scat(1,:) = fitCirc.radius*cos(scaThe) + fitCirc.center(1);
+    scat(2,:) = fitCirc.radius*sin(scaThe) + fitCirc.center(2);
+    plot(scat(1,:),scat(2,:),'k--','LineWidth',1);
+    % plot the fitting arc
+    R = rotz(atan2(fitCirc.startV(2),fitCirc.startV(1)) - 0.5*fitCirc.op);
+    scaThe = linspace(0,fitCirc.openAng);
+    scat(1,:) = fitCirc.radius*cos(scaThe);
+    scat(2,:) = fitCirc.radius*sin(scaThe);
+    circFit = R(1:2,1:2)*scat + fitCirc.center;
+    plot(circFit(1,:),circFit(2,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',3);
+    hold off;
+    grid on;
+    axis equal
+    evalPer = evalLineFcn(fitCirc,oriPts');
+    evalSum = sum(evalLineFcn(fitCirc,toolOri));
+end
 
 
 %% rigid transform
