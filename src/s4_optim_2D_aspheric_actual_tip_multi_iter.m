@@ -369,14 +369,14 @@ legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','tool edge','Location','northeast');
 legend('designed surface','tool center point','tool edge','Location','northeast');
 
-s6_visualize_concentric_multi;
-
-msgfig = questdlg({'Concentric tool path was generated successfully!', ...
-    'Ready to continue?'}, ...
-    'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
-if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    return;
-end
+% s6_visualize_concentric_multi;
+% 
+% msgfig = questdlg({'Concentric tool path was generated successfully!', ...
+%     'Ready to continue?'}, ...
+%     'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
+% if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+%     return;
+% end
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path

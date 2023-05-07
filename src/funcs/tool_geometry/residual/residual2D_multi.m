@@ -94,7 +94,7 @@ while any(istan)
 %     maxtan = max(cmptan);
 %     istan0 = find(maxtan./cmptan > 1); % test the differentiate of each intersection point
     istan = zeros(length(cmp3),1);
-    cmp3tmp = [1;cmp3;length(dist)];
+%     cmp3tmp = [1;cmp3;length(dist)];
     for ii = 1:length(cmp3)
     %     vec0 = s1(:,index(cmp2(istan0(ii)))) - s2(:,cmp2(istan0(ii)));
     %     vecInd1 = min([cmp2(istan0(ii)) + round(5e-4/eps),length(index)]);
@@ -111,20 +111,41 @@ while any(istan)
         % vec0 = sign(pt2Line(s1(:,index(cmp2(istan0(ii)))),pt1,pt2) ...
         %     - pt2Line(s2(:,cmp2(istan0(ii))),pt1,pt2));
         if ii == 1
-            vecInd1 = cmp3tmp(ii);
+            vecIndPrev2 = 1;
+            vecIndPrev1 = 1;
         else
-            vecInd1 = round((cmp3tmp(ii) + cmp3tmp(ii + 1))/2);
+            vecIndPrev2 = round((cmp3(ii) + cmp3(ii - 1))/2);
+            vecIndPrev1 = index(vecIndPrev2);
         end
-        vec1 = pt2Line(s1(:,index(vecInd1)),pt1,pt2) - pt2Line(s2(:,vecInd1),pt1,pt2);
+        vec1 = pt2Line(s1(:,vecIndPrev1),pt1,pt2) - pt2Line(s2(:,vecIndPrev2),pt1,pt2);
         if ii == length(cmp3)
-            vecInd2 = cmp3tmp(ii + 2);
+            vecIndNext2 = length(s2);
+            vecIndNext1 = length(s1);
         else
-            vecInd2 = round((cmp3tmp(ii + 1) + cmp3tmp(ii + 2))/2);
+            vecIndNext2 = round((cmp3(ii) + cmp3(ii + 1))/2);
+            vecIndNext1 = index(vecIndNext2);
         end
-        vec2 = pt2Line(s1(:,index(vecInd2)),pt1,pt2) - pt2Line(s2(:,vecInd2),pt1,pt2);
+        vec2 = pt2Line(s1(:,vecIndNext1),pt1,pt2) - pt2Line(s2(:,vecIndNext2),pt1,pt2);
         istan(ii) = vec1*vec2 > 0;
+%         if ii == length(cmp3)
+%             vecInd2 = cmp3tmp(ii + 2);
+%             vec2 = pt2Line(s1(:,index(vecInd2)),pt1,pt2) - pt2Line(s2(:,vecInd2),pt1,pt2);
+%             if vec2 > 0 && vec2 < 0.5
+%                 istan(ii) = -1;
+%             else
+%                 istan(ii) = vec1*vec2 > 0;
+%             end
+%         else
+%             vecInd2 = round((cmp3tmp(ii + 1) + cmp3tmp(ii + 2))/2);
+%             vec2 = pt2Line(s1(:,index(vecInd2)),pt1,pt2) - pt2Line(s2(:,vecInd2),pt1,pt2);
+%             istan(ii) = vec1*vec2 > 0;
+%         end
     end
     cmp3(find(istan)) = [];
+end
+
+if mod(length(cmp3),2)
+    cmp3 = [cmp3,length(dist)];
 end
 
 % calculate the intersection points
