@@ -26,6 +26,10 @@ while true
         workspaceDir, ...
         'MultiSelect','off');
     pathName = fullfile(dirName,fileName);
+    if ~fileName
+        fprintf('No tool data file has been loaded.\n');
+        return;
+    end
     workspaceDir = dirName;
     
     [~,~,fileExt] = fileparts(pathName);
@@ -48,12 +52,12 @@ while true
                 toolOri = toolOri.data;
             end
             toolOri(:,3) = [];
-            toolOri = sortrows(toolOri,1,'ascend');
+%             toolOri = sortrows(toolOri,1,'ascend');
             toolOri = toolOri';
         case {'.txt'}
             % tool data file that has been processed in mmt software
             toolOri = importdata(pathName,' ',0);
-            toolOri = sortrows(toolOri,1,'ascend');
+%             toolOri = sortrows(toolOri,1,'ascend');
             toolOri = toolOri';
     end
 

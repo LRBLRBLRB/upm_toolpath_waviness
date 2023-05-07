@@ -45,7 +45,7 @@ s2 = s2(:,isRange2);
 % get the indices of the local minimum points
 cmp1 = find(diff(sign(diff(dist))) > 0) + 1; % length = size(s2,2)
 
-range = mean(vecnorm(diff(s1,1,2),2,1));
+range = mean(vecnorm(diff(s1,1,2),2,1))*2;
 % cmp2: the indices of the intersection points, 
 %   i.e., the local minimals which is close enough to both sp1 and sp2
 cmp1 = cmp1(dist(cmp1) < range);
@@ -146,6 +146,7 @@ interPt = 0.5*(s1(:,index(cmp)) + s2(:,cmp));
 %% u range
 if ~mod(length(cmp),2)
     warning('Something wrong in the intersection point calculation process.\n');
+    resPlot;
     res = 0;
     peakPt = [];
     interPt = [];
@@ -189,53 +190,64 @@ peakPt(5) = -1*(resInd > kk);
 
 
 %% plot the intersection results
-fig = figure('WindowState','maximized');
-tiledlayout(2,2);
-nexttile([1 2]);
-plot(s1(1,:),s1(3,:),'--','LineWidth',1.5,'Color',[0,0.4470,0.7410]); % tool edge 1
-hold on;
-plot(s2(1,:),s2(3,:),'--','LineWidth',1.5,'Color',[0.9290 0.6940 0.1250]); % tool edge 2
-axis equal;
-ax = get(gca,'XLim');
-ay = get(gca,'YLim');
-curveSlope = (pt2(3) - pt1(3))/(pt2(1) - pt1(1));
-plot([pt1(1),pt1(1) - curveSlope*10],[pt1(3),pt1(3) + 10], ...
-    '--','Color',[0.4660 0.6740 0.1880]); % the intersection range
-plot([pt2(1),pt2(1) - curveSlope*10],[pt2(3),pt2(3) + 10], ...
-    '--','Color',[0.4660 0.6740 0.1880]); % the intersection range
-plot([pt1(1),pt2(1)],[pt1(3),pt2(3)],'LineWidth',1,'Color',[0.4660 0.6740 0.1880], ...
-    'Marker','.','MarkerSize',18); % theoretical curve edge in line
-plot(peakPtTmp(1,1:kk),peakPtTmp(3,1:kk),'.', ...
-    'LineWidth',1.5,'Color',[0,0.4470,0.7410]); % actual curve edge
-plot(peakPtTmp(1,kk + 1:end),peakPtTmp(3,kk + 1:end),'.', ...
-    'LineWidth',1.5,'Color',[0.9290 0.6940 0.1250]); % actual curve edge
-plot(interPt(1,:),interPt(3,:),'.','MarkerSize',36, ...
-    'Color',[0.8500 0.3250 0.0980]); % intersection points
-plot(peakPt(1),peakPt(3),'.','MarkerSize',36, ...
-    'Color',[0.4940 0.1840 0.5560]); % peak point
-set(gca,'XLim',ax,'YLim',ay);
-title('tool tip edge');
-xlabel('x'); zlabel('z');
-legend('edge 1','edge 2','intersection range','','theoretical surface', ...
-    'actual surface','intersection pt','peak pt','Location','bestoutside');
-set(gca,'FontSize',14,'FontName','Times New Roman');
-nexttile(3);
-plot(1:length(dist),dist);
-hold on;
-line(1:length(dist),zeros(1,length(dist)),'LineStyle','--','LineWidth',0.3, ...
-    'Color',[0.8500 0.3250 0.0980]);
-title('dist-No.');
-set(gca,'FontSize',14,'FontName','Times New Roman');
-set(gca,'XDir','reverse');
-nexttile(4);
-plot(u2,dist);
-hold on;
-line(u2,zeros(1,length(u2)),'LineStyle','--','LineWidth',0.3, ...
-    'Color',[0.8500 0.3250 0.0980]);
-title('dist-u2');
-set(gca,'FontSize',14,'FontName','Times New Roman');
-set(gca,'XDir','reverse');
-% pause(1);
-delete(fig);
+    function fig = resPlot(sec)
+        fig = figure('WindowState','maximized');
+        tiledlayout(2,2);
+        nexttile([1 2]);
+        plot(s1(1,:),s1(3,:),'--','LineWidth',1.5,'Color',[0,0.4470,0.7410]); % tool edge 1
+        hold on;
+        plot(s2(1,:),s2(3,:),'--','LineWidth',1.5,'Color',[0.9290 0.6940 0.1250]); % tool edge 2
+        axis equal;
+        ax = get(gca,'XLim');
+        ay = get(gca,'YLim');
+        curveSlope = (pt2(3) - pt1(3))/(pt2(1) - pt1(1));
+        plot([pt1(1),pt1(1) - curveSlope*10],[pt1(3),pt1(3) + 10], ...
+            '--','Color',[0.4660 0.6740 0.1880]); % the intersection range
+        plot([pt2(1),pt2(1) - curveSlope*10],[pt2(3),pt2(3) + 10], ...
+            '--','Color',[0.4660 0.6740 0.1880]); % the intersection range
+        plot([pt1(1),pt2(1)],[pt1(3),pt2(3)],'LineWidth',1,'Color',[0.4660 0.6740 0.1880], ...
+            'Marker','.','MarkerSize',18); % theoretical curve edge in line
+        if exist('peakPtTmp','var')
+            plot(peakPtTmp(1,1:kk),peakPtTmp(3,1:kk),'.', ...
+                'LineWidth',1.5,'Color',[0,0.4470,0.7410]); % actual curve edge
+            plot(peakPtTmp(1,kk + 1:end),peakPtTmp(3,kk + 1:end),'.', ...
+                'LineWidth',1.5,'Color',[0.9290 0.6940 0.1250]); % actual curve edge
+            plot(interPt(1,:),interPt(3,:),'.','MarkerSize',36, ...
+                'Color',[0.8500 0.3250 0.0980]); % intersection points
+            plot(peakPt(1),peakPt(3),'.','MarkerSize',36, ...
+                'Color',[0.4940 0.1840 0.5560]); % peak point
+            legend('edge 1','edge 2','intersection range','','theoretical surface', ...
+                'actual surface','intersection pt','peak pt','Location','bestoutside');
+        else
+            legend('edge 1','edge 2','intersection range','','theoretical surface');
+        end
+        set(gca,'XLim',ax,'YLim',ay);
+        
+        title('tool tip edge');
+        xlabel('x'); zlabel('z');
+        set(gca,'FontSize',14,'FontName','Times New Roman');
+        nexttile(3);
+        plot(1:length(dist),dist);
+        hold on;
+        line(1:length(dist),zeros(1,length(dist)),'LineStyle','--','LineWidth',0.3, ...
+            'Color',[0.8500 0.3250 0.0980]);
+        title('dist-No.');
+        set(gca,'FontSize',14,'FontName','Times New Roman');
+        set(gca,'XDir','reverse');
+        nexttile(4);
+        plot(u2,dist);
+        hold on;
+        line(u2,zeros(1,length(u2)),'LineStyle','--','LineWidth',0.3, ...
+            'Color',[0.8500 0.3250 0.0980]);
+        title('dist-u2');
+        set(gca,'FontSize',14,'FontName','Times New Roman');
+        set(gca,'XDir','reverse');
+        if nargin
+            pause(sec);
+        end
+    end
+
+% fig = resPlot();
+% delete(fig);
 
 end
