@@ -116,10 +116,10 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 1;
+    aimRes = 1; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
-    arcLength = 20;
+    arcLength = 20; % um
     maxAngPtDist = 0.5*pi/180;
     angularLength = 0.5*pi/180;
 end
@@ -385,34 +385,42 @@ end
 % the function between the numeric label of tool path and surf radius R
 toolREach = curvePt(1,:);
 Fr = csape(accumPtNum,toolREach,[1,1]);
-
+diffR = abs(diff(toolREach));
 toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
 rTheta = csape(toolNoTheta,toolREach,[1,1]);
 
 figure('Name','Feed Rate Smoothing');
-tiledlayout(2,1);
-nexttile;
+% tiledlayout(2,1);
+% nexttile;
+yyaxis left;
 scatter(accumPtNum,toolREach);
 hold on;
 fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]);
 plot(1:accumPtNum(end),toolRAccum);
+ylim1 = [min(toolREach),max(toolREach)];
+set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)]);
+ylabel(['Radius of the Loop (',unit,')']);
+yyaxis right;
+bar(accumPtNum(1:end - 1),diffR);
+ylim2 = [min(diffR),max(diffR)];
+set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)]);
+ylabel(['Cutting width of each Loop (',unit,')']);
 % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
 %     'Color',[0.929,0.694,0.1250]);
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel('Loop Accumulating Point Number');
-ylabel(['Radius of the Loop (',unit,')']);
 legend('No.-R scatters','csape result','Concentric result');
-nexttile;
-scatter(toolNoTheta,toolREach);
-hold on;
-fnplt(rTheta,'r',[toolPathAngle(accumPtNum(1) + 1),toolPathAngle(end)+2*pi*toolNAccum(end)]);
-plot(toolPathAngle + 2*pi*toolNAccum,toolRAccum);
-% line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
-%     'Color',[0.929,0.694,0.1250]);
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel('Accumulating Toolpath Angle');
-ylabel(['Radius of the Loop (',unit,')']);
-legend('\theta-R scatters','csape result','Concentric result');
+% nexttile;
+% scatter(toolNoTheta,toolREach);
+% hold on;
+% fnplt(rTheta,'r',[toolPathAngle(accumPtNum(1) + 1),toolPathAngle(end)+2*pi*toolNAccum(end)]);
+% plot(toolPathAngle + 2*pi*toolNAccum,toolRAccum);
+% % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
+% %     'Color',[0.929,0.694,0.1250]);
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% xlabel('Accumulating Toolpath Angle');
+% ylabel(['Radius of the Loop (',unit,')']);
+% legend('\theta-R scatters','csape result','Concentric result');
 % save the feed rate curve
 % [smoothFileName,smoothDirName,smoothFileType] = uiputfile({ ...
 %     '*.mat','MAT-file(*.mat)'; ...
