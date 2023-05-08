@@ -30,9 +30,9 @@ angDistEqEps = 1e-6; % the epsilon to judge whether the angle difference is equa
 
 switch options.cutDirection
     case 'Edge to Center'
-        angularMaxInd = find(angDist < angDistEqEps,1,'last');
-        indChange = 1:angularMaxInd;
-        indOri = (angularMaxInd + 1):length(t);
+        angularMaxInd = find(angDist < angDistEqEps,1,'first');
+        indChange = 1:angularMaxInd; % constant-arc range
+        indOri = (angularMaxInd + 1):length(t); % constant-angle range
     case 'Center to Edge'
         angularMaxInd = find(angDist > angDistEqEps,1,'first');
         indChange = (angularMaxInd + 1):length(t);

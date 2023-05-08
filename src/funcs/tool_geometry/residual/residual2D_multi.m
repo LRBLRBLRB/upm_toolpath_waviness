@@ -144,9 +144,9 @@ while any(istan)
     cmp3(find(istan)) = [];
 end
 
-if mod(length(cmp3),2)
-    cmp3 = [cmp3,length(dist)];
-end
+% if mod(length(cmp3),2)
+%     cmp3 = [cmp3,length(dist)];
+% end
 
 % calculate the intersection points
 cmp = cmp3;

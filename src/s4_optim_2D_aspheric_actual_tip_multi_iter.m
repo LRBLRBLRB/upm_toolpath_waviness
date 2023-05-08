@@ -51,7 +51,7 @@ else
     % global variables
     % workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
     % workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
-    workspaceDir = '..\workspace\20230424';
+    workspaceDir = '..\workspace';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -116,7 +116,7 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 1; % um
+    aimRes = 2; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     arcLength = 20; % um

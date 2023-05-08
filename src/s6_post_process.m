@@ -6,12 +6,12 @@ if isAPP
     if app.isSpiralFile
         toolPathPath = fullfile(app.dirName,app.fileName);
         % toolName = 'output_data\tool\toolTheo_3D.mat';
-        spiralPath0 = load(toolPathPath,'spiralPath');
+        spiralPath = load(toolPathPath,'spiralPath');
         spiralNorm = load(toolPathPath,'spiralNorm');
         spiralCut = load(toolPathPath,'spiralCut');
         spiralQuat = load(toolPathPath,'spiralQuat');
     else
-        spiralPath0 = app.spiralPath;
+        spiralPath = app.spiralPath;
         spiralNorm = app.spiralNorm;
         spiralCut = app.spiralCut;
         spiralQuat = app.spiralQuat;
@@ -29,11 +29,13 @@ else
             fullfile(workspaceDir,'tooltheo.mat'), ...
             'MultiSelect','off');
         toolPathPath = fullfile(dirName,fileName);
+        processData = load(toolPathPath);
         % toolName = 'output_data\tool\toolTheo_3D.mat';
-        spiralPath0 = load(toolPathPath,'spiralPath');
-        spiralNorm = load(toolPathPath,'spiralNorm');
-        spiralCut = load(toolPathPath,'spiralCut');
-        spiralQuat = load(toolPathPath,'spiralQuat');
+        spiralAngle = processData.spiralAngle;
+        spiralPath = processData.spiralPath;
+        spiralNorm = processData.spiralNorm;
+        spiralCut = processData.spiralCut;
+        spiralQuat = processData.spiralQuat;
     end
 end
 
@@ -43,8 +45,8 @@ feedRate = 0.001;
 %% generate the 5-axis tool path from original data
 % toolpath should be saved in "x y z i j k" format
 
-spiralAngle1 = 180/pi*spiralAngle0; % rad -> deg
-spiralPath1 = 0.001*spiralPath0; % um -> mm
+spiralAngle1 = 180/pi*spiralAngle; % rad -> deg
+spiralPath1 = 0.001*spiralPath; % um -> mm
 postType = 2;
 switch postType
     case 1
@@ -92,7 +94,7 @@ switch postType
         ncFid = fopen(ncFile,'w');
 %         fprintf(ncFid,'( CUTTING BLOCK )\nG93 F%d\n',feedRate);
         for ii = 1:length(axisC)
-            fprintf(ncFid,'C%f X%f Z%f\n',axisC(ii),axisX(ii),axisZ(ii));
+            fprintf(ncFid,'C%f\tX%f\tZ%f\n',axisC(ii),axisX(ii),axisZ(ii));
 %             fprintf(ncFid,'%f %f %f\n',axisC(ii),axisX(ii),axisZ(ii));
 %             fprintf(ncFid,'GOTO/%f,%f,%f,%f,%f,%f\n', ...
 %                 spiralPath1(1,ii),spiralPath1(2,ii),spiralPath1(3,ii), ...
