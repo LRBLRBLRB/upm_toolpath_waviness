@@ -5,7 +5,9 @@
 % Step four: simulation of the machining surface
 % Step Five: generate the actual toolpath
 
-% 实际上，我打算把concentric和freeform的方案给合并。目前aspheric文件中的是旧的刀位点计算方案，freeform中是新的
+% constant-residual-height based spiral tool path generation, with the
+% radius tooltip instead of B-spline, the optimiation of which is to
+% directly solve.
 
 close all;
 clear;
