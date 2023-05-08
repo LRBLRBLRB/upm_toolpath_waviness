@@ -514,7 +514,7 @@ spiralAngle0 = toolPathAngle + 2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
 if strcmp(angularDiscrete,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
-        spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},toolData,'interpType','linear');
+        spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},spiralQuat0,toolData,'interpType','linear');
 %     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
 %         spiralAngle0,spiralPath0,spiralContactU0,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
     spiralNorm = spiralVec{1};
