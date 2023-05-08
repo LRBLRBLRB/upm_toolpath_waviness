@@ -1,4 +1,4 @@
-function [tOut,fOut,uOut,varargout] = arclengthparam(arcInv,maxAng,t,f,u,var1,var2,options)
+function [tOut,fOut,uOut,varargout] = arclengthparam(arcInv,maxAng,t,f,u,var1,var2,toolData,options)
 %ARCLENGTHPARAM Generate the function of arc length 
 %
 %
@@ -13,6 +13,7 @@ arguments
     u (1,:) = []
     var1 = []
     var2 = []
+    toolData = []
     options.algorithm {mustBeMember(options.algorithm, ...
         {'analytical-function','list-interpolation','lq-fitting'})} ...
         = 'list-interpolation'
@@ -24,20 +25,48 @@ arguments
         {'Edge to Center','Center to Edge'})} = 'Edge to Center'
 end
 
+    % varargout output function 
+    function varOut(n,var1,var2)
+        switch n
+            case 3
+            case 4
+                varargout{1} = var1;
+            case 5
+                varargout{1} = var1;
+                varargout{2} = var2;
+        end
+    end
+
 % find the point needed to be recalculated (for constant arc length)
-angDist = abs((t(2:end) - t(1:end - 1)) - maxAng);
+angDist = abs(t(2:end) - t(1:end - 1)) - maxAng;
 angDistEqEps = 1e-6; % the epsilon to judge whether the angle difference is equal or not
 
 switch options.cutDirection
     case 'Edge to Center'
-        angularMaxInd = find(angDist < angDistEqEps,1,'last');
-        indChange = 1:angularMaxInd;
-        indOri = (angularMaxInd + 1):length(t);
+        arcMinInd = find(angDist + angDistEqEps < 0,1,'last');
+        indChange = 1:arcMinInd; % constant-arc range
+        indOri = (arcMinInd + 1):length(t); % constant-angle range
     case 'Center to Edge'
-        angularMaxInd = find(angDist > angDistEqEps,1,'first');
-        indChange = (angularMaxInd + 1):length(t);
-        indOri = 1:angularMaxInd;
+        arcMinInd = find(angDist + angDistEqEps < 0,1,'first');
+        indChange = arcMinInd:length(t);
+        indOri = 1:(arcMinInd - 1);
 end
+
+% the surface is too small to apply constant-arc
+if length(indChange) <= 1 
+    tOut = t;
+    fOut = f;
+    uOut = u;
+    if isempty(var1)
+        varOut(nargout);
+    elseif size(var1,2) == 4
+        varOut(nargout,var1,var2);
+    else
+        varOut(nargout,var2,var1);
+    end
+    return;
+end
+
 tEq = t(indChange);
 fEq = f(:,indChange);
 uEq = u(indChange);
@@ -98,14 +127,19 @@ vecOut = {};
 if isempty(var1) % input: (arcInv,maxAng,t,f,u,options)
     quatOut = [];
 elseif size(var1,2) == 4 % input: (arcInv,maxAng,t,f,u,quat,vec,options)
-    quat = var1;
-    quatEq = quat(indChange,:);
+    quat = var1; % calculate the orientation based on the quaternions
+    quatEq = quat(indChange,:); % pick out the quaternions that needed to recalculate
     quat = quat(indOri,:); % quat that only have constant-angle
-    vec = var2;
-    vecLen = length(vec);
-    for ii = 1:vecLen
-        vecEq{ii} = vec{ii}(:,indChange);
+    if isempty(var2) % get the vecEq
+        error('Invalid input: when var1 = quat, var2 must be vec.\n');
+    else
+        vec = var2;
+        vecLen = length(vec);
+        for ii = 1:vecLen
+            vecEq{ii} = vec{ii}(:,indChange);
+        end
     end
+
     quatOut = zeros(numOut,4);
     vecOut = cell(vecLen,1);
     % constant angle ones
@@ -140,18 +174,22 @@ elseif size(var1,2) == 4 % input: (arcInv,maxAng,t,f,u,quat,vec,options)
         vecOut{kk}(:,numOut) = vecEq{kk}(:,end);
     end
 
-elseif iscell(var1) % input: (arcInv,maxAng,t,f,u,vec,toolData,options)
-    vec = var1;
+elseif iscell(var1) % input: (arcInv,maxAng,t,f,u,vec,quat,toolData,options)
+    vec = var1; % calculate the orientation based on the vectors
     vecLen = length(vec);
-    for ii = 1:vecLen
+    for ii = 1:vecLen % pick out the vectors that needed to recalculate
         vecEq{ii} = vec{ii}(:,indChange);
     end
-    quatOut = zeros(numOut,4);
-    vecOut = cell(vecLen,1);
-    % constant angle ones
-    for ii = indOri
-        quat(ii,:) = rotm2quat(axesRot(var2.toolEdgeNorm,var2.cutDirect, ...
-            vec{1}(:,ii),vec{2}(:,ii),''));
+    if isempty(var2) % if quat hasn't been given, then calculate the constant-angle ones
+        quatOut = zeros(numOut,4);
+        vecOut = cell(vecLen,1);
+        % constant angle ones
+        for ii = indOri
+            quat(ii,:) = rotm2quat(axesRot(toolData.toolEdgeNorm,toolData.cutDirect, ...
+                vec{1}(:,ii),vec{2}(:,ii),''));
+        end
+    else % if given, directly use the input var2 as the constant-angle ones
+        quat = var2(indOri,:);
     end
 
     % constant arc length ones
@@ -175,14 +213,14 @@ elseif iscell(var1) % input: (arcInv,maxAng,t,f,u,vec,toolData,options)
 %                 vecEq{kk}(1,ii),vecEq{kk}(2,ii),vecEq{kk}(3,ii), ...
 %                 50,'ShowArrowHead','on');
         end
-        quatOut(ii,:) = rotm2quat(axesRot(var2.toolEdgeNorm,var2.cutDirect, ...
+        quatOut(ii,:) = rotm2quat(axesRot(toolData.toolEdgeNorm,toolData.cutDirect, ...
             vecOut{1}(:,ii),vecOut{2}(:,ii),''));
 %         delete(q(1));
 %         delete(q(2));
     end
 
     % the last point
-    quatOut(numOut,:) = rotm2quat(axesRot(var2.toolEdgeNorm,var2.cutDirect, ...
+    quatOut(numOut,:) = rotm2quat(axesRot(toolData.toolEdgeNorm,toolData.cutDirect, ...
         vecEq{2}(:,end),vecEq{2}(:,end),''));
     for kk = 1:vecLen
         vecOut{kk}(:,numOut) = vecEq{kk}(:,end);
@@ -219,12 +257,5 @@ switch options.cutDirection
         end
 end
 
-switch nargout
-    case 3
-    case 4
-        varargout{1} = quatOut;
-    case 5
-        varargout{1} = quatOut;
-        varargout{2} = vecOut;
-end
+varOut(nargout,quatOut,vecOut);
 end

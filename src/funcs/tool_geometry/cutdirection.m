@@ -40,7 +40,7 @@ switch options.method
             error(['Invalid input: surfcae center should be given and ', ...
                 'should not be inf when using the method ''concentric''']);
         end
-        Rot = rotz(pi/2);
+        Rot = rotz(90);
         toolDirect = Rot*(surfPt - surfCenter);
         toolDirect(3,:) = 0;
         toolDirect = toolDirect ./ vecnorm(toolDirect,2,1);

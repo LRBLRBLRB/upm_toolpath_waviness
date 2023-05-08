@@ -51,7 +51,7 @@ else
     % global variables
     % workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
     % workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
-    workspaceDir = '..\workspace\20230417';
+    workspaceDir = '..\workspace';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -116,12 +116,12 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 0.5;
+    aimRes = 2; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
-    arcLength = 20;
-    maxAngPtDist = 0.5*pi/180;
-    angularLength = 0.5*pi/180;
+    arcLength = 10; % um
+    maxAngPtDist = 1*pi/180;
+    angularLength = 1*pi/180;
 end
 
 % plot the importing result
@@ -139,7 +139,7 @@ hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
-% nexttile;
+nexttile;
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
@@ -339,7 +339,7 @@ for ii = 1:size(curvePathPt,2)
 end
 accumPtNum(1) = [];
 for ii = 1:length(toolPathAngle)
-    R = rotz(toolPathAngle(ii));
+    R = rotz(toolPathAngle(ii)/pi*180);
     kk = find(ii <= accumPtNum,1);
     loopQuat(ii,:) = rotm2quat(R);
     toolPathPt(:,ii) = R*curvePathPt(:,kk); % the concentric tool path point
@@ -369,14 +369,14 @@ legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','tool edge','Location','northeast');
 legend('designed surface','tool center point','tool edge','Location','northeast');
 
-s6_visualize_concentric_multi;
-
-msgfig = questdlg({'Concentric tool path was generated successfully!', ...
-    'Ready to continue?'}, ...
-    'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
-if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-    return;
-end
+% s6_visualize_concentric_multi;
+% 
+% msgfig = questdlg({'Concentric tool path was generated successfully!', ...
+%     'Ready to continue?'}, ...
+%     'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
+% if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+%     return;
+% end
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
@@ -385,34 +385,42 @@ end
 % the function between the numeric label of tool path and surf radius R
 toolREach = curvePt(1,:);
 Fr = csape(accumPtNum,toolREach,[1,1]);
-
+diffR = abs(diff(toolREach));
 toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
 rTheta = csape(toolNoTheta,toolREach,[1,1]);
 
 figure('Name','Feed Rate Smoothing');
-tiledlayout(2,1);
-nexttile;
+% tiledlayout(2,1);
+% nexttile;
+yyaxis left;
 scatter(accumPtNum,toolREach);
 hold on;
 fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]);
 plot(1:accumPtNum(end),toolRAccum);
+ylim1 = [min(toolREach),max(toolREach)];
+set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)]);
+ylabel(['Radius of the Loop (',unit,')']);
+yyaxis right;
+bar(accumPtNum(1:end - 1),diffR);
+ylim2 = [min(diffR),max(diffR)];
+set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)]);
+ylabel(['Cutting width of each Loop (',unit,')']);
 % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
 %     'Color',[0.929,0.694,0.1250]);
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel('Loop Accumulating Point Number');
-ylabel(['Radius of the Loop (',unit,')']);
 legend('No.-R scatters','csape result','Concentric result');
-nexttile;
-scatter(toolNoTheta,toolREach);
-hold on;
-fnplt(rTheta,'r',[toolPathAngle(accumPtNum(1) + 1),toolPathAngle(end)+2*pi*toolNAccum(end)]);
-plot(toolPathAngle + 2*pi*toolNAccum,toolRAccum);
-% line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
-%     'Color',[0.929,0.694,0.1250]);
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel('Accumulating Toolpath Angle');
-ylabel(['Radius of the Loop (',unit,')']);
-legend('\theta-R scatters','csape result','Concentric result');
+% nexttile;
+% scatter(toolNoTheta,toolREach);
+% hold on;
+% fnplt(rTheta,'r',[toolPathAngle(accumPtNum(1) + 1),toolPathAngle(end)+2*pi*toolNAccum(end)]);
+% plot(toolPathAngle + 2*pi*toolNAccum,toolRAccum);
+% % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
+% %     'Color',[0.929,0.694,0.1250]);
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% xlabel('Accumulating Toolpath Angle');
+% ylabel(['Radius of the Loop (',unit,')']);
+% legend('\theta-R scatters','csape result','Concentric result');
 % save the feed rate curve
 % [smoothFileName,smoothDirName,smoothFileType] = uiputfile({ ...
 %     '*.mat','MAT-file(*.mat)'; ...
@@ -506,7 +514,7 @@ spiralAngle0 = toolPathAngle + 2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
 if strcmp(angularDiscrete,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
-        spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},toolData,'interpType','linear');
+        spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},spiralQuat0,toolData,'interpType','linear');
 %     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
 %         spiralAngle0,spiralPath0,spiralContactU0,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
     spiralNorm = spiralVec{1};
@@ -549,6 +557,19 @@ fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSp
 % if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
 %     return;
 % end
+
+[spiralPathFileName,spiralPathDirName,spiralPathFileType] = uiputfile({ ...
+    '*.mat','MAT-file(*.mat)'; ...
+    '*.txt','text-file(.txt)';...
+    '*.*','all file(*.*)';...
+    }, ...
+    'Select the directory and filename to save the surface tool path', ...
+    fullfile(workspaceDir,['spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
+if ~spiralPathFileType
+    spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
+    save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
+        "spiralNorm","spiralCut");
+end
 
 %% Spiral Residual height calculation of the spiral tool path
 spiralRes = 5*aimRes*ones(2,spiralPtNum);

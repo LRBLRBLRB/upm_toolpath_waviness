@@ -15,7 +15,7 @@ if isAPP
     fitOpts.lineFitMaxDist = app.lineFitMaxDist;
     fitOpts.lineFitMethod = app.lineFitMethod;
 else
-    close all;
+%     close all;
     clear; clc;
     isAPP = false;
     addpath(genpath('funcs'));
@@ -23,18 +23,21 @@ else
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
     % workspaceDir = '../workspace/20221020-tooltip';
-    workspaceDir = '../workspace/20230424';
+    workspaceDir = '../workspace';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
 
     toolUnit = 'mm';
     
+    unitList = {'m','mm','\mum','nm'};
+    aimUnit = find(strcmp(unitList,unit),1);
+
     % tool process parameters
     fitOpts.toolFitType = 'lineArc';
     fitOpts.arcRansacMaxDist = 1e-2;
     fitOpts.arcFitMethod = 'levenberg-marquardt';
-    fitOpts.lineFitMaxDist = 1e-3;
+    fitOpts.lineFitMaxDist = 1000^(aimUnit - 3);
     fitOpts.lineFitMethod = 'polyfit';
     paramMethod = 'centripetal';
 
@@ -95,9 +98,7 @@ else
     end
 
     % unit convertion
-    unitList = {'m','mm','\mum','nm'};
     presUnit = find(strcmp(unitList,toolUnit),1);
-    aimUnit = find(strcmp(unitList,unit),1);
     toolOri = 1000^(aimUnit - presUnit)*toolOri;
 end
 
