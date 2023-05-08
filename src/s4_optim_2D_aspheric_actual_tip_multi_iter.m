@@ -119,9 +119,9 @@ else
     aimRes = 2; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
-    arcLength = 20; % um
-    maxAngPtDist = 0.5*pi/180;
-    angularLength = 0.5*pi/180;
+    arcLength = 10; % um
+    maxAngPtDist = 1*pi/180;
+    angularLength = 1*pi/180;
 end
 
 % plot the importing result
@@ -557,6 +557,19 @@ fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSp
 % if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
 %     return;
 % end
+
+[spiralPathFileName,spiralPathDirName,spiralPathFileType] = uiputfile({ ...
+    '*.mat','MAT-file(*.mat)'; ...
+    '*.txt','text-file(.txt)';...
+    '*.*','all file(*.*)';...
+    }, ...
+    'Select the directory and filename to save the surface tool path', ...
+    fullfile(workspaceDir,['spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
+if ~spiralPathFileType
+    spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
+    save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
+        "spiralNorm","spiralCut");
+end
 
 %% Spiral Residual height calculation of the spiral tool path
 spiralRes = 5*aimRes*ones(2,spiralPtNum);
