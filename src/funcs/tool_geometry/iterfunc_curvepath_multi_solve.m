@@ -147,7 +147,7 @@ while (r - rRange(2))*delta0 < 0
 %         scatter(toolContactPt20(1),toolContactPt20(3),18,[0.929,0.694,0.1250],"filled");
 %         scatter(curveInterPt{ind}(1,:),curveInterPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
 
-    fprintf('No.%d\t toolpath point at [r = %f] is calculated within %fs.\n-----\n',ind,r,toc);
+    fprintf('No.%d\t toolpath %f\t[r = %f] is calculated within %fs.\n-----\n',ind,curvePathPt(1,ind),r,toc);
 end
 
 end

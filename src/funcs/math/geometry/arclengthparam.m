@@ -129,7 +129,7 @@ if isempty(var1) % input: (arcInv,maxAng,t,f,u,options)
 elseif size(var1,2) == 4 % input: (arcInv,maxAng,t,f,u,quat,vec,options)
     quat = var1; % calculate the orientation based on the quaternions
     quatEq = quat(indChange,:); % pick out the quaternions that needed to recalculate
-    quat = quat(indOri,:); % quat that only have constant-angle
+    % quat = quat(indOri,:); % quat that only have constant-angle
     if isempty(var2) % get the vecEq
         error('Invalid input: when var1 = quat, var2 must be vec.\n');
     else
@@ -189,7 +189,7 @@ elseif iscell(var1) % input: (arcInv,maxAng,t,f,u,vec,quat,toolData,options)
                 vec{1}(:,ii),vec{2}(:,ii),''));
         end
     else % if given, directly use the input var2 as the constant-angle ones
-        quat = var2(indOri,:);
+        quat = var2;
     end
 
     % constant arc length ones
@@ -226,8 +226,6 @@ elseif iscell(var1) % input: (arcInv,maxAng,t,f,u,vec,quat,toolData,options)
         vecOut{kk}(:,numOut) = vecEq{kk}(:,end);
     end
 end
-
-
 
 %% output
 switch options.cutDirection

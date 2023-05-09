@@ -19,14 +19,17 @@ elseif tmp > 0
 %     fprintf('%d\t%f\t%f\n',ii,a,tmp);
     while tmp > 0
         ii = ii + 1;
+        b = a;
         a = a - h;
         tmp = f(a);
 %         fprintf('%d\t%f\t%f\n',ii,a,tmp);
         if a > x1(2) 
+            b = a + h;
             a = x1(2);
 %             fprintf('Linear search failed. all the f(x) > 0.');
             break;
         elseif a < x1(1)
+            b = a + h;
             a = x1(1);
 %             fprintf('Linear search failed. all the f(x) > 0.');
             break;
@@ -47,10 +50,12 @@ else
         tmp = f(b);
 %         fprintf('%d\t%f\t%f\n',ii,b,tmp);
         if b > x1(2)
+            a = b - h;
             b = x1(2);
 %             fprintf('Linear search failed. all the f(x) < 0.');
             break;
         elseif b < x1(1)
+            a = b - h;
             b = x1(1);
 %             fprintf('Linear search failed. all the f(x) < 0.');
             break;

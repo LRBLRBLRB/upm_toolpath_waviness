@@ -51,7 +51,7 @@ else
     % global variables
     % workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
     % workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
-    workspaceDir = '..\workspace';
+    workspaceDir = '..\workspace\20230504 D906\01030-sts-r1000+c0.091-D906-old-res1-arc0.02+deg1';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -116,10 +116,10 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 2; % um
+    aimRes = 1; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
-    arcLength = 10; % um
+    arcLength = 20; % um
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
 end
@@ -203,7 +203,7 @@ curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
 %     scatter(toolContactPt0(1),toolContactPt0(3),18,[0.929,0.694,0.1250],"filled");
 
 t1O = toc(t1);
-fprintf('-----\nNo.1\t toolpath point at [r = %d] is calculated within %fs.\n-----\n',curvePathPt(1,1),t1O);
+fprintf('-----\nNo.1\t toolpath %f\t[r = %f] is calculated within %fs.\n-----\n',curvePathPt(1,1),curvePt(1,1),t1O);
 
 % the rest
 % opt = optimset('Display','iter','MaxIter',50,'TolFun',1e-6,'TolX',1e-6); % fzero options
@@ -369,14 +369,14 @@ legend('tool center point','tool cutting direction', ...
     'tool spindle direction','','tool edge','Location','northeast');
 legend('designed surface','tool center point','tool edge','Location','northeast');
 
-% s6_visualize_concentric_multi;
-% 
-% msgfig = questdlg({'Concentric tool path was generated successfully!', ...
-%     'Ready to continue?'}, ...
-%     'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
-% if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
-%     return;
-% end
+s6_visualize_concentric_multi;
+
+msgfig = questdlg({'Concentric tool path was generated successfully!', ...
+    'Ready to continue?'}, ...
+    'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
+if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    return;
+end
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
@@ -565,11 +565,11 @@ fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSp
     }, ...
     'Select the directory and filename to save the surface tool path', ...
     fullfile(workspaceDir,['spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
-if ~spiralPathFileType
+% if ~spiralPathFileType
     spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
     save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
         "spiralNorm","spiralCut");
-end
+% end
 
 %% Spiral Residual height calculation of the spiral tool path
 spiralRes = 5*aimRes*ones(2,spiralPtNum);
