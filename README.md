@@ -1,6 +1,6 @@
 # UPM-toolpath-waviness
 
-rbliang's project on tool path generation based on tool edge profile and waviness in ultra-precision machining
+Rbliang's project on tool path generation based on tool edge profile and waviness in ultra-precision machining.
 
 ## Principle
 
@@ -13,6 +13,10 @@ rbliang's project on tool path generation based on tool edge profile and wavines
 
 
 ### Spiral Toolpath Generation
+
+
+
+### Post-processing
 
 
 
@@ -34,9 +38,23 @@ _(temporarily useless)_
 
 M-code beginning with `s4`
 
-- 
+For the one thing, the codes named as `cmp` are the comparison methods compared with those with `optim`.
+
+- `s4_cmp_2D_radius_res_iter.m`: the M-code for **iterative** calculation of the method, which is based on the constant-residual-height object, and on the circular tooltip.
+- `s4_cmp_2D_radius_res1.m`: the M-code for **direct** calculation of the method, which is based on the constant-residual-height object, and the circular tooltip.
+
+For another, the codes named as `optim` are the main method put forward in the repo.
+
+- `s4_optim_2D_aspheric_actual_tip_multi.m`: 
+- `s4_optim_2D_aspheric_actual_tip_multi_iter.m`: 
+- `s4_optim_2D_aspheric_actual_tip_single.m`: 
+- `s4_optim_2D_aspheric_actual_tip_single_iter.m`: 
+
+
 
 #### s5: spiral path optimization for freeform surfaces
+
+_(need to improve in the future)_
 
 
 
@@ -65,4 +83,4 @@ Lastly, codes beginning with `s6_visualize` are sub-function of the tool path op
 
 ## Workspace
 
-All the data files, including the imported  will be saved The folder 'workspace' in the root folder 
+All the data files, including the imported data files and the exported result files, will be saved in the folder `workspace` located in the root folder.

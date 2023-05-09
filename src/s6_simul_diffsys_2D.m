@@ -86,7 +86,6 @@ switch cncFileType
         fclose(cncFid);
     case '.pgm'
     case '.csv'
-        x
 end
 
 

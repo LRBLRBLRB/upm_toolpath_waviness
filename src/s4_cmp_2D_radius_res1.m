@@ -9,6 +9,8 @@
 % radius tooltip instead of B-spline, the optimiation of which is to
 % directly solve.
 
+% no residual & ulim calculation: still have bugs!!!
+
 close all;
 clear;
 clc;
