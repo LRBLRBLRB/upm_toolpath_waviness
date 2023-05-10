@@ -6,7 +6,7 @@ t0 = tic;
 
 % global variables
 % global textFontSize textFontType;
-workspaceDir = '../workspace/20220925-contrast/nagayama_concentric';
+workspaceDir = fullfile('..','workspace','/20220925-contrast/nagayama_concentric';
 unit = '\mum';
 textFontSize = 12;
 textFontType = 'Times New Roman';

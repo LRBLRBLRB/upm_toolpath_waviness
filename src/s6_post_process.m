@@ -21,7 +21,7 @@ else
 %     clear;
     addpath(genpath('funcs'));
     if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
-        workspaceDir = '..\workspace\20230504 D906';
+        workspaceDir = uigetdir(fullfile('..','workspace','20230504 D906'),'select the workspace directory:');
         % the spiral path does not exist in the workspace
         [fileName,dirName] = uigetfile({ ...
             '*.mat','MAT-files(*.mat)'; ...
@@ -87,11 +87,15 @@ switch postType
             axisZ = axisZ - axisZ(end);
         end
 
+        % cnc header parameter
+        % app = post_process;
+
         % put in the .nc file
+        spiralncFolderName = getlastfoldername(workspaceDir);
         [ncFname,ncPath,ncInd] = uiputfile( ...
             {'*.nc','Numerical control files(*.nc)';'*.*','All files'}, ...
             'Enter the file to save the CNC code',fullfile( ...
-            workspaceDir,['spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.nc']));
+            workspaceDir,[spiralncFolderName,'spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.nc']));
         ncFile = fullfile(ncPath,ncFname);
         ncFid = fopen(ncFile,'w');
         fprintf(ncFid,'#100 = 1\t\t( TOTAL PASSES OF Z)\n');

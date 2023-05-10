@@ -7,8 +7,8 @@ addpath(genpath('funcs'));
 
 % global variables
 % global textFontSize textFontType unit fitMethod paramMethod;
-% workspaceDir = '../workspace/20221020-tooltip';
-workspaceDir = '../workspace/20230424';
+% workspaceDir = fullfile('..','workspace','/20221020-tooltip';
+workspaceDir = fullfile('..','workspace','/20230424';
 unit = '\mum';
 textFontSize = 12;
 textFontType = 'Times New Roman';

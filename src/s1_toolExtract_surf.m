@@ -8,7 +8,7 @@ if true
     
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
-    workspaceDir = '../workspace/20221020-tooltip';
+    workspaceDir = fullfile('..','workspace','/20221020-tooltip';
     fitMethod = 'Levenberg-Marquardt';
     paramMethod = 'centripetal';
     unit = '\mum';

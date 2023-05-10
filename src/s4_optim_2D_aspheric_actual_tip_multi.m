@@ -11,8 +11,8 @@ clc;
 addpath(genpath('funcs'));
 % global variables
 % global textFontSize textFontType;
-% workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
-workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
+% workspaceDir = fullfile('..','workspace','\20220925-contrast\nagayama_concentric';
+workspaceDir = fullfile('..','workspace','\20221020-tooltip\tooltip fitting result';
 unit = '\mum';
 textFontSize = 12;
 textFontType = 'Times New Roman';

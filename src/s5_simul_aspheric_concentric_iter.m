@@ -39,7 +39,7 @@ else
     addpath(genpath('funcs'));
     t0 = tic;
     
-    workspaceDir = '../workspace/20220925-contrast/nagayama_concentric';
+    workspaceDir = fullfile('..','workspace','/20220925-contrast/nagayama_concentric';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -70,7 +70,7 @@ else
             '*.mat','MAT-files(*.mat)'; ...
             '*,*','all files(*.*)'}, ...
             'Select the surface edge data file', ...
-            '..\workspace\input_data\surface\ellipsoidAray.mat', ...
+            fullfile('..','workspace','\input_data\surface\ellipsoidAray.mat', ...
             'MultiSelect','off');
         surfName = fullfile(dirName,fileName);
         load(surfName);
@@ -116,7 +116,7 @@ else
     % surfNorm(:,3) = -ones(densTheta*densR,1);
     [surfNorm(:,:,1),surfNorm(:,:,2),surfNorm(:,:,3)] = surfnorm( ...
         surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
-%     save('../workspace/input_data/surface/ellipsoidAray.mat', ...
+%     save(fullfile('..','workspace','/input_data/surface/ellipsoidAray.mat', ...
 %         "surfMesh","surfNorm","surfCenter");
     end
 end

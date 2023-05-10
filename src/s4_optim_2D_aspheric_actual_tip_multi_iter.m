@@ -49,9 +49,11 @@ else
     clc;
     addpath(genpath('funcs'));
     % global variables
-    % workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
-    % workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
-    workspaceDir = '..\workspace\20230504 D906\01040-sts-r1000+c0.091-D906-0424-5-res1-arc0.02+deg1';
+    % workspaceDir = fullfile('..','workspace','\20220925-contrast\nagayama_concentric';
+    % workspaceDir = fullfile('..','workspace','\20221020-tooltip\tooltip fitting result';
+    workspaceDir = uigetdir( ...
+        fullfile('..','workspace','20230504 D906','01040-sts-r1000+c0.091-D906-0424-5-res1-arc0.02+deg1'), ...
+        'select the workspace directory');
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -59,7 +61,7 @@ else
     msgOpts.Default = 'Cancel and quit';
     msgOpts.Interpreter = 'tex';
     
-    diaryFile = fullfile('..\workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
+    diaryFile = fullfile('..','workspace','diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
     % diary diaryFile;
     % diary on;
     
@@ -76,7 +78,6 @@ else
         fullfile(workspaceDir,'tooltheo.mat'), ...
         'MultiSelect','off');
     toolName = fullfile(dirName,fileName);
-    % toolName = 'output_data\tool\toolTheo_3D.mat';
     % tool data unit convertion
     toolData = load(toolName);
     unitList = {'m','mm','\mum','nm'};
@@ -567,18 +568,18 @@ fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSp
 %     return;
 % end
 
+spiralFolderName = getlastfoldername(workspaceDir);
 [spiralPathFileName,spiralPathDirName,spiralPathFileType] = uiputfile({ ...
     '*.mat','MAT-file(*.mat)'; ...
     '*.txt','text-file(.txt)';...
     '*.*','all file(*.*)';...
     }, ...
     'Select the directory and filename to save the surface tool path', ...
-    fullfile(workspaceDir,['spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
-% if ~spiralPathFileType
-    spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
-    save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
-        "spiralNorm","spiralCut");
-% end
+    fullfile(workspaceDir,[spiralFolderName,'-spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
+spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
+save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
+    "spiralNorm","spiralCut");
+return;
 
 %% Spiral Residual height calculation of the spiral tool path
 spiralRes = 5*aimRes*ones(2,spiralPtNum);
