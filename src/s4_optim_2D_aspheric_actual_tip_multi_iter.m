@@ -52,7 +52,7 @@ else
     % workspaceDir = fullfile('..','workspace','\20220925-contrast\nagayama_concentric';
     % workspaceDir = fullfile('..','workspace','\20221020-tooltip\tooltip fitting result';
     workspaceDir = uigetdir( ...
-        fullfile('..','workspace','20230504 D906','01040-sts-r1000+c0.091-D906-0424-5-res1-arc0.02+deg1'), ...
+        fullfile('..','workspace','20230504 D906'), ...
         'select the workspace directory');
     unit = '\mum';
     textFontSize = 12;
@@ -71,13 +71,13 @@ else
     fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
     
     % tool data import
-    [fileName,dirName] = uigetfile({ ...
+    [toolFileName,toolDirName] = uigetfile({ ...
         '*.mat','MAT-files(*.mat)'; ...
         '*,*','all files(*.*)'}, ...
         'Select one tool edge data file', ...
         fullfile(workspaceDir,'tooltheo.mat'), ...
         'MultiSelect','off');
-    toolName = fullfile(dirName,fileName);
+    toolName = fullfile(toolDirName,toolFileName);
     % tool data unit convertion
     toolData = load(toolName);
     unitList = {'m','mm','\mum','nm'};
@@ -92,10 +92,9 @@ else
     
     % concentric surface generation / import
     % A = tand(20)/(2*2000);
-    A = 0.091/1000/(1000^(aimUnit - presUnit));
-    C = 0;
+    c = 0.091/1000/(1000^(aimUnit - presUnit));
     syms x y;
-    surfSym = A.*(x.^2 + y.^2)./2 + C;
+    surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
     surfFx = diff(surfFunc,x);
     surfFy = diff(surfFunc,y);
@@ -117,7 +116,7 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 1; % um
+    aimRes = 0.5; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     arcLength = 20; % um
@@ -163,9 +162,13 @@ ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 
 % interaction
-msgfig = msgbox('Surface was generated successfully!','Exit','help','non-modal');
-uiwait(msgfig);
-msgfig = questdlg({'Surface was generated successfully!', ...
+msgfig = questdlg({'Surface was generated successfully!\n', ...
+    'The parameters are listed below:', ...
+    sprintf('1. Tool file: %s',toolFileName), ...
+    sprintf('2. Aimed residual error: %f',aimRes), ...
+    sprintf('3. C increment : (arc %f, max-angle %f)',arcLength,maxAngPtDist), ...
+    sprintf('4. Surface radius: %f',surfDomain(1,2)), ...
+    sprintf('5. Surface curvature: %f\n',c), ...
     'Ready to continue?'}, ...
     'Surface Generation','OK & continue','Cancel & quit','OK & continue');
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
@@ -225,7 +228,7 @@ opt.XTol = 1e-6;
     toolData,curvePathPt,curveQuat,curveContactU,curvePt,rStep,aimRes,rRange, ...
     'algorithm','search-bisection','directionType','norm-cut','optimopt',opt);
 
-% the last point
+%% the last point
 % it should be noticed that the last tooltippt can be a minus value.But if 
 % thetoolpathpt is minus, the spiral path would be difficult to generate.
 if curvePathPt(1,end) <= 0
