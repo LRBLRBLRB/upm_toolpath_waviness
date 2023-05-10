@@ -169,6 +169,7 @@ if ~mod(length(cmp),2)
     warning('Something wrong in the intersection point calculation process.\n');
     resPlot;
     res = 0;
+    pause();
     peakPt = [];
     interPt = [];
     uLim1 = [];

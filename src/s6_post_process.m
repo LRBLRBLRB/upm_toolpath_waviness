@@ -18,15 +18,16 @@ if isAPP
     end
 else
     close all;
+%     clear;
     addpath(genpath('funcs'));
     if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
-        workspaceDir = '..\workspace';
+        workspaceDir = '..\workspace\20230504 D906';
         % the spiral path does not exist in the workspace
         [fileName,dirName] = uigetfile({ ...
             '*.mat','MAT-files(*.mat)'; ...
             '*,*','All Files(*.*)'}, ...
             'Select one tool path data file', ...
-            fullfile(workspaceDir,'tooltheo.mat'), ...
+            fullfile(workspaceDir,'spiralpath.mat'), ...
             'MultiSelect','off');
         toolPathPath = fullfile(dirName,fileName);
         processData = load(toolPathPath);
@@ -98,7 +99,7 @@ switch postType
         fprintf(ncFid,'#555 = 0.001\t\t( FEED RATE )\n');
 
         fprintf(ncFid,'\nG52 G63 G71 G103 G40 G18 G90\n');
-        fprintf(ncFid,'\n( Working Coordinates )\n%s\n%s\n\n','G55','T0202');
+        fprintf(ncFid,'\n( Working Coordinates )\n%s\n%s\n\n','G55','T0303');
 
         fprintf(ncFid,'G18 G40 G94\n');
         fprintf(ncFid,'M78\n');
