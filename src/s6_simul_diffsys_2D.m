@@ -13,7 +13,7 @@ msgOpts.Interpreter = 'tex';
 
 % workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
 % workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
-workspaceDir = '..\workspace\20230417';
+workspaceDir = '..\workspace\20230504 D906';
 diaryFile = fullfile('..\workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
 % diary diaryFile;
 % diary on;
