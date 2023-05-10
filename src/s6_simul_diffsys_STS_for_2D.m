@@ -11,10 +11,10 @@ textFontType = 'Times New Roman';
 msgOpts.Default = 'Cancel and quit';
 msgOpts.Interpreter = 'tex';
 
-% workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
-% workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
-workspaceDir = '..\workspace\20230417';
-diaryFile = fullfile('..\workspace\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
+% workspaceDir = fullfile('..','workspace','\20220925-contrast\nagayama_concentric';
+% workspaceDir = fullfile('..','workspace','\20221020-tooltip\tooltip fitting result';
+workspaceDir = fullfile('..','workspace','\20230417';
+diaryFile = fullfile('..','workspace','\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
 % diary diaryFile;
 % diary on;
 

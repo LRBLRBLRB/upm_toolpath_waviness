@@ -7,7 +7,7 @@ clear; clc;
 % dirName = 'tool_path\';
 % fileName = 'Lens array_210721_RT0.2_tilt0_rot0_SF_s6a12d0.66.nc';
 if ~exist('workspaceDir','var')
-    workspaceDir = '../workspace';
+    workspaceDir = fullfile('..','workspace','';
 end
 [fileName,dirName] = uigetfile({ ...
     '*.nc','nc-file(*.nc)'; ...
