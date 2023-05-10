@@ -18,10 +18,10 @@ if isAPP
     end
 else
     close all;
-    clear;
+%     clear;
     addpath(genpath('funcs'));
     if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
-        workspaceDir = '..\workspace\20230504 D906\01030-sts-r1000+c0.091-D906-old-res1-arc0.02+deg1';
+        workspaceDir = '..\workspace\20230504 D906';
         % the spiral path does not exist in the workspace
         [fileName,dirName] = uigetfile({ ...
             '*.mat','MAT-files(*.mat)'; ...
@@ -99,7 +99,7 @@ switch postType
         fprintf(ncFid,'#555 = 0.001\t\t( FEED RATE )\n');
 
         fprintf(ncFid,'\nG52 G63 G71 G103 G40 G18 G90\n');
-        fprintf(ncFid,'\n( Working Coordinates )\n%s\n%s\n\n','G55','T0202');
+        fprintf(ncFid,'\n( Working Coordinates )\n%s\n%s\n\n','G55','T0303');
 
         fprintf(ncFid,'G18 G40 G94\n');
         fprintf(ncFid,'M78\n');

@@ -51,7 +51,7 @@ else
     % global variables
     % workspaceDir = '..\workspace\20220925-contrast\nagayama_concentric';
     % workspaceDir = '..\workspace\20221020-tooltip\tooltip fitting result';
-    workspaceDir = '..\workspace\20230504 D906\01030-sts-r1000+c0.091-D906-old-res1-arc0.02+deg1';
+    workspaceDir = '..\workspace\20230504 D906\01040-sts-r1000+c0.091-D906-0424-5-res1-arc0.02+deg1';
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -123,6 +123,8 @@ else
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
 end
+
+fprintf('tool Radius: %f\n',toolData.radius);
 
 % plot the importing result
 [surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...
@@ -222,25 +224,32 @@ opt.XTol = 1e-6;
     toolData,curvePathPt,curveQuat,curveContactU,curvePt,rStep,aimRes,rRange, ...
     'algorithm','search-bisection','directionType','norm-cut','optimopt',opt);
 
-if curvePathPt(1,end) < 0
-    tic;
+% the last point
+% it should be noticed that the last tooltippt can be a minus value.But if 
+% thetoolpathpt is minus, the spiral path would be difficult to generate.
+if curvePathPt(1,end) <= 0
+    % which means in the last tooltip lies over the symetrical axis as well
+    % as the toolpathpt
     curvePathPt(1,end) = 0;
-    [curvePathPt(:,end),curveQuat(end,:),curveContactU(end),curvePt(:,end)] = ...
-    curvepos(curveFunc,curveFx,toolData,curvePathPt(:,end),[0;0;-1],[0;-1;0]);
-
-    % calculate the residual height of the loop and the inner nearest loop
-    toolSp1 = toolSp;
-    toolSp1.coefs = quat2rotm(curveQuat(end,:))*toolSp1.coefs + curvePathPt(:,end);
-    toolSp2 = toolSp;
-    toolSp2.coefs = quat2rotm(curveQuat(end - 1,:))*toolSp2.coefs + curvePathPt(:,end - 1);
-    [curveRes(end),curvePeakPt(:,end),curveInterPt{end},curveULim{end}, ...
-        curveULim{end - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
-        curvePt(:,end),curvePt(:,end - 1),curveULim{end - 1});
-    % curvePeakPt(5,end) = curvePeakPt(5,end) + length(curveContactU);
-    fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
+else
+    % which means in the last tooltip lies over the symetrical axis while
+    % the toolpathpt within it
+    curvePathPt = [curvePathPt,zeros(3,1)];
 end
-
-
+tic;
+ind = size(curvePathPt,2);
+[curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind),curvePt(:,ind)] = ...
+    curvepos(curveFunc,curveFx,toolData,curvePathPt(:,ind),[0;0;-1],[0;-1;0]);
+% calculate the residual height of the loop and the inner nearest loop
+toolSp1 = toolSp;
+toolSp1.coefs = quat2rotm(curveQuat(ind,:))*toolSp1.coefs + curvePathPt(:,ind);
+toolSp2 = toolSp;
+toolSp2.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp2.coefs + curvePathPt(:,ind - 1);
+[curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim{ind}, ...
+    curveULim{ind - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
+    curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
+% curvePeakPt(5,ind) = curvePeakPt(5,ind) + length(curveContactU);
+fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
 
