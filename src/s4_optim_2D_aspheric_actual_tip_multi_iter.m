@@ -52,8 +52,11 @@ else
     % workspaceDir = fullfile('..','workspace','\20220925-contrast\nagayama_concentric';
     % workspaceDir = fullfile('..','workspace','\20221020-tooltip\tooltip fitting result';
     workspaceDir = uigetdir( ...
-        fullfile('..','workspace','20230504 D906'), ...
+        fullfile('..','workspace'), ...
         'select the workspace directory');
+    if ~workspaceDir
+        workspaceDir = fullfile('..','workspace');
+    end
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
@@ -77,6 +80,10 @@ else
         'Select one tool edge data file', ...
         fullfile(workspaceDir,'tooltheo.mat'), ...
         'MultiSelect','off');
+    if ~toolFileName
+        fprintf('No tool data file loaded.\n');
+        return;
+    end
     toolName = fullfile(toolDirName,toolFileName);
     % tool data unit convertion
     toolData = load(toolName);
@@ -116,7 +123,7 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 0.5; % um
+    aimRes = 0.3; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     arcLength = 20; % um
@@ -162,13 +169,15 @@ ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 
 % interaction
-msgfig = questdlg({'Surface was generated successfully!\n', ...
+msgfig = questdlg({sprintf('Surface was generated successfully!\n'), ...
     'The parameters are listed below:', ...
+    sprintf('0. Workspace: %s',getlastfoldername(workspaceDir)), ...
     sprintf('1. Tool file: %s',toolFileName), ...
-    sprintf('2. Aimed residual error: %f',aimRes), ...
-    sprintf('3. C increment : (arc %f, max-angle %f)',arcLength,maxAngPtDist), ...
-    sprintf('4. Surface radius: %f',surfDomain(1,2)), ...
-    sprintf('5. Surface curvature: %f\n',c), ...
+    sprintf('2. Aimed residual error: %f %s',aimRes,unit), ...
+    sprintf('3. C increment arc %f %s',arcLength,unit), ...
+    sprintf(['   max-angle %f',char(176),')'],maxAngPtDist*180/pi), ...
+    sprintf('4. Surface radius: %f %s',surfDomain(1,2),unit), ...
+    sprintf('5. Surface curvature: %f %s^-1\n',c,unit), ...
     'Ready to continue?'}, ...
     'Surface Generation','OK & continue','Cancel & quit','OK & continue');
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
@@ -249,6 +258,11 @@ toolSp1 = toolSp;
 toolSp1.coefs = quat2rotm(curveQuat(ind,:))*toolSp1.coefs + curvePathPt(:,ind);
 toolSp2 = toolSp;
 toolSp2.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp2.coefs + curvePathPt(:,ind - 1);
+prevUlimInd = size(curveULim{ind},2);
+if prevUlimInd > 1
+    curveULim{ind - 1}(:,(end - prevUlimInd + 2):end) = [];
+end
+curveULim{ind - 1}(end) = 1;
 [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim{ind}, ...
     curveULim{ind - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
     curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
@@ -402,7 +416,7 @@ diffR = abs(diff(toolREach));
 toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
 rTheta = csape(toolNoTheta,toolREach,[1,1]);
 
-figure('Name','Feed Rate Smoothing');
+hFeedrate = figure('Name','Feed Rate Smoothing');
 % tiledlayout(2,1);
 % nexttile;
 yyaxis left;
@@ -423,6 +437,9 @@ ylabel(['Cutting width of each Loop (',unit,')']);
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel('Loop Accumulating Point Number');
 legend('No.-R scatters','csape result','Concentric result');
+
+savefig(hFeedrate,fullfile(workspaceDir,'feedrate.fig'));
+
 % nexttile;
 % scatter(toolNoTheta,toolREach);
 % hold on;

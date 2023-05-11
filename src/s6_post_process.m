@@ -87,6 +87,11 @@ switch postType
             axisZ = axisZ - axisZ(end);
         end
 
+        % direction correction
+        axisX = -1.*axisX;
+        axisC = wrapTo360(-1.*axisC);
+        axisC(find(abs(axisC - 360) < 1e-3)) = 0;
+
         % cnc header parameter
         % app = post_process;
 
@@ -120,9 +125,9 @@ switch postType
         
         fprintf(ncFid,'( LINK BLOCK )\n');
         fprintf(ncFid,'G94 X%f\n',axisX(1));
-        fprintf(ncFid,'G93 F0.001 C0\n\n');
+        fprintf(ncFid,'G93 F0.001 C%f\n\n',axisC(1));
         
-        fprintf(ncFid,'G94 Z5 F500\n');
+        fprintf(ncFid,'G94 Z%d F500\n',5 + floor(axisZ(1)));
         fprintf(ncFid,'Z%f F200\n',ceil(axisZ(1)));
         fprintf(ncFid,'Z%f F20\n',axisZ(1) + 0.1);
         fprintf(ncFid,'Z%f F1\n\n',axisZ(1));

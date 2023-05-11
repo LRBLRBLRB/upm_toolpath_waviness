@@ -1,4 +1,4 @@
-function [circ2D,scatterDst,RMSE,varargout] = toolFit2D(scatterOri, ...
+function [circ2D0,scatterDst,RMSE,varargout] = toolFit2D(scatterOri, ...
     arcRansacMaxDist,lineFitMaxDist,options)
 % usage: [circ2D,scatterDst,RMSE] = toolFit2D(scatterOri)
 %
@@ -169,8 +169,8 @@ switch options.toolFitType
         varargout{1} = lineFitMaxDist;
 end
 
-% tool tip arc fitting
-[circ2D,RMSE] = arcFit2D(scatterOri, ...
+% tool tip arc initial fitting
+[circ2D0,RMSE] = arcFit2D(scatterOri, ...
     'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType);
 
 % test whetger the ransac function defined above is true
@@ -217,8 +217,22 @@ end
 
 %% rigid transform
 n = size(scatterOri,2);
+rotAng = -90 - atan2d(circ2D0.arcVec(2),circ2D0.arcVec(1));
+rotMat = rotz(rotAng);
+rotMat = rotMat(1:2,1:2);
+scatterDst0 = rotMat*(scatterOri - ndgrid(circ2D0.center,1:n));
+
+%% outliers removed
+% figure; plot(scatterDst0(1,:),scatterDst0(2,:),'.-','MarkerSize',2);
+scatterDst1 = tooloutlierremove(scatterDst0);
+% figure; plot(scatterDst1(1,:),scatterDst1(2,:),'.-','MarkerSize',2);
+
+[circ2D,RMSE] = arcFit2D(scatterDst1, ...
+    'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType);
+
+n = size(scatterDst1,2);
 rotAng = -90 - atan2d(circ2D.arcVec(2),circ2D.arcVec(1));
 rotMat = rotz(rotAng);
 rotMat = rotMat(1:2,1:2);
-scatterDst = rotMat*(scatterOri - ndgrid(circ2D.center,1:n));
+scatterDst = rotMat*(scatterDst1 - ndgrid(circ2D.center,1:n));
 end

@@ -65,6 +65,9 @@ else
         'Select one tool tip measurement data', ...
         workspaceDir, ...
         'MultiSelect','off');
+    if ~fileName
+        return;
+    end
     pathName = fullfile(dirName,fileName);
 
     [~,~,fileExt] = fileparts(pathName);
@@ -82,18 +85,20 @@ else
                 numHeader = numHeader + 1;
             end
             fclose(tooltipFile);
-            toolOri = importdata(pathName,',',numHeader);
-            if size(toolOri,2) ~= 3 && size(toolOri,2) ~= 2
-                toolOri = toolOri.data;
+            toolOri1 = importdata(pathName,',',numHeader);
+            if size(toolOri1,2) ~= 3 && size(toolOri1,2) ~= 2
+                toolOri1 = toolOri1.data;
             end
-            toolOri(:,3) = [];
-            toolOri = sortrows(toolOri,1,'ascend');
-            toolOri = toolOri';
+            toolOri1(:,3) = [];
+%             toolOri2 = toolini(toolOri1);
+%             toolOri3 = sortrows(toolOri2,1,'ascend');
+            toolOri = toolOri1';
         case {'.txt'}
             % tool data file that has been processed in mmt software
-            toolOri = importdata(pathName,' ',0);
-            toolOri = sortrows(toolOri,1,'ascend');
-            toolOri = toolOri';
+            toolOri1 = importdata(pathName,' ',0);
+%             toolOri2 = toolini(toolOri1);
+%             toolOri3 = sortrows(toolOri2,1,'ascend');
+            toolOri = toolOri1';
     end
 
     % unit convertion
