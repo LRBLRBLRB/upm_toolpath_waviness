@@ -130,8 +130,8 @@ else
     aimRes = 0.3; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
-    spiralMethod = 'Radius-Angle'; % Radius-Number
-    frMethod = 'Approximation'; % 'Approximation'
+    spiralMethod = 'Radius-Number'; % Radius-Angle
+    frMethod = 'Interpolation'; % 'Approximation'
 end
 
 fprintf('tool Radius: %f\n',toolData.radius);
@@ -444,10 +444,25 @@ end
 % cubic spline approximation
 % the function between the numeric label of tool path and surf radius R
 toolREach = curvePt(1,:);
-Fr = csape(accumPtNum,toolREach,[1,1]);
 diffR = abs(diff(toolREach));
-toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
-rTheta = csape(toolNoTheta,toolREach,[1,1]);
+% Fr = csape(accumPtNum,toolREach,[1,1]);
+% toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
+% rTheta = csape(toolNoTheta,toolREach,[1,1]);
+
+switch spiralMethod
+    case 'Radius-Number'
+        SurfEach = accumPtNum;
+    case 'Radius-Angle'
+        SurfEach = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
+end
+
+switch frMethod
+    case 'Interpolation'
+        Fr = csape(SurfEach,toolREach,[1,1]);
+    case 'Approximation'
+%         input
+        Fr = csaps(SurfEach,toolREach,0.5);
+end
 
 hFeedrate = figure('Name','Feed Rate Smoothing');
 % tiledlayout(2,1);
@@ -471,7 +486,11 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel('Loop Accumulating Point Number');
 legend('No.-R scatters','csape result','Concentric result');
 
-savefig(hFeedrate,fullfile(workspaceDir,'feedrate.fig'));
+if exist(fullfile(workspaceDir,'feedrate.fig'),'file')
+    savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',datestr(now,'yyyymmddTHHMMSS'),'.fig']));
+else
+    savefig(hFeedrate,fullfile(workspaceDir,'feedrate.fig'));
+end
 
 % nexttile;
 % scatter(toolNoTheta,toolREach);
@@ -495,7 +514,7 @@ savefig(hFeedrate,fullfile(workspaceDir,'feedrate.fig'));
 % smoothName = fullfile(smoothDirName,smoothFileName);
 % switch smoothFileType
 %     case 0
-%         msgfig = msgbox("No approximation saved","Warning","warn","non-modal");
+%         msgfig = msgbox(sprintf("\fontsize{%d}\fontname{%s} No approximation saved"),"Warning","warn","non-modal");
 %         uiwait(msgfig);
 %     case 1
 %         Comments = cell2mat(inputdlg( ...

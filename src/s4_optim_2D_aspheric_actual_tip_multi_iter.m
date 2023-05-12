@@ -105,8 +105,8 @@ else
     surfFunc = matlabFunction(surfSym);
     surfFx = diff(surfFunc,x);
     surfFy = diff(surfFunc,y);
-    surfDomain = [-1000,1000;-1000,1000];
-    surfDomain = 1.05*surfDomain;
+    surfDomain = [-500,500;-500,500];
+    surfDomain = 1.2*surfDomain;
     rMax = max(surfDomain(1,2),surfDomain(2,2));
     % sampling density
     spar = 501;
@@ -127,7 +127,7 @@ else
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
     radialIncrement = 'On-Axis'; % 'Surface'
-    aimRes = 0.5; % um
+    aimRes = 0.3; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     spiralMethod = 'Radius-Number'; % Radius-Angle
@@ -477,6 +477,8 @@ end
 toolREach = curvePt(1,:);
 diffR = abs(diff(toolREach));
 % Fr = csape(accumPtNum,toolREach,[1,1]);
+% toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
+% rTheta = csape(toolNoTheta,toolREach,[1,1]);
 
 switch spiralMethod
     case 'Radius-Number'
@@ -489,7 +491,8 @@ switch frMethod
     case 'Interpolation'
         Fr = csape(SurfEach,toolREach,[1,1]);
     case 'Approximation'
-        Fr = 
+%         input
+        Fr = csaps(SurfEach,toolREach,0.5);
 end
 
 hFeedrate = figure('Name','Feed Rate Smoothing');
