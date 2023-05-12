@@ -4,7 +4,7 @@ clc
 close
 
 path = "..\workspace\20230504 D906";
-filename = "01020-sts-r1000+c0.091-D906-6-res1-arc0.02+deg1-spiralPath20230509T092244.nc";
+filename = "01000-2D-r900c0.091+r9000-D906fit-x0.001.pgm";
 file = path + "\" + filename;
 
 tic
@@ -17,7 +17,7 @@ while ~feof(fid)
     % '*char' indicates 1 str per read, *indicates output str
     row=row+sum(fread(fid,10000,'*char')==newline);
 end
-fclose(fid);
+% fclose(fid);
 fprintf('File row number is %d.\r\n',row)
 toc
 MaxCounter = row;
@@ -27,7 +27,7 @@ MaxCounter = row;
 %% read data from file
 tic
 fprintf('Importing data...\r\n')
-fid=fopen(file);
+% fid=fopen(file);
 
 Wait_Title = waitbar(0,'Data importing...');
 
