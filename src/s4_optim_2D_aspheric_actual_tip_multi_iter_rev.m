@@ -153,30 +153,7 @@ hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-% hold on;
-%     quiver3(surfMesh(1:10:end,1:10:end,1), ...
-%         surfMesh(1:10:end,1:10:end,2), ...
-%         surfMesh(1:10:end,1:10:end,3), ...
-%         surfNormIni(1:10:end,1:10:end,1), ...
-%         surfNormIni(1:10:end,1:10:end,2), ...
-%         surfNormIni(1:10:end,1:10:end,3), ...
-%         'AutoScale','on','Color',[0.85,0.33,0.10], ...
-%         'DisplayName','Normal Vectors');
-%     legend('Original Points','Orthogonal direction','Location','northeast');
-% axis equal;
-% set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% xlabel(['x (',unit,')']);
-% ylabel(['y (',unit,')']);
-% zlabel(['z (',unit,')']);
 
-% interaction
-% isContinue = infocheckdlg(workspaceDir,toolFileName,unit,aimRes,arcLength,maxAngPtDist,rMax,c);
-% if ~isContinue
-%     return;
-% end
 questOpt.Interpreter = 'tex';
 questOpt.Default = 'OK & continue';
 msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
@@ -349,16 +326,7 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
 
-nexttile;
-surf( ...
-    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-hold on;
-% colormap('summer');
-% cb = colorbar;
-% cb.Label.String = ['Height (',unit,')'];
-
-% concentric toolpath for each loop
+%% concentric toolpath generation for each loop
 toolPathAngle = [];
 loopPtNum = [];
 accumPtNum = 0;
@@ -412,6 +380,15 @@ for ii = 1:length(toolPathAngle)
     interPt{ii} = R*curveInterPt{kk}; % the intersection point of each tool path point
     surfPt(:,ii) = R*curvePt(:,kk); % the contact point of each tool path point
 end
+
+nexttile;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+hold on;
+% colormap('summer');
+% cb = colorbar;
+% cb.Label.String = ['Height (',unit,')'];
 plotSpar = 1;
 plot3(toolPathPt(1,1:plotSpar:end), ...
     toolPathPt(2,1:plotSpar:end), ...
@@ -424,13 +401,11 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 axis equal;
-legend('tool center point','tool cutting direction', ...
-    'tool spindle direction','','tool edge','Location','northeast');
 legend('designed surface','tool center point','tool edge','Location','northeast');
 
 s6_visualize_concentric_multi;
 
-msgfig = questdlg({sprintf(['\fontsize{%d}\fontname{%s} ', ...
+msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
     'Concentric tool path was generated successfully!',textFontSize,textFontType]), ...
     'Ready to continue?'}, ...
     'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
@@ -519,7 +494,7 @@ end
 % smoothName = fullfile(smoothDirName,smoothFileName);
 % switch smoothFileType
 %     case 0
-%         msgfig = msgbox(sprintf("\fontsize{%d}\fontname{%s} No approximation saved"),"Warning","warn","non-modal");
+%         msgfig = msgbox(sprintf("\\fontsize{%d}\\fontname{%s} No approximation saved"),"Warning","warn","non-modal");
 %         uiwait(msgfig);
 %     case 1
 %         Comments = cell2mat(inputdlg( ...
@@ -775,7 +750,7 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 % sprial tool path error
 s6_visualize_spiral_multi;
 
-msgfig = msgbox(sprintf('\fontsize{%d}\fontname{%s}Spiral tool path was generated successfully!', ...
+msgfig = msgbox(sprintf('\\fontsize{%d}\\fontname{%s}Spiral tool path was generated successfully!', ...
     textFontSize,textFontType),'Success','help','non-modal');
 
 %% Comparison: directly generate the spiral tool path

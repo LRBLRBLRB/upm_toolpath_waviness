@@ -88,11 +88,11 @@ switch postType
         end
 
         % direction correction
-        if strcmp(startDirection,'X Plus')
+%         if strcmp(startDirection,'X Plus')
             axisX = -1.*axisX;
             axisC = wrapTo360(-1.*axisC);
             axisC(find(abs(axisC - 360) < 1e-3)) = 0;
-        end
+%         end
 
         % cnc header parameter
         % app = post_process;

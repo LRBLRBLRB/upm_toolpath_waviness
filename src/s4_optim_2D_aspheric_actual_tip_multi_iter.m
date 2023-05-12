@@ -13,9 +13,6 @@ if isAPP
     textFontSize = app.fontSize;
     textFontType = app.fontName;
 
-    msgOpts.Default = 'Cancel and quit';
-    msgOpts.Interpreter = 'tex';
-
     tPar0 = tic;
     parObj = gcp;
     tPar = toc(tPar0);
@@ -60,9 +57,9 @@ else
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
-    
-    msgOpts.Default = 'Cancel and quit';
-    msgOpts.Interpreter = 'tex';
+
+    questOpt.Interpreter = 'tex';
+    questOpt.Default = 'OK & Continue';
     
     diaryFile = fullfile('..','workspace','diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
     % diary diaryFile;
@@ -97,28 +94,7 @@ else
     toolData.toolEdgePt = 1000^(aimUnit - presUnit)*toolData.toolEdgePt;
     toolData.toolFit = 1000^(aimUnit - presUnit)*toolData.toolFit;
     
-    % concentric surface generation / import
-    % A = tand(20)/(2*2000);
-    c = 0.35/1000/(1000^(aimUnit - presUnit));
-    syms x y;
-    surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
-    surfFunc = matlabFunction(surfSym);
-    surfFx = diff(surfFunc,x);
-    surfFy = diff(surfFunc,y);
-    surfDomain = [-500,500;-500,500];
-    surfDomain = 1.2*surfDomain;
-    rMax = max(surfDomain(1,2),surfDomain(2,2));
-    % sampling density
-    spar = 501;
-    conR = linspace(0,rMax,spar); % concentric radius vector
-    conTheta = linspace(0,2*pi,spar);
-    [rMesh,thetaMesh] = meshgrid(conR,conTheta);
-    surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
-    surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
-    surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
-    % save('input_data/surface/ellipsoidAray.mat', ...
-    %    "surfMesh","surfNorm","surfCenter");
-    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     startDirection = 'X Plus'; % 'X Minus'
@@ -127,14 +103,55 @@ else
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
     radialIncrement = 'On-Axis'; % 'Surface'
-    aimRes = 0.3; % um
+    aimRes = 1; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     spiralMethod = 'Radius-Number'; % Radius-Angle
     frMethod = 'Interpolation'; % 'Approximation'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % concentric surface generation / import
+    % A = tand(20)/(2*2000);
+    c = 0.5/1000/(1000^(aimUnit - presUnit));
+    syms x y;
+    surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
+    surfFunc = matlabFunction(surfSym);
+    surfFx = diff(surfFunc,x);
+    surfFy = diff(surfFunc,y);
+    surfDomain = [-500,500;-500,500];
+    surfDomain = 1.2*surfDomain;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
-fprintf('tool Radius: %f\n',toolData.radius);
+% related parameters
+switch startDirection
+    case 'X Plus' % plus in this program, but minus in moore
+        rMax = max(surfDomain(1,2),surfDomain(2,2));
+        rStep = -1*rStep;
+    case 'X Minus' % minus in this program, but plus in moore
+        rMax = min(surfDomain(1,1),surfDomain(2,1)); % reverse
+        rStep = 1*rStep;
+end
+
+switch cutDirection
+    case 'Edge to Center'
+        rRange = [rMax,0];
+    case 'Center to Edge'
+%             rRange = [0,rMax];
+end
+
+
+% sampling density
+spar = 501;
+conR = linspace(0,rMax,spar); % concentric radius vector
+conTheta = linspace(0,2*pi,spar);
+[rMesh,thetaMesh] = meshgrid(conR,conTheta);
+surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
+surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
+surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
+% save('input_data/surface/ellipsoidAray.mat', ...
+%    "surfMesh","surfNorm","surfCenter");
 
 % plot the importing result
 [surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...
@@ -145,7 +162,14 @@ tiledlayout(1,2);
 pos = get(gcf,'position');
 set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
 nexttile;
-plot(toolData.toolFit(2,:),toolData.toolFit(3,:)); hold on;
+plot(toolData.toolFit(2,:),toolData.toolFit(3,:),'Color',[0,0.4470,0.7410]);
+hold on;
+patch('XData',toolData.toolFit(2,:),'YData',toolData.toolFit(3,:),...
+    'EdgeColor','none','FaceColor',[0.9290 0.6940 0.1250],'FaceAlpha',0.3);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+title('Tooltip Geometry');
 nexttile;
 rSpar = linspace(0,rMax,spar);
 plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))));
@@ -153,37 +177,13 @@ hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-% hold on;
-%     quiver3(surfMesh(1:10:end,1:10:end,1), ...
-%         surfMesh(1:10:end,1:10:end,2), ...
-%         surfMesh(1:10:end,1:10:end,3), ...
-%         surfNormIni(1:10:end,1:10:end,1), ...
-%         surfNormIni(1:10:end,1:10:end,2), ...
-%         surfNormIni(1:10:end,1:10:end,3), ...
-%         'AutoScale','on','Color',[0.85,0.33,0.10], ...
-%         'DisplayName','Normal Vectors');
-%     legend('Original Points','Orthogonal direction','Location','northeast');
-% axis equal;
-% set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% xlabel(['x (',unit,')']);
-% ylabel(['y (',unit,')']);
-% zlabel(['z (',unit,')']);
+title('2D-Surface Geometry');
 
-% interaction
-% isContinue = infocheckdlg(workspaceDir,toolFileName,unit,aimRes,arcLength,maxAngPtDist,rMax,c);
-% if ~isContinue
-%     return;
-% end
-questOpt.Interpreter = 'tex';
-questOpt.Default = 'OK & continue';
 msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     'Surface was generated successfully!\n'],textFontSize,textFontType), ...
     'The workspace directory name is: ', ...
     sprintf('%s\n',getlastfoldername(workspaceDir)), ...
-    sprintf('The parameters are listed below:\n'), ...
+    sprintf('The parameters are listed below:'), ...
     sprintf('1. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,unit), ...
     '2. X increment: ', ...
     sprintf('\tX direction (in program): %s',startDirection), ...
@@ -192,10 +192,10 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     sprintf('\tIncrement type: %s',angularIncrement), ...
     sprintf('\tArc length: %f%s',arcLength,unit), ...
     sprintf(['\tMax angle: %f',char(176),')'],maxAngPtDist*180/pi), ...
-    sprintf('4. Surface radius: %f%s',surfDomain(1,2),unit), ...
+    sprintf('4. Surface radius: %f%s',abs(rMax),unit), ...
     sprintf('5. Surface curvature: %f%s^{-1}\n',c,unit), ...
     'Ready to continue?'}, ...
-    'Surface Generation','OK & continue','Cancel & quit',questOpt);
+    'Surface Generation','OK & Continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
     return;
 end
@@ -208,16 +208,6 @@ t1 = tic;
 % get the f(r) function of the surface
 curveFunc = matlabFunction(subs(surfSym,y,0),'Vars',x);
 curveFx = matlabFunction(subs(surfFx,y,0),'Vars',x);
-
-
-switch startDirection
-    case 'X Plus' % plus in this program, but minus in moore
-        rRange = [rMax,0];
-        rStep = -1*rStep;
-    case 'X Minus' % minus in this program, but plus in moore
-        rRange = [-1*rMax,0]; % reverse
-        rStep = 1*rStep;
-end
 
 toolSp = toolData.toolBform; % B-form tool tip arc
 toolRadius = toolData.radius; % fitted tool radius
@@ -273,13 +263,17 @@ if curvePt(1,end)*curvePathPt(1,end) >= 0
         curvePathPt = [curvePathPt,zeros(3,1)];
     else
         % ensure whether to delete the rest point
-        msg = questdlg({sprintf(['\fontsize{%d}\fontname{%s}', ...
-            'The last curve path point exceeds the symetrical axis!\n'], ...
-            textFontSize,textFontType), ...
-            sprintf('Ensure to delete the last %d curve path point?', ...
-            length(curvePathPt(1,:)) - ii)}, ...
-            'Whether t odelete the exceeding point', ...
-            'OK','Cancel','OK');
+        questStr = {sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
+            'Whether to delete?'],textFontSize,textFontType), ...
+            'The last curve path point exceeds the symetrical axis: ', ...
+            sprintf('  curvePathPt  curvePt')};
+        for tmpii = 1:size(curvePathPt,2) - ii
+            questStr{tmpii + 3} = sprintf('  %f  %f',curvePathPt(1,tmpii),curvePt(1,tmpii));
+        end
+        questStr{tmpii + 4} = sprintf('Ensure to delete the last %d curve path point?', ...
+            length(curvePathPt(1,:)) - ii);
+        msg = questdlg(questStr,'Whether to delete the exceeding point', ...
+            'OK & Continue','Cancel',questOpt);
         waitfor(msg);
         switch msg
             case 'OK'
@@ -294,6 +288,7 @@ if curvePt(1,end)*curvePathPt(1,end) >= 0
                 curveInterPt(:,(ii + 1):end) = [];
                 curveULim((ii + 1):end) = [];
             case 'Cancel'
+                curvePathPt(1,end) = 0;
         end
     end
 else
@@ -379,16 +374,7 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
 
-nexttile;
-surf( ...
-    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-hold on;
-% colormap('summer');
-% cb = colorbar;
-% cb.Label.String = ['Height (',unit,')'];
-
-% concentric toolpath for each loop
+%% concentric toolpath generation for each loop
 toolPathAngle = [];
 loopPtNum = [];
 accumPtNum = 0;
@@ -442,6 +428,15 @@ for ii = 1:length(toolPathAngle)
     interPt{ii} = R*curveInterPt{kk}; % the intersection point of each tool path point
     surfPt(:,ii) = R*curvePt(:,kk); % the contact point of each tool path point
 end
+
+nexttile;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+hold on;
+% colormap('summer');
+% cb = colorbar;
+% cb.Label.String = ['Height (',unit,')'];
 plotSpar = 1;
 plot3(toolPathPt(1,1:plotSpar:end), ...
     toolPathPt(2,1:plotSpar:end), ...
@@ -454,16 +449,14 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 axis equal;
-legend('tool center point','tool cutting direction', ...
-    'tool spindle direction','','tool edge','Location','northeast');
-legend('designed surface','tool center point','tool edge','Location','northeast');
+legend('designed surface','tool center point','Location','northeast');
 
 s6_visualize_concentric_multi;
 
-msgfig = questdlg({sprintf(['\fontsize{%d}\fontname{%s} ', ...
-    'Concentric tool path was generated successfully!',textFontSize,textFontType]), ...
+msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
+    'Concentric tool path was generated successfully!'],textFontSize,textFontType), ...
     'Ready to continue?'}, ...
-    'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
+    'Concentric tool path Generation','OK & Continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
     return;
 end
@@ -549,7 +542,7 @@ end
 % smoothName = fullfile(smoothDirName,smoothFileName);
 % switch smoothFileType
 %     case 0
-%         msgfig = msgbox(sprintf("\fontsize{%d}\fontname{%s} No approximation saved"),"Warning","warn","non-modal");
+%         msgfig = msgbox(sprintf("\\fontsize{%d}\\fontname{%s} No approximation saved"),"Warning","warn","non-modal");
 %         uiwait(msgfig);
 %     case 1
 %         Comments = cell2mat(inputdlg( ...
@@ -670,7 +663,7 @@ fprintf('The time spent in the spiral toolpath generation process is %fs.\n',tSp
 
 % msgfig = questdlg({'Spiral tool path was generated successfully!', ...
 %     'Ready to continue to simulate?'}, ...
-%     'Spiral tool path Generation','OK & continue','Cancel & quit','OK & continue');
+%     'Spiral tool path Generation','OK & Continue','Cancel & quit',questOpt);
 % if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
 %     return;
 % end
@@ -805,7 +798,7 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 % sprial tool path error
 s6_visualize_spiral_multi;
 
-msgfig = msgbox(sprintf('\fontsize{%d}\fontname{%s}Spiral tool path was generated successfully!', ...
+msgfig = msgbox(sprintf('\\fontsize{%d}\\fontname{%s}Spiral tool path was generated successfully!', ...
     textFontSize,textFontType),'Success','help','non-modal');
 
 %% Comparison: directly generate the spiral tool path
