@@ -290,13 +290,15 @@ curveULim{ind - 1}(end) = 1;
 % curvePeakPt(5,ind) = curvePeakPt(5,ind) + length(curveContactU);
 fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
 
-% uLim reverse
-curveULim{1}(1) = 1;
-curveULim{end}(end) = 0;
-for ii = 1:length(curveULim)
-    tmp = curveULim{ii};
-    tmpSorted = sort(tmp(:),'ascend');
-    curveULim{ii} = reshape(tmpSorted,2,[]);
+if strcmp(startDirection,'X Minus')
+    % uLim reverse
+    curveULim{1}(1) = 1;
+    curveULim{end}(end) = 0;
+    for ii = 1:length(curveULim)
+        tmp = curveULim{ii};
+        tmpSorted = sort(tmp(:),'ascend');
+        curveULim{ii} = reshape(tmpSorted,2,[]);
+    end
 end
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
@@ -372,8 +374,8 @@ peakPlace = [];
 uLim = {zeros(2,0)};
 interPt = {zeros(3,0)};
 
-if strcmp(startDirection,'Clockwise') % 'Counterclockwise'
-    conThetaBound = [0,-2*pi];
+if strcmp(startDirection,'X Plus') % 'X Minus'
+    conThetaBound = [2*pi,0];
 else
     conThetaBound = [0,2*pi];
 end
@@ -428,7 +430,8 @@ legend('designed surface','tool center point','tool edge','Location','northeast'
 
 s6_visualize_concentric_multi;
 
-msgfig = questdlg({'Concentric tool path was generated successfully!', ...
+msgfig = questdlg({sprintf(['\fontsize{%d}\fontname{%s} ', ...
+    'Concentric tool path was generated successfully!',textFontSize,textFontType]), ...
     'Ready to continue?'}, ...
     'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)

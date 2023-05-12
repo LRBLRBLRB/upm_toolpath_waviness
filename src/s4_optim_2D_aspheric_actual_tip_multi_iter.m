@@ -130,8 +130,8 @@ else
     aimRes = 0.5; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
-    spiralMethod = 'Radius-Angle'; % Radius-Number
-    frMethod = 'Approximation'; % 'Approximation'
+    spiralMethod = 'Radius-Number'; % Radius-Angle
+    frMethod = 'Interpolation'; % 'Approximation'
 end
 
 fprintf('tool Radius: %f\n',toolData.radius);
@@ -321,6 +321,17 @@ curveULim{ind - 1}(end) = 1;
 % curvePeakPt(5,ind) = curvePeakPt(5,ind) + length(curveContactU);
 fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
 
+if strcmp(startDirection,'X Minus')
+    % uLim reverse
+    curveULim{1}(1) = 1;
+    curveULim{end}(end) = 0;
+    for ii = 1:length(curveULim)
+        tmp = curveULim{ii};
+        tmpSorted = sort(tmp(:),'ascend');
+        curveULim{ii} = reshape(tmpSorted,2,[]);
+    end
+end
+
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
 
 % diary off;
@@ -394,8 +405,8 @@ peakPlace = [];
 uLim = {zeros(2,0)};
 interPt = {zeros(3,0)};
 
-if strcmp(startDirection,'Clockwise') % 'Counterclockwise'
-    conThetaBound = [0,-2*pi];
+if strcmp(startDirection,'X Plus') % 'X Minus'
+    conThetaBound = [2*pi,0];
 else
     conThetaBound = [0,2*pi];
 end
