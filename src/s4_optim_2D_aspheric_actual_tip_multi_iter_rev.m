@@ -34,8 +34,8 @@ if isAPP
 
     % machining paramters
     cutDirection = app.cutDirection;
-    spindleDirection = app.spindleDirection;
-    angularDiscrete = app.angularDiscrete;
+    startDirection = app.spindleDirection;
+    angularIncrement = app.angularDiscrete;
     aimRes = app.aimRes;
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = app.maxIter;
@@ -99,13 +99,13 @@ else
     
     % concentric surface generation / import
     % A = tand(20)/(2*2000);
-    c = 0.18/1000/(1000^(aimUnit - presUnit));
+    c = 0.35/1000/(1000^(aimUnit - presUnit));
     syms x y;
     surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
     surfFx = diff(surfFunc,x);
     surfFy = diff(surfFunc,y);
-    surfDomain = [-1000,1000;-1000,1000];
+    surfDomain = [-500,500;-500,500];
     surfDomain = 1.05*surfDomain;
     rMax = max(surfDomain(1,2),surfDomain(2,2));
     % sampling density
@@ -121,16 +121,17 @@ else
     
     % machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
-    angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 0.5; % um
-    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
-    maxIter = 100;
+    startDirection = 'X Minus'; % 'X Plus'
+    angularIncrement = 'Constant Arc'; % 'Constant Angle'
     arcLength = 20; % um
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
-    LeftRight = 'X plus';
-    isrev = true;
+    radialIncrement = 'On-Axis'; % 'Surface'
+    aimRes = 0.3; % um
+    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+    maxIter = 100;
+    spiralMethod = 'Radius-Angle'; % Radius-Number
+    frMethod = 'Approximation'; % 'Approximation'
 end
 
 fprintf('tool Radius: %f\n',toolData.radius);
@@ -144,17 +145,18 @@ tiledlayout(1,2);
 pos = get(gcf,'position');
 set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
 nexttile;
+plot(toolData.toolFit(2,:),toolData.toolFit(3,:)); hold on;
+nexttile;
 rSpar = linspace(0,rMax,spar);
 plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))));
 hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
-nexttile;
-surf( ...
-    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-hold on;
+% surf( ...
+%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+%     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+% hold on;
 %     quiver3(surfMesh(1:10:end,1:10:end,1), ...
 %         surfMesh(1:10:end,1:10:end,2), ...
 %         surfMesh(1:10:end,1:10:end,3), ...
@@ -165,10 +167,10 @@ hold on;
 %         'DisplayName','Normal Vectors');
 %     legend('Original Points','Orthogonal direction','Location','northeast');
 % axis equal;
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel(['x (',unit,')']);
-ylabel(['y (',unit,')']);
-zlabel(['z (',unit,')']);
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% xlabel(['x (',unit,')']);
+% ylabel(['y (',unit,')']);
+% zlabel(['z (',unit,')']);
 
 % interaction
 % isContinue = infocheckdlg(workspaceDir,toolFileName,unit,aimRes,arcLength,maxAngPtDist,rMax,c);
@@ -177,17 +179,21 @@ zlabel(['z (',unit,')']);
 % end
 questOpt.Interpreter = 'tex';
 questOpt.Default = 'OK & continue';
-msgfig = questdlg({sprintf('Surface was generated successfully!\n'), ...
+msgfig = questdlg({sprintf(['\fontsize{%d}\fontname{%s}', ...
+    'Surface was generated successfully!\n'],textFontSize,textFontType), ...
     'The workspace directory name is: ', ...
     sprintf('%s\n',getlastfoldername(workspaceDir)), ...
     sprintf('The parameters are listed below:\n'), ...
-    sprintf('1. Tool file: %s',toolFileName), ...
-    sprintf('2. Aimed residual error: %f %s',aimRes,unit), ...
-    sprintf('3. C increment arc %f %s',arcLength,unit), ...
-    sprintf(['   max-angle %f',char(176),')'],maxAngPtDist*180/pi), ...
-    sprintf('4. Surface radius: %f %s',surfDomain(1,2),unit), ...
+    sprintf('1. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,uni), ...
+    '2. X increment: ', ...
+    sprintf('\tX direction (in program): %s',startDirection), ...
+    sprintf('\tAimed residual error: %f%s',aimRes,unit), ...
+    '3. C increment: ', ...
+    sprintf('\tIncrement type: %s',angularIncrement), ...
+    sprintf('\tArc length: %f%s',arcLength,unit), ...
+    sprintf(['\tMax angle: %f',char(176),')'],maxAngPtDist*180/pi), ...
+    sprintf('4. Surface radius: %f%s',surfDomain(1,2),unit), ...
     sprintf('5. Surface curvature: %f%s^{-1}\n',c,unit), ...
-    sprintf('6. X from left or right: %i',LeftRight), ...
     'Ready to continue?'}, ...
     'Surface Generation','OK & continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
@@ -253,7 +259,12 @@ opt.XTol = 1e-6;
 if curvePt(1,end)*curvePathPt(1,end) >= 0
     % which means in the last tooltip lies over the symetrical axis as well
     % as the toolpathpt ( both are <= 0, or both ar >= 0)
-    curvePathPt(1,end) = 0;
+    ii = find(curvePt(1,end)*curvePathPt(1,:) < 0,1,'first');
+    if ii == 0
+        curvePathPt = [curvePathPt,zeros(3,1)];
+    else
+        curvePathPt(1,ii:end) = 0;
+    end
 else
     % which means in the last tooltip lies over the symetrical axis while
     % the toolpathpt within it
@@ -361,7 +372,7 @@ peakPlace = [];
 uLim = {zeros(2,0)};
 interPt = {zeros(3,0)};
 
-if strcmp(spindleDirection,'Clockwise') % 'Counterclockwise'
+if strcmp(startDirection,'Clockwise') % 'Counterclockwise'
     conThetaBound = [0,-2*pi];
 else
     conThetaBound = [0,2*pi];
@@ -561,7 +572,7 @@ spiralContactU0(1:accumPtNum(1) - 1) = [];
 % change the spiral tool path to constant arc length one
 spiralAngle0 = toolPathAngle + 2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
-if strcmp(angularDiscrete,'Constant Arc')
+if strcmp(angularIncrement,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
         spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},spiralQuat0,toolData,'interpType','linear');
 %     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...

@@ -34,8 +34,8 @@ if isAPP
 
     % machining paramters
     cutDirection = app.cutDirection;
-    spindleDirection = app.spindleDirection;
-    angularDiscrete = app.angularDiscrete;
+    startDirection = app.spindleDirection;
+    angularIncrement = app.angularDiscrete;
     aimRes = app.aimRes;
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = app.maxIter;
@@ -99,7 +99,7 @@ else
     
     % concentric surface generation / import
     % A = tand(20)/(2*2000);
-    c = 0.18/1000/(1000^(aimUnit - presUnit));
+    c = 0.35/1000/(1000^(aimUnit - presUnit));
     syms x y;
     surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
@@ -121,16 +121,17 @@ else
     
     % machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
-    angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 0.5; % um
-    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
-    maxIter = 100;
+    startDirection = 'X Plus'; % 'X Minus'
+    angularIncrement = 'Constant Arc'; % 'Constant Angle'
     arcLength = 20; % um
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
-    LeftRight = 'X Minus';
-    isrev = false;
+    radialIncrement = 'On-Axis'; % 'Surface'
+    aimRes = 0.5; % um
+    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+    maxIter = 100;
+    spiralMethod = 'Radius-Angle'; % Radius-Number
+    frMethod = 'Approximation'; % 'Approximation'
 end
 
 fprintf('tool Radius: %f\n',toolData.radius);
@@ -178,19 +179,24 @@ ylabel(['z (',unit,')']);
 % end
 questOpt.Interpreter = 'tex';
 questOpt.Default = 'OK & continue';
-msgfig = questdlg({sprintf('Surface was generated successfully!\n'), ...
+msgfig = questdlg({sprintf(['\fontsize{%d}\fontname{%s}', ...
+    'Surface was generated successfully!\n'],textFontSize,textFontType), ...
     'The workspace directory name is: ', ...
     sprintf('%s\n',getlastfoldername(workspaceDir)), ...
     sprintf('The parameters are listed below:\n'), ...
-    sprintf('1. Tool file: %s',toolFileName), ...
-    sprintf('2. Aimed residual error: %f %s',aimRes,unit), ...
-    sprintf('3. C increment arc %f %s',arcLength,unit), ...
-    sprintf(['   max-angle %f',char(176),')'],maxAngPtDist*180/pi), ...
-    sprintf('4. Surface radius: %f %s',surfDomain(1,2),unit), ...
+    sprintf('1. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,uni), ...
+    '2. X increment: ', ...
+    sprintf('\tX direction (in program): %s',startDirection), ...
+    sprintf('\tAimed residual error: %f%s',aimRes,unit), ...
+    '3. C increment: ', ...
+    sprintf('\tIncrement type: %s',angularIncrement), ...
+    sprintf('\tArc length: %f%s',arcLength,unit), ...
+    sprintf(['\tMax angle: %f',char(176),')'],maxAngPtDist*180/pi), ...
+    sprintf('4. Surface radius: %f%s',surfDomain(1,2),unit), ...
     sprintf('5. Surface curvature: %f%s^{-1}\n',c,unit), ...
-    sprintf('6. X from left or right: %i',LeftRight), ...
     'Ready to continue?'}, ...
     'Surface Generation','OK & continue','Cancel & quit',questOpt);
+waitfor(msgfig);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
     return;
 end
@@ -204,8 +210,15 @@ t1 = tic;
 curveFunc = matlabFunction(subs(surfSym,y,0),'Vars',x);
 curveFx = matlabFunction(subs(surfFx,y,0),'Vars',x);
 
-rRange = [rMax,0];
-rStep = -1*rStep;
+
+switch startDirection
+    case 'X Plus' % plus in this program, but minus in moore
+        rRange = [rMax,0];
+        rStep = -1*rStep;
+    case 'X Minus' % minus in this program, but plus in moore
+        rRange = [-1*rMax,0]; % reverse
+        rStep = 1*rStep;
+end
 
 toolSp = toolData.toolBform; % B-form tool tip arc
 toolRadius = toolData.radius; % fitted tool radius
@@ -251,17 +264,44 @@ opt.XTol = 1e-6;
 %% the last point
 % it should be noticed that the last tooltippt can be a minus value.But if 
 % thetoolpathpt is minus, the spiral path would be difficult to generate.
-if curvePathPt(1,end) <= 0
+tic;
+if curvePt(1,end)*curvePathPt(1,end) >= 0
     % which means in the last tooltip lies over the symetrical axis as well
-    % as the toolpathpt
-    ii = find(curvePathPt(1,:) >= 0,1,'last');
-    curvePathPt(1,ii:end) = 0;
+    % as the toolpathpt ( both are <= 0, or both ar >= 0)
+    ii = find(curvePt(1,end)*curvePathPt(1,:) < 0,1,'last');
+    if isempty(ii) 
+        % spiral pitch is too small that all the curvePt(end)*curvePathPt(end) > 0
+        curvePathPt = [curvePathPt,zeros(3,1)];
+    else
+        % ensure whether to delete the rest point
+        msg = questdlg({sprintf(['\fontsize{%d}\fontname{%s}', ...
+            'The last curve path point exceeds the symetrical axis!\n'], ...
+            textFontSize,textFontType), ...
+            sprintf('Ensure to delete the last %d curve path point?', ...
+            length(curvePathPt(1,:)) - ii)}, ...
+            'Whether t odelete the exceeding point', ...
+            'OK','Cancel','OK');
+        waitfor(msg);
+        switch msg
+            case 'OK'
+                curvePathPt(1,ii) = 0;
+                % delete the rest point
+                curvePathPt(:,(ii + 1):end) = [];
+                curveQuat((ii + 1):end,:) = [];
+                curveContactU((ii + 1):end) = [];
+                curvePt(:,(ii + 1):end) = [];
+                curveRes((ii + 1):end) = [];
+                curvePeakPt(:,(ii + 1):end) = [];
+                curveInterPt(:,(ii + 1):end) = [];
+                curveULim((ii + 1):end) = [];
+            case 'Cancel'
+        end
+    end
 else
     % which means in the last tooltip lies over the symetrical axis while
     % the toolpathpt within it
     curvePathPt = [curvePathPt,zeros(3,1)];
 end
-tic;
 ind = size(curvePathPt,2);
 [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind),curvePt(:,ind)] = ...
     curvepos(curveFunc,curveFx,toolData,curvePathPt(:,ind),[0;0;-1],[0;-1;0]);
@@ -354,7 +394,7 @@ peakPlace = [];
 uLim = {zeros(2,0)};
 interPt = {zeros(3,0)};
 
-if strcmp(spindleDirection,'Clockwise') % 'Counterclockwise'
+if strcmp(startDirection,'Clockwise') % 'Counterclockwise'
     conThetaBound = [0,-2*pi];
 else
     conThetaBound = [0,2*pi];
@@ -410,7 +450,8 @@ legend('designed surface','tool center point','tool edge','Location','northeast'
 
 s6_visualize_concentric_multi;
 
-msgfig = questdlg({'Concentric tool path was generated successfully!', ...
+msgfig = questdlg({sprintf(['\fontsize{%d}\fontname{%s} ', ...
+    'Concentric tool path was generated successfully!',textFontSize,textFontType]), ...
     'Ready to continue?'}, ...
     'Concentric tool path Generation','OK & continue','Cancel & quit','OK & continue');
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
@@ -423,10 +464,22 @@ end
 % cubic spline approximation
 % the function between the numeric label of tool path and surf radius R
 toolREach = curvePt(1,:);
-Fr = csape(accumPtNum,toolREach,[1,1]);
 diffR = abs(diff(toolREach));
-toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
-rTheta = csape(toolNoTheta,toolREach,[1,1]);
+% Fr = csape(accumPtNum,toolREach,[1,1]);
+
+switch spiralMethod
+    case 'Radius-Number'
+        SurfEach = accumPtNum;
+    case 'Radius-Angle'
+        SurfEach = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
+end
+
+switch frMethod
+    case 'Interpolation'
+        Fr = csape(SurfEach,toolREach,[1,1]);
+    case 'Approximation'
+        Fr = 
+end
 
 hFeedrate = figure('Name','Feed Rate Smoothing');
 % tiledlayout(2,1);
@@ -450,7 +503,11 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel('Loop Accumulating Point Number');
 legend('No.-R scatters','csape result','Concentric result');
 
-savefig(hFeedrate,fullfile(workspaceDir,'feedrate.fig'));
+if exist(fullfile(workspaceDir,'feedrate.fig'),'file')
+    savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',datestr(now,'yyyymmddTHHMMSS'),'.fig']));
+else
+    savefig(hFeedrate,fullfile(workspaceDir,'feedrate.fig'));
+end
 
 % nexttile;
 % scatter(toolNoTheta,toolREach);
@@ -474,7 +531,7 @@ savefig(hFeedrate,fullfile(workspaceDir,'feedrate.fig'));
 % smoothName = fullfile(smoothDirName,smoothFileName);
 % switch smoothFileType
 %     case 0
-%         msgfig = msgbox("No approximation saved","Warning","warn","non-modal");
+%         msgfig = msgbox(sprintf("\fontsize{%d}\fontname{%s} No approximation saved"),"Warning","warn","non-modal");
 %         uiwait(msgfig);
 %     case 1
 %         Comments = cell2mat(inputdlg( ...
@@ -494,8 +551,8 @@ spiralCut0 = zeros(3,accumPtNum(end));
 spiralQuat0 = zeros(accumPtNum(end),4);
 spiralContactU0 = zeros(1,accumPtNum(end));
 
-interpR = fnval(Fr,1:accumPtNum(end));
-interpR(1:accumPtNum(1)) = 0;
+interpR = fnval(Fr,1:SurfEach(end));
+interpR(1:SurfEach(1)) = 0;
 accumPtNumlength = [0,accumPtNum];
 
 numLoop = length(accumPtNum);
@@ -554,7 +611,7 @@ spiralContactU0(1:accumPtNum(1) - 1) = [];
 % change the spiral tool path to constant arc length one
 spiralAngle0 = toolPathAngle + 2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
-if strcmp(angularDiscrete,'Constant Arc')
+if strcmp(angularIncrement,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
         spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},spiralQuat0,toolData,'interpType','linear');
 %     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
@@ -730,7 +787,8 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 % sprial tool path error
 s6_visualize_spiral_multi;
 
-msgfig = msgbox('Spiral tool path was generated successfully!','Success','help','non-modal');
+msgfig = msgbox(sprintf('\fontsize{%d}\fontname{%s}Spiral tool path was generated successfully!', ...
+    textFontSize,textFontType),'Success','help','non-modal');
 
 %% Comparison: directly generate the spiral tool path
 % 实际上，这种显然更好。用上面的那种方法，会导致不是真正的等弧长，而且在交接段会突然减速，动力学应该会影响表面质量
