@@ -460,8 +460,13 @@ switch frMethod
     case 'Interpolation'
         Fr = csape(SurfEach,toolREach,[1,1]);
     case 'Approximation'
-%         input
-        Fr = csaps(SurfEach,toolREach,0.5);
+        [isContinue,approxOut] = selectfr;
+        switch approxOut.approxMethod
+            case 'Cubic Spline'
+                Fr = csaps(SurfEach,toolREach,approxOut.approxParam);
+            case 'Basic Spline'
+                Fr = spap2(3,3,SurfEach,toolREach,approxOut.approxParam);
+        end
 end
 
 hFeedrate = figure('Name','Feed Rate Smoothing');
