@@ -39,6 +39,7 @@ fig.Visible = 'on';
 uiwait(fig);
 
     function fig_close_req(app)
+        isContinue = 0;
         delete(app);
     end
 

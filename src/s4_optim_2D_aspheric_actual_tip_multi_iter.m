@@ -99,7 +99,7 @@ else
     
     % concentric surface generation / import
     % A = tand(20)/(2*2000);
-    c = 0.091/1000/(1000^(aimUnit - presUnit));
+    c = 0.18/1000/(1000^(aimUnit - presUnit));
     syms x y;
     surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
@@ -123,12 +123,14 @@ else
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     spindleDirection = 'Counterclockwise'; % 'Counterclockwise'
     angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-    aimRes = 0.3; % um
+    aimRes = 0.5; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     arcLength = 20; % um
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
+    LeftRight = 'X Minus';
+    isrev = false;
 end
 
 fprintf('tool Radius: %f\n',toolData.radius);
@@ -142,17 +144,18 @@ tiledlayout(1,2);
 pos = get(gcf,'position');
 set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
 nexttile;
+plot(toolData.toolFit(2,:),toolData.toolFit(3,:)); hold on;
+nexttile;
 rSpar = linspace(0,rMax,spar);
 plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))));
 hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
-nexttile;
-surf( ...
-    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-hold on;
+% surf( ...
+%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+%     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+% hold on;
 %     quiver3(surfMesh(1:10:end,1:10:end,1), ...
 %         surfMesh(1:10:end,1:10:end,2), ...
 %         surfMesh(1:10:end,1:10:end,3), ...
@@ -163,23 +166,31 @@ hold on;
 %         'DisplayName','Normal Vectors');
 %     legend('Original Points','Orthogonal direction','Location','northeast');
 % axis equal;
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel(['x (',unit,')']);
-ylabel(['y (',unit,')']);
-zlabel(['z (',unit,')']);
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% xlabel(['x (',unit,')']);
+% ylabel(['y (',unit,')']);
+% zlabel(['z (',unit,')']);
 
 % interaction
+% isContinue = infocheckdlg(workspaceDir,toolFileName,unit,aimRes,arcLength,maxAngPtDist,rMax,c);
+% if ~isContinue
+%     return;
+% end
+questOpt.Interpreter = 'tex';
+questOpt.Default = 'OK & continue';
 msgfig = questdlg({sprintf('Surface was generated successfully!\n'), ...
-    'The parameters are listed below:', ...
-    sprintf('0. Workspace: %s',getlastfoldername(workspaceDir)), ...
+    'The workspace directory name is: ', ...
+    sprintf('%s\n',getlastfoldername(workspaceDir)), ...
+    sprintf('The parameters are listed below:\n'), ...
     sprintf('1. Tool file: %s',toolFileName), ...
     sprintf('2. Aimed residual error: %f %s',aimRes,unit), ...
     sprintf('3. C increment arc %f %s',arcLength,unit), ...
     sprintf(['   max-angle %f',char(176),')'],maxAngPtDist*180/pi), ...
     sprintf('4. Surface radius: %f %s',surfDomain(1,2),unit), ...
-    sprintf('5. Surface curvature: %f %s^-1\n',c,unit), ...
+    sprintf('5. Surface curvature: %f%s^{-1}\n',c,unit), ...
+    sprintf('6. X from left or right: %i',LeftRight), ...
     'Ready to continue?'}, ...
-    'Surface Generation','OK & continue','Cancel & quit','OK & continue');
+    'Surface Generation','OK & continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
     return;
 end
@@ -243,7 +254,8 @@ opt.XTol = 1e-6;
 if curvePathPt(1,end) <= 0
     % which means in the last tooltip lies over the symetrical axis as well
     % as the toolpathpt
-    curvePathPt(1,end) = 0;
+    ii = find(curvePathPt(1,:) >= 0,1,'last');
+    curvePathPt(1,ii:end) = 0;
 else
     % which means in the last tooltip lies over the symetrical axis while
     % the toolpathpt within it

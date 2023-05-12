@@ -31,7 +31,7 @@ end
 
 toolSp = toolData.toolBform; % B-form tool tip arc
 
-if rRange(2) > rRange(1) % to ensure the rake face on top
+if abs(rRange(2)) > abs(rRange(1)) % to ensure the rake face on top
     % if range(2) > rRange(1), then feed direction is center-to-edge, and
     % the toolDirect is [0;1;0]. So cut direction is [-1;0;0]
     cutDirect = [0;1;0];
@@ -115,7 +115,12 @@ while (r - rRange(2))*delta0 < 0
             [r,diffRes1] = fzero(@iterfunc,r0,options.optimopt);
         case 'search-bisection'
             h = delta/50;
-            r = mysearch(@iterfunc,r0,h,[r0 + delta,r],options.optimopt.XTol);
+            if delta > 0
+                searchInt = [r,r0 + delta];
+            else
+                searchInt = [r0 + delta,r];
+            end
+            r = mysearch(@iterfunc,r0,h,searchInt,options.optimopt.XTol);
         case 'traverse-bisection'
         case 'genetic'
             % 'InitialPopulationMatrix',iniMat
