@@ -179,12 +179,12 @@ ylabel(['z (',unit,')']);
 % end
 questOpt.Interpreter = 'tex';
 questOpt.Default = 'OK & continue';
-msgfig = questdlg({sprintf(['\fontsize{%d}\fontname{%s}', ...
+msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     'Surface was generated successfully!\n'],textFontSize,textFontType), ...
     'The workspace directory name is: ', ...
     sprintf('%s\n',getlastfoldername(workspaceDir)), ...
     sprintf('The parameters are listed below:\n'), ...
-    sprintf('1. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,uni), ...
+    sprintf('1. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,unit), ...
     '2. X increment: ', ...
     sprintf('\tX direction (in program): %s',startDirection), ...
     sprintf('\tAimed residual error: %f%s',aimRes,unit), ...
@@ -256,6 +256,7 @@ opt.XTol = 1e-6;
 %% the last point
 % it should be noticed that the last tooltippt can be a minus value.But if 
 % thetoolpathpt is minus, the spiral path would be difficult to generate.
+tic;
 if curvePt(1,end)*curvePathPt(1,end) >= 0
     % which means in the last tooltip lies over the symetrical axis as well
     % as the toolpathpt ( both are <= 0, or both ar >= 0)
@@ -270,7 +271,6 @@ else
     % the toolpathpt within it
     curvePathPt = [curvePathPt,zeros(3,1)];
 end
-tic;
 ind = size(curvePathPt,2);
 [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind),curvePt(:,ind)] = ...
     curvepos(curveFunc,curveFx,toolData,curvePathPt(:,ind),[0;0;-1],[0;-1;0]);
@@ -534,8 +534,8 @@ spiralCut0 = zeros(3,accumPtNum(end));
 spiralQuat0 = zeros(accumPtNum(end),4);
 spiralContactU0 = zeros(1,accumPtNum(end));
 
-interpR = fnval(Fr,1:accumPtNum(end));
-interpR(1:accumPtNum(1)) = 0;
+interpR = fnval(Fr,1:SurfEach(end));
+interpR(1:SurfEach(1)) = 0;
 accumPtNumlength = [0,accumPtNum];
 
 numLoop = length(accumPtNum);
@@ -770,7 +770,8 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 % sprial tool path error
 s6_visualize_spiral_multi;
 
-msgfig = msgbox('Spiral tool path was generated successfully!','Success','help','non-modal');
+msgfig = msgbox(sprintf('\fontsize{%d}\fontname{%s}Spiral tool path was generated successfully!', ...
+    textFontSize,textFontType),'Success','help','non-modal');
 
 %% Comparison: directly generate the spiral tool path
 % 实际上，这种显然更好。用上面的那种方法，会导致不是真正的等弧长，而且在交接段会突然减速，动力学应该会影响表面质量
