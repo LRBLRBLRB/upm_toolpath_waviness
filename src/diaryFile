@@ -1,0 +1,1579 @@
+The time spent in the parallel computing activating process is 0.001335s.
+-----
+No.1	 toolpath 535.073516	[r = 600.000000] is calculated within 0.090899s.
+-----
+No.2	 toolpath 530.574576	[r = 595.501059] is calculated within 11.513085s.
+-----
+No.3	 toolpath 526.192401	[r = 591.118886] is calculated within 11.744570s.
+-----
+No.4	 toolpath 521.870948	[r = 586.797432] is calculated within 11.498527s.
+-----
+No.5	 toolpath 517.600100	[r = 582.526584] is calculated within 11.908708s.
+-----
+No.6	 toolpath 513.369854	[r = 578.296337] is calculated within 11.632831s.
+-----
+No.7	 toolpath 509.172824	[r = 574.099309] is calculated within 11.581538s.
+-----
+No.8	 toolpath 504.998420	[r = 569.924905] is calculated within 11.626992s.
+-----
+No.9	 toolpath 500.849569	[r = 565.776054] is calculated within 11.708507s.
+-----
+No.10	 toolpath 496.723803	[r = 561.650288] is calculated within 12.050727s.
+-----
+No.11	 toolpath 492.610669	[r = 557.537154] is calculated within 11.646732s.
+-----
+No.12	 toolpath 488.515657	[r = 553.442142] is calculated within 11.656466s.
+-----
+No.13	 toolpath 484.433456	[r = 549.359941] is calculated within 11.665166s.
+-----
+No.14	 toolpath 480.364101	[r = 545.058861] is calculated within 11.708605s.
+-----
+No.15	 toolpath 476.307588	[r = 541.002350] is calculated within 11.861332s.
+-----
+No.16	 toolpath 472.264034	[r = 536.958794] is calculated within 11.849139s.
+-----
+No.17	 toolpath 468.230657	[r = 532.925419] is calculated within 11.644324s.
+-----
+No.18	 toolpath 464.207865	[r = 528.902627] is calculated within 11.600452s.
+-----
+No.19	 toolpath 460.195586	[r = 524.890348] is calculated within 11.916429s.
+-----
+No.20	 toolpath 456.188317	[r = 520.883079] is calculated within 11.713818s.
+-----
+No.21	 toolpath 452.188984	[r = 516.883744] is calculated within 11.617167s.
+-----
+No.22	 toolpath 448.197678	[r = 512.892438] is calculated within 11.622808s.
+-----
+No.23	 toolpath 444.211694	[r = 508.906454] is calculated within 11.717032s.
+-----
+No.24	 toolpath 440.230699	[r = 504.925460] is calculated within 11.577533s.
+-----
+No.25	 toolpath 436.252221	[r = 500.946983] is calculated within 11.855957s.
+-----
+No.26	 toolpath 432.279034	[r = 496.973794] is calculated within 11.604842s.
+-----
+No.27	 toolpath 428.305716	[r = 493.000477] is calculated within 11.582966s.
+-----
+No.28	 toolpath 424.334619	[r = 489.029381] is calculated within 11.630461s.
+-----
+No.29	 toolpath 420.363233	[r = 485.057995] is calculated within 11.633382s.
+-----
+No.30	 toolpath 416.394723	[r = 481.089485] is calculated within 11.669923s.
+-----
+No.31	 toolpath 412.425797	[r = 477.120558] is calculated within 11.655921s.
+-----
+No.32	 toolpath 408.456461	[r = 473.151223] is calculated within 11.555501s.
+-----
+No.33	 toolpath 404.483730	[r = 469.178491] is calculated within 11.478313s.
+-----
+No.34	 toolpath 400.510553	[r = 465.205313] is calculated within 11.512583s.
+-----
+No.35	 toolpath 396.534076	[r = 461.228836] is calculated within 11.476215s.
+-----
+No.36	 toolpath 392.554205	[r = 457.248967] is calculated within 11.624387s.
+-----
+No.37	 toolpath 388.570782	[r = 453.265543] is calculated within 11.534432s.
+-----
+No.38	 toolpath 384.580774	[r = 449.275535] is calculated within 11.732974s.
+-----
+No.39	 toolpath 380.590160	[r = 445.284920] is calculated within 11.666421s.
+-----
+No.40	 toolpath 376.590360	[r = 441.285122] is calculated within 11.670788s.
+-----
+No.41	 toolpath 372.583641	[r = 437.278401] is calculated within 12.113012s.
+-----
+No.42	 toolpath 368.570040	[r = 433.264800] is calculated within 11.809825s.
+-----
+No.43	 toolpath 364.546565	[r = 429.241327] is calculated within 11.775276s.
+-----
+No.44	 toolpath 360.513175	[r = 425.207936] is calculated within 11.738385s.
+-----
+No.45	 toolpath 356.469649	[r = 421.164411] is calculated within 11.809421s.
+-----
+No.46	 toolpath 352.409670	[r = 417.104431] is calculated within 12.183995s.
+-----
+No.47	 toolpath 348.335951	[r = 413.030712] is calculated within 11.837823s.
+-----
+No.48	 toolpath 344.248544	[r = 408.943306] is calculated within 11.809474s.
+-----
+No.49	 toolpath 340.147107	[r = 404.841869] is calculated within 11.935859s.
+-----
+No.50	 toolpath 336.021797	[r = 400.716559] is calculated within 11.841595s.
+-----
+No.51	 toolpath 331.875695	[r = 396.570456] is calculated within 12.182851s.
+-----
+No.52	 toolpath 327.701494	[r = 392.396256] is calculated within 11.759894s.
+-----
+No.53	 toolpath 323.499033	[r = 388.193795] is calculated within 11.665110s.
+-----
+No.54	 toolpath 319.260620	[r = 383.955381] is calculated within 11.632528s.
+-----
+No.55	 toolpath 287.867282	[r = 342.140877] is calculated within 13.807184s.
+-----
+No.56	 toolpath 246.757608	[r = 278.508764] is calculated within 38.525634s.
+-----
+No.57	 toolpath 204.178564	[r = 235.148265] is calculated within 13.180934s.
+-----
+No.58	 toolpath 167.171601	[r = 189.378003] is calculated within 15.051140s.
+-----
+No.59	 toolpath 133.961314	[r = 155.764712] is calculated within 9.190920s.
+-----
+No.60	 toolpath 93.887927	[r = 105.135000] is calculated within 18.567927s.
+-----
+No.61	 toolpath 54.302748	[r = 64.822976] is calculated within 9.123533s.
+-----
+No.62	 toolpath 13.624251	[r = 10.409207] is calculated within 22.887154s.
+-----
+No.63	 toolpath -23.020885	[r = -27.960208] is calculated within 8.194712s.
+-----
+<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m',256,1)">256 </a>tic;
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbcont; end
+-----
+No.63	 toolpath point at [r = 0] is calculated within 12.493120s.
+-----
+The toolpath concentric optimization process causes 1172.240865 seconds.
+The time spent in the spiral toolpath generation process is 1.037921s.
+Fr = csaps(SurfEach,toolREach,0);
+Fr
+
+Fr = 
+
+  包含以下字段的 <a href="matlab:helpPopup struct" style="font-weight:bold">struct</a>:
+
+      form: 'pp'
+    breaks: [360 720 1080 1440 1800 2160 2520 2880 3240 3600 3960 4320 4680 5040 5400 5760 6120 6480 6840 7200 7560 7920 8280 8640 9000 9360 9720 10080 10440 10800 11160 11520 11880 12240 … ]
+     coefs: [62×4 double]
+    pieces: 62
+     order: 4
+       dim: 1
+
+figure
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,0.1);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,0.1);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,0.01);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,0.0000001);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+clc
+selectfr
+
+ans = 
+
+  包含以下字段的 <a href="matlab:helpPopup struct" style="font-weight:bold">struct</a>:
+
+    approxMethod: 'Cubic Spline'
+     approxParam: 1
+
+help uitextarea
+ <strong>uitextarea</strong> Create text area component 
+    textarea = <strong>uitextarea</strong> creates a text area in a new UI figure window.
+ 
+    textarea = <strong>uitextarea</strong>(parent) specifies the object in which to create
+    the text area. 
+ 
+    textarea = <strong>uitextarea</strong>( ___ ,Name,Value) specifies text area properties
+    using one or more Name,Value pair arguments. Use this option with any
+    of the input argument combinations in the previous syntaxes.
+ 
+    Example 1: Create Text Area
+       textarea = uitextarea;
+ 
+    Example 2: Specify the Parent Object for a Text Area
+       % Specify a small UI figure window as the parent object
+       % for a text area. 
+       fig = uifigure('Position', [100 100 429 276])
+       textarea = uitextarea(fig);
+ 
+    See also <a href="matlab:help uifigure -displayBanner">uifigure</a>, <a href="matlab:help uieditfield -displayBanner">uieditfield</a>, <a href="matlab:help uilabel -displayBanner">uilabel</a>
+
+    <a href="matlab:doc uitextarea">uitextarea 的文档</a>
+
+doc uitextarea
+aa = listfonts;
+help strcmpi
+ <strong>strcmpi</strong> Compare strings or character vectors ignoring case
+    TF = <strong>strcmpi</strong>(S1,S2) compares S1 and S2 and returns logical 1 (true)
+    if they are the same except for case, and returns logical 0 (false) 
+    otherwise. Either text input can be a character vector or a string scalar. 
+ 
+    TF = <strong>strcmpi</strong>(S,A) compares S to each element of array A, where S
+    is a character vector, a string scalar, or a cell array with one
+    element, and A is a string array or a cell array of character vectors. <strong>strcmpi</strong> 
+    returns TF, a logical array that is the same size as A and contains 
+    logical 1 (true) for those elements of A that are a match, except for 
+    case, and logical 0 (false) for those elements that are not. TF = <strong>strcmpi</strong>(A,S) 
+    returns the same result.
+ 
+    TF = <strong>strcmpi</strong>(A1,A2) compares each element of A1 to the same element in A2, 
+    where A1 and A2 are equal-size string arrays or cell arrays of character 
+    vectors. Input A1 and/or A2 can also be a character array having the number 
+    of rows as there are elements in the other argument. <strong>strcmpi</strong> returns TF, 
+    a logical array that is the same size as A1 or A2, and contains logical 1 
+    (true) for those elements of A1 and A2 that are a match, except for case, 
+    and logical 0 (false) for those elements that are not.
+ 
+    When one of the inputs is an array, scalar expansion occurs as needed.
+ 
+    <strong>strcmpi</strong> supports international character sets.
+ 
+    See also <a href="matlab:help strcmp -displayBanner">strcmp</a>, <a href="matlab:help strncmp -displayBanner">strncmp</a>, <a href="matlab:help strncmpi -displayBanner">strncmpi</a>, <a href="matlab:help regexpi -displayBanner">regexpi</a>, <a href="matlab:help contains -displayBanner">contains</a>, <a href="matlab:help startsWith -displayBanner">startsWith</a>,
+    <a href="matlab:help endsWith -displayBanner">endsWith</a>.
+
+    <a href="matlab:doc strcmpi">strcmpi 的文档</a>
+    <a href="matlab:matlab.internal.language.introspective.overloads.displayOverloads('strcmpi')">名为 strcmpi 的其他函数</a>
+
+doc strcmpi
+strcat(aa,'math')
+
+ans =
+
+  438×1 <a href="matlab:helpPopup cell" style="font-weight:bold">cell</a> 数组
+
+    {'3ds Lightmath'                      }
+    {'Adobe Arabicmath'                   }
+    {'Adobe Fan Heiti Std Bmath'          }
+    {'Adobe Gothic Std Bmath'             }
+    {'Adobe Hebrewmath'                   }
+    {'Adobe Ming Std Lmath'               }
+    {'Adobe Myungjo Std Mmath'            }
+    {'Adobe Thaimath'                     }
+    {'Adobe 宋体 Std Lmath'               }
+    {'Adobe 黑体 Std Rmath'               }
+    {'Agency FBmath'                      }
+    {'Algerianmath'                       }
+    {'AMGDTmath'                          }
+    {'AMGDT_IV25math'                     }
+    {'AMGDT_IV50math'                     }
+    {'Arialmath'                          }
+    {'Arial Blackmath'                    }
+    {'Arial Narrowmath'                   }
+    {'Arial Rounded MT Boldmath'          }
+    {'Arial Unicode MSmath'               }
+    {'Artifakt Elementmath'               }
+    {'Artifakt Element Blackmath'         }
+    {'Artifakt Element Bookmath'          }
+    {'Artifakt Element Hairmath'          }
+    {'Artifakt Element Heavymath'         }
+    {'Artifakt Element Lightmath'         }
+    {'Artifakt Element Mediummath'        }
+    {'Artifakt Element Thinmath'          }
+    {'AvantGardemath'                     }
+    {'Bahnschriftmath'                    }
+    {'BankGothic Lt BTmath'               }
+    {'BankGothic Md BTmath'               }
+    {'Baskerville Old Facemath'           }
+    {'Bauhaus 93math'                     }
+    {'Bell MTmath'                        }
+    {'Berlin Sans FBmath'                 }
+    {'Berlin Sans FB Demimath'            }
+    {'Bernard MT Condensedmath'           }
+    {'Blackadder ITCmath'                 }
+    {'Bodoni MTmath'                      }
+    {'Bodoni MT Blackmath'                }
+    {'Bodoni MT Condensedmath'            }
+    {'Bodoni MT Poster Compressedmath'    }
+    {'Book Antiquamath'                   }
+    {'Bookmanmath'                        }
+    {'Bookman Old Stylemath'              }
+    {'Bradley Hand ITCmath'               }
+    {'Britannic Boldmath'                 }
+    {'Broadwaymath'                       }
+    {'Brush Script MTmath'                }
+    {'Calibrimath'                        }
+    {'Calibri Lightmath'                  }
+    {'Californian FBmath'                 }
+    {'Calisto MTmath'                     }
+    {'Cambriamath'                        }
+    {'Cambria Mathmath'                   }
+    {'Candaramath'                        }
+    {'Candara Lightmath'                  }
+    {'Cascadia Codemath'                  }
+    {'Cascadia Monomath'                  }
+    {'Castellarmath'                      }
+    {'Centaurmath'                        }
+    {'Centurymath'                        }
+    {'Century Gothicmath'                 }
+    {'Century Schoolbookmath'             }
+    {'Chillermath'                        }
+    {'Colonna MTmath'                     }
+    {'Comic Sans MSmath'                  }
+    {'CommercialScript BTmath'            }
+    {'Complexmath'                        }
+    {'Complex_IV25math'                   }
+    {'Complex_IV50math'                   }
+    {'Consolasmath'                       }
+    {'Constantiamath'                     }
+    {'Cooper Blackmath'                   }
+    {'Copperplate Gothic Boldmath'        }
+    {'Copperplate Gothic Lightmath'       }
+    {'Corbelmath'                         }
+    {'Corbel Lightmath'                   }
+    {'Courantmath'                        }
+    {'Couriermath'                        }
+    {'Courier Newmath'                    }
+    {'Courier Stdmath'                    }
+    {'Curlz MTmath'                       }
+    {'DejaVu Math TeX Gyremath'           }
+    {'DejaVu Sansmath'                    }
+    {'DejaVu Sans Condensedmath'          }
+    {'DejaVu Sans Lightmath'              }
+    {'DejaVu Sans Monomath'               }
+    {'DejaVu Serifmath'                   }
+    {'DejaVu Serif Condensedmath'         }
+    {'Delcam Gothicmath'                  }
+    {'Delcam Grenadiermath'               }
+    {'Delcam Handscriptmath'              }
+    {'Delcam Sans Serifmath'              }
+    {'Delcam Scriptmath'                  }
+    {'DFKai-SBmath'                       }
+    {'Dialogmath'                         }
+    {'DialogInputmath'                    }
+    {'Dubaimath'                          }
+    {'Dubai Lightmath'                    }
+    {'Dubai Mediummath'                   }
+    {'Dutch801 Rm BTmath'                 }
+    {'Dutch801 XBd BTmath'                }
+    {'Ebrimamath'                         }
+    {'Edwardian Script ITCmath'           }
+    {'Elephantmath'                       }
+    {'Engravers MTmath'                   }
+    {'Eras Bold ITCmath'                  }
+    {'Eras Demi ITCmath'                  }
+    {'Eras Light ITCmath'                 }
+    {'Eras Medium ITCmath'                }
+    {'ESSTIXFourmath'                     }
+    {'ESSTIXOnemath'                      }
+    {'ESSTIXSixteenmath'                  }
+    {'ESSTIXThreemath'                    }
+    {'ESSTIXTwomath'                      }
+    {'Euclidmath'                         }
+    {'Euclid Frakturmath'                 }
+    {'Euclid Symbolmath'                  }
+    {'Felix Titlingmath'                  }
+    {'Fencesmath'                         }
+    {'Footlight MT Lightmath'             }
+    {'Fortemath'                          }
+    {'Franklin Gothic Bookmath'           }
+    {'Franklin Gothic Demimath'           }
+    {'Franklin Gothic Demi Condmath'      }
+    {'Franklin Gothic Heavymath'          }
+    {'Franklin Gothic Mediummath'         }
+    {'Franklin Gothic Medium Condmath'    }
+    {'Freestyle Scriptmath'               }
+    {'French Script MTmath'               }
+    {'Gabriolamath'                       }
+    {'Gadugimath'                         }
+    {'Garamondmath'                       }
+    {'GDTmath'                            }
+    {'GDT_IV25math'                       }
+    {'GDT_IV50math'                       }
+    {'GENISOmath'                         }
+    {'Georgiamath'                        }
+    {'Gigimath'                           }
+    {'Gill Sans MTmath'                   }
+    {'Gill Sans MT Condensedmath'         }
+    {'Gill Sans MT Ext Condensed Boldmath'}
+    {'Gill Sans Ultra Boldmath'           }
+    {'Gill Sans Ultra Bold Condensedmath' }
+    {'Gloucester MT Extra Condensedmath'  }
+    {'GOST Commonmath'                    }
+    {'GothicEmath'                        }
+    {'GothicGmath'                        }
+    {'GothicImath'                        }
+    {'Goudy Old Stylemath'                }
+    {'Goudy Stoutmath'                    }
+    {'GreekCmath'                         }
+    {'GreekC_IV25math'                    }
+    {'GreekC_IV50math'                    }
+    {'GreekSmath'                         }
+    {'GreekS_IV25math'                    }
+    {'GreekS_IV50math'                    }
+    {'Haettenschweilermath'               }
+    {'Harlow Solid Italicmath'            }
+    {'Harringtonmath'                     }
+    {'Heloniamath'                        }
+    {'Helveticamath'                      }
+    {'Helvetica-Narrowmath'               }
+    {'High Tower Textmath'                }
+    {'Impactmath'                         }
+    {'Imprint MT Shadowmath'              }
+    {'Informal Romanmath'                 }
+    {'Ink Freemath'                       }
+    {'ISOCPmath'                          }
+    {'ISOCP2math'                         }
+    {'ISOCP2_IV25math'                    }
+    {'ISOCP2_IV50math'                    }
+    {'ISOCP3math'                         }
+    {'ISOCP3_IV25math'                    }
+    {'ISOCP3_IV50math'                    }
+    {'ISOCP_IV25math'                     }
+    {'ISOCP_IV50math'                     }
+    {'ISOCPEURmath'                       }
+    {'ISOCTmath'                          }
+    {'ISOCT2math'                         }
+    {'ISOCT2_IV25math'                    }
+    {'ISOCT2_IV50math'                    }
+    {'ISOCT3math'                         }
+    {'ISOCT3_IV25math'                    }
+    {'ISOCT3_IV50math'                    }
+    {'ISOCT_IV25math'                     }
+    {'ISOCT_IV50math'                     }
+    {'ISOCTEURmath'                       }
+    {'Italicmath'                         }
+    {'Italic_IV25math'                    }
+    {'Italic_IV50math'                    }
+    {'ItalicCmath'                        }
+    {'ItalicTmath'                        }
+    {'Javanese Textmath'                  }
+    {'Jokermanmath'                       }
+    {'Juice ITCmath'                      }
+    {'Kozuka Gothic Pr6N Mmath'           }
+    {'Kozuka Mincho Pr6N Rmath'           }
+    {'Kristen ITCmath'                    }
+    {'Kunstler Scriptmath'                }
+    {'Leelawadeemath'                     }
+    {'Leelawadee UImath'                  }
+    {'Leelawadee UI Semilightmath'        }
+    {'Lucida Brightmath'                  }
+    {'Lucida Calligraphymath'             }
+    {'Lucida Consolemath'                 }
+    {'Lucida Faxmath'                     }
+    {'Lucida Handwritingmath'             }
+    {'Lucida Sansmath'                    }
+    {'Lucida Sans Typewritermath'         }
+    {'Lucida Sans Unicodemath'            }
+    {'Magnetomath'                        }
+    {'Maiandra GDmath'                    }
+    {'Malgun Gothicmath'                  }
+    {'Malgun Gothic Semilightmath'        }
+    {'MaplePimath'                        }
+    {'Matura MT Script Capitalsmath'      }
+    {'Microsoft Himalayamath'             }
+    {'Microsoft JhengHeimath'             }
+    {'Microsoft JhengHei Lightmath'       }
+    {'Microsoft JhengHei UImath'          }
+    {'Microsoft JhengHei UI Lightmath'    }
+    {'Microsoft New Tai Luemath'          }
+    {'Microsoft PhagsPamath'              }
+    {'Microsoft Sans Serifmath'           }
+    {'Microsoft Tai Lemath'               }
+    {'Microsoft Uighurmath'               }
+    {'Microsoft YaHei UImath'             }
+    {'Microsoft YaHei UI Lightmath'       }
+    {'Microsoft Yi Baitimath'             }
+    {'MingLiUmath'                        }
+    {'MingLiU-ExtBmath'                   }
+    {'MingLiU_HKSCSmath'                  }
+    {'MingLiU_HKSCS-ExtBmath'             }
+    {'Minion Promath'                     }
+    {'Mistralmath'                        }
+    {'Modern No. 20math'                  }
+    {'Mongolian Baitimath'                }
+    {'Monospac821 BTmath'                 }
+    {'Monospacedmath'                     }
+    {'Monotxtmath'                        }
+    {'Monotxt_IV25math'                   }
+    {'Monotxt_IV50math'                   }
+    {'Monotype Corsivamath'               }
+    {'MS Gothicmath'                      }
+    {'MS PGothicmath'                     }
+    {'MS Reference Sans Serifmath'        }
+    {'MS UI Gothicmath'                   }
+    {'MV Bolimath'                        }
+    {'Myanmar Textmath'                   }
+    {'Myriad CADmath'                     }
+    {'Myriad Promath'                     }
+    {'NewCenturySchoolBookmath'           }
+    {'Niagara Engravedmath'               }
+    {'Niagara Solidmath'                  }
+    {'Nirmala UImath'                     }
+    {'Nirmala UI Semilightmath'           }
+    {'NX ANSI Symbolsmath'                }
+    {'NX ISO Symbolsmath'                 }
+    {'OCR A Extendedmath'                 }
+    {'Old English Text MTmath'            }
+    {'OLF SimpleSansOCmath'               }
+    {'Onyxmath'                           }
+    {'Open Sansmath'                      }
+    {'Open Sans Semiboldmath'             }
+    {'Palace Script MTmath'               }
+    {'Palatinomath'                       }
+    {'Palatino Linotypemath'              }
+    {'Papyrusmath'                        }
+    {'Parchmentmath'                      }
+    {'Perpetuamath'                       }
+    {'Perpetua Titling MTmath'            }
+    {'Playbillmath'                       }
+    {'PMingLiUmath'                       }
+    {'PMingLiU-ExtBmath'                  }
+    {'Poor Richardmath'                   }
+    {'Pristinamath'                       }
+    {'Proxy 1math'                        }
+    {'Proxy 2math'                        }
+    {'Proxy 3math'                        }
+    {'Proxy 4math'                        }
+    {'Proxy 5math'                        }
+    {'Proxy 6math'                        }
+    {'Proxy 7math'                        }
+    {'Proxy 8math'                        }
+    {'Proxy 9math'                        }
+    {'Rage Italicmath'                    }
+    {'Raviemath'                          }
+    {'Rockwellmath'                       }
+    {'Rockwell Condensedmath'             }
+    {'Rockwell Extra Boldmath'            }
+    {'RomanCmath'                         }
+    {'RomanDmath'                         }
+    {'RomanSmath'                         }
+    {'RomanS_IV25math'                    }
+    {'RomanS_IV50math'                    }
+    {'RomanTmath'                         }
+    {'SansSerifmath'                      }
+    {'Script MT Boldmath'                 }
+    {'ScriptCmath'                        }
+    {'ScriptSmath'                        }
+    {'ScriptS_IV25math'                   }
+    {'ScriptS_IV50math'                   }
+    {'Segoe Printmath'                    }
+    {'Segoe Scriptmath'                   }
+    {'Segoe UImath'                       }
+    {'Segoe UI Blackmath'                 }
+    {'Segoe UI Emojimath'                 }
+    {'Segoe UI Historicmath'              }
+    {'Segoe UI Lightmath'                 }
+    {'Segoe UI Semiboldmath'              }
+    {'Segoe UI Semilightmath'             }
+    {'Segoe UI Symbolmath'                }
+    {'Segoe UI Variablemath'              }
+    {'Serifmath'                          }
+    {'Showcard Gothicmath'                }
+    {'Simplexmath'                        }
+    {'Simplex_IV25math'                   }
+    {'Simplex_IV50math'                   }
+    {'SimSun-ExtBmath'                    }
+    {'Sitka Textmath'                     }
+    {'Snap ITCmath'                       }
+    {'SolidWorks GDTmath'                 }
+    {'Stencilmath'                        }
+    {'Stylus BTmath'                      }
+    {'SWAstromath'                        }
+    {'SWCompmath'                         }
+    {'SWGDTmath'                          }
+    {'SWGothemath'                        }
+    {'SWGothgmath'                        }
+    {'SWGothimath'                        }
+    {'SWGrekcmath'                        }
+    {'SWGreksmath'                        }
+    {'Swis721 BdCnOul BTmath'             }
+    {'Swis721 BdOul BTmath'               }
+    {'Swis721 Blk BTmath'                 }
+    {'Swis721 BlkCn BTmath'               }
+    {'Swis721 BlkEx BTmath'               }
+    {'Swis721 BlkOul BTmath'              }
+    {'Swis721 BTmath'                     }
+    {'Swis721 Cn BTmath'                  }
+    {'Swis721 Ex BTmath'                  }
+    {'Swis721 Lt BTmath'                  }
+    {'Swis721 LtCn BTmath'                }
+    {'Swis721 LtEx BTmath'                }
+    {'SWIsop1math'                        }
+    {'SWIsop2math'                        }
+    {'SWIsop3math'                        }
+    {'SWIsot1math'                        }
+    {'SWIsot2math'                        }
+    {'SWIsot3math'                        }
+    {'SWItalmath'                         }
+    {'SWItalcmath'                        }
+    {'SWItaltmath'                        }
+    {'SWLinkmath'                         }
+    {'SWMapmath'                          }
+    {'SWMathmath'                         }
+    {'SWMeteomath'                        }
+    {'SWMonomath'                         }
+    {'SWMusicmath'                        }
+    {'SWRomncmath'                        }
+    {'SWRomndmath'                        }
+    {'SWRomnsmath'                        }
+    {'SWRomntmath'                        }
+    {'SWScrpcmath'                        }
+    {'SWScrpsmath'                        }
+    {'SWSimpmath'                         }
+    {'SWTxtmath'                          }
+    {'Syastromath'                        }
+    {'Syastro_IV25math'                   }
+    {'Syastro_IV50math'                   }
+    {'Sylfaenmath'                        }
+    {'Symapmath'                          }
+    {'Symap_IV25math'                     }
+    {'Symap_IV50math'                     }
+    {'Symathmath'                         }
+    {'Symath_IV25math'                    }
+    {'Symath_IV50math'                    }
+    {'Symbolmath'                         }
+    {'SymbolPimath'                       }
+    {'Symeteomath'                        }
+    {'Symeteo_IV25math'                   }
+    {'Symeteo_IV50math'                   }
+    {'Tahomamath'                         }
+    {'Tempus Sans ITCmath'                }
+    {'Thamesmath'                         }
+    {'Tigermath'                          }
+    {'Tiger Expertmath'                   }
+    {'Timesmath'                          }
+    {'Times New Romanmath'                }
+    {'Trebuchet MSmath'                   }
+    {'Tw Cen MTmath'                      }
+    {'Tw Cen MT Condensedmath'            }
+    {'Tw Cen MT Condensed Extra Boldmath' }
+    {'Txtmath'                            }
+    {'Txt_IV25math'                       }
+    {'Txt_IV50math'                       }
+    {'Verdanamath'                        }
+    {'Viner Hand ITCmath'                 }
+    {'Vineta BTmath'                      }
+    {'Vivaldimath'                        }
+    {'Vladimir Scriptmath'                }
+    {'Wide Latinmath'                     }
+    {'Yu Gothicmath'                      }
+    {'Yu Gothic Lightmath'                }
+    {'Yu Gothic Mediummath'               }
+    {'Yu Gothic UImath'                   }
+    {'Yu Gothic UI Lightmath'             }
+    {'Yu Gothic UI Semiboldmath'          }
+    {'Yu Gothic UI Semilightmath'         }
+    {'ZapfChancerymath'                   }
+    {'ZapfDingbatsmath'                   }
+    {'仿宋math'                           }
+    {'华文中宋math'                        }
+    {'华文仿宋math'                        }
+    {'华文宋体math'                        }
+    {'华文彩云math'                        }
+    {'华文新魏math'                        }
+    {'华文楷体math'                        }
+    {'华文琥珀math'                        }
+    {'华文细黑math'                        }
+    {'华文行楷math'                        }
+    {'华文隶书math'                        }
+    {'宋体math'                           }
+    {'幼圆math'                           }
+    {'微软雅黑math'                        }
+    {'微软雅黑 Lightmath'                  }
+    {'新宋体math'                          }
+    {'方正姚体math'                        }
+    {'方正舒体math'                        }
+    {'楷体math'                           }
+    {'汉仪长仿宋体math'                     }
+    {'等线math'                           }
+    {'等线 Lightmath'                     }
+    {'隶书math'                           }
+    {'黑体math'                           }
+
+help strcmpi
+ <strong>strcmpi</strong> Compare strings or character vectors ignoring case
+    TF = <strong>strcmpi</strong>(S1,S2) compares S1 and S2 and returns logical 1 (true)
+    if they are the same except for case, and returns logical 0 (false) 
+    otherwise. Either text input can be a character vector or a string scalar. 
+ 
+    TF = <strong>strcmpi</strong>(S,A) compares S to each element of array A, where S
+    is a character vector, a string scalar, or a cell array with one
+    element, and A is a string array or a cell array of character vectors. <strong>strcmpi</strong> 
+    returns TF, a logical array that is the same size as A and contains 
+    logical 1 (true) for those elements of A that are a match, except for 
+    case, and logical 0 (false) for those elements that are not. TF = <strong>strcmpi</strong>(A,S) 
+    returns the same result.
+ 
+    TF = <strong>strcmpi</strong>(A1,A2) compares each element of A1 to the same element in A2, 
+    where A1 and A2 are equal-size string arrays or cell arrays of character 
+    vectors. Input A1 and/or A2 can also be a character array having the number 
+    of rows as there are elements in the other argument. <strong>strcmpi</strong> returns TF, 
+    a logical array that is the same size as A1 or A2, and contains logical 1 
+    (true) for those elements of A1 and A2 that are a match, except for case, 
+    and logical 0 (false) for those elements that are not.
+ 
+    When one of the inputs is an array, scalar expansion occurs as needed.
+ 
+    <strong>strcmpi</strong> supports international character sets.
+ 
+    See also <a href="matlab:help strcmp -displayBanner">strcmp</a>, <a href="matlab:help strncmp -displayBanner">strncmp</a>, <a href="matlab:help strncmpi -displayBanner">strncmpi</a>, <a href="matlab:help regexpi -displayBanner">regexpi</a>, <a href="matlab:help contains -displayBanner">contains</a>, <a href="matlab:help startsWith -displayBanner">startsWith</a>,
+    <a href="matlab:help endsWith -displayBanner">endsWith</a>.
+
+    <a href="matlab:doc strcmpi">strcmpi 的文档</a>
+    <a href="matlab:matlab.internal.language.introspective.overloads.displayOverloads('strcmpi')">名为 strcmpi 的其他函数</a>
+
+aa = listfonts;
+contains(aa,'math')
+
+ans =
+
+  438×1 <a href="matlab:helpPopup logical" style="font-weight:bold">logical</a> 数组
+
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   1
+   1
+   1
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+   0
+
+help text
+ <strong>text</strong> Add text descriptions to data points
+    <strong>text</strong>(x,y,str) adds a text description to one or more data points in the
+    current axes using the text specified by str. To add text to one point,
+    specify x and y as scalars in data units. To add text to multiple
+    points, specify x and y as vectors with equal length.
+ 
+    <strong>text</strong>(x,y,z,str) positions the text in 3-D coordinates.
+    
+    <strong>text</strong>(...,Name,Value) specifies text properties using one or more
+    Name,Value pair arguments. For example, 'FontSize',14 sets the font
+    size to 14 points. You can specify text properties with any of the
+    input argument combinations in the previous syntaxes. If you specify
+    the Position and String properties as Name,Value pairs, then you do not
+    need to specify the x, y, z, and str inputs.
+ 
+    <strong>text</strong>(container,...) creates the text in the axes, group, or transform
+    specified by container, instead of in the current axes.
+ 
+    T = <strong>text</strong>(...) returns one or more text objects. Use T to modify
+    properties of the text objects after they are created. For a list of
+    properties and descriptions, see Text Properties. You can specify an
+    output with any of the previous syntaxes.
+ 
+    Execute GET(T), where T is a text object, to see a list of text object
+    properties and their current values.
+    Execute SET(T) to see a list of text object properties and legal
+    property values.
+ 
+    See also <a href="matlab:help xlabel -displayBanner">xlabel</a>, <a href="matlab:help ylabel -displayBanner">ylabel</a>, <a href="matlab:help zlabel -displayBanner">zlabel</a>, <a href="matlab:help title -displayBanner">title</a>, <a href="matlab:help gtext -displayBanner">gtext</a>, <a href="matlab:help line -displayBanner">line</a>, <a href="matlab:help patch -displayBanner">patch</a>.
+
+    <a href="matlab:doc text">text 的文档</a>
+    <a href="matlab:matlab.internal.help.displayFoldersList('text')">名为 text 的文件夹</a>
+
+doc text
+Fr = csaps(SurfEach,toolREach,0.0000001);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+help csaps
+ <strong>csaps</strong> Cubic smoothing spline.
+ 
+    <strong>csaps</strong>(X,Y)  returns the ppform of a cubic smoothing spline for the
+    given data X,Y. The smoothing spline approximates, at the data site X(j),
+    the given data value Y(:,j), j=1:length(X). The data values may be
+    scalars, vectors, matrices, or even ND-arrays. Data points with the
+    same site are replaced by their (weighted) average, and this may affect the
+    smoothing spline.
+    For smoothing of gridded data, see below.
+ 
+    This smoothing spline  f  minimizes
+ 
+    P * sum_j W(j) |Y(:,j) - f(X(j))|^2  +  (1-P) * integral |D^2 f|^2 .
+ 
+    Here, the sum is over j=1:length(X);
+    X  and  Y  are the result of replacing any data points with the same site
+    by their weighted average, with its weight the sum of the corresponding
+    weights;
+    the integral is taken over the interval [min(X) .. max(X)];
+    |z|^2  is the sum of the squares of the entries of  z ;
+    D^2 f  is the second derivative of the function  f ;
+    W = ones(length(X),1)  is the default value for W; and
+    the default value for the smoothing parameter P is chosen,
+    in an ad hoc fashion and in dependence on X, as indicated in
+    the next paragraph. You can supply a specific value for P, by using
+    <strong>csaps</strong>(X,Y,P)  instead.
+ 
+    When P is 0, the smoothing spline is the least-squares straight line fit
+    to the data, while, at the other extreme, i.e., when P is 1, it is the
+    `natural' or variational cubic spline interpolant. The transition region
+    between these two extremes is usually only a rather small range of values
+    for P and its location strongly depends on the data sites. It is in this
+    small range that P is chosen when it is not supplied, or when an empty
+    P or a negative P is input.
+    If P > 1 , the corresponding solution of the above minimization problem
+    is returned, but this amounts to a roughening rather than a smoothing.
+ 
+    If the resulting smoothing spline, pp, is to be evaluated outside its basic 
+    interval, it should be replaced by fnxtr(pp) to ensure that its second
+    derivative is zero outside that interval.
+ 
+    [OUT,P] = <strong>csaps</strong>(X,Y,...)  returns the value of P actually used, and this
+    is particularly useful when no P or an empty P was specified.
+ 
+    If you have difficulty choosing P but have some feeling for the size
+    of the noise in Y, consider using instead  spaps(X,Y,tol)  which, in
+    effect, chooses P in such a way that the roughness measure,
+                 integral (D^2 f)^2 ,
+    is as small as possible subject to the condition that the error measure,
+                 sum_i W(i)(Y(i) - f(X(i)))^2 ,
+    does not exceed the specified  tol . This usually means that the error
+    measure equals the specified  tol .
+ 
+    <strong>csaps</strong>(X,Y,P,XX)  returns the value(s) at XX of the cubic smoothing spline,
+    unless XX is empty, in which case the ppform of the cubic smoothing
+    spline is returned. This latter option is important when the user wants
+    the smoothing spline (rather than its values) corresponding to a specific
+    choice of error weights, as is discussed next.
+ 
+    <strong>csaps</strong>(X,Y,P,XX,W)  returns, depending on whether or not XX is empty, the
+    ppform, or the values at XX, of the cubic smoothing spline for the
+    specified weights W. Any negative weight is replaced by 0, and that
+    makes the resulting smoothing spline independent of the corresponding
+    data point. When data points with the same site are averaged, their
+    weights are summed.
+ 
+    See below for the case of GRIDDED data.
+ 
+    Example:
+       x = linspace(0,2*pi,21); y = sin(x)+(rand(1,21)-.5)*.1;
+       pp = csaps(x,y, .4, [], [ones(1,10), repmat(5,1,10), 0] );
+    returns a smooth fit to the data that is much closer to the data
+    in the right half, because of the much larger weight there, except for
+    the last data point, for which the weight is zero.
+ 
+    It is also possible to vary the smoothness requirement, by having P be a
+    sequence (of the same length as X) rather than a scalar.
+    In that case, the roughness measure is taken to be
+                    integral lambda(t)*(D^2 f(t))^2 dt ,
+    with the roughness weight  lambda  the piecewise constant function with
+    interior breaks X whose value on the interval (X(i-1),X(i)) is P(i)  for
+    i=2:length(x),  while P(1) continues to be taken as the smoothing
+    parameter, P.
+ 
+    Example:
+       pp1 = csaps(x,y, [.4,ones(1,10),repmat(.2,1,10)], [], ...
+                                   [ones(1,10), repmat(5,1,10), 0]);
+    uses the same data, smoothing parameter, and error weight as in the
+    earlier example, but chooses the roughness weight to be only .2 in the
+    right half of the interval and gives, correspondingly, a rougher but
+    better fit there, -- except for the last data point which is ignored.
+    A plot showing both examples for comparison could now be obtained by
+       fnplt(pp); hold on, fnplt(pp1,'r'), plot(x,y,'ok'), hold off
+       title('cubic smoothing spline, with right half treated differently:')
+       xlabel(['blue: larger error weights; ', ...
+               'red: also smaller roughness weights'])
+ 
+    <strong>csaps</strong>({X1,...,Xm},Y, ... )  provides a cubic smoothing spline to data
+    values Y on the m-dimensional rectangular grid specified by the  m
+    vectors X1, ..., Xm, and these may be of different lengths. Now,
+    Y has size [d,length(X1), ..., length(Xm)], with  d  the size of a
+    data value.
+    If Y is only of size [length(X1), ..., length(Xm)], i.e., the apparent
+    d is [], then  d  is taken to be [1], i.e., the function is scalar-valued.
+    As to the optional arguments,  P , XX , W , if present, they must be as
+    follows:
+ 
+    P must be a cell-array with  m  entries, or else an m-vector, except that
+    it may also be a scalar or empty, in which case it is converted to an
+    m-cell-array with all entries equal to the given P. The optional second
+    output argument will always be an m-cell-array.
+ 
+     XX  can either be a matrix with  m  rows, and then each of its columns
+    is taken as a point in m-space at which the smoothing spline is to be
+    evaluated; or else, XX must be a cell-array {XX1, ..., XXm} specifying
+    the m-dimensional grid at which to evaluate the smoothing spline.
+    With such an XX present, the values of the smoothing spline at the points
+    specified by XX are returned. If there is no XX or else XX is empty,
+    the ppform of the smoothing spline is returned instead.
+ 
+     W  must be a cell array of length  m , with each W{i} either a vector
+    of the same length as Xi, or else empty, and in that case the default
+    value, ones(1,length(Xi)), is used for W{i}.
+ 
+    Example:
+       x = {linspace(-2,3,51),linspace(-3,3,61)};
+       [xx,yy] = ndgrid(x{1},x{2}); y = peaks(xx,yy);
+       noisy = y+(rand(size(y))-.5);
+       [smooth,p] = csaps(x,noisy,[],x);
+       surf(x{1},x{2},smooth.')
+    adds uniform noise from the interval [-.5,.5] to the values of MATLAB's
+    PEAKS function on a 51-by-61 uniform grid, then obtains smoothed values
+    from <strong>csaps</strong> along with the smoothing parameters chosen by <strong>csaps</strong>, and plots
+    these smoothed values. -- Notice the use of NDGRID and the need to use the
+    transpose of the array  smooth  in the SURF command.
+    If the resulting surface does not strike you as smooth enough, try a
+    slightly smaller P than the one, .9998889, used, for each variable,
+    by <strong>csaps</strong> in this case:
+       smoother = csaps(x,noisy,.996,x);
+       figure, surf(x{1},x{2},smoother.')
+ 
+    See also <a href="matlab:help spaps -displayBanner">spaps</a>, CSAPSDEM, <a href="matlab:help tpaps -displayBanner">tpaps</a>.
+
+    <a href="matlab:doc csaps">csaps 的文档</a>
+
+doc csaps
+help csapi
+ <strong>csapi</strong> Cubic spline interpolant with not-a-knot end condition.
+ 
+    PP  = <strong>csapi</strong>(X,Y)  returns the cubic spline interpolant (in ppform) to the 
+    given data (X,Y) using the not-a-knot end conditions.
+    The interpolant matches, at the data site X(j), the given data value
+    Y(:,j), j=1:length(X). The data values may be scalars, vectors, matrices,
+    or even ND-arrays. Data points with the same site are averaged.
+    For interpolation to gridded data, see below.
+ 
+    <strong>csapi</strong>(X,Y,XX)  is the same as FNVAL(<strong>csapi</strong>(X,Y),XX).
+ 
+    For example, 
+ 
+       values = csapi([-1:5]*(pi/2),[-1 0 1 0 -1 0 1], linspace(0,2*pi));
+ 
+    gives a surprisingly good fine sequence of values for the sine over its
+    period.
+ 
+    It is also possible to interpolate to data values on a rectangular grid,
+    as follows:
+ 
+    PP = <strong>csapi</strong>({X1, ...,Xm},Y)  returns the m-cubic spline interpolant (in
+    ppform) that matches the data value Y(:,j1,...,jm) at the data site
+    (X1(j1), ..., Xm(jm)), for ji=1:length(Xi) and i=1:m.
+    The entries of each Xi must be distinct.  Y must have size
+    [d,length(X1),...,.length(Xm)], with  d  a vector of natural numbers, and
+    with an empty  d  acceptable when the function is to be scalar-valued.
+ 
+    <strong>csapi</strong>({X1, ...,Xm},Y,XX)  is the same as FNVAL(<strong>csapi</strong>({X1,...,Xm},Y),XX).
+ 
+    For example, the statements
+ 
+       x = -1:.2:1; y=-1:.25:1; [xx, yy] = ndgrid(x,y); 
+       z = sin(10*(xx.^2+yy.^2)); pp = csapi({x,y},z);
+       fnplt(pp)
+ 
+    produce the picture of an interpolant to a bivariate function. 
+    Use of MESHGRID instead of NDGRID here would produce an error.
+ 
+    See also <a href="matlab:help csape -displayBanner">csape</a>, <a href="matlab:help spapi -displayBanner">spapi</a>, <a href="matlab:help spline -displayBanner">spline</a>, <a href="matlab:help ndgrid -displayBanner">ndgrid</a>.
+
+    <a href="matlab:doc csapi">csapi 的文档</a>
+
+doc csapi
+help csape
+ <strong>csape</strong> Cubic spline interpolation with various end conditions.
+ 
+    PP  = <strong>csape</strong>(X,Y)  returns the cubic spline interpolant (in ppform) to the 
+    given data (X,Y) using Lagrange end conditions (the default in table below).
+    The interpolant matches, at the data site X(j), the given data value
+    Y(:,j), j=1:length(X). The data values may be scalars, vectors, matrices,
+    or even ND-arrays. Data points with the same site are averaged.
+    For interpolation to gridded data, see below.
+ 
+    PP  = <strong>csape</strong>(X,Y,CONDS)  uses the end conditions specified by CONDS, with
+    corresponding end condition values  endcondvals .
+    If there are two more data values than data sites, then the first (last) 
+    data value is taken as the value for the left (right) end condition, i.e.,
+    endcondvals = Y(:,[1 end]).
+    Otherwise, default values are used.
+ 
+    CONDS may be a *string* whose first character matches one of the
+    following: 'complete' or 'clamped', 'not-a-knot', 'periodic',
+    'second', 'variational', with the following meanings:
+ 
+    'complete'    : match endslopes (as given, with
+                    default as under *default*)
+    'not-a-knot'  : make spline C^3 across first and last interior
+                    break (ignoring given end condition values if any)
+    'periodic'    : match first and second derivatives at first data
+                    point with those at last data point
+                    (ignoring given end condition values if any)
+    'second'      : match end second derivatives (as given,
+                    with default [0 0], i.e., as in variational)
+    'variational' : set end second derivatives equal to zero
+                    (ignoring given end condition values if any)
+    The *default* : match endslopes to the slope of the cubic that
+                    matches the first four data at the respective end.
+ 
+    By giving CONDS as a 1-by-2 matrix instead, it is possible to
+    specify *different* conditions at the two endpoints, namely
+    CONDS(i) with value endcondvals(:,i), with i=1 (i=2) referring to the
+    left (right) endpoint.
+ 
+    CONDS(i)=j  means that the j-th derivative is being specified to
+    be endcondvals(:,i) , j=1,2.  CONDS(1)=0=CONDS(2)  means periodic end
+    conditions.
+ 
+    If CONDS(i) is not specified or is different from 0, 1 or 2, then
+    the default value for CONDS(i) is  1  and the default value of
+    endcondvals(:,i) is taken.  If no end condition values are specified,
+    then the default value for endcondvals(:,i) is taken to be
+ 
+     deriv. of cubic interpolant to nearest four points, if   CONDS(i)=1;
+                      0                                  if   CONDS(i)=2.
+ 
+    For backward compatibility, it is also possible to specify endcondvals as
+    an optional fourth input argument, but only for univariate data.
+    
+    It is also possible to handle gridded data, by having X be a cell array
+    containing  m  univariate meshes and, correspondingly, having Y be an
+    m-dimensional array (or an (m+length(d))-dimensional array if the function 
+    is to have values of size d ). 
+    Correspondingly, CONDS is a cell array with m entries, and,
+    consistent with the tensor product procedure used, also the tensor product
+    of the univariate end conditions is enforced and must be supplied with
+    values; see the example below.
+ 
+    For example,
+ 
+       fnplt(csape( [0:4], [1 0 -1 0 1;0 1 0 -1 0], 'periodic')), axis equal
+ 
+    plots a circle, while
+ 
+       x = linspace(0,2*pi,21);  pp = csape( x, [1 sin(x) 0], [1 2] );
+ 
+    gives a good approximation to the sine function on the interval [0 .. 2*pi]
+    (matching its slope 1 at the left endpoint, x(1) = 0, and its second 
+    derivative 0 at the right endpoint, x(21) = 2*pi, in addition to its value
+    at every x(i), i=1:21).
+ 
+    As an illustration of the specification of end conditions in a multivariate
+    setting, here is complete bicubic interpolation, with the data explicitly
+    derived from the bicubic polynomial  g(x,y) = x^3y^3, to make it easy for 
+    you to see exactly where the slopes and slopes of slopes (i.e., cross 
+    derivatives) must be placed in the data values supplied. Since our  g  is a
+    bicubic polynomial, its interpolant, f , must be  g  itself.  We test this.
+ 
+       sites = {[0 1],[0 2]}; coefs = zeros(4,4); coefs(1,1) = 1;
+       g = ppmak(sites,coefs);
+       Dxg = fnval(fnder(g,[1 0]),sites);
+       Dyg = fnval(fnder(g,[0 1]),sites);
+       Dxyg = fnval(fnder(g,[1 1]),sites);
+       f = csape(sites,[Dxyg(1,1),   Dxg(1,:),    Dxyg(1,2); ...
+                        Dyg(:,1), fnval(g,sites), Dyg(:,2) ; ...
+                        Dxyg(2,1),   Dxg(2,:),    Dxyg(2,2)], ...
+                                                 {'complete','complete'});
+       if any(squeeze(fnbrk(f,'c'))-coefs), 'something went wrong', end
+ 
+    As a multivariate vector-valued example, here is a sphere, done as a 
+    parametric bicubic spline, using prescribed slopes in one direction and
+    periodic end conditions in the other:
+ 
+       x = 0:4; y=-2:2; s2 = 1/sqrt(2);
+       clear v
+       v(3,:,:) = [0 1 s2 0 -s2 -1 0].'*[1 1 1 1 1];
+       v(2,:,:) = [1 0 s2 1 s2 0 -1].'*[0 1 0 -1 0];
+       v(1,:,:) = [1 0 s2 1 s2 0 -1].'*[1 0 -1 0 1];
+       sph = csape({x,y},v,{'clamped','periodic'});
+       values = fnval(sph,{0:.1:4,-2:.1:2});
+     surf(squeeze(values(1,:,:)),squeeze(values(2,:,:)),squeeze(values(3,:,:)))
+       % the previous two lines could have been replaced by: fnplt(sph) 
+       axis equal, axis off
+ 
+    See also <a href="matlab:help csapi -displayBanner">csapi</a>, <a href="matlab:help spapi -displayBanner">spapi</a>, <a href="matlab:help spline -displayBanner">spline</a>.
+
+    <a href="matlab:doc csape">csape 的文档</a>
+
+doc csape
+selectfr
+{输入参数的数目不足。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('selectfr', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\selectfr.m', 31)" style="font-weight:bold">selectfr</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\selectfr.m',31,0)">第 31 行</a>)
+    'FontName',textFontType,'FontSize',textFontSize);
+} 
+frParamLabel = uilabel(figGridLayout,'Text',{'Approximation', 'Parameter'}, ...
+    'FontName',textFontType,'FontSize',textFontSize);
+{输入参数的数目不足。
+} 
+frParamEditfield = uieditfield(figGridLayout,'numeric','Value',[]);
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('uieditfield')" style="font-weight:bold">uieditfield</a>
+'Value' 必须为双精度标量。
+} 
+<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\matlab\uicomponents\uicomponents\uieditfield.m',59,1)">59  </a>    error('MATLAB:ui:EditField:unknownInput', ...
+mustBeInRange(-1,0,1)
+{值必须大于或等于 0 且小于或等于 1。
+} 
+<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\matlab\uicomponents\uicomponents\uieditfield.m',59,1)">59  </a>    error('MATLAB:ui:EditField:unknownInput', ...
+if system_dependent('IsDebugMode')==1, dbquit; end
+if system_dependent('IsDebugMode')==1, dbquit; end
+Fr = csaps(SurfEach,toolREach);
+{尝试将 "Fr" 添加到静态工作区。
+
+<a href="matlab:helpview('matlab','error_err_static_workspace_violation')" style="font-weight:bold">相关文档</a>
+} 
+if system_dependent('IsDebugMode')==1, dbquit; end
+Fr = csaps(SurfEach,toolREach);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,1-3e-8);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,1-3e-5);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,1-3e-1);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,3e-5);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+figure
+Fr = csaps(SurfEach,toolREach,3e-6);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,3e-15);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,3e-10);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,3e-11);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,1e-11);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = csaps(SurfEach,toolREach,1e-12);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = spaps(SurfEach,toolREach,1e-12);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = spaps(SurfEach,toolREach,0.1);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = spaps(SurfEach,toolREach,100);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = spaps(SurfEach,toolREach,100000);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = spaps(SurfEach,toolREach,1e10);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = spaps(SurfEach,toolREach,1e6);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = spaps(SurfEach,toolREach,1e7);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = spaps(SurfEach,toolREach,5e6);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+Fr = spaps(SurfEach,toolREach,7e6);
+scatter(accumPtNum,toolREach); hold on; fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]); hold off;
+pp = fnplt(Fr);
+figure; plot(1:length(pp)-1,diff(pp))
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('plot')" style="font-weight:bold">plot</a>
+向量长度必须相同。
+} 
+figure; plot(1:size(pp,2)-1,diff(pp))
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('plot')" style="font-weight:bold">plot</a>
+向量长度必须相同。
+} 

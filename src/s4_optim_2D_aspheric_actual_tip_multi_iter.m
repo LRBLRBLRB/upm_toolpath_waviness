@@ -61,9 +61,9 @@ else
     questOpt.Interpreter = 'tex';
     questOpt.Default = 'OK & Continue';
     
-    diaryFile = fullfile('..','workspace','diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
-    % diary diaryFile;
-    % diary on;
+    diaryFile = fullfile(workspaceDir,['diary',datestr(now,'yyyymmddTHHMMSS'),'.log']);
+    diary diaryFile;
+    diary on;
     
     tPar0 = tic;
     parObj = gcp;
@@ -107,13 +107,14 @@ else
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     spiralMethod = 'Radius-Number'; % Radius-Angle
-    frMethod = 'Interpolation'; % 'Approximation'
+    frMethodDefault = 'Approximation'; % 'Approximation'
+    frParamDefault = 1-1e-5;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % concentric surface generation / import
     % A = tand(20)/(2*2000);
-    c = 0.5/1000/(1000^(aimUnit - presUnit));
+    c = 0.69/1000/(1000^(aimUnit - presUnit));
     syms x y;
     surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
@@ -254,14 +255,14 @@ opt.XTol = 1e-6;
 % it should be noticed that the last tooltippt can be a minus value.But if 
 % thetoolpathpt is minus, the spiral path would be difficult to generate.
 tic;
-if curvePt(1,end)*curvePathPt(1,end) >= 0
+criterum = curvePt(1,end);
+if criterum*curvePathPt(1,end) >= 0
     % which means in the last tooltip lies over the symetrical axis as well
     % as the toolpathpt ( both are <= 0, or both ar >= 0)
-    ii = find(curvePt(1,end)*curvePathPt(1,:) < 0,1,'last');
-    if isempty(ii) 
+    ii = find(curvePt(1,:).*curvePathPt(1,:) < 0,1,'last');
+    if ~isempty(ii)
         % spiral pitch is too small that all the curvePt(end)*curvePathPt(end) > 0
         curvePathPt = [curvePathPt,zeros(3,1)];
-    else
         % ensure whether to delete the rest point
         questStr = {sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
             'Whether to delete?'],textFontSize,textFontType), ...
@@ -290,6 +291,8 @@ if curvePt(1,end)*curvePathPt(1,end) >= 0
             case 'Cancel'
                 curvePathPt(1,end) = 0;
         end
+    else
+        curvePathPt(1,end) = 0;
     end
 else
     % which means in the last tooltip lies over the symetrical axis while
@@ -479,40 +482,48 @@ switch spiralMethod
         SurfEach = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
 end
 
-switch frMethod
-    case 'Interpolation'
-        Fr = csape(SurfEach,toolREach,[1,1]);
-    case 'Approximation'
-        [isContinue,approxOut] = selectfr;
-        switch approxOut.approxMethod
-            case 'Cubic Spline'
+isContinue = 1;
+while isContinue
+    [approxOut,isContinue] = selectfr(textFontType,textFontSize);
+    switch approxOut.approxMethod
+        case 'csape'
+            approxOut.approxParam = [1,1];
+            Fr = csape(SurfEach,toolREach,approxOut.approxParam);
+        case 'csaps'
+            if approxOut.approxParam < 0 || approxOut.approxParam > 1
+                Fr = csaps(SurfEach,toolREach);
+            else
                 Fr = csaps(SurfEach,toolREach,approxOut.approxParam);
-            case 'Basic Spline'
-                Fr = spap2(3,3,SurfEach,toolREach,approxOut.approxParam);
-        end
-end
+            end
+        case 'spsps'
+            Fr = spaps(SurfEach,toolREach,approxOut.approxParam);
+        case 'spap2'
+            Fr = spap2(3,3,SurfEach,toolREach,approxOut.approxParam);
+    end
 
-hFeedrate = figure('Name','Feed Rate Smoothing');
-% tiledlayout(2,1);
-% nexttile;
-yyaxis left;
-scatter(accumPtNum,toolREach);
-hold on;
-fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]);
-plot(1:accumPtNum(end),toolRAccum);
-ylim1 = [min(toolREach),max(toolREach)];
-set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)]);
-ylabel(['Radius of the Loop (',unit,')']);
-yyaxis right;
-bar(accumPtNum(1:end - 1),diffR);
-ylim2 = [min(diffR),max(diffR)];
-set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)]);
-ylabel(['Cutting width of each Loop (',unit,')']);
-% line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
-%     'Color',[0.929,0.694,0.1250]);
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel('Loop Accumulating Point Number');
-legend('No.-R scatters','csape result','Concentric result');
+    hFeedrate = figure('Name','Feed Rate Smoothing');
+    % tiledlayout(2,1);
+    % nexttile;
+    yyaxis left;
+    scatter(accumPtNum,toolREach);
+    hold on;
+    fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]);
+    plot(1:accumPtNum(end),toolRAccum);
+    ylim1 = [min(toolREach),max(toolREach)];
+    set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)]);
+    ylabel(['Radius of the Loop (',unit,')']);
+    yyaxis right;
+    bar(accumPtNum(1:end - 1),diffR);
+    ylim2 = [min(diffR),max(diffR)];
+    set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)]);
+    ylabel(['Cutting width of each Loop (',unit,')']);
+    % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
+    %     'Color',[0.929,0.694,0.1250]);
+    set(gca,'FontSize',textFontSize,'FontName',textFontType);
+    xlabel('Loop Accumulating Point Number');
+    legend('No.-R scatters','Approx result','Concentric result','Pitch');
+    hold off;
+end
 
 if exist(fullfile(workspaceDir,'feedrate.fig'),'file')
     savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',datestr(now,'yyyymmddTHHMMSS'),'.fig']));
@@ -675,7 +686,8 @@ spiralFolderName = getlastfoldername(workspaceDir);
     '*.*','all file(*.*)';...
     }, ...
     'Select the directory and filename to save the surface tool path', ...
-    fullfile(workspaceDir,[spiralFolderName,'-spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
+    fullfile(workspaceDir,[spiralFolderName,'-spiralPath-',approxOut.approxMethod, ...
+    '-',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
 spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
 save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
     "spiralNorm","spiralCut");
