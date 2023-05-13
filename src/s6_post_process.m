@@ -1,47 +1,31 @@
 % This programme aims to export the toolpath file, for the continuing post
 % processing procedure in the IMSpost software to get the nc file.
-isAPP = false;
-if isAPP
-    workspaceDir = app.workspace;
-    if app.isSpiralFile
-        toolPathPath = fullfile(app.dirName,app.fileName);
-        % toolName = 'output_data\tool\toolTheo_3D.mat';
-        spiralPath = load(toolPathPath,'spiralPath');
-        spiralNorm = load(toolPathPath,'spiralNorm');
-        spiralCut = load(toolPathPath,'spiralCut');
-        spiralQuat = load(toolPathPath,'spiralQuat');
-    else
-        spiralPath = app.spiralPath;
-        spiralNorm = app.spiralNorm;
-        spiralCut = app.spiralCut;
-        spiralQuat = app.spiralQuat;
-    end
-else
-    close all;
+close all;
 %     clear;
-    addpath(genpath('funcs'));
-    if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
-        workspaceDir = uigetdir(fullfile('..','workspace','20230504 D906'),'select the workspace directory:');
-        % the spiral path does not exist in the workspace
-        [fileName,dirName] = uigetfile({ ...
-            '*.mat','MAT-files(*.mat)'; ...
-            '*,*','All Files(*.*)'}, ...
-            'Select one tool path data file', ...
-            fullfile(workspaceDir,'spiralpath.mat'), ...
-            'MultiSelect','off');
-        toolPathPath = fullfile(dirName,fileName);
-        processData = load(toolPathPath);
-        % toolName = 'output_data\tool\toolTheo_3D.mat';
-        spiralAngle = processData.spiralAngle;
-        spiralPath = processData.spiralPath;
-        spiralNorm = processData.spiralNorm;
-        spiralCut = processData.spiralCut;
-        spiralQuat = processData.spiralQuat;
-    end
+
+unit = '\mum';
+textFontSize = 12;
+textFontType = 'Times New Roman';
+
+addpath(genpath('funcs'));
+if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
+    workspaceDir = uigetdir(fullfile('..','workspace','20230504 D906'),'select the workspace directory:');
+    % the spiral path does not exist in the workspace
+    [fileName,dirName] = uigetfile({ ...
+        '*.mat','MAT-files(*.mat)'; ...
+        '*,*','All Files(*.*)'}, ...
+        'Select one tool path data file', ...
+        fullfile(workspaceDir,'spiralpath.mat'), ...
+        'MultiSelect','off');
+    toolPathPath = fullfile(dirName,fileName);
+    processData = load(toolPathPath);
+    % toolName = 'output_data\tool\toolTheo_3D.mat';
+    spiralAngle = processData.spiralAngle;
+    spiralPath = processData.spiralPath;
+    spiralNorm = processData.spiralNorm;
+    spiralCut = processData.spiralCut;
+    spiralQuat = processData.spiralQuat;
 end
-
-feedRate = 0.001;
-
 
 %% generate the 5-axis tool path from original data
 % toolpath should be saved in "x y z i j k" format
@@ -103,55 +87,15 @@ switch postType
             {'*.nc','Numerical control files(*.nc)';'*.*','All files'}, ...
             'Enter the file to save the CNC code',fullfile( ...
             workspaceDir,[spiralncFolderName,'spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.nc']));
-        ncFile = fullfile(ncPath,ncFname);
-        ncFid = fopen(ncFile,'w');
-        fprintf(ncFid,'#100 = 1\t\t( TOTAL PASSES OF Z)\n');
-        fprintf(ncFid,'#103 = 0.0\t\t( DEPTH OF CUT Z )\n');
-        fprintf(ncFid,'#555 = 0.001\t\t( FEED RATE )\n');
-
-        fprintf(ncFid,'\nG52 G63 G71 G103 G40 G18 G90\n');
-        fprintf(ncFid,'\n( Working Coordinates )\n%s\n%s\n\n','G55','T0303');
-
-        fprintf(ncFid,'G18 G40 G94\n');
-        fprintf(ncFid,'M78\n');
-        fprintf(ncFid,'G94 Z20 F500\n\n');
-
-        fprintf(ncFid,'M26.1\n\n');
-
-        fprintf(ncFid,'#5 = 0\t\t( COUNT VARIABLE )\n');
-        fprintf(ncFid,'#8 = 0\t\t( CUT OFFSET Z )\n');
-        fprintf(ncFid,'WHILE[#5 LT #100] DO 2\n\n');
-
-        fprintf(ncFid,'#8 = #8 - #103\t\t( Z AXIS CUTTING )\n');
-        fprintf(ncFid,'G52 X0 Y0 Z[#8]\n');
-        
-        fprintf(ncFid,'( LINK BLOCK )\n');
-        fprintf(ncFid,'G94 X%f\n',axisX(1));
-        fprintf(ncFid,'G93 F0.001 C%f\n\n',axisC(1));
-        
-        fprintf(ncFid,'G94 Z%d F500\n',5 + floor(axisZ(1)));
-        fprintf(ncFid,'Z%f F200\n',ceil(axisZ(1)));
-        fprintf(ncFid,'Z%f F20\n',axisZ(1) + 0.1);
-        fprintf(ncFid,'Z%f F1\n\n',axisZ(1));
-
-        fprintf(ncFid,'( CUTTING BLOCK )\nG93 F[#555]\n');
-        for ii = 1:length(axisC)
-            fprintf(ncFid,'C%f X%f Z%f\n',axisC(ii),axisX(ii),axisZ(ii));
-%             fprintf(ncFid,'%f %f %f\n',axisC(ii),axisX(ii),axisZ(ii));
-%             fprintf(ncFid,'GOTO/%f,%f,%f,%f,%f,%f\n', ...
-%                 spiralPath1(1,ii),spiralPath1(2,ii),spiralPath1(3,ii), ...
-%                 spiralNorm(1,ii),spiralNorm(2,ii),spiralNorm(3,ii));
+        if ~ncFname
+            msgbox(sprintf('\\fontname{%s}\\fontsize{%d} No CNC file saved.', ...
+                textFontType,textFontSize),'Message','warn',msgMode);
         end
-
-        fprintf(ncFid,'(linking block)\n');
-        fprintf(ncFid,'G94 Z5 F200\n\n');
-        fprintf(ncFid,'#5 = #5 + 1\n');
-        fprintf(ncFid,'END 2\n\n');
-        fprintf(ncFid,'G94 Z20 F800\n');
-        fprintf(ncFid,'M29\n');
-        fprintf(ncFid,'M30\n');
-
-        fclose(ncFid);
+        ncFile = fullfile(ncPath,ncFname);
+        loop.num = 1;
+        loop.offset = 0;
+        loop.step = 0;
+        writecnc_STS(ncFile,'G55','T0303',axisC,axisX,axisZ,loop);
 end
 
 %%
