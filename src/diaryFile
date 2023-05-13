@@ -1577,3 +1577,7 @@ figure; plot(1:size(pp,2)-1,diff(pp))
 {错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('plot')" style="font-weight:bold">plot</a>
 向量长度必须相同。
 } 
+figure; plot(1:size(pp,2)-1,diff(pp(:,2)))
+figure; plot(1:size(pp,2)-1,diff(pp(2,:)))
+save data.mat
+[警告: 图窗已保存在 data.mat 中。保存图形句柄变量会使创建的文件很大。要保存图形图窗，请使用 <a href="matlab:helpview([docroot,'/techdoc/ref/savefig.html'])">savefig</a>。] 
