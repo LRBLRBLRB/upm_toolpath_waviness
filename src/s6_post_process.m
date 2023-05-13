@@ -1,47 +1,31 @@
 % This programme aims to export the toolpath file, for the continuing post
 % processing procedure in the IMSpost software to get the nc file.
-isAPP = false;
-if isAPP
-    workspaceDir = app.workspace;
-    if app.isSpiralFile
-        toolPathPath = fullfile(app.dirName,app.fileName);
-        % toolName = 'output_data\tool\toolTheo_3D.mat';
-        spiralPath = load(toolPathPath,'spiralPath');
-        spiralNorm = load(toolPathPath,'spiralNorm');
-        spiralCut = load(toolPathPath,'spiralCut');
-        spiralQuat = load(toolPathPath,'spiralQuat');
-    else
-        spiralPath = app.spiralPath;
-        spiralNorm = app.spiralNorm;
-        spiralCut = app.spiralCut;
-        spiralQuat = app.spiralQuat;
-    end
-else
-    close all;
+close all;
 %     clear;
-    addpath(genpath('funcs'));
-    if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
-        workspaceDir = uigetdir(fullfile('..','workspace','20230504 D906'),'select the workspace directory:');
-        % the spiral path does not exist in the workspace
-        [fileName,dirName] = uigetfile({ ...
-            '*.mat','MAT-files(*.mat)'; ...
-            '*,*','All Files(*.*)'}, ...
-            'Select one tool path data file', ...
-            fullfile(workspaceDir,'spiralpath.mat'), ...
-            'MultiSelect','off');
-        toolPathPath = fullfile(dirName,fileName);
-        processData = load(toolPathPath);
-        % toolName = 'output_data\tool\toolTheo_3D.mat';
-        spiralAngle = processData.spiralAngle;
-        spiralPath = processData.spiralPath;
-        spiralNorm = processData.spiralNorm;
-        spiralCut = processData.spiralCut;
-        spiralQuat = processData.spiralQuat;
-    end
+
+unit = '\mum';
+textFontSize = 12;
+textFontType = 'Times New Roman';
+
+addpath(genpath('funcs'));
+if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
+    workspaceDir = uigetdir(fullfile('..','workspace','20230504 D906'),'select the workspace directory:');
+    % the spiral path does not exist in the workspace
+    [fileName,dirName] = uigetfile({ ...
+        '*.mat','MAT-files(*.mat)'; ...
+        '*,*','All Files(*.*)'}, ...
+        'Select one tool path data file', ...
+        fullfile(workspaceDir,'spiralpath.mat'), ...
+        'MultiSelect','off');
+    toolPathPath = fullfile(dirName,fileName);
+    processData = load(toolPathPath);
+    % toolName = 'output_data\tool\toolTheo_3D.mat';
+    spiralAngle = processData.spiralAngle;
+    spiralPath = processData.spiralPath;
+    spiralNorm = processData.spiralNorm;
+    spiralCut = processData.spiralCut;
+    spiralQuat = processData.spiralQuat;
 end
-
-feedRate = 0.001;
-
 
 %% generate the 5-axis tool path from original data
 % toolpath should be saved in "x y z i j k" format
@@ -96,8 +80,15 @@ switch postType
             {'*.nc','Numerical control files(*.nc)';'*.*','All files'}, ...
             'Enter the file to save the CNC code',fullfile( ...
             workspaceDir,[spiralncFolderName,'spiralPath',datestr(now,'yyyymmddTHHMMSS'),'.nc']));
+        if ~ncFname
+            msgbox(sprintf('\\fontname{%s}\\fontsize{%d} No CNC file saved.', ...
+                textFontType,textFontSize),'Message','warn',msgMode);
+        end
         ncFile = fullfile(ncPath,ncFname);
-        writecnc_STS(ncFile,'G55','T0303');
+        loop.num = 1;
+        loop.offset = 0;
+        loop.step = 0;
+        writecnc_STS(ncFile,'G55','T0303',axisC,axisX,axisZ,loop);
 end
 
 %%

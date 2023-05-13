@@ -86,6 +86,10 @@ toc
 semicolonInd = startsWith(cncLine,';');
 cncLine(semicolonInd) = [];
 cncNum = length(cncLine);
+
+switch
+    case
+end
 axisX = zeros(cncNum,1);
 axisZ = zeros(cncNum,1);
 for ii = 1:cncNum
@@ -170,6 +174,6 @@ if ~cncFile
         textFontType,textFontSize),'Message','warn',msgMode);
 end
 loop.num = 5;
-loop.ini = 0.005;
+loop.offset = 0.005;
 loop.step = -0.005;
 writecnc_2D(cncPath,'G55','T0303',axisX,axisZ,loop);

@@ -1,15 +1,17 @@
-function writecnc_STS(ncFile,workpiece,tool,varargin)
+function writecnc_STS(ncFile,workpiece,tool,axisC,axisX,axisZ,loop)
 %WRITECNC_2D 此处显示有关此函数的摘要
 %   此处显示详细说明
 
-axisC = varargin{1};
-axisX = varargin{2};
-axisZ = varargin{3};
+isLoop = isfield(loop,{'num','offset','step'});
+if ~all(isLoop)
+    error('Invalid struct LOOP! \n');
+end
+
+ncFid = fopen(ncFile,'w');
 
 %% head
-ncFid = fopen(ncFile,'w');
-fprintf(ncFid,'#100 = 1\t\t( TOTAL PASSES OF Z)\n');
-fprintf(ncFid,'#103 = 0.0\t\t( DEPTH OF CUT Z )\n');
+fprintf(ncFid,'#100 = %d\t\t( TOTAL PASSES OF Z)\n',loop.num);
+fprintf(ncFid,'#103 = %f\t\t( DEPTH OF CUT Z )\n',loop.step);
 fprintf(ncFid,'#555 = 0.001\t\t( FEED RATE )\n\n');
 
 fprintf(ncFid,'\nG52 G63 G71 G103 G40 G18 G90\n');
@@ -22,7 +24,7 @@ fprintf(ncFid,'G94 Z20 F500\n\n');
 fprintf(ncFid,'M26.1\n\n');
 
 fprintf(ncFid,'#5 = 0\t\t( COUNT VARIABLE )\n');
-fprintf(ncFid,'#8 = 0\t\t( CUT OFFSET Z )\n');
+fprintf(ncFid,'#8 = %f\t\t( CUT OFFSET Z )\n',loop.offset);
 fprintf(ncFid,'WHILE[#5 LT #100] DO 2\n\n');
 
 fprintf(ncFid,'#8 = #8 - #103\t\t( Z AXIS CUTTING )\n');

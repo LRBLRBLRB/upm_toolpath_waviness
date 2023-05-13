@@ -1,7 +1,7 @@
 function writecnc_2D(ncFile,workpiece,tool,axisX,axisZ,loop)
 %WRITECNC_2D To write the cnc file of 2D-turning process
 
-isLoop = isfield(loop,{'num','ini','step'});
+isLoop = isfield(loop,{'num','offset','step'});
 if ~isLoop
     error('Invalid struct LOOP! \n');
 end
@@ -15,7 +15,7 @@ fprintf(ncFid,'#201=1500	( SPINDLE SPEED )\n\n');
 
 fprintf(ncFid,'#501=%d		( ROUGH TIMES )\n',loop.num);
 fprintf(ncFid,'#502=0		( CURRENT TIMES )\n');
-fprintf(ncFid,'#503=%f	    ( G52 OFFSET )\n',loop.ini);
+fprintf(ncFid,'#503=%f	    ( G52 OFFSET )\n',loop.offset);
 fprintf(ncFid,'#504=%f	    ( CUTTING DEPTH )\n\n',loop.step);
 
 fprintf(ncFid,'G92.1\n');
