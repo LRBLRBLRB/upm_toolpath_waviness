@@ -482,28 +482,15 @@ switch spiralMethod
         SurfEach = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
 end
 
-isContinue = 1;
-while isContinue
-    [approxOut,isContinue] = selectfr(textFontType,textFontSize);
-    switch approxOut.approxMethod
-        case 'csape'
-            approxOut.approxParam = [1,1];
-            Fr = csape(SurfEach,toolREach,approxOut.approxParam);
-        case 'csaps'
-            if approxOut.approxParam < 0 || approxOut.approxParam > 1
-                Fr = csaps(SurfEach,toolREach);
-            else
-                Fr = csaps(SurfEach,toolREach,approxOut.approxParam);
-            end
-        case 'spsps'
-            Fr = spaps(SurfEach,toolREach,approxOut.approxParam);
-        case 'spap2'
-            Fr = spap2(3,3,SurfEach,toolREach,approxOut.approxParam);
-    end
+questOpt1 = questOpt;
+questOpt1.Default = 'Refit';
 
-    hFeedrate = figure('Name','Feed Rate Smoothing');
-    % tiledlayout(2,1);
-    % nexttile;
+hFeedrate = figure('Name','Feed Rate Smoothing');
+while true
+    approxOut = selectfr(textFontType,textFontSize);
+    Fr = approxOut.fittedmodel;
+    tiledlayout(2,1);
+    nexttile;
     yyaxis left;
     scatter(accumPtNum,toolREach);
     hold on;
@@ -523,6 +510,19 @@ while isContinue
     xlabel('Loop Accumulating Point Number');
     legend('No.-R scatters','Approx result','Concentric result','Pitch');
     hold off;
+
+    msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
+        'Feed rate is fittted successfully!'],textFontSize,textFontType), ...
+        'Ready to continue?'}, ...
+        'Feed rate fit','OK & Continue','Refit','Cancel & quit',questOpt1);
+    switch msgfig
+        case {'','Cancel & quit'}
+            return;
+        case 'Refit'
+            continue;
+        case 'OK & Continue'
+            break;
+    end
 end
 
 if exist(fullfile(workspaceDir,'feedrate.fig'),'file')

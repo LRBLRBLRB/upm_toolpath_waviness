@@ -1581,3 +1581,195 @@ figure; plot(1:size(pp,2)-1,diff(pp(:,2)))
 figure; plot(1:size(pp,2)-1,diff(pp(2,:)))
 save data.mat
 [警告: 图窗已保存在 data.mat 中。保存图形句柄变量会使创建的文件很大。要保存图形图窗，请使用 <a href="matlab:helpview([docroot,'/techdoc/ref/savefig.html'])">savefig</a>。] 
+Starting parallel pool (parpool) using the 'local' profile ...
+
+{操作在以下过程中被用户终止 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('matlab.depfun.internal.PathUtility')" style="font-weight:bold">matlab.depfun.internal.PathUtility</a>
+
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('matlab.depfun.internal.Completion', 'C:\Program Files\MATLAB\R2022a\toolbox\matlab\depfun\+matlab\+depfun\+internal\Completion.m', 2738)" style="font-weight:bold">matlab.depfun.internal.Completion</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\matlab\depfun\+matlab\+depfun\+internal\Completion.m',2738,0)">第 2738 行</a>)
+            obj.PathUtility = matlab.depfun.internal.PathUtility;
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('matlab.depfun.internal.requirements', 'C:\Program Files\MATLAB\R2022a\toolbox\matlab\depfun\+matlab\+depfun\+internal\requirements.m', 205)" style="font-weight:bold">matlab.depfun.internal.requirements</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\matlab\depfun\+matlab\+depfun\+internal\requirements.m',205,0)">第 205 行</a>)
+    c = matlab.depfun.internal.Completion(items, tgt);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.internal.apishared.calculateDependencies', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+apishared\calculateDependencies.m', 9)" style="font-weight:bold">parallel.internal.apishared.calculateDependencies</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+apishared\calculateDependencies.m',9,0)">第 9 行</a>)
+    dependencies = matlab.depfun.internal.requirements( fileList, 'PCTWorker' );
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.internal.apishared.AttachedFiles.calculateAttachedFiles', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+apishared\AttachedFiles.m', 298)" style="font-weight:bold">parallel.internal.apishared.AttachedFiles.calculateAttachedFiles</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+apishared\AttachedFiles.m',298,0)">第 298 行</a>)
+                deps = parallel.internal.apishared.calculateDependencies( paths );
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.Task>iCalculateDependentFiles', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Task\Task.m', 803)" style="font-weight:bold">parallel.Task>iCalculateDependentFiles</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Task\Task.m',803,0)">第 803 行</a>)
+        parallel.internal.apishared.AttachedFiles.calculateAttachedFiles( files );
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.Task/hCalculateAndCacheDependentFiles', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Task\Task.m', 720)" style="font-weight:bold">parallel.Task/hCalculateAndCacheDependentFiles</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Task\Task.m',720,0)">第 720 行</a>)
+                        attachedFiles{ii} = iCalculateDependentFiles( taskFcn );
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.Job/attachRequiredFiles', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Job\Job.m', 993)" style="font-weight:bold">parallel.Job/attachRequiredFiles</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Job\Job.m',993,0)">第 993 行</a>)
+                    attachedFiles = job.Tasks.hCalculateAndCacheDependentFiles( taskFunctionCache );
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.Job/preSubmit', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Job\Job.m', 665)" style="font-weight:bold">parallel.Job/preSubmit</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Job\Job.m',665,0)">第 665 行</a>)
+            job.attachRequiredFiles();
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.Job/submit', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Job\Job.m', 402)" style="font-weight:bold">parallel.Job/submit</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\@Job\Job.m',402,0)">第 402 行</a>)
+            job.preSubmit();
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.internal.pool.AbstractInteractiveClient/start', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+pool\AbstractInteractiveClient.m', 128)" style="font-weight:bold">parallel.internal.pool.AbstractInteractiveClient/start</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+pool\AbstractInteractiveClient.m',128,0)">第 128 行</a>)
+                    submit(obj.ParallelJob);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.internal.pool.AbstractClusterPool>iStartClient', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+pool\@AbstractClusterPool\AbstractClusterPool.m', 882)" style="font-weight:bold">parallel.internal.pool.AbstractClusterPool>iStartClient</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+pool\@AbstractClusterPool\AbstractClusterPool.m',882,0)">第 882 行</a>)
+spmdInitialized = client.start(sessionBuildFcn, sessionInfo, numWorkers, cluster, ...
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.internal.pool.AbstractClusterPool.hBuildPool', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+pool\@AbstractClusterPool\AbstractClusterPool.m', 636)" style="font-weight:bold">parallel.internal.pool.AbstractClusterPool.hBuildPool</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+pool\@AbstractClusterPool\AbstractClusterPool.m',636,0)">第 636 行</a>)
+                iStartClient(client, sessionInfo, forceSpmdEnabled, cluster, supportRestart, argsList);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.internal.pool.doParpool', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+pool\doParpool.m', 22)" style="font-weight:bold">parallel.internal.pool.doParpool</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+pool\doParpool.m',22,0)">第 22 行</a>)
+    pool = parallel.internal.pool.AbstractClusterPool.hBuildPool(constructorArgs{:});
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parpool', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\parpool.m', 123)" style="font-weight:bold">parpool</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\parpool.m',123,0)">第 123 行</a>)
+    pool = parallel.internal.pool.doParpool(varargin{:});
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('parallel.internal.parpool.getOrCreateCurrentPool', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+parpool\getOrCreateCurrentPool.m', 17)" style="font-weight:bold">parallel.internal.parpool.getOrCreateCurrentPool</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\+parallel\+internal\+parpool\getOrCreateCurrentPool.m',17,0)">第 17 行</a>)
+        pool = parpool(varargin{:});
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('gcp', 'C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\gcp.m', 45)" style="font-weight:bold">gcp</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\parallel\cluster\gcp.m',45,0)">第 45 行</a>)
+        aPool = parallel.internal.parpool.getOrCreateCurrentPool();
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_optim_2D_aspheric_actual_tip_multi_iter', 'D:\Code\202012_UPM_toolpath\upm_toolpath_waviness\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m', 69)" style="font-weight:bold">s4_optim_2D_aspheric_actual_tip_multi_iter</a> (<a href="matlab: opentoline('D:\Code\202012_UPM_toolpath\upm_toolpath_waviness\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m',69,0)">第 69 行</a>)
+    parObj = gcp;
+} 
+clc
+clear
+load('data.mat')
+help curveFitter
+ <strong>curveFitter</strong> - Fit curves and surfaces to data
+    The Curve Fitter app provides a flexible interface where you can
+    interactively fit curves and surfaces to data and view plots.
+
+    <strong>curveFitter</strong>
+    <strong>curveFitter</strong>(x,y)
+    <strong>curveFitter</strong>(x,y,z)
+    <strong>curveFitter</strong>(x,y,[],w)
+    <strong>curveFitter</strong>(x,y,z,w)
+    <strong>curveFitter</strong>(filename)
+
+    See also <a href="matlab:help fit -displayBanner">fit</a>
+
+    在 R2006a 之前引入
+    <a href="matlab:doc curveFitter">curveFitter 的文档</a>
+
+doc curveFitter
+doc curveFitter
+help fit -displayBanner
+--- <strong>fit</strong> 的帮助 ---
+
+ <strong>fit</strong> - Fit curve or surface to data
+    This MATLAB function creates the fit to the data in x and y with the
+    model specified by fitType.
+
+    fitobject = <strong>fit</strong>(x,y,fitType)
+    fitobject = <strong>fit</strong>([x,y],z,fitType)
+    fitobject = <strong>fit</strong>(x,y,fitType,fitOptions)
+    fitobject = <strong>fit</strong>(x,y,fitType,Name,Value)
+    [fitobject,gof] = <strong>fit</strong>(x,y,fitType)
+    [fitobject,gof,output] = <strong>fit</strong>(x,y,fitType)
+
+    输入参数
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1_sep_bto2vuv-1-x">x</a> - Data to fit
+            matrix
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1_sep_bto2vuv-1-y">y</a> - Data to fit
+            vector
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1_sep_bto2vuv-1-z">z</a> - Data to fit
+            vector
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-fitType">fitType</a> - Model type to fit
+            character vector | string scalar | string array |
+            cell array of character vectors | anonymous function | fittype
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-fitOptions">fitOptions</a> - Algorithm options
+            fitoptions
+
+    名称-值参数
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-Normalize">Normalize</a> - Option to center and scale data
+            'off' (默认值) | 'on'
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-Exclude">Exclude</a> - Points to exclude from fit
+            expression | index vector | logical vector | empty
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-Weights">Weights</a> - Weights for fit
+            [ ] (默认值) | vector
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-problem">problem</a> - Values to assign to problem-dependent constants
+            cell array | double
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-SmoothingParam">SmoothingParam</a> - Smoothing parameter
+            scalar value in the range (0,1)
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-Span">Span</a> - Proportion of data points to use in local regressions
+            0.25 (默认值) | scalar value in the range (0,1)
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-Robust">Robust</a> - Robust linear least-squares fitting method
+            'off' (默认值) | LAR | Bisquare
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-Lower">Lower</a> - Lower bounds on coefficients to be fitted
+            [ ] (默认值) | vector
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-Upper">Upper</a> - Upper bounds on coefficients to be fitted
+            [ ] (默认值) | vector
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-StartPoint">StartPoint</a> - Initial values for the coefficients
+            [ ] (默认值) | vector
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-Algorithm">Algorithm</a> - Algorithm to use for fitting procedure
+            'Trust-Region' (默认值) | 'Levenberg-Marquardt'
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-DiffMaxChange">DiffMaxChange</a> - Maximum change in coefficients for finite difference
+        gradients
+            0.1 (默认值)
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-DiffMinChange">DiffMinChange</a> - Minimum change in coefficients for finite difference
+        gradients
+            10^{–8} (默认值)
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-Display">Display</a> - Display option in Command Window
+            'notify' (默认值) | 'final' | 'iter' | 'off'
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-MaxFunEvals">MaxFunEvals</a> - Maximum number of evaluations of model allowed
+            600 (默认值)
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-MaxIter">MaxIter</a> - Maximum number of iterations allowed for fit
+            400 (默认值)
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-TolFun">TolFun</a> - Termination tolerance on model value
+            10^{–6} (默认值)
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-TolX">TolX</a> - Termination tolerance on coefficient values
+            10^{–6} (默认值)
+
+    输出参数
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-fitobject">fitobject</a> - Fit result
+            cfit | sfit
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-gof">gof</a> - Goodness-of-fit statistics
+            gof structure
+        <a href="C:\Program Files\MATLAB\R2022a\help\curvefit\fit.html#bto2vuv-1-output">output</a> - Fitting algorithm information
+            output structure
+
+    打开示例
+        <a href="matlab:openExample('curvefit/FitaQuadraticCurveExample')">Fit a Quadratic Curve</a>
+        <a href="matlab:openExample('curvefit/FitaPolynomialSurfaceExample')">Fit a Polynomial Surface</a>
+        <a href="matlab:openExample('curvefit/FitaSurfaceUsingVariablesinaMATLABTableExample')">Fit a Surface Using Variables in a MATLAB Table</a>
+        <a href="matlab:openExample('curvefit/CreateFitOptionsandFitTypeBeforeFittingExample')">Create Fit Options and Fit Type Before Fitting</a>
+        <a href="matlab:openExample('curvefit/FitaCubicPolynomialSpecifyingNormalizeandRobustOptionsExample')">Fit a Cubic Polynomial Specifying Normalize and Robust Options</a>
+        <a href="matlab:openExample('curvefit/ExcludePointsfromFitExample')">Exclude Points from Fit</a>
+        <a href="matlab:openExample('curvefit/ExcludePointsandPlotFitShowingExcludedDataExample')">Exclude Points and Plot Fit Showing Excluded Data</a>
+        <a href="matlab:openExample('curvefit/FitaSmoothingSplineCurveandReturnGoodnessofFitInformatioExample')">Fit a Smoothing Spline Curve and Return Goodness-of-Fit Information</a>
+        <a href="matlab:openExample('curvefit/FitaSingleTermExponentialExample')">Fit a Single-Term Exponential</a>
+        <a href="matlab:openExample('curvefit/FindCoefficientOrdertoSetStartPointsandBoundsExample')">Find Coefficient Order to Set Start Points and Bounds</a>
+
+    See also <a href="matlab:help('Curve Fitter', '-displayBanner')">Curve Fitter</a>, <a href="matlab:help fittype -displayBanner">fittype</a>, <a href="matlab:help fitoptions -displayBanner">fitoptions</a>, <a href="matlab:help prepareCurveData -displayBanner">prepareCurveData</a>,
+        <a href="matlab:help prepareSurfaceData -displayBanner">prepareSurfaceData</a>, <a href="matlab:help feval -displayBanner">feval</a>, <a href="matlab:help plot -displayBanner">plot</a>, <a href="matlab:help confint -displayBanner">confint</a>
+
+    在 R2006a 之前引入
+    <a href="matlab:doc fit">fit 的文档</a>
+
+doc fit
+help cintinue
+--- 未找到 <strong>cintinue</strong>。改为显示 <strong>continue</strong> 的帮助。---
+
+ <strong>continue</strong> - 将控制传递给 for 或 while 循环的下一迭代
+    此 MATLAB 函数 将控制传递给 for 或 while 循环的下一迭代。它跳过当前迭代的循环体中剩
+    余的任何语句。程序继续从下一迭代执行。
+
+    <strong>continue</strong>
+
+    打开示例
+        <a href="matlab:openExample('matlab/SelectivelyDisplayValuesInLoopExample')">有选择地显示循环中的值</a>
+        <a href="matlab:openExample('matlab/SkipToNextLoopIterationExample')">跳至下一循环迭代</a>
+
+    See also <a href="matlab:help for -displayBanner">for</a>, <a href="matlab:help while -displayBanner">while</a>, <a href="matlab:help break -displayBanner">break</a>
+
+    在 R2006a 之前引入
+    <a href="matlab:doc continue">continue 的文档</a>
+
+doc continue
+curveFitter
