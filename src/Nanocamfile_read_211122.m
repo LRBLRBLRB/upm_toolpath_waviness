@@ -3,8 +3,8 @@ clear
 clc
 close
 
-path = "..\workspace\20230504 D906";
-filename = "01000-2D-r900c0.091+r9000-D906fit-x0.001.pgm";
+path = "..\workspace\20230510\01000-sts-r1000c0.09100-D906+0417-res1.0-arc0.02+deg1";
+filename = "01000-sts-r1000c0.09100-D906+0417-res1.0-arc0spiralPath20230510T224816.nc";
 file = path + "\" + filename;
 
 tic
@@ -75,7 +75,7 @@ end
 %% Parallel process data
 wrong_line_number=0;
 data=zeros(MaxCounter,3);
-parpool(6)
+% parpool(6)
 tic
 fprintf('Parallel processing data...\r\n')
 

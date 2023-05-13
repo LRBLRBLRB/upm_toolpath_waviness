@@ -170,12 +170,41 @@ if ~mod(length(cmp),2)
     resPlot;
     res = 0;
     pause();
-    peakPt = [];
-    interPt = [];
-    uLim1 = [];
-    uLim2 = [];
+    peakPt = nan(5,1);
+    interPt = nan(3,1);
+    uLim1 = nan(2,1);
     return;
 end
+
+% if uLim2(2,end) == 1
+%     % the first time to calculate the ind-th pt
+%     uLim2(2,end) = uInter2(1);
+%     if length(uInter2) > 2
+%         uLim2 = [uLim2,[uInter2(2:2:end);uInter2(3:2:end)]];
+%     end
+% else
+%     % recalculate the ind-th pt
+%     % get the previous point u-limit, useful when residual need to recalculate
+%     prevULim2Ind = find(uLim2(1,:) < uInter2(3),1,'last');
+%     if length(uInter2) > 2 % now there are more than 1 intersections
+%         if prevULim2Ind == 1
+%             uLim2(1,:) = [uLim2(1,1),uInter2(2:2:end)];
+%             uLim2(2,:) = uInter2(1:2:end);
+%         else
+%             uLim2(1,:) = [uLim2(1,1:prevULim2Ind),uInter2(2:2:end)];
+%             uLim2(2,:) = [uLim2(2,1:prevULim2Ind - 1),uInter2(1:2:end)];
+%             % uLim2 = [uLim2,[uInter2(2:2:end);uInter2(3:2:end)]];
+%         end
+%     else % only one intersection now
+%         if prevULim2Ind == 1
+%             uLim2(1,:) = uLim2(1,1);
+%             uLim2(2,:) = uInter2(1);
+%         else
+%             uLim2(1,:) = uLim2(1,1:prevULim2Ind);
+%             uLim2(2,:) = [uLim2(2,1:prevULim2Ind - 1),uInter2(1)];
+%         end
+%     end
+% end
 
 uLim2(2,end) = uInter2(1);
 if length(uInter2) > 2
