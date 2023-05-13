@@ -6,7 +6,7 @@ clear;
 % clc;
 addpath(genpath('funcs'));
 if ~(exist('workspaceDir','var'))
-    workspaceDir = fullfile('..','workspace','\20230417';
+    workspaceDir = fullfile('..','workspace','\20230417');
     surfUnit = 'um';
     unit = 'um';
     textFontSize = 12;

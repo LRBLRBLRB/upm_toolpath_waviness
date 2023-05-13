@@ -17,7 +17,7 @@ while ~feof(fid)
     % '*char' indicates 1 str per read, *indicates output str
     row=row+sum(fread(fid,10000,'*char')==newline);
 end
-fclose(fid);
+% fclose(fid);
 fprintf('File row number is %d.\r\n',row)
 toc
 MaxCounter = row;
@@ -27,7 +27,7 @@ MaxCounter = row;
 %% read data from file
 tic
 fprintf('Importing data...\r\n')
-fid=fopen(file);
+% fid=fopen(file);
 
 Wait_Title = waitbar(0,'Data importing...');
 
