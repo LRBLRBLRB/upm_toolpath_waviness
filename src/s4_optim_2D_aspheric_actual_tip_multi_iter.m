@@ -486,11 +486,12 @@ questOpt1 = questOpt;
 questOpt1.Default = 'Refit';
 
 hFeedrate = figure('Name','Feed Rate Smoothing');
-while true
-    approxOut = selectfr(textFontType,textFontSize);
-    Fr = approxOut.fittedmodel;
-    tiledlayout(2,1);
-    nexttile;
+% while true
+%     approxOut = selectfr(textFontType,textFontSize);
+%     Fr = approxOut.fittedmodel;
+Fr = csape(SurfEach,toolREach,[1 1]);
+
+
     yyaxis left;
     scatter(accumPtNum,toolREach);
     hold on;
@@ -507,23 +508,23 @@ while true
     % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
     %     'Color',[0.929,0.694,0.1250]);
     set(gca,'FontSize',textFontSize,'FontName',textFontType);
-    xlabel('Loop Accumulating Point Number');
+    xlabel('Concentric Angle');
     legend('No.-R scatters','Approx result','Concentric result','Pitch');
     hold off;
 
-    msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
-        'Feed rate is fittted successfully!'],textFontSize,textFontType), ...
-        'Ready to continue?'}, ...
-        'Feed rate fit','OK & Continue','Refit','Cancel & quit',questOpt1);
-    switch msgfig
-        case {'','Cancel & quit'}
-            return;
-        case 'Refit'
-            continue;
-        case 'OK & Continue'
-            break;
-    end
-end
+%     msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
+%         'Feed rate is fittted successfully!'],textFontSize,textFontType), ...
+%         'Ready to continue?'}, ...
+%         'Feed rate fit','OK & Continue','Refit','Cancel & quit',questOpt1);
+%     switch msgfig
+%         case {'','Cancel & quit'}
+%             return;
+%         case 'Refit'
+%             continue;
+%         case 'OK & Continue'
+%             break;
+%     end
+% end
 
 if exist(fullfile(workspaceDir,'feedrate.fig'),'file')
     savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',datestr(now,'yyyymmddTHHMMSS'),'.fig']));
