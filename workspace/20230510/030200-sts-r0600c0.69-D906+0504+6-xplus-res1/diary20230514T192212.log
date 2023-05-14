@@ -1,0 +1,27 @@
+The time spent in the parallel computing activating process is 0.000354s.
+-----
+No.1	 toolpath 515.077549	[r = 600.000000] is calculated within 0.037384s.
+-----
+No.2	 toolpath 485.308633	[r = 562.217025] is calculated within 15.545873s.
+-----
+{操作在以下过程中被用户终止 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('dsearchn')" style="font-weight:bold">dsearchn</a>
+
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('residual2D_multi', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m', 44)" style="font-weight:bold">residual2D_multi</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m',44,0)">第 44 行</a>)
+[index,dist] = dsearchn(s1',s2');
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve/iterfunc', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 73)" style="font-weight:bold">iterfunc_curvepath_multi_solve/iterfunc</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',73,0)">第 73 行</a>)
+            curveULim2] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('isBisection', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\isBisection.m', 26)" style="font-weight:bold">isBisection</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\isBisection.m',26,0)">第 26 行</a>)
+        fc = f(c);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('mysearch', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m', 73)" style="font-weight:bold">mysearch</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m',73,0)">第 73 行</a>)
+[iter,x] = isBisection(f,a,b,eps);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 123)" style="font-weight:bold">iterfunc_curvepath_multi_solve</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',123,0)">第 123 行</a>)
+            r = mysearch(@iterfunc,r0,h,searchInt,options.optimopt.XTol);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_optim_2D_aspheric_actual_tip_multi_iter', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m', 250)" style="font-weight:bold">s4_optim_2D_aspheric_actual_tip_multi_iter</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m',250,0)">第 250 行</a>)
+    curveInterPt,curveULim] = iterfunc_curvepath_multi_solve(curveFunc,curveFx, ...
+} 

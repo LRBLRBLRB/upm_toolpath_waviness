@@ -58,7 +58,7 @@ switch postType
 
         axisC = (wrapTo360(spiralAngle1));
         axisZ = spiralPath1(3,:);
-        axisX = vecnorm(spiralPath1(1:2,:),2,1);
+        axisX = sign(spiralPath1(1,1))*vecnorm(spiralPath1(1:2,:),2,1);
 
         % zero point of the C axis
         if axisC(1) ~= 0

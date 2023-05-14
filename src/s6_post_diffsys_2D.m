@@ -13,12 +13,31 @@ clear
 clc
 addpath(genpath('funcs'));
 
+%% modification of process data
 unit = '\mum';
 textFontSize = 12;
 textFontType = 'Times New Roman';
 
 msgMode.WindowStyle = 'non-modal';
 msgMode.Interpreter = 'tex';
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% tool
+toolRadius = 0.18746;
+
+% surface
+c = 0.69;
+surfRange = 0.6;
+z0 = 0;
+syms x;
+surfSym = c.*x.^2./(1 + sqrt(1 - c.^2.*x.^2)) + z0;
+surfFunc = matlabFunction(surfSym);
+
+% cnc
+loop.num = 5;
+loop.offset = 0.005;
+loop.step = -0.005;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% load the CNC file
 workspaceDir = uigetdir(fullfile(['D:\OneDrive - sjtu.edu.cn\Research\Projects' ...
@@ -87,9 +106,6 @@ semicolonInd = startsWith(cncLine,';');
 cncLine(semicolonInd) = [];
 cncNum = length(cncLine);
 
-switch
-    case
-end
 axisX = zeros(cncNum,1);
 axisZ = zeros(cncNum,1);
 for ii = 1:cncNum
@@ -99,17 +115,6 @@ for ii = 1:cncNum
 end
 
 %% simulate the actual surface
-
-% tool
-toolRadius = 0.18746;
-
-% surface
-c = 0.35;
-z0 = 0;
-syms x;
-surfSym = c.*x.^2./(1 + sqrt(1 - c.^2.*x.^2)) + z0;
-surfFunc = matlabFunction(surfSym);
-
 waitBar2 = waitbar(0,'Figure Plotting ...','Name','CNC Data Plot', ...
     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
 setappdata(waitBar2,'canceling',0);
@@ -173,7 +178,4 @@ if ~cncFile
     msgbox(sprintf('\\fontname{%s}\\fontsize{%d} No CNC file saved.', ...
         textFontType,textFontSize),'Message','warn',msgMode);
 end
-loop.num = 5;
-loop.offset = 0.005;
-loop.step = -0.005;
 writecnc_2D(cncPath,'G55','T0303',axisX,axisZ,loop);

@@ -97,7 +97,7 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    startDirection = 'X Minus'; % 'X Minus'
+    startDirection = 'X Plus'; % 'X Minus'
     angularIncrement = 'Constant Arc'; % 'Constant Angle'
     arcLength = 20; % um
     maxAngPtDist = 1*pi/180;
@@ -214,12 +214,14 @@ toolSp = toolData.toolBform; % B-form tool tip arc
 toolRadius = toolData.radius; % fitted tool radius
 
 % initialize the cutting pts: the outest loop
-curvePt = [rRange(1);0;curveFunc(rRange(1))];
+curvePathPt = [rRange(1);0;curveFunc(rRange(1))];
 curveNorm = [curveFx(rRange(1));0;-1];
 curveNorm = curveNorm./norm(curveNorm);
 % the first toolpath pt
-[curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
-    [0;0;-1],[0;-1;0],'directionType','norm-cut');
+[curvePathPt,curveQuat,curveContactU,curvePt] = ...
+    curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],[0;-1;0]);
+% [curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
+%     [0;0;-1],[0;-1;0],'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
 
 
@@ -395,9 +397,9 @@ uLim = {zeros(2,0)};
 interPt = {zeros(3,0)};
 
 if strcmp(startDirection,'X Plus') % 'X Minus'
-    conThetaBound = [2*pi,0];
-else
     conThetaBound = [0,2*pi];
+else
+    conThetaBound = [2*pi,0];
 end
 
 for ii = 1:size(curvePathPt,2)
@@ -532,7 +534,7 @@ end
 %     end
 % end
 
-if exist(fullfile(workspaceDir,'feedrate.fig'),'file')
+if exist(fullfile(workspaceDir,['feedrate-',approxMethod,'.fig']),'file')
     savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',approxMethod,'-',datestr(now,'yyyymmddTHHMMSS'),'.fig']));
 else
     savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',approxMethod,'.fig']));

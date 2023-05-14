@@ -1,0 +1,87 @@
+The time spent in the parallel computing activating process is 0.001202s.
+-----
+No.1	 toolpath 525.377423	[r = 600.000000] is calculated within 0.098831s.
+-----
+<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m',7,1)">7   </a>tmp = f(x0);
+if system_dependent('IsDebugMode')==1, dbcont; end
+No.2	 toolpath 498.040522	[r = 572.663099] is calculated within 15.821401s.
+-----
+No.3	 toolpath 471.115025	[r = 545.737601] is calculated within 13.473781s.
+-----
+No.4	 toolpath 438.295201	[r = 504.687057] is calculated within 16.975041s.
+-----
+No.5	 toolpath 424.312654	[r = 469.006190] is calculated within 10.711052s.
+-----
+No.6	 toolpath 423.356397	[r = 468.049931] is calculated within 13.388061s.
+-----
+No.7	 toolpath 422.405772	[r = 467.099306] is calculated within 12.949139s.
+-----
+No.8	 toolpath 421.454627	[r = 466.148161] is calculated within 12.965317s.
+-----
+No.9	 toolpath 420.502961	[r = 465.196495] is calculated within 13.028008s.
+-----
+No.10	 toolpath 419.550207	[r = 464.243742] is calculated within 12.986934s.
+-----
+No.11	 toolpath 418.596920	[r = 463.290456] is calculated within 13.011382s.
+-----
+No.12	 toolpath 417.643100	[r = 462.336636] is calculated within 12.940064s.
+-----
+No.13	 toolpath 416.688746	[r = 461.382282] is calculated within 12.883737s.
+-----
+No.14	 toolpath 415.733859	[r = 460.427395] is calculated within 12.979090s.
+-----
+No.15	 toolpath 414.778439	[r = 459.471973] is calculated within 12.970202s.
+-----
+No.16	 toolpath 413.822095	[r = 458.515629] is calculated within 12.933302s.
+-----
+No.17	 toolpath 412.865067	[r = 457.558602] is calculated within 12.970714s.
+-----
+No.18	 toolpath 411.907493	[r = 456.601027] is calculated within 13.257407s.
+-----
+No.19	 toolpath 410.949369	[r = 455.642905] is calculated within 13.045574s.
+-----
+No.20	 toolpath 409.990698	[r = 454.684232] is calculated within 13.456119s.
+-----
+No.21	 toolpath 409.031476	[r = 453.725012] is calculated within 14.509766s.
+-----
+No.22	 toolpath 408.072235	[r = 452.765769] is calculated within 15.217263s.
+-----
+No.23	 toolpath 407.113853	[r = 451.807388] is calculated within 14.138096s.
+-----
+No.24	 toolpath 406.156327	[r = 450.849862] is calculated within 14.650936s.
+-----
+No.25	 toolpath 405.199655	[r = 449.893190] is calculated within 15.359120s.
+-----
+No.26	 toolpath 404.243834	[r = 448.937368] is calculated within 13.670204s.
+-----
+No.27	 toolpath 403.288488	[r = 447.982024] is calculated within 14.189217s.
+-----
+No.28	 toolpath 402.332592	[r = 447.026126] is calculated within 13.754281s.
+-----
+No.29	 toolpath 401.376142	[r = 446.069678] is calculated within 15.390811s.
+-----
+No.30	 toolpath 400.419139	[r = 445.112675] is calculated within 15.866466s.
+-----
+No.31	 toolpath 399.461582	[r = 444.155118] is calculated within 14.160549s.
+-----
+No.32	 toolpath 398.503470	[r = 443.197005] is calculated within 14.505554s.
+-----
+{操作在以下过程中被用户终止 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('dsearchn')" style="font-weight:bold">dsearchn</a>
+
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('residual2D_multi', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m', 44)" style="font-weight:bold">residual2D_multi</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m',44,0)">第 44 行</a>)
+[index,dist] = dsearchn(s1',s2');
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve/iterfunc', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 73)" style="font-weight:bold">iterfunc_curvepath_multi_solve/iterfunc</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',73,0)">第 73 行</a>)
+            curveULim2] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('mysearch', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m', 24)" style="font-weight:bold">mysearch</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m',24,0)">第 24 行</a>)
+        tmp = f(a);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 123)" style="font-weight:bold">iterfunc_curvepath_multi_solve</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',123,0)">第 123 行</a>)
+            r = mysearch(@iterfunc,r0,h,searchInt,options.optimopt.XTol);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_optim_2D_aspheric_actual_tip_multi_iter', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m', 250)" style="font-weight:bold">s4_optim_2D_aspheric_actual_tip_multi_iter</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m',250,0)">第 250 行</a>)
+    curveInterPt,curveULim] = iterfunc_curvepath_multi_solve(curveFunc,curveFx, ...
+} 
+diary off
