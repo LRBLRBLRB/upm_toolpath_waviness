@@ -223,7 +223,7 @@ curveNorm = curveNorm./norm(curveNorm);
 % [curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
 %     [0;0;-1],[0;-1;0],'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
-
+rRange(1) = curvePt(1);
 
 %     scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
 %     toolSp0 = toolData.toolBform;
