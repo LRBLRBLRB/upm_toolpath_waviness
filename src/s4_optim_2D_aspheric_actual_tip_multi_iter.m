@@ -464,8 +464,6 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
     return;
 end
-diary off;
-return;
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
@@ -492,8 +490,13 @@ hFeedrate = figure('Name','Feed Rate Smoothing');
 % while true
 %     approxOut = selectfr(textFontType,textFontSize);
 %     Fr = approxOut.fittedmodel;
-Fr = csape(SurfEach,toolREach,[1 1]);
-% Fr = pchip(SurfEach,toolREach);
+approxMethod = 'pchip';
+switch approxMethod
+    case 'csape'
+        Fr = csape(SurfEach,toolREach,[1 1]);
+    case 'pchip'
+        Fr = pchip(SurfEach,toolREach);
+end
 
     yyaxis left;
     scatter(SurfEach,toolREach);
@@ -530,9 +533,9 @@ Fr = csape(SurfEach,toolREach,[1 1]);
 % end
 
 if exist(fullfile(workspaceDir,'feedrate.fig'),'file')
-    savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',datestr(now,'yyyymmddTHHMMSS'),'.fig']));
+    savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',approxMethod,'-',datestr(now,'yyyymmddTHHMMSS'),'.fig']));
 else
-    savefig(hFeedrate,fullfile(workspaceDir,'feedrate.fig'));
+    savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',approxMethod,'.fig']));
 end
 
 % nexttile;
@@ -689,7 +692,7 @@ spiralFolderName = getlastfoldername(workspaceDir);
     '*.*','all file(*.*)';...
     }, ...
     'Select the directory and filename to save the surface tool path', ...
-    fullfile(workspaceDir,[spiralFolderName,'-spiralPath-',approxOut.approxMethod, ...
+    fullfile(workspaceDir,[spiralFolderName,'-spiralPath-',approxMethod, ...
     '-',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
 spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
 save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
