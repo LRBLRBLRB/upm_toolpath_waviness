@@ -62,7 +62,7 @@ else
     questOpt.Default = 'OK & Continue';
     
     diaryFile = fullfile(workspaceDir,['diary',datestr(now,'yyyymmddTHHMMSS'),'.log']);
-    diary diaryFile;
+    diary(diaryFile);
     diary on;
     
     tPar0 = tic;
@@ -97,7 +97,7 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    startDirection = 'X Plus'; % 'X Minus'
+    startDirection = 'X Minus'; % 'X Minus'
     angularIncrement = 'Constant Arc'; % 'Constant Angle'
     arcLength = 20; % um
     maxAngPtDist = 1*pi/180;
@@ -186,7 +186,7 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     sprintf('%s\n',getlastfoldername(workspaceDir)), ...
     sprintf('The parameters are listed below:'), ...
     sprintf('1. Surface radius: %f%s',abs(rMax),unit), ...
-    sprintf('2. Surface curvature: %f%s^{-1}\n',c,unit), ...
+    sprintf('2. Surface curvature: %f%s^{-1}',c,unit), ...
     sprintf('3. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,unit), ...
     '4. X increment: ', ...
     sprintf('\tX direction (in program): %s',startDirection), ...
@@ -194,7 +194,7 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     '5. C increment: ', ...
     sprintf('\tIncrement type: %s',angularIncrement), ...
     sprintf('\tArc length: %f%s',arcLength,unit), ...
-    sprintf(['\tMax angle: %f',char(176),')'],maxAngPtDist*180/pi), ...
+    sprintf(['\tMax angle: %f',char(176),')\n'],maxAngPtDist*180/pi), ...
     'Ready to continue?'}, ...
     'Surface Generation','OK & Continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
@@ -298,6 +298,7 @@ else
     % which means in the last tooltip lies over the symetrical axis while
     % the toolpathpt within it
     curvePathPt = [curvePathPt,zeros(3,1)];
+    curveULim{size(curvePathPt,2)} = [];
 end
 ind = size(curvePathPt,2);
 [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind),curvePt(:,ind)] = ...
@@ -307,7 +308,7 @@ toolSp1 = toolSp;
 toolSp1.coefs = quat2rotm(curveQuat(ind,:))*toolSp1.coefs + curvePathPt(:,ind);
 toolSp2 = toolSp;
 toolSp2.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp2.coefs + curvePathPt(:,ind - 1);
-prevUlimInd = size(curveULim{ind},2);
+prevUlimInd = size(curveULim{ind},2); % get the curveUlim use of the last pathpt
 if prevUlimInd > 1
     curveULim{ind - 1}(:,(end - prevUlimInd + 2):end) = [];
 end
@@ -463,6 +464,8 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
     return;
 end
+diary off;
+return;
 
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
@@ -564,7 +567,6 @@ end
 %             string(datestr(now))));
 %         save(smoothName,"Comments","Fr","rTheta");
 % end
-
 
 %% spiral tool path generation with the smoothing result
 % initialize the spiral path

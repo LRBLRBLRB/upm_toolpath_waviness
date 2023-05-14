@@ -1,0 +1,11 @@
+The time spent in the parallel computing activating process is 0.001254s.
+-----
+No.1	 toolpath 535.073516	[r = 600.000000] is calculated within 0.048920s.
+-----
+initial linear search begins: 
+<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m',168,1)">168 </a>if ~mod(length(cmp),2)
+if system_dependent('IsDebugMode')==1, dbcont; end
+No.\tx\tf(x)
+0	568.344755	1.379614
+if system_dependent('IsDebugMode')==1, dbquit all; end
+s4_optim_2D_aspheric_actual_tip_multi_iter
