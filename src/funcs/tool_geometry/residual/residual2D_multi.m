@@ -166,7 +166,7 @@ interPt = 0.5*(s1(:,index(cmp)) + s2(:,cmp));
 
 %% u range
 if ~mod(length(cmp),2)
-    warningTone = load('gong');
+    warningTone = load('chirp');
     sound(warningTone.y,warningTone.Fs);
     warning('Something wrong in the intersection point calculation process.\n');
     resPlot;

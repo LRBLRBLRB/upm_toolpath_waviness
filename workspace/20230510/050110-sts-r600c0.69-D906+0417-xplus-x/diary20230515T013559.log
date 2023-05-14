@@ -1,0 +1,14 @@
+The time spent in the parallel computing activating process is 0.000275s.
+{函数或变量 'rRange' 无法识别。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_actual_x', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m', 222)" style="font-weight:bold">s4_cmp_2D_actual_x</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m',222,0)">第 222 行</a>)
+curvePt = [rRange(1);0;curveFunc(rRange(1))];
+} 
+opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m',222,0)
+未定义与 'double' 类型的输入参数相对应的函数 'rRange'。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_actual_x', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m', 224)" style="font-weight:bold">s4_cmp_2D_actual_x</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m',224,0)">第 224 行</a>)
+curvePt = [rRange(1);0;curveFunc(rRange(1))];
+
+opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m',224,0)
+s4_cmp_2D_actual_x

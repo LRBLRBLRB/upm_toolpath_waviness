@@ -1,0 +1,9 @@
+The time spent in the parallel computing activating process is 0.000354s.
+{Index in position 2 exceeds array bounds. Index must not exceed 1.
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_actual_x', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m', 267)" style="font-weight:bold">s4_cmp_2D_actual_x</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m',267,0)">第 267 行</a>)
+        curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
+} 
+<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m',267,1)">267 </a>        curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
+if system_dependent('IsDebugMode')==1, dbquit; end
+s4_cmp_2D_actual_x

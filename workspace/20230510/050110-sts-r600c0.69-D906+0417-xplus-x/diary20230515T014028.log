@@ -1,0 +1,10 @@
+The time spent in the parallel computing activating process is 0.000315s.
+{函数或变量 't1O' 无法识别。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_actual_x', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m', 233)" style="font-weight:bold">s4_cmp_2D_actual_x</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m',233,0)">第 233 行</a>)
+fprintf('-----\nNo.1\t toolpath %f\t[r = %f] is calculated within %fs.\n-----\n',curvePathPt(1,1),curvePt(1,1),t1O);
+} 
+<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m',233,1)">233 </a>fprintf('-----\nNo.1\t toolpath %f\t[r = %f] is calculated within %fs.\n-----\n',curvePathPt(1,1),curvePt(1,1),t1O);
+opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_x.m',233,0)
+if system_dependent('IsDebugMode')==1, dbquit all; end
+s4_cmp_2D_actual_x
