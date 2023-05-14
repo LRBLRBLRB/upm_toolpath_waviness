@@ -1,0 +1,130 @@
+The time spent in the parallel computing activating process is 0.001081s.
+-----
+No.1	 toolpath 535.073516	[r = 600.000000] is calculated within 0.089130s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	564.617726	1.203952
+1	565.325372	1.199334
+2	566.033017	1.194714
+3	566.740662	1.190092
+4	567.448308	1.185471
+5	568.155953	1.180848
+6	568.863599	1.176223
+7	569.571244	1.171598
+8	570.278890	1.166972
+9	570.986535	1.162344
+10	571.694181	1.157715
+11	572.401826	1.150572
+12	573.109472	1.064287
+13	573.817117	0.951659
+14	574.524763	0.837807
+15	575.232408	0.731107
+16	575.940054	0.636026
+17	576.647699	0.557194
+18	577.355345	0.544566
+19	578.062990	0.541897
+20	578.770636	0.546085
+21	579.478281	0.545765
+22	580.185927	0.546908
+23	580.893572	0.548052
+24	581.601218	0.547791
+25	582.308863	0.525868
+26	583.016509	0.512438
+27	583.724154	0.481875
+28	584.431799	0.482512
+29	585.139445	0.504897
+30	585.847090	0.512494
+31	586.554736	0.509818
+32	587.262381	0.507141
+33	587.970027	0.504852
+34	588.677672	0.449650
+35	589.385318	0.333133
+36	590.092963	0.141911
+37	590.800609	0.011599
+38	591.508254	0.010674
+39	592.215900	0.009748
+40	592.923545	0.008822
+41	593.631191	0.007896
+42	594.338836	0.006970
+43	595.046482	0.006044
+44	595.754127	-0.022681
+bisection interval found by 1-dim search: [595.046482,595.754127]
+No.2	 toolpath 530.574576	[r = 595.501059] is calculated within 12.105388s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	560.064155	1.263327
+1	560.772893	1.258708
+2	561.481632	1.254089
+3	562.190370	1.249468
+4	562.899108	1.244847
+5	563.607846	1.240224
+6	564.316584	1.235600
+7	565.025322	1.230975
+8	565.734060	1.226348
+9	566.442798	1.221721
+10	567.151536	1.217093
+11	567.860274	1.168700
+12	568.569012	1.059286
+13	569.277750	0.940336
+14	569.986489	0.823886
+15	570.695227	0.714977
+16	571.403965	0.618178
+17	572.112703	0.581409
+18	572.821441	0.578740
+19	573.530179	0.576070
+20	574.238917	0.573400
+21	574.947655	0.570729
+22	575.656393	0.568058
+23	576.365131	0.565385
+24	577.073869	0.562713
+25	577.782607	0.547757
+26	578.491346	0.499848
+27	579.200084	0.461227
+28	579.908822	0.468636
+29	580.617560	0.496492
+30	581.326298	0.522714
+31	582.035036	0.540135
+32	582.743774	0.541310
+33	583.452512	0.516690
+34	584.161250	0.455827
+35	584.869988	0.341258
+36	585.578726	0.152572
+37	586.287464	0.023416
+38	586.996202	0.022487
+39	587.704941	0.021559
+40	588.413679	0.020631
+41	589.122417	0.019702
+42	589.831155	0.018774
+43	590.539893	0.017845
+44	591.248631	-0.014903
+bisection interval found by 1-dim search: [590.539893,591.248631]
+{操作在以下过程中被用户终止 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('spval>spval1')" style="font-weight:bold">spval>spval1</a>
+
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('spval', 'C:\Program Files\MATLAB\R2022a\toolbox\curvefit\splines\spval.m', 65)" style="font-weight:bold">spval</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\curvefit\splines\spval.m',65,0)">第 65 行</a>)
+   v = spval1(sp,x,left);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('fnval', 'C:\Program Files\MATLAB\R2022a\toolbox\curvefit\splines\fnval.m', 99)" style="font-weight:bold">fnval</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\curvefit\splines\fnval.m',99,0)">第 99 行</a>)
+v = reshape(feval(ff,f,varargin{:}),[sizeval,sizex]);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('residual2D_multi', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m', 23)" style="font-weight:bold">residual2D_multi</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m',23,0)">第 23 行</a>)
+s2 = fnval(sp2,u);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve/iterfunc', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 73)" style="font-weight:bold">iterfunc_curvepath_multi_solve/iterfunc</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',73,0)">第 73 行</a>)
+            curveULim2] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('isBisection', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\isBisection.m', 26)" style="font-weight:bold">isBisection</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\isBisection.m',26,0)">第 26 行</a>)
+        fc = f(c);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('mysearch', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m', 73)" style="font-weight:bold">mysearch</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m',73,0)">第 73 行</a>)
+[iter,x] = isBisection(f,a,b,eps);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 123)" style="font-weight:bold">iterfunc_curvepath_multi_solve</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',123,0)">第 123 行</a>)
+            r = mysearch(@iterfunc,r0,h,searchInt,options.optimopt.XTol);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_optim_2D_aspheric_actual_tip_multi_iter', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m', 252)" style="font-weight:bold">s4_optim_2D_aspheric_actual_tip_multi_iter</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m',252,0)">第 252 行</a>)
+    curveInterPt,curveULim] = iterfunc_curvepath_multi_solve(curveFunc,curveFx, ...
+} 
+s4_optim_2D_aspheric_actual_tip_multi_iter

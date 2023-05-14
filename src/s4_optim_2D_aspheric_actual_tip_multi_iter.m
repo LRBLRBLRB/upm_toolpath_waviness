@@ -214,16 +214,16 @@ toolSp = toolData.toolBform; % B-form tool tip arc
 toolRadius = toolData.radius; % fitted tool radius
 
 % initialize the cutting pts: the outest loop
-curvePathPt = [rRange(1);0;curveFunc(rRange(1))];
+curvePt = [rRange(1);0;curveFunc(rRange(1))];
 curveNorm = [curveFx(rRange(1));0;-1];
 curveNorm = curveNorm./norm(curveNorm);
 % the first toolpath pt
-[curvePathPt,curveQuat,curveContactU,curvePt] = ...
-    curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],[0;-1;0]);
-% [curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
-%     [0;0;-1],[0;-1;0],'directionType','norm-cut');
+% [curvePathPt,curveQuat,curveContactU,curvePt] = ...
+%     curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],[0;-1;0]);
+[curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
+    [0;0;-1],[0;-1;0],'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
-rRange(1) = curvePt(1);
+% rRange(1) = curvePt(1);
 
 %     scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
 %     toolSp0 = toolData.toolBform;
@@ -243,7 +243,7 @@ fprintf('-----\nNo.1\t toolpath %f\t[r = %f] is calculated within %fs.\n-----\n'
 %     'MaxIterations',50,'FunctionTolerance',1e-6,'StepTolerance',1e-6); % fsolve options
 % % 'PlotFcn',{@optimplotx,@optimplotfval},
 
-opt.XTol = 1e-6;
+opt.XTol = 1e-3;
 
 % opt = optimoptions('ga','UseParallel',false,'Display','iter', ...
 %     'MaxGenerations',10,'FitnessLimit',aimRes*0.5);
@@ -719,7 +719,7 @@ tSpiralRes0 = tic;
 %     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
 % hold on;
 
-parfor ind1 = 1:spiralPtNum
+for ind1 = 1:spiralPtNum
     % inner ulim & residual height
     ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,'first');
     ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,'last');
@@ -735,7 +735,7 @@ parfor ind1 = 1:spiralPtNum
     else
         [tmpRes1,tmpPeak1,spiralInterPtIn{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-            toolData,toolRadius,spiralULim{ind1},ind1,ind2,ind3);
+            toolData,toolRadius,spiralULim{ind1},aimRes,ind1,ind2,ind3);
     end
 
     % outer ulim & residual height
@@ -761,7 +761,7 @@ parfor ind1 = 1:spiralPtNum
 
         [tmpRes2,tmpPeak2,spiralInterPtOut{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-            toolData,toolRadius,spiralULim{ind1},ind1,ind2,ind3);
+            toolData,toolRadius,spiralULim{ind1},aimRes,ind1,ind2,ind3);
     end
     
     spiralRes(:,ind1) = [tmpRes1;tmpRes2];
@@ -783,6 +783,8 @@ end
 
 tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
+warningTone = load('handel');
+sound(warningTone.y,warningTone.Fs);
 
 %% spiral tool path result
 % plot the result

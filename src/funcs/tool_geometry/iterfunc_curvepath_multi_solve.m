@@ -71,7 +71,7 @@ curveRes = 5*aimRes; % the residual height, initialized with 5 times the standar
     
         [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim1, ...
             curveULim2] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
-            curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
+            curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1},aimRes);
         % curvePeakPt(5,ind) = curvePeakPt(5,ind) + ind;
     
         if isinf(curveRes(ind))
