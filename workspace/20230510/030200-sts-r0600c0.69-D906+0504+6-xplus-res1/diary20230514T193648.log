@@ -1,0 +1,116 @@
+The time spent in the parallel computing activating process is 0.001433s.
+-----
+No.1	 toolpath 600.000000	[r = 691.949845] is calculated within 12.302101s.
+-----
+Wrong input: there is no root in the interval [a,b]!
+No.2	 toolpath 515.077549	[r = NaN] is calculated within 142.646980s.
+-----
+{操作在以下过程中被用户终止 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('dsearchn')" style="font-weight:bold">dsearchn</a>
+
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('residual2D_multi', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m', 44)" style="font-weight:bold">residual2D_multi</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m',44,0)">第 44 行</a>)
+[index,dist] = dsearchn(s1',s2');
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_optim_2D_aspheric_actual_tip_multi_iter', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m', 321)" style="font-weight:bold">s4_optim_2D_aspheric_actual_tip_multi_iter</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m',321,0)">第 321 行</a>)
+    curveULim{ind - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
+} 
+-----
+No.1	 toolpath 600.000000	[r = 691.949845] is calculated within 11.170767s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	564.362051	8.227277
+1	565.074810	8.041225
+2	565.787569	8.023584
+3	566.500328	8.005937
+4	567.213087	7.988286
+5	567.925846	7.970630
+6	568.638605	7.952970
+figure; fnplt(sp1); hold on; fnplt(sp2); axis equal
+if system_dependent('IsDebugMode')==1, dbcont; end
+7	569.351364	7.935305
+8	570.064123	7.903315
+9	570.776882	7.838160
+10	571.489641	7.882281
+11	572.202400	7.648462
+12	572.915159	7.300870
+13	573.627918	7.283524
+14	574.340677	7.250474
+15	575.053436	7.266374
+16	575.766195	7.233944
+17	576.478954	7.162325
+18	577.191713	7.048230
+19	577.904472	7.051984
+20	578.617231	7.338001
+21	579.329990	7.361846
+22	580.042749	7.128327
+23	580.755508	7.109814
+24	581.468267	6.867911
+25	582.181026	6.755216
+26	582.893785	6.637841
+27	583.606544	6.653043
+28	584.319303	6.646350
+29	585.032062	6.430433
+30	585.744821	6.170839
+31	586.457579	6.070032
+32	587.170338	6.037434
+33	587.883097	5.963256
+34	588.595856	5.904110
+35	589.308615	6.638114
+36	590.021374	6.378995
+37	590.734133	6.158538
+38	591.446892	6.171098
+39	592.159651	6.067750
+40	592.872410	6.050387
+41	593.585169	5.996880
+42	594.297928	5.882715
+43	595.010687	6.228595
+44	595.723446	6.134318
+45	596.436205	6.093756
+46	597.148964	6.066980
+47	597.861723	5.856234
+48	598.574482	5.712568
+49	599.287241	5.460263
+50	600.000000	5.447983
+51	600.712759	5.282270
+Linear search failed. all the f(x) > 0.bisection interval found by 1-dim search: [600.000000,600.000000]
+Wrong input: there is no root in the interval [a,b]!
+No.2	 toolpath 515.077549	[r = NaN] is calculated within 161.608397s.
+-----
+-----
+No.1	 toolpath 600.000000	[r = 691.949845] is calculated within 11.203459s.
+-----
+iterfunc(580)
+figure; fnplt(toolSp1); hold on; fnplt(toolSp2); axis equal
+figure; st1 = fnplt(toolSp1); plot(st1(1,:),st1(2,:)); hold on; st2 = fnplt(toolSp2); plot(st2(1,:),st2(2,:)) axis equal
+ figure; st1 = fnplt(toolSp1); plot(st1(1,:),st1(2,:)); hold on; st2 = fnplt(toolSp2); plot(st2(1,:),st2(2,:)) axis equal
+                                                                                                               ↑
+{无效表达式。请检查缺失的乘法运算符、缺失或不对称的分隔符或者其他语法错误。要构造矩阵，请使用方括号而不是圆括号。
+} 
+figure; st1 = fnplt(toolSp1); plot(st1(1,:),st1(3,:)); hold on; st2 = fnplt(toolSp2); plot(st2(1,:),st2(3,:)) axis equal
+ figure; st1 = fnplt(toolSp1); plot(st1(1,:),st1(3,:)); hold on; st2 = fnplt(toolSp2); plot(st2(1,:),st2(3,:)) axis equal
+                                                                                                               ↑
+{无效表达式。请检查缺失的乘法运算符、缺失或不对称的分隔符或者其他语法错误。要构造矩阵，请使用方括号而不是圆括号。
+} 
+st1 = fnplt(toolSp1);
+{尝试将 "st1" 添加到静态工作区。
+
+<a href="matlab:helpview('matlab','error_err_static_workspace_violation')" style="font-weight:bold">相关文档</a>
+} 
+figure; fnplt(toolSp1); hold on; fnplt(toolSp2); axis equal
+figure; fnplt(toolSp1); hold on; fnplt(toolSp2); axis equal
+view(0,0)
+figure; fnplt(toolSp1); hold on; fnplt(toolSp2); view(0,0); grid on;
+if system_dependent('IsDebugMode')==1, dbquit; end
+iterfunc(598)
+figure; fnplt(toolSp1); hold on; fnplt(toolSp2); view(0,0); grid on;
+if system_dependent('IsDebugMode')==1, dbquit; end
+if system_dependent('IsDebugMode')==1, dbquit; end
+-----
+No.1	 toolpath 600.000000	[r = 691.949845] is calculated within 11.174621s.
+-----
+iterfunc(598)
+figure; fnplt(toolSp1); hold on; fnplt(toolSp2); view(0,0); grid on;
+if system_dependent('IsDebugMode')==1, dbquit; end
+if system_dependent('IsDebugMode')==1, dbquit; end
+s4_optim_2D_aspheric_actual_tip_multi_iter

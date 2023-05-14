@@ -1,0 +1,196 @@
+The time spent in the parallel computing activating process is 0.000354s.
+-----
+No.1	 toolpath 515.077549	[r = 600.000000] is calculated within 0.037384s.
+-----
+No.2	 toolpath 485.308633	[r = 562.217025] is calculated within 15.545873s.
+-----
+{操作在以下过程中被用户终止 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('dsearchn')" style="font-weight:bold">dsearchn</a>
+
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('residual2D_multi', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m', 44)" style="font-weight:bold">residual2D_multi</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m',44,0)">第 44 行</a>)
+[index,dist] = dsearchn(s1',s2');
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve/iterfunc', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 73)" style="font-weight:bold">iterfunc_curvepath_multi_solve/iterfunc</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',73,0)">第 73 行</a>)
+            curveULim2] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('isBisection', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\isBisection.m', 26)" style="font-weight:bold">isBisection</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\isBisection.m',26,0)">第 26 行</a>)
+        fc = f(c);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('mysearch', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m', 73)" style="font-weight:bold">mysearch</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m',73,0)">第 73 行</a>)
+[iter,x] = isBisection(f,a,b,eps);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 123)" style="font-weight:bold">iterfunc_curvepath_multi_solve</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',123,0)">第 123 行</a>)
+            r = mysearch(@iterfunc,r0,h,searchInt,options.optimopt.XTol);
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_optim_2D_aspheric_actual_tip_multi_iter', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m', 250)" style="font-weight:bold">s4_optim_2D_aspheric_actual_tip_multi_iter</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m',250,0)">第 250 行</a>)
+    curveInterPt,curveULim] = iterfunc_curvepath_multi_solve(curveFunc,curveFx, ...
+} 
+beep('on'); pause(1);beep('off');
+beep on; pause(1);beep off;
+beep
+beep
+help beep
+ <strong>beep</strong> - 产生操作系统蜂鸣声
+    此 MATLAB 函数 产生计算机的默认蜂鸣声（如果已启用）。
+
+    <strong>beep</strong>
+    <strong>beep</strong> on
+    <strong>beep</strong> off
+
+    status = <strong>beep</strong>
+
+    打开示例
+        <a href="matlab:openExample('matlab/ProduceBeepSoundExample')">产生蜂鸣声</a>
+
+    See also <a href="matlab:help sound -displayBanner">sound</a>
+
+    在 R2006a 之前引入
+    <a href="matlab:doc beep">beep 的文档</a>
+
+doc beep
+pause(5)
+beep
+status = beep
+
+status =
+
+    'off'
+
+beep pn
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('beep')" style="font-weight:bold">beep</a>
+未知的命令选项。
+} 
+help beep
+ <strong>beep</strong> - 产生操作系统蜂鸣声
+    此 MATLAB 函数 产生计算机的默认蜂鸣声（如果已启用）。
+
+    <strong>beep</strong>
+    <strong>beep</strong> on
+    <strong>beep</strong> off
+
+    status = <strong>beep</strong>
+
+    打开示例
+        <a href="matlab:openExample('matlab/ProduceBeepSoundExample')">产生蜂鸣声</a>
+
+    See also <a href="matlab:help sound -displayBanner">sound</a>
+
+    在 R2006a 之前引入
+    <a href="matlab:doc beep">beep 的文档</a>
+
+ProduceBeepSoundExample
+status = beep on
+ status = beep on
+               ↑
+{无效表达式。请检查缺失的乘法运算符、缺失或不对称的分隔符或者其他语法错误。要构造矩阵，请使用方括号而不是圆括号。
+} 
+status = beep
+
+status =
+
+    'off'
+
+beep on
+status = beep
+
+status =
+
+    'on'
+
+beep off
+load chirp
+sound(y,Fs)
+load gong
+sound(y,Fs)
+load handel
+sound(y,Fs)
+load laughter
+sound(y,Fs)
+load train
+sound(y,Fs)
+help pause
+ <strong>pause</strong> - 暂时停止执行 MATLAB
+    此 MATLAB 函数 暂时停止执行 MATLAB 并等待用户按下任意键。pause 函数还会暂时停止执行
+    Simulink 模型，但不会暂停其重绘。
+
+    <strong>pause</strong>
+
+    <strong>pause</strong>(n)
+
+    <strong>pause</strong>(state)
+    oldState = <strong>pause</strong>(state)
+
+    输入参数
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/pause.html#f76-920820-n">n</a> - 秒数
+            非负实数
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/pause.html#f76-920820-state">state</a> - 暂停设置
+            'on' | 'off' | 'query'
+
+    打开示例
+        <a href="matlab:openExample('matlab/PauseExecutionExample')">暂停执行</a>
+        <a href="matlab:openExample('matlab/DisablePauseSettingExample')">禁用暂停设置</a>
+        <a href="matlab:openExample('matlab/SaveAndRstorePauseStateExample')">保存并还原暂停状态</a>
+
+    See also <a href="matlab:help keyboard -displayBanner">keyboard</a>, <a href="matlab:help input -displayBanner">input</a>, <a href="matlab:help drawnow -displayBanner">drawnow</a>
+
+    在 R2006a 之前引入
+    <a href="matlab:doc pause">pause 的文档</a>
+    <a href="matlab:matlab.internal.language.introspective.overloads.displayOverloads('pause')">名为 pause 的其他函数</a>
+
+doc pause
+help sound
+ <strong>sound</strong> - 将信号数据矩阵转换为声音
+    此 MATLAB 函数 以默认采样率 8192 赫兹向扬声器发送音频信号 y。
+
+    <strong>sound</strong>(y)
+    <strong>sound</strong>(y,Fs)
+    <strong>sound</strong>(y,Fs,nBits)
+
+    输入参数
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/sound.html#btj60o3-1_sep_shared-y">y</a> - 音频数据
+            列向量 | m×2 矩阵
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/sound.html#btj60o3-1_sep_shared-Fs">Fs</a> - 采样率
+            8192 (默认值) | 正数
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/sound.html#btj60o3-1_sep_shared-nBits">nBits</a> - 样本值的位深
+            8 | 16 (默认值) | 24
+
+    打开示例
+        <a href="matlab:openExample('matlab/PlaySampleDataatDefaultSampleRateExample')">以默认采样率播放样本数据</a>
+        <a href="matlab:openExample('matlab/PlaySampleDataatSpecificSampleRateExample')">以特定采样率播放样本数据</a>
+        <a href="matlab:openExample('matlab/PlaySampleDatawithSpecificBitDepthExample')">以特定位深播放样本数据</a>
+
+    See also <a href="matlab:help audioplayer -displayBanner">audioplayer</a>, <a href="matlab:help soundsc -displayBanner">soundsc</a>, <a href="matlab:help audioread -displayBanner">audioread</a>, <a href="matlab:help audiowrite -displayBanner">audiowrite</a>
+
+    在 R2006a 之前引入
+    <a href="matlab:doc sound">sound 的文档</a>
+
+doc sound
+PlaySampleDatawithSpecificBitDepthExample
+clear
+PlaySampleDatawithSpecificBitDepthExample
+if system_dependent('IsDebugMode')==1, dbquit; end
+PlaySampleDatawithSpecificBitDepthExample
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbquit; end
+warningTone = load('train');
+clear
+warningTone = load('train');
+sound(warningTone.y,warningTone.Fs);
+nBits
+{函数或变量 'nBits' 无法识别。
+} 
+load handel.mat;
+nBits = 16;
+sound(y,Fs,nBits);
+sound(y,Fs,32);
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('sound')" style="font-weight:bold">sound</a>
+当前仅支持 8、16 和 24 位音频。
+} 
+<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\matlab\audiovideo\sound.m',79,1)">79  </a>    throw(exception);
+sound(y,Fs,24);
+{函数或变量 'Fs' 无法识别。
+} 
+sound(y,fs,24);
+if system_dependent('IsDebugMode')==1, dbquit; end
+clc
+s4_optim_2D_aspheric_actual_tip_multi_iter

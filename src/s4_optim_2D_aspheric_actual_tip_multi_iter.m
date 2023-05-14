@@ -62,7 +62,7 @@ else
     questOpt.Default = 'OK & Continue';
     
     diaryFile = fullfile(workspaceDir,['diary',datestr(now,'yyyymmddTHHMMSS'),'.log']);
-    diary diaryFile;
+    diary(diaryFile);
     diary on;
     
     tPar0 = tic;
@@ -185,16 +185,16 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     'The workspace directory name is: ', ...
     sprintf('%s\n',getlastfoldername(workspaceDir)), ...
     sprintf('The parameters are listed below:'), ...
-    sprintf('1. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,unit), ...
-    '2. X increment: ', ...
+    sprintf('1. Surface radius: %f%s',abs(rMax),unit), ...
+    sprintf('2. Surface curvature: %f%s^{-1}',c,unit), ...
+    sprintf('3. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,unit), ...
+    '4. X increment: ', ...
     sprintf('\tX direction (in program): %s',startDirection), ...
     sprintf('\tAimed residual error: %f%s',aimRes,unit), ...
-    '3. C increment: ', ...
+    '5. C increment: ', ...
     sprintf('\tIncrement type: %s',angularIncrement), ...
     sprintf('\tArc length: %f%s',arcLength,unit), ...
-    sprintf(['\tMax angle: %f',char(176),')'],maxAngPtDist*180/pi), ...
-    sprintf('4. Surface radius: %f%s',abs(rMax),unit), ...
-    sprintf('5. Surface curvature: %f%s^{-1}\n',c,unit), ...
+    sprintf(['\tMax angle: %f',char(176),')\n'],maxAngPtDist*180/pi), ...
     'Ready to continue?'}, ...
     'Surface Generation','OK & Continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
@@ -214,14 +214,16 @@ toolSp = toolData.toolBform; % B-form tool tip arc
 toolRadius = toolData.radius; % fitted tool radius
 
 % initialize the cutting pts: the outest loop
-curvePt = [rRange(1);0;curveFunc(rRange(1))];
+curvePathPt = [rRange(1);0;curveFunc(rRange(1))];
 curveNorm = [curveFx(rRange(1));0;-1];
 curveNorm = curveNorm./norm(curveNorm);
 % the first toolpath pt
-[curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
-    [0;0;-1],[0;-1;0],'directionType','norm-cut');
+[curvePathPt,curveQuat,curveContactU,curvePt] = ...
+    curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],[0;-1;0]);
+% [curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
+%     [0;0;-1],[0;-1;0],'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
-
+rRange(1) = curvePt(1);
 
 %     scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
 %     toolSp0 = toolData.toolBform;
@@ -273,6 +275,8 @@ if criterum*curvePathPt(1,end) >= 0
         end
         questStr{tmpii + 4} = sprintf('Ensure to delete the last %d curve path point?', ...
             length(curvePathPt(1,:)) - ii);
+        warningTone = load('gong');
+        sound(warningTone.y,warningTone.Fs);
         msg = questdlg(questStr,'Whether to delete the exceeding point', ...
             'OK & Continue','Cancel',questOpt);
         waitfor(msg);
@@ -298,6 +302,7 @@ else
     % which means in the last tooltip lies over the symetrical axis while
     % the toolpathpt within it
     curvePathPt = [curvePathPt,zeros(3,1)];
+    curveULim{size(curvePathPt,2)} = [];
 end
 ind = size(curvePathPt,2);
 [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind),curvePt(:,ind)] = ...
@@ -307,7 +312,7 @@ toolSp1 = toolSp;
 toolSp1.coefs = quat2rotm(curveQuat(ind,:))*toolSp1.coefs + curvePathPt(:,ind);
 toolSp2 = toolSp;
 toolSp2.coefs = quat2rotm(curveQuat(ind - 1,:))*toolSp2.coefs + curvePathPt(:,ind - 1);
-prevUlimInd = size(curveULim{ind},2);
+prevUlimInd = size(curveULim{ind},2); % get the curveUlim use of the last pathpt
 if prevUlimInd > 1
     curveULim{ind - 1}(:,(end - prevUlimInd + 2):end) = [];
 end
@@ -394,9 +399,9 @@ uLim = {zeros(2,0)};
 interPt = {zeros(3,0)};
 
 if strcmp(startDirection,'X Plus') % 'X Minus'
-    conThetaBound = [2*pi,0];
-else
     conThetaBound = [0,2*pi];
+else
+    conThetaBound = [2*pi,0];
 end
 
 for ii = 1:size(curvePathPt,2)
@@ -454,6 +459,8 @@ zlabel(['z (',unit,')']);
 axis equal;
 legend('designed surface','tool center point','Location','northeast');
 
+warningTone = load('handel');
+sound(warningTone.y,warningTone.Fs);
 s6_visualize_concentric_multi;
 
 msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
@@ -489,19 +496,24 @@ hFeedrate = figure('Name','Feed Rate Smoothing');
 % while true
 %     approxOut = selectfr(textFontType,textFontSize);
 %     Fr = approxOut.fittedmodel;
-Fr = csape(SurfEach,toolREach,[1 1]);
-
+approxMethod = 'pchip';
+switch approxMethod
+    case 'csape'
+        Fr = csape(SurfEach,toolREach,[1 1]);
+    case 'pchip'
+        Fr = pchip(SurfEach,toolREach);
+end
 
     yyaxis left;
-    scatter(accumPtNum,toolREach);
+    scatter(SurfEach,toolREach);
     hold on;
-    fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]);
-    plot(1:accumPtNum(end),toolRAccum);
+    fnplt(Fr,'r',[SurfEach(1) + 1,SurfEach(end)]);
+    plot(1:SurfEach(end),toolRAccum);
     ylim1 = [min(toolREach),max(toolREach)];
     set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)]);
     ylabel(['Radius of the Loop (',unit,')']);
     yyaxis right;
-    bar(accumPtNum(1:end - 1),diffR);
+    bar(SurfEach(1:end - 1),diffR);
     ylim2 = [min(diffR),max(diffR)];
     set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)]);
     ylabel(['Cutting width of each Loop (',unit,')']);
@@ -526,10 +538,10 @@ Fr = csape(SurfEach,toolREach,[1 1]);
 %     end
 % end
 
-if exist(fullfile(workspaceDir,'feedrate.fig'),'file')
-    savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',datestr(now,'yyyymmddTHHMMSS'),'.fig']));
+if exist(fullfile(workspaceDir,['feedrate-',approxMethod,'.fig']),'file')
+    savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',approxMethod,'-',datestr(now,'yyyymmddTHHMMSS'),'.fig']));
 else
-    savefig(hFeedrate,fullfile(workspaceDir,'feedrate.fig'));
+    savefig(hFeedrate,fullfile(workspaceDir,['feedrate-',approxMethod,'.fig']));
 end
 
 % nexttile;
@@ -564,7 +576,6 @@ end
 %             string(datestr(now))));
 %         save(smoothName,"Comments","Fr","rTheta");
 % end
-
 
 %% spiral tool path generation with the smoothing result
 % initialize the spiral path
@@ -687,7 +698,7 @@ spiralFolderName = getlastfoldername(workspaceDir);
     '*.*','all file(*.*)';...
     }, ...
     'Select the directory and filename to save the surface tool path', ...
-    fullfile(workspaceDir,[spiralFolderName,'-spiralPath-',approxOut.approxMethod, ...
+    fullfile(workspaceDir,[spiralFolderName,'-spiralPath-',approxMethod, ...
     '-',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
 spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
 save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...

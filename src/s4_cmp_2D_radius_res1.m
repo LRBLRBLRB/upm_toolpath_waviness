@@ -16,38 +16,79 @@ clear;
 clc;
 addpath(genpath('funcs'));
 % global variables
-% global textFontSize textFontType;
+% workspaceDir = fullfile('..','workspace','\20220925-contrast\nagayama_concentric';
+% workspaceDir = fullfile('..','workspace','\20221020-tooltip\tooltip fitting result';
+workspaceDir = uigetdir( ...
+    fullfile('..','workspace'), ...
+    'select the workspace directory');
+if ~workspaceDir
+    workspaceDir = fullfile('..','workspace');
+end
 unit = '\mum';
 textFontSize = 12;
 textFontType = 'Times New Roman';
 
-msgOpts.Default = 'Cancel and quit';
-msgOpts.Interpreter = 'tex';
+questOpt.Interpreter = 'tex';
+questOpt.Default = 'OK & Continue';
+   
+diaryFile = fullfile(workspaceDir,['diary',datestr(now,'yyyymmddTHHMMSS'),'.log']);
+diary(diaryFile);
+diary on;
 
-workspaceDir = fullfile('..','workspace','\20220925-contrast\nagayama_concentric';
-diaryFile = fullfile('..','workspace','\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
-% diary diaryFile;
-% diary on;
+tPar0 = tic;
+parObj = gcp;
+tPar = toc(tPar0);
+fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
 
-% profile on
-% tPar0 = tic;
-% parObj = gcp;
-% tPar = toc(tPar0);
-% fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
 
-radius = 879.92;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% machining paramters
+cutDirection = 'Edge to Center'; % 'Center to Edge'
+startDirection = 'X Minus'; % 'X Minus'
+angularIncrement = 'Constant Arc'; % 'Constant Angle'
+arcLength = 20; % um
+maxAngPtDist = 1*pi/180;
+angularLength = 1*pi/180;
+radialIncrement = 'On-Axis'; % 'Surface'
+aimRes = 1; % um
+rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+maxIter = 100;
+spiralMethod = 'Radius-Number'; % Radius-Angle
+frMethodDefault = 'Approximation'; % 'Approximation'
+frParamDefault = 1-1e-5;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% surface data import
-A = tand(20)/(2*2000);
-C = 0;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% concentric surface generation / import
+% A = tand(20)/(2*2000);
+c = 0.69/1000/(1000^(aimUnit - presUnit));
 syms x y;
-surfSym = A*(x.^2 + y.^2) + C;
+surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
 surfFunc = matlabFunction(surfSym);
 surfFx = diff(surfFunc,x);
 surfFy = diff(surfFunc,y);
-surfDomain = [-5000,5000;-5000,5000];
-surfDomain = 1.05*surfDomain;
+surfDomain = [-500,500;-500,500];
+surfDomain = 1.2*surfDomain;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% related parameters
+switch startDirection
+    case 'X Plus' % plus in this program, but minus in moore
 rMax = max(surfDomain(1,2),surfDomain(2,2));
+        rStep = -1*rStep;
+    case 'X Minus' % minus in this program, but plus in moore
+        rMax = min(surfDomain(1,1),surfDomain(2,1)); % reverse
+        rStep = 1*rStep;
+end
+
+switch cutDirection
+    case 'Edge to Center'
+        rRange = [rMax,0];
+    case 'Center to Edge'
+%             rRange = [0,rMax];
+end
+
+
 % sampling density
 spar = 501;
 conR = linspace(0,rMax,spar); % concentric radius vector
@@ -56,14 +97,26 @@ conTheta = linspace(0,2*pi,spar);
 surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
 surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
 surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
+% save('input_data/surface/ellipsoidAray.mat', ...
+%    "surfMesh","surfNorm","surfCenter");
 
 % plot the importing result
 [surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
+
 fig1 = figure('Name','original xyz scatters of the surface (sparsely)');
 tiledlayout(1,2);
 pos = get(gcf,'position');
 set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
+nexttile;
+plot(toolData.toolFit(2,:),toolData.toolFit(3,:),'Color',[0,0.4470,0.7410]);
+hold on;
+patch('XData',toolData.toolFit(2,:),'YData',toolData.toolFit(3,:),...
+    'EdgeColor','none','FaceColor',[0.9290 0.6940 0.1250],'FaceAlpha',0.3);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+title('Tooltip Geometry');
 nexttile;
 rSpar = linspace(0,rMax,spar);
 plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))));
@@ -71,46 +124,28 @@ hold on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
-% nexttile;
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-% hold on;
-% % quiver3(surfMesh(1:10:end,1:10:end,1), ...
-% %     surfMesh(1:10:end,1:10:end,2), ...
-% %     surfMesh(1:10:end,1:10:end,3), ...
-% %     surfNormIni(1:10:end,1:10:end,1), ...
-% %     surfNormIni(1:10:end,1:10:end,2), ...
-% %     surfNormIni(1:10:end,1:10:end,3), ...
-% %     'AutoScale','on','Color',[0.85,0.33,0.10], ...
-% %     'DisplayName','Normal Vectors');
-% % legend('Original Points','Orthogonal direction','Location','northeast');
-% set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% xlabel(['x (',unit,')']);
-% ylabel(['y (',unit,')']);
-% zlabel(['z (',unit,')']);
+title('2D-Surface Geometry');
 
-% interaction
-msgfig = msgbox('Surface was generated successfully!','Exit','help','non-modal');
-uiwait(msgfig);
-msgfig = questdlg({'Surface was generated successfully!', ...
+msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
+    'Surface was generated successfully!\n'],textFontSize,textFontType), ...
+    'The workspace directory name is: ', ...
+    sprintf('%s\n',getlastfoldername(workspaceDir)), ...
+    sprintf('The parameters are listed below:'), ...
+    sprintf('1. Surface radius: %f%s',abs(rMax),unit), ...
+    sprintf('2. Surface curvature: %f%s^{-1}',c,unit), ...
+    sprintf('3. Tool radius: %f%s',toolRadius,unit), ...
+    '4. X increment: ', ...
+    sprintf('\tX direction (in program): %s',startDirection), ...
+    sprintf('\tAimed residual error: %f%s',aimRes,unit), ...
+    '5. C increment: ', ...
+    sprintf('\tIncrement type: %s',angularIncrement), ...
+    sprintf('\tArc length: %f%s',arcLength,unit), ...
+    sprintf(['\tMax angle: %f',char(176),')\n'],maxAngPtDist*180/pi), ...
     'Ready to continue?'}, ...
-    'Surface Generation','OK & continue','Cancel & quit','OK & continue');
+    'Surface Generation','OK & Continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
     return;
 end
-
-%% machining paramters
-cutDirection = 'Edge to Center'; % 'Center to Edge'
-spindleDirection = 'Counterclockwise'; % 'Clockwise'
-angularDiscrete = 'Constant Arc'; % 'Constant Angle'
-conThetaBound = [2*pi,0];
-aimRes = 0.2;
-rStep = radius/2; % 每步步长可通过曲面轴向偏导数确定
-maxIter = 100;
-arcLength = 1;
-maxAngPtDist = 6*pi/180;
-angularLength = 6*pi/180;
 
 %% Tool path adjusting
 t0 = tic;
@@ -121,8 +156,7 @@ t1 = tic;
 curveFunc = matlabFunction(subs(surfSym,y,0),'Vars',x);
 curveFx = matlabFunction(subs(surfFx,y,0),'Vars',x);
 
-rRange = [rMax,0];
-rStep = -1*rStep;
+toolRadius = radius; % fitted tool radius
 
 % initialize the cutting pts: the outest loop
 curvePt = [rRange(1);0;curveFunc(rRange(1))];
