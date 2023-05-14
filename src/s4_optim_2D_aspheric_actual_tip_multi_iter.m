@@ -490,18 +490,18 @@ hFeedrate = figure('Name','Feed Rate Smoothing');
 %     approxOut = selectfr(textFontType,textFontSize);
 %     Fr = approxOut.fittedmodel;
 Fr = csape(SurfEach,toolREach,[1 1]);
-
+% Fr = pchip(SurfEach,toolREach);
 
     yyaxis left;
-    scatter(accumPtNum,toolREach);
+    scatter(SurfEach,toolREach);
     hold on;
-    fnplt(Fr,'r',[accumPtNum(1) + 1,accumPtNum(end)]);
-    plot(1:accumPtNum(end),toolRAccum);
+    fnplt(Fr,'r',[SurfEach(1) + 1,SurfEach(end)]);
+    plot(1:SurfEach(end),toolRAccum);
     ylim1 = [min(toolREach),max(toolREach)];
     set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)]);
     ylabel(['Radius of the Loop (',unit,')']);
     yyaxis right;
-    bar(accumPtNum(1:end - 1),diffR);
+    bar(SurfEach(1:end - 1),diffR);
     ylim2 = [min(diffR),max(diffR)];
     set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)]);
     ylabel(['Cutting width of each Loop (',unit,')']);
