@@ -214,16 +214,16 @@ toolSp = toolData.toolBform; % B-form tool tip arc
 toolRadius = toolData.radius; % fitted tool radius
 
 % initialize the cutting pts: the outest loop
-curvePathPt = [rRange(1);0;curveFunc(rRange(1))];
+curvePt = [rRange(1);0;curveFunc(rRange(1))];
 curveNorm = [curveFx(rRange(1));0;-1];
 curveNorm = curveNorm./norm(curveNorm);
 % the first toolpath pt
-[curvePathPt,curveQuat,curveContactU,curvePt] = ...
-    curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],[0;-1;0]);
-% [curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
-%     [0;0;-1],[0;-1;0],'directionType','norm-cut');
+% [curvePathPt,curveQuat,curveContactU,curvePt] = ...
+%     curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],[0;-1;0]);
+[curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
+    [0;0;-1],[0;-1;0],'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
-rRange(1) = curvePt(1);
+% rRange(1) = curvePt(1);
 
 %     scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
 %     toolSp0 = toolData.toolBform;
@@ -243,10 +243,12 @@ fprintf('-----\nNo.1\t toolpath %f\t[r = %f] is calculated within %fs.\n-----\n'
 %     'MaxIterations',50,'FunctionTolerance',1e-6,'StepTolerance',1e-6); % fsolve options
 % % 'PlotFcn',{@optimplotx,@optimplotfval},
 
-opt.XTol = 1e-6;
+opt.XTol = 1e-3;
 
 % opt = optimoptions('ga','UseParallel',false,'Display','iter', ...
 %     'MaxGenerations',10,'FitnessLimit',aimRes*0.5);
+
+% opt = optimoptions('particleswarm','UseParallel',true,'Display','iter');
 
 [curvePathPt,curveQuat,curveContactU,curvePt,curveRes,curvePeakPt, ...
     curveInterPt,curveULim] = iterfunc_curvepath_multi_solve(curveFunc,curveFx, ...

@@ -1,5 +1,5 @@
 function [toolPathPt,toolQuat,toolContactU,curvePt] = radiuspos( ...
-    curveFunc,curveFx,radius,toolPathPt,toolPathNorm,toolPathFeed,options)
+    curveFunc,curveFx,toolData,toolPathPt,toolPathNorm,toolPathFeed,options)
 % Description:
 %   Solve the tool pose and the tool tip pose using the tangent relationship 
 %   of tool tip and surface, with the tool axis unchanged.
@@ -7,12 +7,12 @@ function [toolPathPt,toolQuat,toolContactU,curvePt] = radiuspos( ...
 %   as well as the surface contact point will be figured out.
 % 
 % Usage:
-%   [toolQuad,toolPathPt,surfPt] = surfPos(toolEdge,toolPathPt, ...
+%   [toolQuad,toolPathPt,surfPt] = surfPos(toolData,toolPathPt, ...
 %       toolPathNorm,toolPathDir,surfFunc,surfNorm)
 % Inputs:
 %   curveFunc
 %   curveFy 
-%   toolEdge struct the edge model of the tool
+%   toolData struct the edge model of the tool
 %   toolPathPt (3,1) pose of the tool tip (the surface as well)
 %   toolPathNorm (3,1) the normal vector of the tool, whose default value 
 %       is [0;0;-1], i.e., the tool points towards the workpiece
@@ -29,13 +29,15 @@ function [toolPathPt,toolQuat,toolContactU,curvePt] = radiuspos( ...
 arguments
     curveFunc function_handle
     curveFx function_handle
-    radius double
+    toolData struct
     toolPathPt (3,1)
     toolPathNorm (3,1) = [0;0;-1]
     toolPathFeed (3,1) = [0;-1;0]
     options.iniDisplay {mustBeMember(options.iniDisplay,{'none','off', ...
         'iter','iter-detailed','final','final-detailed'})} = 'none'
     options.useParallel logical = false
+    options.directionType {mustBeMember(options.directionType, ...
+        {'quaternion','norm-cut','norm-feed'})} = 'norm-cut'
 end
 
 %% Initial value of iteration
@@ -45,9 +47,9 @@ end
         % need to be solved. so x = [tooltip_y; toolpath_z].
         curveNorm = [curveFx(x(1));-1];
         curveNorm = curveNorm./norm(curveNorm);
-        F1(1) = toolpathxy - x(1) + radius*curveNorm(1);
+        F1(1) = toolpathxy - x(1) + toolData.toolRadius*curveNorm(1);
         % F1(2) = toolpathx(2) - x(2) + R*curveNorm(1);
-        F1(2) = x(2) - curveFunc(x(1)) + radius*curveNorm(2);
+        F1(2) = x(2) - curveFunc(x(1)) + toolData.toolRadius*curveNorm(2);
     end
 
 optimOpts1 = optimoptions('fsolve', ...
@@ -61,9 +63,19 @@ curvePt(2) = 0;
 curvePt(3) = curveFunc(curvePt(1));
 
 %% rotation transform
-% Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
-toolRot = axesRot([0;-1;0],[0;0;-1], ...
-        toolPathFeed,toolPathNorm,'yz');
+switch options.directionType
+    case 'norm-cut'
+        % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+        toolRot = axesRot(toolData.toolEdgeNorm,toolData.cutDirect, ...
+            toolPathNorm,toolPathFeed,'zx');
+    case 'norm-feed'
+        % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+        toolRot = axesRot(toolData.toolDirect,toolData.toolEdgeNorm, ...
+            toolPathFeed,toolPathNorm,'yz');
+    case 'quaternion'
+        % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+        toolRot = rotm2quat(toolPathNorm);
+end
 toolQuat = rotm2quat(toolRot);
 
 curveNorm0 = [curveFx(curvePt(1));-1];

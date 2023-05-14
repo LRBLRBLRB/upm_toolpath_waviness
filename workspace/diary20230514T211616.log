@@ -1,0 +1,9 @@
+The time spent in the parallel computing activating process is 0.001733s.
+{函数或变量 'presUnit' 无法识别。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_radius_res_iter', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_radius_res_iter.m', 73)" style="font-weight:bold">s4_cmp_2D_radius_res_iter</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_radius_res_iter.m',73,0)">第 73 行</a>)
+c = 0.69/1000/(1000^(aimUnit - presUnit));
+} 
+opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_radius_res_iter.m',73,0)
+if system_dependent('IsDebugMode')==1, dbquit all; end
+s4_cmp_2D_radius_res_iter
