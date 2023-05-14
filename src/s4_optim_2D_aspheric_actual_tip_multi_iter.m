@@ -275,6 +275,8 @@ if criterum*curvePathPt(1,end) >= 0
         end
         questStr{tmpii + 4} = sprintf('Ensure to delete the last %d curve path point?', ...
             length(curvePathPt(1,:)) - ii);
+        warningTone = load('gong');
+        sound(warningTone.y,warningTone.Fs);
         msg = questdlg(questStr,'Whether to delete the exceeding point', ...
             'OK & Continue','Cancel',questOpt);
         waitfor(msg);
@@ -457,6 +459,8 @@ zlabel(['z (',unit,')']);
 axis equal;
 legend('designed surface','tool center point','Location','northeast');
 
+warningTone = load('handel');
+sound(warningTone.y,warningTone.Fs);
 s6_visualize_concentric_multi;
 
 msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
