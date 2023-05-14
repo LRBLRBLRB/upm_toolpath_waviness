@@ -1,11 +1,12 @@
-function [toolPathPt,toolQuat,toolContactU] = radiustippos(radius,curvePt,curveNorm,toolPathNorm,toolPathVec,options)
-% usage: [toolPos,toolCutDirect,log] = toolPos(toolEdge,surfPt,surfNorm,designDirect,designNorm)
+function [toolPathPt,toolQuat,toolContactU] = radiustippos( ...
+    toolData,curvePt,curveNorm,toolPathNorm,toolPathVec,options)
+% usage: [toolPos,toolCutDirect,log] = toolPos(toolData,surfPt,surfNorm,designDirect,designNorm)
 %   Solve the tool pose using the tangent relationship of tool tip and
 %   surface, with the tool axis unchanged.
 % Notice: now the tool has not been tilte                                                                                                                 d
 % Notice: 刀具现在是固定住朝向的，即认为刀轴方形恒为[0;0;1]不变。
 % Input:
-%   toolEdge (structure) the edge model of the tool
+%   toolData (structure) the edge model of the tool
 %   curvePt (3,1) pose of the tool tip (the surface as well)
 %   toolPathNorm (3,1) the normal vector of the toolpath
 %   designNorm (3,1)
@@ -14,7 +15,7 @@ function [toolPathPt,toolQuat,toolContactU] = radiustippos(radius,curvePt,curveN
 %   toolQuat    
 %   toolContactU
 arguments
-    radius double
+    toolData struct
     curvePt (3,1) double
     curveNorm (3,1)
     toolPathNorm
@@ -30,20 +31,19 @@ end
 switch options.directionType
     case 'norm-cut'
         % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
-        toolRot = axesRot([0;0;-1],[1;0;0], ...
+        toolRot = axesRot(toolData.toolEdgeNorm,toolData.cutDirect, ...
             toolPathNorm,toolPathVec,'zx');
     case 'norm-feed'
         % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
-        toolRot = axesRot([0;-1;0],[0;0;-1], ...
+        toolRot = axesRot(toolData.toolDirect,toolData.toolEdgeNorm, ...
             toolPathVec,toolPathNorm,'yz');
     case 'quaternion'
         % Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
         toolRot = quat2rotm(toolPathNorm);
 end
-
 toolQuat = rotm2quat(toolRot);
 
 % calculate the actual contact point on the tool edge
-toolPathPt = curvePt - radius*curveNorm;
+toolPathPt = curvePt - toolData.toolRadius*curveNorm;
 toolContactU = atan2(-curveNorm(end),-curveNorm(1));
 end

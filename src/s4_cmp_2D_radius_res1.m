@@ -8,6 +8,8 @@
 % constant-residual-height based spiral tool path generation, with the
 % radius tooltip instead of B-spline, the optimiation of which is to
 % directly solve.
+% - tool: circle with only obe parameter, radius.
+% - path: constant-residual-height based
 
 % no residual & ulim calculation: still have bugs!!!
 
@@ -40,6 +42,7 @@ parObj = gcp;
 tPar = toc(tPar0);
 fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
 
+radius = 190;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % machining paramters
@@ -51,7 +54,7 @@ maxAngPtDist = 1*pi/180;
 angularLength = 1*pi/180;
 radialIncrement = 'On-Axis'; % 'Surface'
 aimRes = 1; % um
-rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+rStep = radius/2; % 每步步长可通过曲面轴向偏导数确定
 maxIter = 100;
 spiralMethod = 'Radius-Number'; % Radius-Angle
 frMethodDefault = 'Approximation'; % 'Approximation'
@@ -159,10 +162,16 @@ curveFx = matlabFunction(subs(surfFx,y,0),'Vars',x);
 toolRadius = radius; % fitted tool radius
 
 % initialize the cutting pts: the outest loop
-curvePt = [rRange(1);0;curveFunc(rRange(1))];
+curvePathPt = [rRange(1);0;curveFunc(rRange(1))];
 curveNorm = [curveFx(rRange(1));0;-1];
 curveNorm = curveNorm./norm(curveNorm);
+
 % the first toolpath pt
+[curvePathPt,curveQuat,curveContactU,curvePt] = radiuspos( ...
+    curveFunc,curveFx,toolRadius,curvePathPt,[0;0;-1],[0;-1;0],'useParallel',false);
+curveNorm = quat2rotm(curveQuat)*[0;0;-1];
+rRange(1) = curvePt(1);
+    
 cutWidth = 1;
 % ---!!! the tool should be fixed just as the picture !!!---
 ind = 1;
