@@ -646,7 +646,7 @@ spiralQuat0(1:accumPtNum(1) - 1,:) = [];
 spiralContactU0(1:accumPtNum(1) - 1) = [];
 
 % change the spiral tool path to constant arc length one
-spiralAngle0 = toolPathAngle - 2*pi*toolNAccum;
+spiralAngle0 = toolPathAngle + sign(conThetaBound(1) - conThetaBound(2))*2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
 if strcmp(angularIncrement,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU] = arclengthparam(arcLength,maxAngPtDist, ...
