@@ -1,4 +1,4 @@
-function [res,peakPt,interPt,uLim1,uLim2] = residual2D_multi(sp1,sp2,eps,pt1,pt2,uLim2)
+function [res,peakPt,interPt,uLim1,uLim2] = residual2D_multi(sp1,sp2,eps,pt1,pt2,uLim2,varargin)
 % Solve the residual height between two adjacent points on the tool path in
 % 2-dimension plane, supposing that the residual height is the distance
 % between the intersection point of tool edges, as well as getting the
@@ -166,12 +166,16 @@ interPt = 0.5*(s1(:,index(cmp)) + s2(:,cmp));
 
 %% u range
 if ~mod(length(cmp),2)
-    warningTone = load('chirp');
-    sound(warningTone.y,warningTone.Fs);
-    warning('Something wrong in the intersection point calculation process.\n');
-    resPlot;
-    res = 0;
-    pause();
+    if isempty(cmp1)
+        res = varargin{1} + 1;
+    else
+        warningTone = load('chirp');
+        sound(warningTone.y,warningTone.Fs);
+        resPlot;
+        warning('Something wrong in the intersection point calculation process.\n');
+        res = 0;
+    end
+    % pause();
     peakPt = nan(5,1);
     interPt = nan(3,1);
     uLim1 = nan(2,1);

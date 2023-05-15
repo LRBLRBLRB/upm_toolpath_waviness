@@ -97,13 +97,13 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    startDirection = 'X Plus'; % 'X Minus'
+    startDirection = 'X Minus'; % 'X Minus'
     angularIncrement = 'Constant Arc'; % 'Constant Angle'
     arcLength = 20; % um
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
     radialIncrement = 'On-Axis'; % 'Surface'
-    aimRes = 1; % um
+    aimRes = 0.5; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     spiralMethod = 'Radius-Number'; % Radius-Angle
@@ -114,14 +114,14 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % concentric surface generation / import
     % A = tand(20)/(2*2000);
-    c = 0.69/1000/(1000^(aimUnit - presUnit));
+    c = 0.18/1000/(1000^(aimUnit - presUnit));
     syms x y;
     surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
     surfFx = diff(surfFunc,x);
     surfFy = diff(surfFunc,y);
-    surfDomain = [-500,500;-500,500];
-    surfDomain = 1.2*surfDomain;
+    surfDomain = [-2000,2000;-2000,2000];
+    surfDomain = 1.1*surfDomain;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
@@ -182,7 +182,7 @@ title('2D-Surface Geometry');
 
 msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     'Surface was generated successfully!\n'],textFontSize,textFontType), ...
-    'The workspace directory name is: ', ...
+    'The workspace directory name is: ', ...clo
     sprintf('%s\n',getlastfoldername(workspaceDir)), ...
     sprintf('The parameters are listed below:'), ...
     sprintf('1. Surface radius: %f%s',abs(rMax),unit), ...
@@ -321,7 +321,7 @@ end
 curveULim{ind - 1}(end) = 1;
 [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim{ind}, ...
     curveULim{ind - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
-    curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
+    curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1},aimRes);
 % curvePeakPt(5,ind) = curvePeakPt(5,ind) + length(curveContactU);
 fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
 
@@ -512,16 +512,17 @@ end
     fnplt(Fr,'r',[SurfEach(1) + 1,SurfEach(end)]);
     plot(1:SurfEach(end),toolRAccum);
     ylim1 = [min(toolREach),max(toolREach)];
-    set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)]);
+    set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)],'YColor','k','YMinorGrid','on');
     ylabel(['Radius of the Loop (',unit,')']);
     yyaxis right;
-    bar(SurfEach(1:end - 1),diffR);
+    bar(SurfEach(1:end - 1),diffR,'EdgeColor','none');
     ylim2 = [min(diffR),max(diffR)];
-    set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)]);
+    set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)],'YColor','k','YMinorGrid','on');
     ylabel(['Cutting width of each Loop (',unit,')']);
     % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
     %     'Color',[0.929,0.694,0.1250]);
     set(gca,'FontSize',textFontSize,'FontName',textFontType);
+    grid on;
     xlabel('Concentric Angle');
     legend('No.-R scatters','Approx result','Concentric result','Pitch');
     hold off;
@@ -645,15 +646,16 @@ spiralQuat0(1:accumPtNum(1) - 1,:) = [];
 spiralContactU0(1:accumPtNum(1) - 1) = [];
 
 % change the spiral tool path to constant arc length one
-spiralAngle0 = toolPathAngle + 2*pi*toolNAccum;
+spiralAngle0 = toolPathAngle + sign(conThetaBound(1) - conThetaBound(2))*2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
 if strcmp(angularIncrement,'Constant Arc')
-    [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
-        spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},spiralQuat0,toolData,'interpType','linear');
+    [spiralAngle,spiralPath,spiralContactU] = arclengthparam(arcLength,maxAngPtDist, ...
+        spiralAngle0,spiralPath0,spiralContactU0,toolData,'interpType','linear'); % {spiralNorm0;spiralCut0},spiralQuat0,
 %     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
 %         spiralAngle0,spiralPath0,spiralContactU0,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
-    spiralNorm = spiralVec{1};
-    spiralCut = spiralVec{2};
+% ,spiralQuat,spiralVec    
+% spiralNorm = spiralVec{1};
+%     spiralCut = spiralVec{2};
 else
     spiralAngle = spiralAngle0;
     spiralPath = spiralPath0;
@@ -703,8 +705,9 @@ spiralFolderName = getlastfoldername(workspaceDir);
     fullfile(workspaceDir,[spiralFolderName,'-spiralPath-',approxMethod, ...
     '-',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
 spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
-save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
-    "spiralNorm","spiralCut");
+save(spiralPathName,"spiralAngle","spiralPath");
+% ,"spiralQuat", ...
+%     "spiralNorm","spiralCut");
 return;
 
 %% Spiral Residual height calculation of the spiral tool path
@@ -721,7 +724,7 @@ tSpiralRes0 = tic;
 %     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
 % hold on;
 
-parfor ind1 = 1:spiralPtNum
+for ind1 = 1:spiralPtNum
     % inner ulim & residual height
     ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,'first');
     ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,'last');
@@ -737,7 +740,7 @@ parfor ind1 = 1:spiralPtNum
     else
         [tmpRes1,tmpPeak1,spiralInterPtIn{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-            toolData,toolRadius,spiralULim{ind1},ind1,ind2,ind3);
+            toolData,toolRadius,spiralULim{ind1},aimRes,ind1,ind2,ind3);
     end
 
     % outer ulim & residual height
@@ -763,7 +766,7 @@ parfor ind1 = 1:spiralPtNum
 
         [tmpRes2,tmpPeak2,spiralInterPtOut{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-            toolData,toolRadius,spiralULim{ind1},ind1,ind2,ind3);
+            toolData,toolRadius,spiralULim{ind1},aimRes,ind1,ind2,ind3);
     end
     
     spiralRes(:,ind1) = [tmpRes1;tmpRes2];
@@ -785,6 +788,8 @@ end
 
 tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
+warningTone = load('handel');
+sound(warningTone.y,warningTone.Fs);
 
 %% spiral tool path result
 % plot the result

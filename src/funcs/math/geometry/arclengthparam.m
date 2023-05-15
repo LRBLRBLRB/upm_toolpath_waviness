@@ -1,4 +1,4 @@
-function [tOut,fOut,uOut,varargout] = arclengthparam(arcInv,maxAng,t,f,u,var1,var2,toolData,options)
+function [tOut,fOut,uOut,varargout] = arclengthparam(arcInv,maxAng,t,f,u,toolData,var1,var2,options)
 %ARCLENGTHPARAM Generate the function of arc length 
 %
 %
@@ -11,9 +11,9 @@ arguments
     t
     f 
     u (1,:) = []
+    toolData = []
     var1 = []
     var2 = []
-    toolData = []
     options.algorithm {mustBeMember(options.algorithm, ...
         {'analytical-function','list-interpolation','lq-fitting'})} ...
         = 'list-interpolation'
@@ -152,9 +152,8 @@ elseif size(var1,2) == 4 % input: (arcInv,maxAng,t,f,u,quat,vec,options)
 
 %         plot3(fOut(1,ii),fOut(2,ii),fOut(3,ii),'b.');
 
-        ind1 = find(tOut(ii) >= tEq);
-        ind1 = ind1(end); % the closest parameter smaller than tEq
-        ind2 = find(tOut(ii) < tEq,1); % the closest parameter larger than tEq
+        ind1 = find(tOut(ii) >= tEq,1,'last'); % the closest parameter smaller than tEq
+        ind2 = find(tOut(ii) < tEq,1,'first'); % the closest parameter larger than tEq
         quat_t = (tOut(ii) - tEq(ind1))/(tEq(ind2) - tEq(ind1));
         quatOut(ii,:) = slerp(quatEq(ind1,:),quatEq(ind2,:),quat_t);
         for kk = 1:vecLen
@@ -197,8 +196,8 @@ elseif iscell(var1) % input: (arcInv,maxAng,t,f,u,vec,quat,toolData,options)
 
 %         plot3(fEq(1,ii),fEq(2,ii),fEq(3,ii),'b.');
 
-        ind1 = find(tOut(ii) >= tEq);
-        ind1 = ind1(end); % the closest parameter smaller than tEq
+        ind1 = find(tOut(ii) >= tEq,1,'last'); % the closest parameter smaller than tEq
+        ind2 = find(tOut(ii) < tEq,1,'first'); % the closest parameter larger than tEq
         ind2 = find(tOut(ii) < tEq,1); % the closest parameter larger than tEq
         quat_t = (tOut(ii) - tEq(ind1))/(tEq(ind2) - tEq(ind1));
         quat_12 = rotm2quat(axesRot(vecEq{1}(:,ind1),vecEq{2}(:,ind1), ...
@@ -233,7 +232,7 @@ switch options.cutDirection
         tOut = [tOut,t(indOri)];
         fOut = [fOut,f(:,indOri)];
         uOut = [uOut,u(indOri)];
-        if exist('vecOut','var')
+        if exist('vec','var')
             for ii = 1:vecLen
                 vecOut{ii} = [vecOut{ii},vec{ii}(:,indOri)];
             end
@@ -245,7 +244,7 @@ switch options.cutDirection
         tOut = [t(indOri),tOut];
         fOut = [f(:,indOri),fOut];
         uOut = [u(indOri),uOut];
-        if exist('vecOut','var')
+        if exist('vec','var')
             for ii = 1:vecLen
                 vecOut{ii} = [vec{ii}(:,indOri),vecOut{ii}];
             end

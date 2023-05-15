@@ -26,8 +26,8 @@ msgMode.Interpreter = 'tex';
 toolRadius = 0.18746;
 
 % surface
-c = 0.69;
-surfRange = 0.6;
+c = 0.18;
+surfRange = 2;
 z0 = 0;
 syms x;
 surfSym = c.*x.^2./(1 + sqrt(1 - c.^2.*x.^2)) + z0;
@@ -120,7 +120,7 @@ waitBar2 = waitbar(0,'Figure Plotting ...','Name','CNC Data Plot', ...
 setappdata(waitBar2,'canceling',0);
 
 figure;
-rSpar = linspace(0,axisX(1),cncNum/10);
+rSpar = linspace(0,surfRange,cncNum/10);
 plot(rSpar,surfFunc(rSpar),'Color',[0.8500 0.3250 0.0980],'LineWidth',2);
 hold on;
 plotNum = 200;

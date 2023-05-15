@@ -1,6 +1,0 @@
-﻿[4] Advanced contour analysis: D906-4
-C:\RBL\20230424 D906\Untitled document.mnt
-2023/04/25	14:40:27
-
-Name	Value	Unit	Context	Frame Number	Studiable name	
-Radius (Rls)[1]	191.9383927	µm		4	D906-4	

@@ -117,6 +117,7 @@ for ii = 1:cncNum
 end
 
 % diffsys - nanocam convertion
+axisZ = axisZ - axisZ(end);
 axisX = -1.*axisX;
 axisC = wrapTo360(-1.*axisC);
 axisC(find(abs(axisC - 360) < 1e-3)) = 0;
