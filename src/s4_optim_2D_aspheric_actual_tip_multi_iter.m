@@ -97,13 +97,13 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    startDirection = 'X Plus'; % 'X Minus'
+    startDirection = 'X Minus'; % 'X Minus'
     angularIncrement = 'Constant Arc'; % 'Constant Angle'
     arcLength = 20; % um
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
     radialIncrement = 'On-Axis'; % 'Surface'
-    aimRes = 1; % um
+    aimRes = 0.5; % um
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = 100;
     spiralMethod = 'Radius-Number'; % Radius-Angle
@@ -114,14 +114,14 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % concentric surface generation / import
     % A = tand(20)/(2*2000);
-    c = 0.69/1000/(1000^(aimUnit - presUnit));
+    c = 0.18/1000/(1000^(aimUnit - presUnit));
     syms x y;
     surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
     surfFx = diff(surfFunc,x);
     surfFy = diff(surfFunc,y);
-    surfDomain = [-500,500;-500,500];
-    surfDomain = 1.2*surfDomain;
+    surfDomain = [-2000,2000;-2000,2000];
+    surfDomain = 1.1*surfDomain;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
@@ -182,7 +182,7 @@ title('2D-Surface Geometry');
 
 msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     'Surface was generated successfully!\n'],textFontSize,textFontType), ...
-    'The workspace directory name is: ', ...
+    'The workspace directory name is: ', ...clo
     sprintf('%s\n',getlastfoldername(workspaceDir)), ...
     sprintf('The parameters are listed below:'), ...
     sprintf('1. Surface radius: %f%s',abs(rMax),unit), ...
@@ -321,7 +321,7 @@ end
 curveULim{ind - 1}(end) = 1;
 [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim{ind}, ...
     curveULim{ind - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
-    curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1});
+    curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1},aimRes);
 % curvePeakPt(5,ind) = curvePeakPt(5,ind) + length(curveContactU);
 fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
 
@@ -517,8 +517,8 @@ end
     yyaxis right;
     bar(SurfEach(1:end - 1),diffR,'EdgeColor','none');
     ylim2 = [min(diffR),max(diffR)];
-    set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)]);
-    ylabel(['Cutting width of each Loop (',unit,')'],'YColor','k','YMinorGrid','on');
+    set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)],'YColor','k','YMinorGrid','on');
+    ylabel(['Cutting width of each Loop (',unit,')']);
     % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
     %     'Color',[0.929,0.694,0.1250]);
     set(gca,'FontSize',textFontSize,'FontName',textFontType);
@@ -646,7 +646,7 @@ spiralQuat0(1:accumPtNum(1) - 1,:) = [];
 spiralContactU0(1:accumPtNum(1) - 1) = [];
 
 % change the spiral tool path to constant arc length one
-spiralAngle0 = toolPathAngle + 2*pi*toolNAccum;
+spiralAngle0 = toolPathAngle - 2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
 if strcmp(angularIncrement,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
