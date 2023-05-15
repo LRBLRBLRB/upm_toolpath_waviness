@@ -47,7 +47,7 @@ aimUnit = find(strcmp(unitList,unit),1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % tool parameters
-toolData.toolRadius = 192;
+toolData.toolRadius = 189.3576;
 toolData.toolEdgeNorm = [0;0;-1];
 toolData.cutDirect = [1;0;0];
 presUnit = find(strcmp(unitList,'\mum'),1);

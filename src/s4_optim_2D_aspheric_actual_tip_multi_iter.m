@@ -512,16 +512,17 @@ end
     fnplt(Fr,'r',[SurfEach(1) + 1,SurfEach(end)]);
     plot(1:SurfEach(end),toolRAccum);
     ylim1 = [min(toolREach),max(toolREach)];
-    set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)]);
+    set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)],'YColor','k','YMinorGrid','on');
     ylabel(['Radius of the Loop (',unit,')']);
     yyaxis right;
-    bar(SurfEach(1:end - 1),diffR);
+    bar(SurfEach(1:end - 1),diffR,'EdgeColor','none');
     ylim2 = [min(diffR),max(diffR)];
     set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)]);
-    ylabel(['Cutting width of each Loop (',unit,')']);
+    ylabel(['Cutting width of each Loop (',unit,')'],'YColor','k','YMinorGrid','on');
     % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
     %     'Color',[0.929,0.694,0.1250]);
     set(gca,'FontSize',textFontSize,'FontName',textFontType);
+    grid on;
     xlabel('Concentric Angle');
     legend('No.-R scatters','Approx result','Concentric result','Pitch');
     hold off;
