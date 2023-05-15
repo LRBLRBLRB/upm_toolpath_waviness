@@ -1,4 +1,0 @@
-Starting parallel pool (parpool) using the 'local' profile ...
-Connected to the parallel pool (number of workers: 6).
-The time spent in the parallel computing activating process is 18.273991s.
-s4_optim_2D_aspheric_actual_tip_multi_iter

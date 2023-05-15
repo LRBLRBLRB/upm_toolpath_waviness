@@ -649,12 +649,13 @@ spiralContactU0(1:accumPtNum(1) - 1) = [];
 spiralAngle0 = toolPathAngle - 2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
 if strcmp(angularIncrement,'Constant Arc')
-    [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
-        spiralAngle0,spiralPath0,spiralContactU0,{spiralNorm0;spiralCut0},spiralQuat0,toolData,'interpType','linear');
+    [spiralAngle,spiralPath,spiralContactU] = arclengthparam(arcLength,maxAngPtDist, ...
+        spiralAngle0,spiralPath0,spiralContactU0,toolData,'interpType','linear'); % {spiralNorm0;spiralCut0},spiralQuat0,
 %     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
 %         spiralAngle0,spiralPath0,spiralContactU0,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
-    spiralNorm = spiralVec{1};
-    spiralCut = spiralVec{2};
+% ,spiralQuat,spiralVec    
+% spiralNorm = spiralVec{1};
+%     spiralCut = spiralVec{2};
 else
     spiralAngle = spiralAngle0;
     spiralPath = spiralPath0;
@@ -704,8 +705,9 @@ spiralFolderName = getlastfoldername(workspaceDir);
     fullfile(workspaceDir,[spiralFolderName,'-spiralPath-',approxMethod, ...
     '-',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
 spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
-save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
-    "spiralNorm","spiralCut");
+save(spiralPathName,"spiralAngle","spiralPath");
+% ,"spiralQuat", ...
+%     "spiralNorm","spiralCut");
 return;
 
 %% Spiral Residual height calculation of the spiral tool path
