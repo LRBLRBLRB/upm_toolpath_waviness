@@ -20,7 +20,7 @@ if nargin == 4 % 2D
     end
 
     varargout{1} = false;
-    toolRot = rotz(vecAng([0;1],toolPathNorm,1));
+    toolRot = rotz(vecAng([0;1],toolPathNorm,1)/pi*180);
     toolRot = toolRot(1:2,1:2);
     toolEdge.center = toolRot*toolEdge.center;
     toolEdge.toolEdgeNorm = toolRot*toolEdge.toolEdgeNorm;

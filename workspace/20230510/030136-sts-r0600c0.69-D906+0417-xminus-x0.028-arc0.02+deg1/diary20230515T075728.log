@@ -1,0 +1,50 @@
+The time spent in the parallel computing activating process is 0.000542s.
+-----
+No.1	 toolpath -600.000000	[r = -683.111057] is calculated within 244.902761s.
+-----
+No.2	 toolpath -572.727273	[r = -655.465536] is calculated within 25.235172s.
+-----
+No.3	 toolpath -545.454545	[r = -627.830817] is calculated within 25.176409s.
+-----
+No.4	 toolpath -518.181818	[r = -600.207215] is calculated within 24.829601s.
+-----
+No.5	 toolpath -490.909091	[r = -572.594245] is calculated within 21.708981s.
+-----
+No.6	 toolpath -463.636364	[r = -532.030042] is calculated within 21.276814s.
+-----
+No.7	 toolpath -436.363636	[r = -504.038111] is calculated within 20.510293s.
+-----
+No.8	 toolpath -409.090909	[r = -465.885050] is calculated within 20.333769s.
+-----
+No.9	 toolpath -381.818182	[r = -437.788578] is calculated within 16.995931s.
+-----
+No.10	 toolpath -354.545455	[r = -409.709364] is calculated within 16.508434s.
+-----
+No.11	 toolpath -327.272727	[r = -382.038750] is calculated within 16.329503s.
+-----
+No.12	 toolpath -300.000000	[r = -342.120301] is calculated within 16.951205s.
+-----
+No.13	 toolpath -272.727273	[r = -314.382011] is calculated within 15.644067s.
+-----
+No.14	 toolpath -245.454545	[r = -285.699552] is calculated within 13.510008s.
+-----
+No.15	 toolpath -218.181818	[r = -251.108358] is calculated within 13.134950s.
+-----
+No.16	 toolpath -190.909091	[r = -223.022808] is calculated within 13.174471s.
+-----
+No.17	 toolpath -163.636364	[r = -186.725469] is calculated within 13.581355s.
+-----
+No.18	 toolpath -136.363636	[r = -159.027573] is calculated within 11.256220s.
+-----
+No.19	 toolpath -109.090909	[r = -131.319432] is calculated within 11.224364s.
+-----
+No.20	 toolpath -81.818182	[r = -92.670955] is calculated within 9.553257s.
+-----
+No.21	 toolpath -54.545455	[r = -61.602897] is calculated within 7.304153s.
+-----
+No.22	 toolpath -27.272727	[r = -32.474781] is calculated within 5.364456s.
+-----
+No.23	 toolpath -0.000000	[r = -3.878702] is calculated within 5.338445s.
+-----
+The toolpath concentric optimization process causes 370.580718 seconds.
+The time spent in the spiral toolpath generation process is 1.385635s.

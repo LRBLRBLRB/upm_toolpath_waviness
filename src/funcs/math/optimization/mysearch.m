@@ -11,11 +11,11 @@ if tmp == 0
     fprintf('f(%f) = 0, and the iteratoin ends.\n',x0);
     return;
 elseif tmp > 0
-    b = x0;
+%     b = x0;
     a = x0;
     ii = 0;
     fprintf('No.\tx\tf(x)\n');
-    tmp = f(a);
+%     tmp = f(a);
     fprintf('%d\t%f\t%f\n',ii,a,tmp);
     while tmp > 0
         ii = ii + 1;
@@ -52,11 +52,15 @@ else
         if b > x1(2)
             a = b - h;
             b = x1(2);
+            warningTone = load('gong');
+            sound(warningTone.y,warningTone.Fs);
             fprintf('Linear search failed. all the f(x) < 0.');
             break;
         elseif b < x1(1)
             a = b - h;
             b = x1(1);
+            warningTone = load('gong');
+            sound(warningTone.y,warningTone.Fs);
             fprintf('Linear search failed. all the f(x) < 0.');
             break;
         end

@@ -1,0 +1,156 @@
+The time spent in the parallel computing activating process is 0.001903s.
+-----
+No.1	 toolpath -517.894901	[r = -600.000000] is calculated within 0.073137s.
+-----
+No.2	 toolpath -490.964349	[r = -572.727273] is calculated within 0.600895s.
+-----
+No.3	 toolpath -476.966667	[r = -545.454545] is calculated within 0.345417s.
+-----
+No.4	 toolpath -450.050994	[r = -518.181818] is calculated within 0.365681s.
+-----
+No.5	 toolpath -423.502659	[r = -490.909091] is calculated within 0.260723s.
+-----
+No.6	 toolpath -407.135612	[r = -463.636364] is calculated within 0.269747s.
+-----
+No.7	 toolpath -380.273317	[r = -436.363636] is calculated within 0.266852s.
+-----
+No.8	 toolpath -353.808589	[r = -409.090909] is calculated within 0.249085s.
+-----
+No.9	 toolpath -327.329671	[r = -381.818182] is calculated within 0.244761s.
+-----
+No.10	 toolpath -311.813997	[r = -354.545455] is calculated within 0.255036s.
+-----
+No.11	 toolpath -285.464432	[r = -327.272727] is calculated within 0.253197s.
+-----
+No.12	 toolpath -259.128314	[r = -300.000000] is calculated within 0.246801s.
+-----
+No.13	 toolpath -239.258667	[r = -272.727273] is calculated within 0.240313s.
+-----
+No.14	 toolpath -212.790718	[r = -245.454545] is calculated within 0.258957s.
+-----
+No.15	 toolpath -186.334922	[r = -218.181818] is calculated within 0.235146s.
+-----
+No.16	 toolpath -167.663738	[r = -190.909091] is calculated within 0.268478s.
+-----
+No.17	 toolpath -140.812287	[r = -163.636364] is calculated within 0.246522s.
+-----
+No.18	 toolpath -113.970561	[r = -136.363636] is calculated within 0.246924s.
+-----
+No.19	 toolpath -87.588783	[r = -109.090909] is calculated within 0.237338s.
+-----
+No.20	 toolpath -72.660121	[r = -81.818182] is calculated within 0.278467s.
+-----
+No.21	 toolpath -48.232950	[r = -54.545455] is calculated within 0.227821s.
+-----
+No.22	 toolpath -22.333404	[r = -27.272727] is calculated within 0.230437s.
+-----
+No.23	 toolpath 3.631993	[r = -0.000000] is calculated within 0.259989s.
+-----
+The toolpath concentric optimization process causes 6.180832 seconds.
+The time spent in the spiral toolpath generation process is 0.562762s.
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('save')" style="font-weight:bold">save</a>
+' \ .mat' 是一个文件夹名称。FILENAME 必须为有效的文件名。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_actual_r', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m', 658)" style="font-weight:bold">s4_cmp_2D_actual_r</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m',658,0)">第 658 行</a>)
+save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
+} 
+help aixs
+--- 未找到 <strong>aixs</strong>。改为显示 <strong>axis</strong> 的帮助。---
+
+ <strong>axis</strong> - 设置坐标轴范围和纵横比
+    此 MATLAB 函数 指定当前坐标区的范围。以包含 4 个、6 个或 8 个元素的向量形式指定范
+    围。
+
+    <strong>axis</strong>(limits)
+
+    <strong>axis</strong> style
+    <strong>axis</strong> mode
+    <strong>axis</strong> ydirection
+    <strong>axis</strong> visibility
+
+    lim = <strong>axis</strong>
+    [m,v,d] = <strong>axis</strong>('state')
+
+    ___ = <strong>axis</strong>(ax,___)
+
+    输入参数
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/axis.html#buk989s-1-limits">limits</a> - 坐标轴范围
+            四元素向量 | 六元素向量 | 八元素向量
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/axis.html#buk989s-1-mode">mode</a> - 用来确定坐标轴范围的手动、自动或半自动选择
+            manual | auto | 'auto x' | 'auto y' | 'auto z' | 'auto xy' |
+            'auto xz' | 'auto yz'
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/axis.html#buk989s-1-style">style</a> - 坐标轴范围和尺度
+            tight | padded | fill | equal | image | square | vis3d | normal
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/axis.html#buk989s-1-ydirection">ydirection</a> - y 轴方向
+            xy (默认值) | ij
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/axis.html#buk989s-1-visibility">visibility</a> - 坐标区线条和背景的可见性
+            on (默认值) | off
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/axis.html#buk989s-1-ax">ax</a> - 目标坐标区
+            一个或多个坐标区
+
+    输出参数
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref/axis.html#buk989s-1-lim">lim</a> - 当前范围值
+            四元素向量 | 六元素向量
+
+    打开示例
+        <a href="matlab:openExample('graphics/SetAxisLimitsExample')">设置坐标轴范围</a>
+        <a href="matlab:openExample('graphics/AxisPaddedExample')">在阶梯图周围添加填充</a>
+        <a href="matlab:openExample('graphics/SetAxisLimits2Example')">使用半自动坐标轴范围</a>
+        <a href="matlab:openExample('graphics/AxisLimitsforMultiple19bExample')">设置多个坐标轴的坐标轴范围</a>
+        <a href="matlab:openExample('graphics/TurnOffAxesBackgroundDisplayExample')">显示绘图而不显示坐标区背景</a>
+        <a href="matlab:openExample('graphics/UseTightBoundingBoxAroundDataExample')">使用紧凑的坐标轴范围并返回值</a>
+        <a href="matlab:openExample('graphics/ChangeDirectionOfCoordinateSystemExample')">更改坐标系的方向</a>
+        <a href="matlab:openExample('graphics/RetainCurrentAxisLimitsWhenAddingNewPlotsExample')">添加新绘图时保留当前的坐标轴范围</a>
+
+    See also <a href="matlab:help xlim -displayBanner">xlim</a>, <a href="matlab:help ylim -displayBanner">ylim</a>, <a href="matlab:help zlim -displayBanner">zlim</a>, <a href="matlab:help caxis -displayBanner">caxis</a>, <a href="matlab:help tiledlayout -displayBanner">tiledlayout</a>, <a href="matlab:help nexttile -displayBanner">nexttile</a>, <a href="matlab:help title -displayBanner">title</a>, <a href="matlab:help grid -displayBanner">grid</a>,
+        <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref\matlab.graphics.axis.axes-properties.html">Axes 属性</a>, <a href="C:\Program Files\MATLAB\R2022a\help\matlab\ref\matlab.graphics.axis.polaraxes-properties.html">PolarAxes 属性</a>
+
+    在 R2006a 之前引入
+    <a href="matlab:doc axis">axis 的文档</a>
+    <a href="matlab:matlab.internal.language.introspective.overloads.displayOverloads('axis')">名为 axis 的其他函数</a>
+
+doc axis
+web('C:\Program Files\MATLAB\R2022a\help\matlab\ref\matlab.graphics.axis.axes-properties.html')
+错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('matlab.graphics.axis.Axes/set')" style="font-weight:bold">matlab.graphics.axis.Axes/set</a>
+参数/值对组参数无效。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_actual_r', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m', 462)" style="font-weight:bold">s4_cmp_2D_actual_r</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m',462,0)">第 462 行</a>)
+    set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)],'YTick');
+
+错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('matlab.graphics.axis.Axes/set')" style="font-weight:bold">matlab.graphics.axis.Axes/set</a>
+参数/值对组参数无效。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_actual_r', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m', 462)" style="font-weight:bold">s4_cmp_2D_actual_r</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m',462,0)">第 462 行</a>)
+    set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)],'YTick');
+
+clc
+s6_post_diffsys_STS
+Importing data...
+File row number is 7584.
+历时 0.007049 秒。
+Data imported.
+历时 1.746845 秒。
+s6_post_diffsys_STS
+Importing data...
+File row number is 7584.
+历时 0.002261 秒。
+Data imported.
+历时 1.581110 秒。
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030220-sts-r0600c0.69-D906+1015-xminus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030310-sts-r0600c0.69-D906+1019+5-xplus-res1\feedrate-pchip.fig',1)
+grid on
+set(gca,'YColor','k')
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030320-sts-r0600c0.69-D906+1019+5-xminus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030410-sts-r0600c0.69-D906+0424+5-xplus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030420-sts-r0600c0.69-D906+0424+5-xminus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030130-sts-r0600c0.69-D906+0417-xminus-res1-arc0.02+deg1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030420-sts-r0600c0.69-D906+0424+5-xminus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030410-sts-r0600c0.69-D906+0424+5-xplus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030320-sts-r0600c0.69-D906+1019+5-xminus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030410-sts-r0600c0.69-D906+0424+5-xplus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030420-sts-r0600c0.69-D906+0424+5-xminus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030320-sts-r0600c0.69-D906+1019+5-xminus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030220-sts-r0600c0.69-D906+1015-xminus-res1\feedrate-pchip.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030100-sts-r0600c0.69-D906+0417-xplus-res1-arc0.02+deg1\feedrate-pchip-20230514T142147.fig',1)
+uiopen('D:\Code\2021-11_ToolWaviness\upm_toolpath\workspace\20230510\030100-sts-r0600c0.69-D906+0417-xplus-res1-arc0.02+deg1\feedrate-pchip.fig',1)
+s4_optim_2D_aspheric_actual_tip_multi_iter

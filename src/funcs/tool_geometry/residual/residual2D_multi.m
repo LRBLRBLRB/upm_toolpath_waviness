@@ -169,7 +169,7 @@ if ~mod(length(cmp),2)
     if isempty(cmp1)
         res = varargin{1} + 1;
     else
-        warningTone = load('gong');
+        warningTone = load('chirp');
         sound(warningTone.y,warningTone.Fs);
         resPlot;
         warning('Something wrong in the intersection point calculation process.\n');

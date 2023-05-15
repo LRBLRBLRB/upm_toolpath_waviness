@@ -1,0 +1,11 @@
+Starting parallel pool (parpool) using the 'local' profile ...
+Connected to the parallel pool (number of workers: 8).
+The time spent in the parallel computing activating process is 19.642052s.
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('toc')" style="font-weight:bold">toc</a>
+必须先调用不带输出参数的 TIC，然后再调用不带输入参数的 TOC。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_actual_r', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m', 233)" style="font-weight:bold">s4_cmp_2D_actual_r</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m',233,0)">第 233 行</a>)
+fprintf('-----\nNo.1\t toolpath %f\t[r = %f] is calculated within %fs.\n-----\n',curvePathPt(1,1),curvePt(1,1),toc);
+} 
+opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m',233,0)
+s4_cmp_2D_actual_r

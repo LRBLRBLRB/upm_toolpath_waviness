@@ -1,0 +1,61 @@
+The time spent in the parallel computing activating process is 0.000663s.
+-----
+No.1	 toolpath -517.894901	[r = -600.000000] is calculated within 0.111305s.
+-----
+No.2	 toolpath -490.964349	[r = -572.727273] is calculated within 0.645431s.
+-----
+No.3	 toolpath -476.966667	[r = -545.454545] is calculated within 0.494746s.
+-----
+No.4	 toolpath -450.050994	[r = -518.181818] is calculated within 0.530133s.
+-----
+No.5	 toolpath -423.502659	[r = -490.909091] is calculated within 0.523465s.
+-----
+No.6	 toolpath -407.135612	[r = -463.636364] is calculated within 0.538711s.
+-----
+No.7	 toolpath -380.273317	[r = -436.363636] is calculated within 0.534857s.
+-----
+No.8	 toolpath -353.808589	[r = -409.090909] is calculated within 0.526378s.
+-----
+No.9	 toolpath -327.329671	[r = -381.818182] is calculated within 0.512397s.
+-----
+No.10	 toolpath -311.813997	[r = -354.545455] is calculated within 0.516618s.
+-----
+No.11	 toolpath -285.464432	[r = -327.272727] is calculated within 0.531605s.
+-----
+No.12	 toolpath -259.128314	[r = -300.000000] is calculated within 0.516674s.
+-----
+No.13	 toolpath -239.258667	[r = -272.727273] is calculated within 0.498283s.
+-----
+No.14	 toolpath -212.790718	[r = -245.454545] is calculated within 0.551542s.
+-----
+No.15	 toolpath -186.334922	[r = -218.181818] is calculated within 0.561962s.
+-----
+No.16	 toolpath -167.663738	[r = -190.909091] is calculated within 0.542283s.
+-----
+No.17	 toolpath -140.812287	[r = -163.636364] is calculated within 0.479323s.
+-----
+No.18	 toolpath -113.970561	[r = -136.363636] is calculated within 0.503637s.
+-----
+No.19	 toolpath -87.588783	[r = -109.090909] is calculated within 0.486793s.
+-----
+No.20	 toolpath -72.660121	[r = -81.818182] is calculated within 0.545626s.
+-----
+No.21	 toolpath -48.232950	[r = -54.545455] is calculated within 0.522444s.
+-----
+No.22	 toolpath -22.333404	[r = -27.272727] is calculated within 0.485557s.
+-----
+No.23	 toolpath 3.631993	[r = -0.000000] is calculated within 0.488499s.
+-----
+The toolpath concentric optimization process causes 11.659256 seconds.
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('matlab.graphics.primitive.Text/set')" style="font-weight:bold">matlab.graphics.primitive.Text/set</a>
+类 Text 的属性 YColor 无法识别。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('ylabel', 'C:\Program Files\MATLAB\R2022a\toolbox\matlab\graph2d\ylabel.m', 73)" style="font-weight:bold">ylabel</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2022a\toolbox\matlab\graph2d\ylabel.m',73,0)">第 73 行</a>)
+    set(h, 'String', string, pvpairs{:});
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_cmp_2D_actual_r', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m', 463)" style="font-weight:bold">s4_cmp_2D_actual_r</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m',463,0)">第 463 行</a>)
+    ylabel(['Cutting width of each Loop (',unit,')'],'YColor','k', ...
+} 
+opentoline('C:\Program Files\MATLAB\R2022a\toolbox\matlab\graph2d\ylabel.m',73,0)
+opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_cmp_2D_actual_r.m',463,0)
+The time spent in the spiral toolpath generation process is 1.187079s.
