@@ -33,6 +33,8 @@ surfMesh(:,:,1) = reshape(surfData(:,1),[yNum,xNum])';
 surfMesh(:,:,2) = reshape(surfData(:,2),[yNum,xNum])';
 surfMesh(:,:,3) = reshape(surfDataStruct.data(:,3),[xNum,yNum])';
 
+surfMesh(:,:,3) = surfMesh(end:-1:1,:,3);
+
 %% unit convertion
 unitList = {'m','mm','um','nm'};
 xyUnit0 = 1; % default unit is milimeter
