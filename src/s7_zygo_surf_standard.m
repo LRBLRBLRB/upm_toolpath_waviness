@@ -76,7 +76,9 @@ end
 
 % plot the original result
 figure('Name','1 Zygo original result');
-surf( ...
+tiledlayout(1,2);
+nexttile;
+s = surf( ...
     surfData0(:,:,1),surfData0(:,:,2),surfData0(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
 % surf( ...
@@ -86,6 +88,31 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
+nexttile;
+waitBar = waitbar(0,'Figure Plotting ...','Name','CNC Data Plot', ...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+setappdata(waitBar,'canceling',0);
+for ii = 1:size(surfData0,1)
+    for jj = 1:size(surfData0,2)
+        % Check for clicked Cancel button
+        if getappdata(waitBar,'canceling')
+            break;
+        end
+        displayData = num2str(roundn(((ii - 1)*size(surfData0,1) + jj) ...
+            /(size(surfData0,1)*size(surfData0,2))*100,-2)); % Calculate percentage
+        displayStr = ['Figure Plotting ... ',displayData,'%']; % Show Calculate State
+        waitbar(((ii - 1)*size(surfData0,1) + jj) ...
+            /(size(surfData0,1)*size(surfData0,2)),waitBar,displayStr); % Progress bar dynamic display
+        plot3(surfData0(ii,jj,1),surfData0(ii,jj,2),surfData0(ii,jj,3),'.', ...
+            'Color',[0,0.4470,0.7410],'MarkerSize',0.5); hold on;
+    end
+end
+
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
+delete(waitBar);   
 
 %% point cloud registration
 % % rough registration
@@ -146,9 +173,64 @@ zlabel(['z (',unit,')']);
 % zlabel(['z (',unit,')']);
 
 %% rigid transform
+% surf data convertion to image data
+surfSize = size(surfData0);
+surfImgInd = zeros(surfSize(2),surfSize(1));
+surfImgColorMap = colormap(parula(512));
+surfZ = reshape(surfData0(:,:,3),[],1);
+[~,surfZInd] = sort(surfZ,'descend');
+for col = 1:surfSize(1)
+    for row = 1:surfSize(2)
+        surfImgInd(row,col) = surfZInd(row + (col - 1)*surfSize(1));
+    end
+end
+maxZ = max(surfImgInd,[],'all');
+minZ = min(surfImgInd,[],'all');
+surfZInv = linspace(maxZ,minZ,512 + 1);
+
+surfImgColorInd = surfImgInd;
+for ii = 1:surfSize(2)
+    for jj = 1:surfSize(1)
+        if ~isnan(surfImgInd(ii,jj))
+            surfImgColorInd(ii,jj) = find(surfImgInd(ii,jj) >= surfZInv,1);
+        end
+    end
+end
+
 % to get the flat region and fit it to the z = 0 plane
+figure('Name','2 surface located');
+% hPlot1 = contourf(surfData0(:,:,1),surfData0(:,:,2),surfData0(:,:,3)); hold on;
+% view(0,90);
+imshow(surfImgColorInd,surfImgColorMap);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+
+% isContinue = checkextractcir();
+% while ~isContinue
+%     fprintf('Please select the surface data with selecting the center and radius of a circle: \n');
+%     disableDefaultInteractivity(gca);
+%     k = waitforbuttonpress; % 等待鼠标按下
+%     point1 = get(gca,'CurrentPoint'); % 鼠标按下了
+%     finalRect = rbbox; %
+%     point2 = get(gca,'CurrentPoint'); % 鼠标松开了
+%     circCenter = point1(1,1:2); % the center of the drawed circle
+%     circEdge = point2(1,1:2); % the edge point of it
+%     circRadius = norm(circEdge - circCenter); % the radius of it
+%     boxDel = [circCenter(1) - circRadius,circCenter(2) - circRadius,2*circRadius,2*circRadius];
+%     hplot = rectangle('Position',boxDel,'Curvature',[1,1],'FaceColor','none','EdgeColor',[0.8500 0.3250 0.0980]); %在原图上显示截取的区域
+%     [isContinue] = checkextractcir(hplot);
+%     delete(hPlot1);
+%     hPlot1 = contourf(surfData0(:,:,1),surfData0(:,:,2),surfData0(:,:,3)); hold on;
+% end
 
 
+% roi = images.roi.Circle('StripeColor',[0.8500 0.3250 0.0980],'SelectedColor',[0.6350 0.0780 0.1840]);
+% fprintf(['Please draw a circle to include all the surface: \n' ...
+%     '(Double-click to return to the main procedure)\n']);
+% roi = drawcircle('Color',[0.8500 0.3250 0.0980]);
+% wait(roi);
+% isSurf = inROI(roi,surfData0(:,:,1),surfData0(:,:,2));
 
 %% fit the theoretical surface
 % z = A.*((x - x0).^2 + (y - y0).^2)./2 + C + z0;
