@@ -248,7 +248,7 @@ while strcmp(msgfig2,'Re-select')
     planeMesh1 = surfData0;
     planeMesh1(~(repmat(isPlane,[1,1,3]))) = nan;
     planeData1 = reshape(planeMesh1,[],3);
-    ax22 = nexttile(2);
+    ax22 = nexttile(tiled2,2);
     hold(ax22,'off');
     surf(ax22,planeMesh1(:,:,1),planeMesh1(:,:,2),planeMesh1(:,:,3), ...
         'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
@@ -275,7 +275,7 @@ planeData2 = (planeRot*planeData1')'; % scatters projected to the xOy plane
 planeMeshSize = size(planeMesh1);
 planeMesh2 = reshape(planeData2,planeMeshSize);
 
-ax23 = nexttile(4);
+ax23 = nexttile(tiled2,4);
 surf(ax23,planeMesh2(:,:,1),planeMesh2(:,:,2),planeMesh2(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
 colormap(parula(256));
