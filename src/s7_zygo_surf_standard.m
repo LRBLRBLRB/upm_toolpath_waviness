@@ -74,8 +74,10 @@ switch surfFileType
         return;
 end
 
-% plot the original result
+%% plot the original result
 figure('Name','1 Zygo original result');
+figPos = get(gcf,'Position');
+set(gcf,'Position',[figPos(1)-0.5*figPos(3),figPos(2),2*figPos(3),figPos(4)]);
 tiledlayout(1,2);
 nexttile;
 s = surf( ...
@@ -92,18 +94,20 @@ nexttile;
 waitBar = waitbar(0,'Figure Plotting ...','Name','CNC Data Plot', ...
     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
 setappdata(waitBar,'canceling',0);
-for ii = 1:50:size(surfData0,1)
-    for jj = 1:50:size(surfData0,2)
+videoSpeed = 50;
+for ii = 1:size(surfData0,1)/videoSpeed
+    for jj = 1:size(surfData0,2)/videoSpeed
         % Check for clicked Cancel button
         if getappdata(waitBar,'canceling')
             break;
         end
-        displayData = num2str(roundn(((ii - 1)*size(surfData0,1) + jj) ...
-            /(size(surfData0,1)*size(surfData0,2))*100,-2)); % Calculate percentage
-        displayStr = ['Figure Plotting ... ',displayData,'%']; % Show Calculate State
-        waitbar(((ii - 1)*size(surfData0,1) + jj) ...
-            /(size(surfData0,1)*size(surfData0,2)),waitBar,displayStr); % Progress bar dynamic display
-        plot3(surfData0(ii,jj,1),surfData0(ii,jj,2),surfData0(ii,jj,3),'.', ...
+        displayData = ((ii - 1)*size(surfData0,1)/videoSpeed + jj) ...
+            /(size(surfData0,1)*size(surfData0,2)/videoSpeed/videoSpeed); % Calculate percentage
+        waitbar(displayData,waitBar,['Figure Plotting ... ', ...
+            num2str(roundn(displayData*100,-2),'%.2f'),'%']); % Progress bar dynamic display
+        plot3(surfData0(videoSpeed*ii,videoSpeed*jj,1), ...
+            surfData0(videoSpeed*ii,videoSpeed*jj,2), ...
+            surfData0(videoSpeed*ii,videoSpeed*jj,3),'.', ...
             'Color',[0,0.4470,0.7410],'MarkerSize',0.5); hold on;
     end
 end
@@ -172,7 +176,7 @@ delete(waitBar);
 % ylabel(['y (',unit,')']);
 % zlabel(['z (',unit,')']);
 
-%% rigid transform
+%% separate the flat region from the surface, and remove the tilt
 % % surf data convertion to image data
 % surfSize = size(surfData0);
 % surfImg = zeros(surfSize(2),surfSize(1));
@@ -192,48 +196,107 @@ delete(waitBar);
 % end
 
 % to get the flat region and fit it to the z = 0 plane
+surfBW = imbinarize(rescale(surfData0(:,:,3),0,1),0.99);
+fig2 = figure('Name','2 surface located','WindowState','maximized');
+tiled2 = tiledlayout(2,2,'TileSpacing','compact');
+ax21 = nexttile(1,[2,1]);
+imshow(surfBW,'Parent',ax21);
+axis(ax21,'xy');
+axis(ax21,'on');
+xlabel(ax21,['x (',unit,')']);
+ylabel(ax21,['y (',unit,')']);
+[fitCenterGp,fitRadiusGp] = imfindcircles(surfBW,[100,1000], ...
+    'ObjectPolarity','dark'); % use circular Hough transform to find the largest circle
+if ~isempty(fitRadiusGp)
+    [fitRadius,fitInd] = max(fitRadiusGp);
+    fitCenter = fitCenterGp(fitInd,:);
+    viscircles(fitCenter,fitRadius,'Color',[0,0.4450,0.7410]);
+end
+questOpt.Interpreter = 'tex';
+questOpt.Default = 'Re-select';
+msgfig1 = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
+    'Auto surface selection finished successfully!'],textFontSize,textFontType), ...
+    'Re-selet or not?'}, ...
+    'Concentric tool path Generation','Re-select','OK',questOpt);
+msgfig2 = 'Re-select';
+while strcmp(msgfig2,'Re-select')
+    if strcmp(msgfig1,'Re-select')
+        hold(ax21,'off');
+        % imshow(surfImg,surfImgColorMap);
+        contourf(ax21,surfData0(:,:,1),surfData0(:,:,2),surfData0(:,:,3),16,'--','LineWidth',0.1); hold on;
+        colormap(parula(256));
+        colorbar(ax21,'southoutside');
+        axis(ax21,'equal');
+        set(ax21,'FontSize',textFontSize,'FontName',textFontType);
+        xLim = get(ax21,'XLim');
+        yLim = get(ax21,'YLim');
+        set(ax21,'XLim',sqrt(2)*xLim,'YLim',sqrt(2)*yLim);
+        xlabel(ax21,['x (',unit,')']);
+        ylabel(ax21,['y (',unit,')']);
+        fprintf(['Please draw a circle to include all the surface: \n' ...
+            '(Double-click to return to the main procedure)\n\n']);
+        roi = drawcircle(ax21,'Color',[0.8500 0.3250 0.0980]);
+        wait(roi);
+        fitCenter = roi.Center;
+        fitRadius = roi.Radius;
+    end
 
-如何算这个阈值
-surfBW = imbinarize(rescale(surfData0(:,:,3),0,1),0.97);
-figure('Name','2 surface auto-located');
-imshow(surfBW);
-
-if false
-    figure('Name','2 surface manual-located');
-    figPos = get(gcf,'Position');
-    set(gcf,'Position',[figPos(1) - sqrt(2)*figPos(3),figPos(2) - sqrt(2)*figPos(4),sqrt(2)*figPos(3),sqrt(2)*figPos(4)]);
-    % imshow(surfImg,surfImgColorMap);
-    contourf(surfData0(:,:,1),surfData0(:,:,2),surfData0(:,:,3),16,'--','LineWidth',0.1); hold on;
-    axis equal;
-    set(gca,'FontSize',textFontSize,'FontName',textFontType);
-    xLim = get(gca,'XLim');
-    yLim = get(gca,'YLim');
-    set(gca,'XLim',sqrt(2)*xLim,'YLim',sqrt(2)*yLim);
-    xlabel(['x (',unit,')']);
-    ylabel(['y (',unit,')']);
-    fprintf(['Please draw a circle to include all the surface: \n' ...
-        '(Double-click to return to the main procedure)\n']);
-    roi = drawcircle('Color',[0.8500 0.3250 0.0980]);
-    wait(roi);
+    % to get the indices of the plane
+    % isSurf = inROI(roi,surfData0(:,:,1),surfData0(:,:,2));
+    isPlane = (surfData0(:,:,1) - fitCenter(1)).^2 + (surfData0(:,:,2) - fitCenter(1)).^2 > fitRadius.^2;
+    % plane extraction
+    planeMesh1 = surfData0;
+    planeMesh1(~(repmat(isPlane,[1,1,3]))) = nan;
+    planeData1 = reshape(planeMesh1,[],3);
+    ax22 = nexttile(2);
+    hold(ax22,'off');
+    surf(ax22,planeMesh1(:,:,1),planeMesh1(:,:,2),planeMesh1(:,:,3), ...
+        'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+    colormap(parula(256));
+    colorbar(ax22,'eastoutside');
+    clim([min(planeMesh1(:,:,3),[],'all'),max(planeMesh1(:,:,3),[],'all')]);
+    xlabel(ax22,['x (',unit,')']);
+    ylabel(ax22,['y (',unit,')']);
+    zlabel(ax22,['z (',unit,')']);
+    % plot3(planeData(:,1),planeData(:,2),planeData(:,3),'.','Color',[0,0.4450,0.7410]);
+    % pause();
+    msgfig2 = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
+        'Surface selection finished successfully!'],textFontSize,textFontType), ...
+        'Re-selet or not?'}, ...
+        'Concentric tool path Generation','Re-select','OK',questOpt);
 end
 
-% to get the indices of the plane
-% isSurf = inROI(roi,surfData0(:,:,1),surfData0(:,:,2)); % the points are
-% too many to use inROI
-isPlane = (surfData0(:,:,1) - roi.Center(1)).^2 + (surfData0(:,:,2) - roi.Center(1)).^2 > roi.Radius.^2;
-planeData = surfData0(repmat(isPlane,[1,1,3]));
-
 % to fit the plane and to remove the tilt
+% a.*x + b.*y + c.*z + d = 0;
+[planeNorm,~] = fitPlane(planeData1,'normalization',true);
+planeRot = vecRot(planeNorm,[0;0;1]);
 
+planeData2 = (planeRot*planeData1')'; % scatters projected to the xOy plane
+planeMeshSize = size(planeMesh1);
+planeMesh2 = reshape(planeData2,planeMeshSize);
 
-
-
-
-
+ax23 = nexttile(4);
+surf(ax23,planeMesh2(:,:,1),planeMesh2(:,:,2),planeMesh2(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+colormap(parula(256));
+colorbar(ax23,'eastoutside');
+clim([min(planeMesh2(:,:,3),[],'all'),max(planeMesh2(:,:,3),[],'all')]);
+xlabel(ax23,['x (',unit,')']);
+ylabel(ax23,['y (',unit,')']);
+zlabel(ax23,['z (',unit,')']);
 
 %% fit the theoretical surface
+% surface extraction (the same as plane extraction)
+
+
+
+
+
+surfMesh1 = surfData0;
+surfMesh1((repmat(isPlane,[1,1,3]))) = nan;
+surfData1 = reshape(surfMesh1,[],3);
+
 % z = A.*((x - x0).^2 + (y - y0).^2)./2 + C + z0;
-surfDataPt1 = reshape(surfData0,[],3);
 
 % least-square result of linear equations
 % coeffMat = [surfDataPt1(:,1).^2 + surfDataPt1(:,2).^2,ones(size(surfDataPt1,1),1)];
@@ -241,8 +304,9 @@ surfDataPt1 = reshape(surfData0,[],3);
 % fitResult = (coeffMat'*coeffMat)\(coeffMat'*reMat);
 
 % lsqcurvefit
-f = @(x,xdata) x(1)/2*(xdata(:,1).^2 + xdata(:,2).^2) + x(2);
-x = lsqcurvefit(f,c,surfDataPt1(:,1:2),surfDataPt1(:,3));
+f = @(x,xdata) c.*((xdata(:,1) - x(1)).^2 + (xdata(:,2) - x(2)).^2) ...
+    ./(1 + sqrt(1 - c.^2.*((xdata(:,1) - x(1)).^2 + (xdata(:,2) - x(2)).^2))) + x(3);
+x = lsqcurvefit(f,[0;0;0],surfData1(:,1:2),surfData1(:,3));
 
 %% surface error calculation
 deltaZ = surfData1(:,:,3) - surfFunc(surfData1(:,:,1),surfData1(:,:,2));
