@@ -216,29 +216,15 @@ questOpt.Interpreter = 'tex';
 questOpt.Default = 'Re-select';
 msgfig1 = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
     'Auto surface selection finished successfully!'],textFontSize,textFontType), ...
-    'Re-selet or not?'}, ...
+    'Re-select or not?'}, ...
     'Concentric tool path Generation','Re-select','OK',questOpt);
 msgfig2 = 'Re-select';
 while strcmp(msgfig2,'Re-select')
     if strcmp(msgfig1,'Re-select')
         hold(ax21,'off');
         % imshow(surfImg,surfImgColorMap);
-        contourf(ax21,surfData0(:,:,1),surfData0(:,:,2),surfData0(:,:,3),16,'--','LineWidth',0.1); hold on;
-        colormap(parula(256));
-        colorbar(ax21,'southoutside');
-        axis(ax21,'equal');
-        set(ax21,'FontSize',textFontSize,'FontName',textFontType);
-        xLim = get(ax21,'XLim');
-        yLim = get(ax21,'YLim');
-        set(ax21,'XLim',sqrt(2)*xLim,'YLim',sqrt(2)*yLim);
-        xlabel(ax21,['x (',unit,')']);
-        ylabel(ax21,['y (',unit,')']);
-        fprintf(['Please draw a circle to include all the surface: \n' ...
-            '(Double-click to return to the main procedure)\n\n']);
-        roi = drawcircle(ax21,'Color',[0.8500 0.3250 0.0980]);
-        wait(roi);
-        fitCenter = roi.Center;
-        fitRadius = roi.Radius;
+        [fitCenter,fitRadius] = drawCircle(ax21,surfData0, ...
+            'textFontSize',textFontSize,'textFontType',textFontType,'unit',unit);
     end
 
     % to get the indices of the plane
@@ -272,50 +258,92 @@ end
 planeRot = vecRot(planeNorm,[0;0;1]);
 
 planeData2 = (planeRot*planeData1')'; % scatters projected to the xOy plane
-planeMeshSize = size(planeMesh1);
-planeMesh2 = reshape(planeData2,planeMeshSize);
+meshSize = size(planeMesh1);
+planeMesh2 = reshape(planeData2,meshSize);
 
 ax23 = nexttile(tiled2,4);
 surf(ax23,planeMesh2(:,:,1),planeMesh2(:,:,2),planeMesh2(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
 colormap(parula(256));
 colorbar(ax23,'eastoutside');
-clim([min(planeMesh2(:,:,3),[],'all'),max(planeMesh2(:,:,3),[],'all')]);
+clim(ax23,[min(planeMesh2(:,:,3),[],'all'),max(planeMesh2(:,:,3),[],'all')]);
 xlabel(ax23,['x (',unit,')']);
 ylabel(ax23,['y (',unit,')']);
 zlabel(ax23,['z (',unit,')']);
 
 %% fit the theoretical surface
-% surface extraction (the same as plane extraction)
-
-
-
-
-
-surfMesh1 = surfData0;
-surfMesh1((repmat(isPlane,[1,1,3]))) = nan;
-surfData1 = reshape(surfMesh1,[],3);
-
 % z = A.*((x - x0).^2 + (y - y0).^2)./2 + C + z0;
+
+% surface extraction (the same as plane extraction)
+fig3 = figure('Name','3 Surface Extraction & fitting','WindowState','maximized');
+tiled3 = tiledlayout(2,2,'TileSpacing','compact');
+ax31 = nexttile(tiled3,1,[1,2]);
+ax32 = nexttile(tiled3,2);
+
+msgfig2 = 'Re-select';
+while strcmp(msgfig2,'Re-select')
+    hold(ax31,'off');
+    % imshow(surfImg,surfImgColorMap);
+    [fitCenter,fitRadius] = drawCircle(ax31,surfData0, ...
+        'textFontSize',textFontSize,'textFontType',textFontType);
+
+    % to get the indices of the plane
+    % isSurf = inROI(roi,surfData0(:,:,1),surfData0(:,:,2));
+    isSurface = (surfData0(:,:,1) - fitCenter(1)).^2 + (surfData0(:,:,2) - fitCenter(1)).^2 < fitRadius.^2;
+    % surface extraction
+    surfMesh1 = surfData0;
+    surfMesh1(~(repmat(isSurface,[1,1,3]))) = nan;
+    surfData1 = reshape(surfMesh1,[],3);
+
+    hold(ax32,'off');
+    surf(ax32,surfMesh1(:,:,1),surfMesh1(:,:,2),surfMesh1(:,:,3), ...
+        'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+    colormap(parula(256));
+    colorbar(ax32,'eastoutside');
+    clim(ax23,[min(surfMesh1(:,:,3),[],'all'),max(surfMesh1(:,:,3),[],'all')]);
+    xlabel(ax32,['x (',unit,')']);
+    ylabel(ax32,['y (',unit,')']);
+    zlabel(ax32,['z (',unit,')']);
+    % plot3(planeData(:,1),planeData(:,2),planeData(:,3),'.','Color',[0,0.4450,0.7410]);
+    % pause();
+    msgfig2 = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
+        'Surface selection finished successfully!'],textFontSize,textFontType), ...
+        'Re-selet or not?'}, ...
+        'Concentric tool path Generation','Re-select','OK',questOpt);
+end
 
 % least-square result of linear equations
 % coeffMat = [surfDataPt1(:,1).^2 + surfDataPt1(:,2).^2,ones(size(surfDataPt1,1),1)];
 % reMat = surfDataPt1(:,3);
 % fitResult = (coeffMat'*coeffMat)\(coeffMat'*reMat);
 
-% lsqcurvefit
+% lsqcurvefit (x means the offset of the surface)
 f = @(x,xdata) c.*((xdata(:,1) - x(1)).^2 + (xdata(:,2) - x(2)).^2) ...
     ./(1 + sqrt(1 - c.^2.*((xdata(:,1) - x(1)).^2 + (xdata(:,2) - x(2)).^2))) + x(3);
-x = lsqcurvefit(f,[0;0;0],surfData1(:,1:2),surfData1(:,3));
+surfDataFit = surfData1(all(~isnan(surfData1),2),:);
+x = lsqcurvefit(f,[0;0;0],surfDataFit(:,1:2),surfDataFit(:,3),'Display','iter-detailed');
+
+% plot the result
+ax33 = nexttile(tiled3,4);
+surfData2 = surfData1 - meshgrid(x,1:size(surfData1,1)); % surface data whose offset has been removed
+surfMesh2 = reshape(surfData2,meshSize); % surface mesh data whose offset has been removed
+surf(ax33,surfMesh2(:,:,1),surfMesh2(:,:,2),surfMesh2(:,:,3), ...
+        'FaceColor','flat','FaceAlpha',0.3,'LineStyle','none');
+hold(ax33,'on');
+surfTheo(:,1:2) = surfData1(:,1:2);
+surfTheo(:,3) = f([0;0;0],surfTheo(:,1:2));
+surfTheoMesh = reshape(surfTheo,meshSize);
+surf(ax33,surfTheoMesh(:,:,1),surfTheoMesh(:,:,2),surfTheoMesh(:,:,3), ...
+        'FaceColor',[0.8500 0.3250 0.0980],'FaceAlpha',0.6,'LineStyle','none');
 
 %% surface error calculation
-deltaZ = surfData1(:,:,3) - surfFunc(surfData1(:,:,1),surfData1(:,:,2));
+deltaZ = surfData2(:,:,3) - surfTheoMesh(:,:,3);
 Sa = mean(abs(deltaZ));
 Sz = max(deltaZ,[],'all') - min(deltaZ,[],'all');
 Sq = sqrt(mean(deltaZ.^2));
 
 figure('Name','3 - surface error');
-surf(surfData1(:,:,1),surfData1(:,:,2),deltaZ,'EdgeColor','none');
+surf(surfData2(:,:,1),surfData2(:,:,2),deltaZ,'EdgeColor','none');
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['\Deltaz (',unit,')']);
