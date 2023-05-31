@@ -7,19 +7,19 @@ clc;
 addpath(genpath('funcs'));
 if ~(exist('workspaceDir','var'))
     workspaceDir = fullfile('..','workspace','20230510','MEASURE');
-    surfUnit = 'um';
+    surfParamUnit = 'mm';
     unit = 'um';
     textFontSize = 12;
     textFontType = 'Times New Roman';
     unitList = {'m','mm','um','nm'};
-    presUnit = find(strcmp(unitList,surfUnit),1);
+    presUnit = find(strcmp(unitList,surfParamUnit),1);
     aimUnit = find(strcmp(unitList,unit),1);
 end
 
 %% surface data import
 if ~(exist('surfFunc','var'))
     % A = tand(20)/(2*2000);
-    c = 0.18/(1000^(aimUnit - presUnit));
+    c = 0.69/(1000^(aimUnit - presUnit));
     syms x y;
     surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
@@ -277,12 +277,10 @@ zlabel(ax23,['z (',unit,')']);
 % surface extraction (the same as plane extraction)
 fig3 = figure('Name','3 Surface Extraction & fitting','WindowState','maximized');
 tiled3 = tiledlayout(2,2,'TileSpacing','compact');
-ax31 = nexttile(tiled3,1,[1,2]);
-ax32 = nexttile(tiled3,2);
+ax31 = nexttile(tiled3,1,[2,1]);
 
 msgfig2 = 'Re-select';
 while strcmp(msgfig2,'Re-select')
-    hold(ax31,'off');
     % imshow(surfImg,surfImgColorMap);
     [fitCenter,fitRadius] = drawCircle(ax31,surfData0, ...
         'textFontSize',textFontSize,'textFontType',textFontType);
@@ -295,12 +293,13 @@ while strcmp(msgfig2,'Re-select')
     surfMesh1(~(repmat(isSurface,[1,1,3]))) = nan;
     surfData1 = reshape(surfMesh1,[],3);
 
-    hold(ax32,'off');
+    ax32 = nexttile(tiled3,2);
     surf(ax32,surfMesh1(:,:,1),surfMesh1(:,:,2),surfMesh1(:,:,3), ...
         'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
-    colormap(parula(256));
+    colormap(ax32,turbo(256));
     colorbar(ax32,'eastoutside');
-    clim(ax23,[min(surfMesh1(:,:,3),[],'all'),max(surfMesh1(:,:,3),[],'all')]);
+    clim(ax23,[min(surfData0(:,:,3),[],'all'),max(surfData0(:,:,3),[],'all')]);
+    set(ax32,'FontSize',textFontSize,'FontName',textFontType);
     xlabel(ax32,['x (',unit,')']);
     ylabel(ax32,['y (',unit,')']);
     zlabel(ax32,['z (',unit,')']);
@@ -310,6 +309,8 @@ while strcmp(msgfig2,'Re-select')
         'Surface selection finished successfully!'],textFontSize,textFontType), ...
         'Re-selet or not?'}, ...
         'Concentric tool path Generation','Re-select','OK',questOpt);
+    hold(ax31,'off');
+    hold(ax32,'off');
 end
 
 % least-square result of linear equations
@@ -317,33 +318,49 @@ end
 % reMat = surfDataPt1(:,3);
 % fitResult = (coeffMat'*coeffMat)\(coeffMat'*reMat);
 
-% lsqcurvefit (x means the offset of the surface)
+%% lsqcurvefit (x means the offset of the surface)
 f = @(x,xdata) c.*((xdata(:,1) - x(1)).^2 + (xdata(:,2) - x(2)).^2) ...
     ./(1 + sqrt(1 - c.^2.*((xdata(:,1) - x(1)).^2 + (xdata(:,2) - x(2)).^2))) + x(3);
-surfDataFit = surfData1(all(~isnan(surfData1),2),:);
-x = lsqcurvefit(f,[0;0;0],surfDataFit(:,1:2),surfDataFit(:,3),'Display','iter-detailed');
+surfDataFit = surfData1(all(~isnan(surfData1),2),:); % remove all the nans in surfData1
+surfFitOpts = optimoptions('lsqcurvefit','Algorithm','trust-region-reflective', ...
+    'Display','iter-detailed');
+x = lsqcurvefit(f,[0;0;min(surfDataFit(:,3))],surfDataFit(:,1:2),surfDataFit(:,3),[],[],surfFitOpts);
 
 % plot the result
+% hold(ax32,'on');
+% surfTheo(:,1:2) = surfData1(:,1:2); % fit surface
+% surfTheo(:,3) = f(x,surfData1(:,1:2));
+% surfTheoMesh = reshape(surfTheo,meshSize);
+% surf(ax32,surfTheoMesh(:,:,1),surfTheoMesh(:,:,2),surfTheoMesh(:,:,3), ...
+%         'FaceColor',[0.8500 0.3250 0.0980],'FaceAlpha',0.5,'LineStyle','none');
 ax33 = nexttile(tiled3,4);
 surfData2 = surfData1 - meshgrid(x,1:size(surfData1,1)); % surface data whose offset has been removed
 surfMesh2 = reshape(surfData2,meshSize); % surface mesh data whose offset has been removed
 surf(ax33,surfMesh2(:,:,1),surfMesh2(:,:,2),surfMesh2(:,:,3), ...
-        'FaceColor','flat','FaceAlpha',0.3,'LineStyle','none');
+        'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+colormap(ax33,parula(256));
+colorbar(ax33,'eastoutside');
+clim(ax33,[min(surfMesh2(:,:,3),[],'all'),max(surfMesh2(:,:,3),[],'all')]);
 hold(ax33,'on');
-surfTheo(:,1:2) = surfData1(:,1:2);
+surfTheo(:,1:2) = surfData1(:,1:2); % fit surface
 surfTheo(:,3) = f([0;0;0],surfTheo(:,1:2));
 surfTheoMesh = reshape(surfTheo,meshSize);
 surf(ax33,surfTheoMesh(:,:,1),surfTheoMesh(:,:,2),surfTheoMesh(:,:,3), ...
-        'FaceColor',[0.8500 0.3250 0.0980],'FaceAlpha',0.6,'LineStyle','none');
+        'FaceColor',[0.8500 0.3250 0.0980],'FaceAlpha',0.8,'LineStyle','none');
+set(ax33,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(ax33,['x (',unit,')']);
+ylabel(ax33,['y (',unit,')']);
+zlabel(ax33,['z (',unit,')']);
 
 %% surface error calculation
-deltaZ = surfData2(:,:,3) - surfTheoMesh(:,:,3);
-Sa = mean(abs(deltaZ));
-Sz = max(deltaZ,[],'all') - min(deltaZ,[],'all');
-Sq = sqrt(mean(deltaZ.^2));
+deltaZ = surfMesh2(:,:,3) - surfTheoMesh(:,:,3);
+deltaZFit = deltaZ(~isnan(deltaZ));
+Sa = mean(abs(deltaZFit));
+Sz = max(deltaZFit,[],'all') - min(deltaZFit,[],'all');
+Sq = sqrt(mean(deltaZFit.^2)); % rms
 
-figure('Name','3 - surface error');
-surf(surfData2(:,:,1),surfData2(:,:,2),deltaZ,'EdgeColor','none');
+figure('Name','4 - surface error');
+surf(surfMesh2(:,:,1),surfMesh2(:,:,2),deltaZ,'EdgeColor','none');
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['\Deltaz (',unit,')']);
