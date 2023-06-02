@@ -404,21 +404,32 @@ ylabel(ax33,['y (',unit,')']);
 zlabel(ax33,['z (',unit,')']);
 
 %% surface error calculation
-deltaZ = surfMesh2(:,:,3) - surfTheoMesh(:,:,3);
-deltaZFit = deltaZ(~isnan(deltaZ));
-Sa = mean(abs(deltaZFit));
-Sz = max(deltaZFit,[],'all') - min(deltaZFit,[],'all');
-Sq = sqrt(mean(deltaZFit.^2)); % rms
+deltaZ(:,:,1:2) = surfMesh2(:,:,1:2);
+deltaZ(:,:,3) = surfMesh2(:,:,3) - surfTheoMesh(:,:,3);
+% deltaZFit = deltaZ(~isnan(deltaZ));
+% Sa = mean(abs(deltaZFit));
+% Sz = max(deltaZFit,[],'all') - min(deltaZFit,[],'all');
+% Sq = sqrt(mean(deltaZFit.^2)); % rms
 
 figure('Name','4 - surface error');
-surf(surfMesh2(:,:,1),surfMesh2(:,:,2),deltaZ,'EdgeColor','none');
+% tiledlayout(2,1);
+% nexttile;
+surf(deltaZ(:,:,1),deltaZ(:,:,2),deltaZ(:,:,3),'EdgeColor','none');
 colormap(turbo(256));
 colorbar('eastoutside');
-clim([min(surfMesh2(:,:,3),[],'all'),max(deltaZ,[],'all')]);
-set('FontSize',textFontSize,'FontName',textFontType);
+clim([min(deltaZ(:,:,3),[],'all'),max(deltaZ(:,:,3),[],'all')]);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['\Deltaz (',unit,')']);
+
+% cut
+% nexttile;
+% deltaZLine = reshape(deltaZ,[],3);
+% CrossPlane = find(deltaZLine(:,2) == 0);
+% deltaZ0 = [deltaZLine(CrossPlane,1),deltaZLine(CrossPlane,3)];
+% plot(deltaZ0(:,1),deltaZ0(:,3),'.');
+viewError(deltaZ,textFontSize,textFontType,unit);
 
 %%
 % rmpath(genpath('funcs'));
