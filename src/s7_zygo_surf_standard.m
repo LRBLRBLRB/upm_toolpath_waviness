@@ -42,7 +42,7 @@ end
 
 % optim selection
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-FitType = 'rigid';
+FitType = 'trans';
 surfFitOpt.Algorithm = 'trust-region-reflective';
 surfFitOpt.Display = 'iter-detailed';
 surfFitOpt.UseParallel = true;
@@ -131,6 +131,24 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 delete(waitBar);   
+
+questOpt.Interpreter = 'tex';
+questOpt.Default = 'OK & Continue';
+msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
+    'Surface was loaded successfully!\n'],textFontSize,textFontType), ...
+    sprintf('The parameters are listed below:'), ...
+    sprintf('1. Unit: %s',unit), ...
+    sprintf('2. Surface fitting type: %s',FitType), ...
+    sprintf('3. Surface fitting algorithm: %s',surfFitOpt.Algorithm), ...
+    sprintf('   Max. iterations: %i',surfFitOpt.MaxIterations), ...
+    sprintf('   Max. function evaluations: %i',surfFitOpt.MaxFunctionEvaluations), ...
+    sprintf('   Function tolerance: %d',surfFitOpt.FunctionTolerance), ...
+    sprintf('   Step x tolerance: %d',surfFitOpt.StepTolerance), ...
+    'Ready to continue?'}, ...
+    'Surface Generation','OK & Continue','Cancel & quit',questOpt);
+if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    return;
+end
 
 %% point cloud registration
 % % rough registration
@@ -424,12 +442,9 @@ ylabel(['y (',unit,')']);
 zlabel(['\Deltaz (',unit,')']);
 
 % cut
-% nexttile;
-% deltaZLine = reshape(deltaZ,[],3);
-% CrossPlane = find(deltaZLine(:,2) == 0);
-% deltaZ0 = [deltaZLine(CrossPlane,1),deltaZLine(CrossPlane,3)];
-% plot(deltaZ0(:,1),deltaZ0(:,3),'.');
-viewError(deltaZ,textFontSize,textFontType,unit);
+lineData = viewError(deltaZ,textFontSize + 2,textFontType,unit);
+nexttile;
+plot(lineData(:,1),lineData(:,2),'.');
 
 %%
 % rmpath(genpath('funcs'));
