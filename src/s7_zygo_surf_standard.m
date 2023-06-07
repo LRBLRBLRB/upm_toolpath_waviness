@@ -1,7 +1,7 @@
 % The file is aimed to deal with the data measured by the Zygo white light interferometer, 
 % and regenerate the measured surface
 
-% close all;
+close all;
 clear;
 clc;
 addpath(genpath('funcs'));
@@ -42,7 +42,8 @@ end
 
 % optim selection
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-FitType = 'trans';
+FitType = 'trans'; % trans trans-rot rigid rigid+c
+
 surfFitOpt.Algorithm = 'trust-region-reflective';
 surfFitOpt.Display = 'iter-detailed';
 surfFitOpt.UseParallel = true;
@@ -394,7 +395,7 @@ switch FitType
             + ndgrid(surfFitResult(1:3),1:size(surfData1,1)))';
         surfTheo(:,1:2) = surfData2(:,1:2); % fit surface
         surfTheo(:,3) = surfFunc(c,surfTheo(:,1),surfTheo(:,2));
-    case 'rigid & c'
+    case 'rigid+c'
         f = @(H) surfHomogeneous(surfFunc,surfDataFit',H(6),H(1:3),H(4:5));
         surfFitOpts = optimoptions('lsqnonlin',surfFitOpts);
         surfFitResult = lsqnonlin(f,[0;0;-1*min(surfDataFit(:,3));0;0;c],[],[],surfFitOpts);
@@ -429,10 +430,12 @@ deltaZ(:,:,3) = surfMesh2(:,:,3) - surfTheoMesh(:,:,3);
 % Sz = max(deltaZFit,[],'all') - min(deltaZFit,[],'all');
 % Sq = sqrt(mean(deltaZFit.^2)); % rms
 
-figure('Name','4 - surface error');
-% tiledlayout(2,1);
-% nexttile;
+figure('Name','4 - 3D surface error');
+tiledlayout(2,1);
+nexttile;
 surf(deltaZ(:,:,1),deltaZ(:,:,2),deltaZ(:,:,3),'EdgeColor','none');
+axis equal;
+hold('on');
 colormap(turbo(256));
 colorbar('eastoutside');
 clim([min(deltaZ(:,:,3),[],'all'),max(deltaZ(:,:,3),[],'all')]);
@@ -442,9 +445,26 @@ ylabel(['y (',unit,')']);
 zlabel(['\Deltaz (',unit,')']);
 
 % cut
-lineData = viewError(deltaZ,textFontSize + 2,textFontType,unit);
+[lineData,lineAng] = viewError(deltaZ,textFontSize + 2,textFontType,unit);
+lineRot = rotz(lineAng);
+linePts = [1.2*minX,1.2*maxX,1.2*maxX,1.2*minX;0,0,0,0; ...
+    1.2*minZ,1.2*minZ,1.2*maxZ,1.2*maxZ];
+linePts = lineRot*linePts;
+minX = min(deltaZ(:,:,1),[],'all');
+maxX = max(deltaZ(:,:,1),[],'all');
+minZ = min(deltaZ(:,:,3),[],'all');
+maxZ = max(deltaZ(:,:,3),[],'all');
+fill3(linePts(1,:),linePts(2,:),linePts(3,:), ...
+    [0.6350 0.0780 0.1840],'EdgeColor','none','FaceAlpha',0.3);
+line([1.2*minX;1.2*maxX],[0;0],[1.2*maxZ;1.2*maxZ], ...
+    'Color',[0.6350 0.0780 0.1840],'LineWidth',3, ...
+    'Marker','.','MarkerSize',18);
+
 nexttile;
-plot(lineData(:,1),lineData(:,2),'.');
+plot(lineData(:,1),lineData(:,2));
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['r (',unit,')']);
+ylabel(['\Deltaz (',unit,')']);
 
 %%
 % rmpath(genpath('funcs'));

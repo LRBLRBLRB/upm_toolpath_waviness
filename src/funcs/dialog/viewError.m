@@ -1,10 +1,11 @@
-function varargout = viewError(deltaZ,textFontSize,textFontType,unit)
+function [lineData,ang] = viewError(deltaZ,textFontSize,textFontType,unit)
 %VIEWERROR 此处显示有关此函数的摘要
 %   此处显示详细说明
 
 % n = size(deltaZ);
-ang = 360;
-plotNum = 500;
+ang = 0;
+plotNum = 1000;
+lineData = [];
 
 fig = uifigure('Name','Check the useless extraction', ...
                 'WindowStyle','alwaysontop','Visible','off');
@@ -60,11 +61,17 @@ figRotSlider.Layout.Row = 2;
 figRotSlider.Layout.Column = 6;
 figRotSlider.ValueChangedFcn = @(sld,event) figRotSliderUpdate(sld);
 
-figEnter = uibutton(figGridLayout,'push','Text','Enter', ...
+figEnterButton = uibutton(figGridLayout,'push','Text','Enter', ...
     'FontName',textFontType,'FontSize',textFontSize);
-figEnter.Layout.Row = [1,2];
-figEnter.Layout.Column = [3,4];
-figEnter.ButtonPushedFcn = @(sld,event) figEnterUpdate;
+figEnterButton.Layout.Row = 1;
+figEnterButton.Layout.Column = [3,4];
+figEnterButton.ButtonPushedFcn = @(sld,event) figEnterButtonPushed(fig);
+
+figExportButton = uibutton(figGridLayout,'push','Text','Export', ...
+    'FontName',textFontType,'FontSize',textFontSize);
+figExportButton.Layout.Row = 2;
+figExportButton.Layout.Column = [3,4];
+figExportButton.ButtonPushedFcn = @(sld,event) figExportButtonPushed(fig);
 
 fig3DAxes = uiaxes(figGridLayout, ...
     'FontName',textFontType,'FontSize',textFontSize);
@@ -94,11 +101,6 @@ fig.Visible = 'on';
 uiwait(fig);
 
     function fig_close_req(app)
-        if exist('lineData','var')
-            varargout{1} = lineData;
-        else
-            varargout{1} = [];
-        end
         delete(app);
     end
 
@@ -124,8 +126,8 @@ uiwait(fig);
     end
 
     % Create ValueChangedFcn callback
-    function figEnterUpdate
-        figWaitbar = uiprogressdlg(fig,'Title','Line Data Extraction', ...
+    function figEnterButtonPushed(app)
+        figWaitbar = uiprogressdlg(app,'Title','Line Data Extraction', ...
             'Cancelable','on','Icon','success','Indeterminate','on');
         figWaitbar.Message = 'Data Extracting ... ';
 
@@ -169,11 +171,18 @@ uiwait(fig);
         surf(fig3DAxes,deltaZUni(:,:,1),deltaZUni(:,:,2),deltaZUni(:,:,3), ...
             'EdgeColor','none');
         hold(fig3DAxes,'on');
-        fill3(fig3DAxes,[0.8*minX;1.2*maxX;1.2*maxX;0.8*minX],[0;0;0;0], ...
-            [0.8*minZ;0.8*minZ;1.2*maxZ;1.2*maxZ],[0.6350 0.0780 0.1840], ...
+        fill3(fig3DAxes,[1.2*minX;1.2*maxX;1.2*maxX;1.2*minX],[0;0;0;0], ...
+            [1.2*minZ;1.2*minZ;1.2*maxZ;1.2*maxZ],[0.6350 0.0780 0.1840], ...
             'EdgeColor','none','FaceAlpha',0.3);
+        line(fig3DAxes,[1.2*minX;1.2*maxX],[0;0],[1.2*maxZ;1.2*maxZ], ...
+            'Color',[0.6350 0.0780 0.1840],'LineWidth',3, ...
+            'Marker','.','MarkerSize',18);
         hold(fig3DAxes,'off');
 
         close(figWaitbar);
+    end
+
+    function figExportButtonPushed(app)
+        uiresume(app);
     end
 end
