@@ -45,14 +45,13 @@ uiwait(fig);
 
     function fig_enter_button_pushed
         isContinue = 1;
-        fig_close_req(fig);
+        delete(fig);
     end
 
     function fig_refit_button_pushed
         isContinue = 0;
         lineFitMaxDist = figLineMaxDistEditfield.Value;
         delete(figShow);
-        fig_close_req(fig);
+        delete(fig);
     end
 end
-

@@ -37,7 +37,7 @@ else
     fitOpts.arcRansacMaxDist = 1e-2;
     fitOpts.arcFitMethod = 'levenberg-marquardt';
     fitOpts.lineFitMaxDist = 1000^(aimUnit - 3);
-    fitOpts.lineFitMethod = 'polyfit';
+    fitOpts.lineFitMethod = 'ransac';
     paramMethod = 'centripetal';
 
 %         % imitation of the tool measurement file

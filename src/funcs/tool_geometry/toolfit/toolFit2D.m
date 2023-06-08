@@ -78,22 +78,23 @@ switch options.toolFitType
                 evalLineFcn = ...   % distance evaluation function
                   @(mdl, pts) sum((pts(:, 2) - polyval(mdl, pts(:,1))).^2,2);
     
-                [leftPoly,leftInlierIdx] = ransac(leftPts',fitLineFcn,evalLineFcn, ...
+                [leftPoly,~] = ransac(leftPts',fitLineFcn,evalLineFcn, ...
                   sampleSz,lineFitMaxDist);
-                [rightPoly,rightInlierIdx] = ransac(rightPts',fitLineFcn,evalLineFcn, ...
+                leftDist = pt2Line(scatterOri,leftPoly);
+                leftInlierIdx = leftDist < lineFitMaxDist;
+                [rightPoly,~] = ransac(rightPts',fitLineFcn,evalLineFcn, ...
                   sampleSz,lineFitMaxDist);
+                rightDist = pt2Line(scatterOri,rightPoly);
+                rightInlierIdx = rightDist < lineFitMaxDist;
     
-                % leftDist = pt2Line(scatterOri,leftPoly);
-                % leftInlierIdx = leftDist < lineFitMaxDist;
-                % rightDist = pt2Line(scatterOri,rightPoly);
-                % rightInlierIdx = rightDist < lineFitMaxDist;
                 % plot the line fitting process
-                figure('Name','Line Fitting of the Tool Tip Arc');
-                plot(leftPts(1,leftInlierIdx),leftPoly(1)*leftPts(1,leftInlierIdx) + leftPoly(2), ...
+                figShow = figure('Name','Line Fitting of the Tool Tip Arc');
+                plot(scatterOri(1,leftInlierIdx),leftPoly(1)*scatterOri(1,leftInlierIdx) + leftPoly(2), ...
                     '.','Color',[0.8500    0.3250    0.0980],'MarkerSize',8); hold on;
-                plot(rightPts(1,rightInlierIdx),rightPoly(1)*rightPts(1,rightInlierIdx) + rightPoly(2), ...
-                    '.','Color',[0.9290    0.6940    0.1250],'MarkerSize',8);
-                plot(scatterOri(1,:),scatterOri(2,:),'LineWidth',0.5,'Color',[0    0.4470    0.7410]);
+                plot(scatterOri(1,rightInlierIdx),rightPoly(1)*scatterOri(1,rightInlierIdx) + rightPoly(2), ...
+                    '.','Color',[0.929,0.694,0.1250],'MarkerSize',8);
+                plot(scatterOri(1,:),scatterOri(2,:),'.','MarkerSize',1, ...
+                    'LineWidth',0.5,'Color',[0    0.4470    0.7410]);
                 yLim = get(gca,'YLim');
                 line([lineMid(1,1),lineMid(1,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
                 line([lineMid(2,1),lineMid(2,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
@@ -101,9 +102,10 @@ switch options.toolFitType
                 line([lineMid(4,1),lineMid(4,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
                 grid on; axis equal;
 
-                % circle boundary
+                % Least Square Fitting Based on the Inliers
                 circIdx(1) = find(leftInlierIdx,1,"last");
-                circIdx(2) = size(scatterOri,2) - find(flipud(rightInlierIdx),1,"last");
+                circIdx(2) = find(rightInlierIdx,1,"first");
+
             else
                 % ------------least-square line fitting to remove outliers & lsc arc fitting------------
                 % least square line fitting 
