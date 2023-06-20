@@ -1,4 +1,4 @@
-function [res,peakPt,interPt,uLim1,uLim2] = residual2D_multi(sp1,sp2,eps,pt1,pt2,uLim2,varargin)
+function [res,peakPt,interPt,uLim1,uLim2] = residual2D_multi(sp1,sp2,eps,pt1,pt2,uLim2,options)
 % Solve the residual height between two adjacent points on the tool path in
 % 2-dimension plane, supposing that the residual height is the distance
 % between the intersection point of tool edges, as well as getting the
@@ -14,6 +14,17 @@ function [res,peakPt,interPt,uLim1,uLim2] = residual2D_multi(sp1,sp2,eps,pt1,pt2
 %   peakpt (5,1) the peak point between the two tooltips
 %   interPt (3,:) the intersection point between the two tooltips
 %   uLim1 & uLim2
+
+arguments
+    sp1
+    sp2
+    eps (1,1) double
+    pt1 (:,1) double
+    pt2 (:,1) double
+    uLim2 (2,:) double
+    options.uDirection {mustBeMember(options.uDirection,{'U Plus','U Minus'})} = 'U Minus'
+    options.aimRes (1,1) double = 1
+end
 
 %% solve the intersection point of the two spline curve
 
@@ -167,7 +178,7 @@ interPt = 0.5*(s1(:,index(cmp)) + s2(:,cmp));
 %% u range
 if ~mod(length(cmp),2)
     if isempty(cmp1)
-        res = varargin{1} + 1;
+        res = options.aimRes + 1;
     else
         warningTone = load('chirp');
         sound(warningTone.y,warningTone.Fs);
@@ -213,11 +224,21 @@ end
 % end
 
 uLim2(2,end) = uInter2(1);
-if length(uInter2) > 2
-    uLim1 = [uInter1(1:2:end);uInter1(2:2:end),1];
-    uLim2 = [uLim2,[uInter2(2:2:end);uInter2(3:2:end)]];
-else
-    uLim1 = [uInter1;1];
+switch options.uDirection
+    case 'U Plus'
+        if length(uInter2) > 2
+            uLim1 = [uInter1(1:2:end);uInter1(2:2:end),1];
+            uLim2 = [uLim2,[uInter2(2:2:end);uInter2(3:2:end)]];
+        else
+            uLim1 = [uInter1;1];
+        end
+    case 'U Minus'
+        if length(uInter2) > 2
+            uLim1 = [uInter1(end:-2:1);uInter1(end - 1:-2:1),0];
+            uLim2 = [uLim2,[uInter2(end - 1:-2:1);uInter2(end - 2:-2:1)]];
+        else
+            uLim1 = [uInter1;0];
+        end
 end
 
 %% calculate the residual height and the coordinate of the peak point
@@ -226,13 +247,13 @@ end
 peakPtTmp = [];
 peakUTmp = [];
 for ii = 1:size(uLim1,2)
-    ind1 = u1 >= uLim1(1,ii) & u1 <= uLim1(2,ii);
+    ind1 = u1 >= min(uLim1(1,ii),uLim1(2,ii)) & u1 <= max(uLim1(1,ii),uLim1(2,ii));
     peakUTmp = [peakUTmp,u1(ind1)];
     peakPtTmp = [peakPtTmp,s1(:,ind1)];
 end
 kk = length(peakUTmp);
 for ii = 1:size(uLim2,2)
-    ind2 = u2 >= uLim2(1,ii) & u2 <= uLim2(2,ii);
+    ind2 = u2 >= min(uLim2(1,ii),uLim2(2,ii)) & u2 <= max(uLim2(1,ii),uLim2(2,ii));
     peakUTmp = [peakUTmp,u2(ind2)];
     peakPtTmp = [peakPtTmp,s2(:,ind2)];
 end

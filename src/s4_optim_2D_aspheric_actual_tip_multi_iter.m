@@ -126,6 +126,7 @@ else
 end
 
 % related parameters
+isUIncrease = toolData.toolBform.coefs(end,1) - toolData.toolBform.coefs(1,1);
 switch startDirection
     case 'X Plus' % plus in this program, but minus in moore
         rMax = max(surfDomain(1,2),surfDomain(2,2));
@@ -133,6 +134,14 @@ switch startDirection
     case 'X Minus' % minus in this program, but plus in moore
         rMax = min(surfDomain(1,1),surfDomain(2,1)); % reverse
         rStep = 1*rStep;
+end
+
+if isUIncrease*rStep < 0
+    % ([1,0] & X minus) or ([0,1] & X plus)
+    uDirection = 'U Minus';
+else
+    % ([1,0] & X plus) or ([0,1] & X minus)
+    uDirection = 'U Plus';
 end
 
 switch cutDirection
@@ -253,6 +262,7 @@ opt.XTol = 1e-3;
 [curvePathPt,curveQuat,curveContactU,curvePt,curveRes,curvePeakPt, ...
     curveInterPt,curveULim] = iterfunc_curvepath_multi_solve(curveFunc,curveFx, ...
     toolData,curvePathPt,curveQuat,curveContactU,curvePt,rStep,aimRes,rRange, ...
+    'uDirection',uDirection, ...
     'algorithm','search-bisection','directionType','norm-cut','optimopt',opt);
 
 %% the last point
@@ -318,10 +328,16 @@ prevUlimInd = size(curveULim{ind},2); % get the curveUlim use of the last pathpt
 if prevUlimInd > 1
     curveULim{ind - 1}(:,(end - prevUlimInd + 2):end) = [];
 end
-curveULim{ind - 1}(end) = 1;
+switch uDirection
+    case 'U Plus'
+        curveULim{ind - 1}(end) = 1;
+    case 'U Minus'
+        curveULim{ind - 1}(end) = 0;
+end
 [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim{ind}, ...
     curveULim{ind - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
-    curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1},aimRes);
+    curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1}, ...
+    'uDirection',uDirection,'aimRes',aimRes);
 % curvePeakPt(5,ind) = curvePeakPt(5,ind) + length(curveContactU);
 fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
 

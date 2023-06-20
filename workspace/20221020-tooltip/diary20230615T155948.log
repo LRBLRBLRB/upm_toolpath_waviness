@@ -1,0 +1,211 @@
+The time spent in the parallel computing activating process is 0.010219s.
+-----
+No.1	 toolpath -2200.890749	[r = -2200.000000] is calculated within 0.135816s.
+-----
+initial linear search begins: 
+<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m',48,1)">48  </a>range = mean(vecnorm(diff(s1,1,2),2,1))*2;
+if system_dependent('IsDebugMode')==1, dbcont; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbcont; end
+No.	x	f(x)
+0	-2172.258961	3.657632
+1	-2172.813781	3.321821
+2	-2173.368602	2.864674
+3	-2173.923423	2.836488
+4	-2174.478244	2.727439
+5	-2175.033065	2.428902
+6	-2175.587885	2.243193
+7	-2176.142706	2.233164
+resPlot
+
+ans = 
+
+  <a href="matlab:helpPopup matlab.ui.Figure" style="font-weight:bold">Figure</a> (2) - 属性:
+
+      Number: 2
+        Name: ''
+       Color: [0.9400 0.9400 0.9400]
+    Position: [1256 1206 560 420]
+       Units: 'pixels'
+
+  显示 <a href="matlab:if exist('ans', 'var'), matlab.graphics.internal.getForDisplay('ans', ans, 'matlab.ui.Figure'), else, matlab.graphics.internal.getForDisplay('ans'), end">所有属性</a>
+
+if system_dependent('IsDebugMode')==1, dbcont; end
+8	-2176.697527	2.233165
+if system_dependent('IsDebugMode')==1, dbcont; end
+9	-2177.252348	2.213027
+if system_dependent('IsDebugMode')==1, dbcont; end
+10	-2177.807169	2.091703
+if system_dependent('IsDebugMode')==1, dbcont; end
+11	-2178.361989	1.972493
+if system_dependent('IsDebugMode')==1, dbcont; end
+12	-2178.916810	1.972492
+if system_dependent('IsDebugMode')==1, dbcont; end
+13	-2179.471631	1.963975
+14	-2180.026452	1.854411
+15	-2180.581272	1.276139
+16	-2181.136093	1.112202
+17	-2181.690914	1.112201
+if system_dependent('IsDebugMode')==1, dbcont; end
+18	-2182.245735	1.112200
+19	-2182.800556	1.112200
+20	-2183.355376	1.112199
+21	-2183.910197	1.112198
+22	-2184.465018	1.112198
+23	-2185.019839	1.112197
+if system_dependent('IsDebugMode')==1, dbcont; end
+24	-2185.574660	1.109068
+if system_dependent('IsDebugMode')==1, dbcont; end
+25	-2186.129480	0.913165
+if system_dependent('IsDebugMode')==1, dbcont; end
+26	-2186.684301	0.534104
+if system_dependent('IsDebugMode')==1, dbcont; end
+27	-2187.239122	0.534105
+if system_dependent('IsDebugMode')==1, dbcont; end
+28	-2187.793943	0.534105
+29	-2188.348763	0.534106
+if system_dependent('IsDebugMode')==1, dbcont; end
+30	-2188.903584	0.534106
+if system_dependent('IsDebugMode')==1, dbcont; end
+31	-2189.458405	0.534107
+if system_dependent('IsDebugMode')==1, dbcont; end
+32	-2190.013226	0.534107
+if system_dependent('IsDebugMode')==1, dbcont; end
+33	-2190.568047	0.374814
+if system_dependent('IsDebugMode')==1, dbcont; end
+34	-2191.122867	0.240186
+if system_dependent('IsDebugMode')==1, dbcont; end
+35	-2191.677688	0.240186
+if system_dependent('IsDebugMode')==1, dbcont; end
+36	-2192.232509	0.133675
+if system_dependent('IsDebugMode')==1, dbcont; end
+37	-2192.787330	0.133675
+if system_dependent('IsDebugMode')==1, dbcont; end
+38	-2193.342151	0.133675
+if system_dependent('IsDebugMode')==1, dbcont; end
+39	-2193.896971	0.133675
+if system_dependent('IsDebugMode')==1, dbcont; end
+40	-2194.451792	0.133675
+if system_dependent('IsDebugMode')==1, dbcont; end
+41	-2195.006613	0.133675
+if system_dependent('IsDebugMode')==1, dbcont; end
+42	-2195.561434	0.133674
+43	-2196.116254	0.133674
+44	-2196.671075	0.133674
+45	-2197.225896	0.133674
+46	-2197.780717	0.133674
+47	-2198.335538	0.133674
+48	-2198.890358	-0.001788
+bisection interval found by 1-dim search: [-2198.890358,-2198.335538]
+No.2	 toolpath -2199.780024	[r = -2198.888733] is calculated within 297.631801s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-2171.147694	3.657638
+1	-2171.702514	3.321827
+2	-2172.257335	2.638870
+3	-2172.812156	2.446348
+4	-2173.366977	2.343273
+5	-2173.921798	1.972503
+6	-2174.476618	1.972502
+7	-2175.031439	1.972501
+if system_dependent('IsDebugMode')==1, dbcont; end
+8	-2175.586260	1.972500
+resPlot
+
+ans = 
+
+  <a href="matlab:helpPopup matlab.ui.Figure" style="font-weight:bold">Figure</a> (3) - 属性:
+
+      Number: 3
+        Name: ''
+       Color: [0.9400 0.9400 0.9400]
+    Position: [1256 1206 560 420]
+       Units: 'pixels'
+
+  显示 <a href="matlab:if exist('ans', 'var'), matlab.graphics.internal.getForDisplay('ans', ans, 'matlab.ui.Figure'), else, matlab.graphics.internal.getForDisplay('ans'), end">所有属性</a>
+
+if system_dependent('IsDebugMode')==1, dbcont; end
+9	-2176.141081	1.972499
+if system_dependent('IsDebugMode')==1, dbcont; end
+10	-2176.695901	1.972498
+if system_dependent('IsDebugMode')==1, dbcont; end
+11	-2177.250722	1.972497
+12	-2177.805543	1.972496
+13	-2178.360364	1.963979
+14	-2178.915185	1.854415
+15	-2179.470005	1.276143
+16	-2180.024826	1.112205
+17	-2180.579647	1.112204
+18	-2181.134468	1.112203
+19	-2181.689289	1.112203
+20	-2182.244109	1.112202
+21	-2182.798930	1.112201
+22	-2183.353751	1.112200
+23	-2183.908572	1.112200
+24	-2184.463392	1.109071
+25	-2185.018213	0.913168
+26	-2185.573034	0.418695
+resPlot
+
+ans = 
+
+  <a href="matlab:helpPopup matlab.ui.Figure" style="font-weight:bold">Figure</a> (4) - 属性:
+
+      Number: 4
+        Name: ''
+       Color: [0.9400 0.9400 0.9400]
+    Position: [1256 1206 560 420]
+       Units: 'pixels'
+
+  显示 <a href="matlab:if exist('ans', 'var'), matlab.graphics.internal.getForDisplay('ans', ans, 'matlab.ui.Figure'), else, matlab.graphics.internal.getForDisplay('ans'), end">所有属性</a>
+
+if system_dependent('IsDebugMode')==1, dbcont; end
+27	-2186.127855	0.534103
+28	-2186.682676	0.418694
+29	-2187.237496	0.418693
+30	-2187.792317	0.418223
+31	-2188.347138	0.378388
+resPlot
+
+ans = 
+
+  <a href="matlab:helpPopup matlab.ui.Figure" style="font-weight:bold">Figure</a> (1) - 属性:
+
+      Number: 1
+        Name: ''
+       Color: [0.9400 0.9400 0.9400]
+    Position: [1256 1206 560 420]
+       Units: 'pixels'
+
+  显示 <a href="matlab:if exist('ans', 'var'), matlab.graphics.internal.getForDisplay('ans', ans, 'matlab.ui.Figure'), else, matlab.graphics.internal.getForDisplay('ans'), end">所有属性</a>
+
+if system_dependent('IsDebugMode')==1, dbcont; end
+32	-2188.901959	0.284786
+33	-2189.456780	0.165758
+34	-2190.011600	0.133675
+35	-2190.566421	0.133675
+36	-2191.121242	0.133675
+resPlot
+
+ans = 
+
+  <a href="matlab:helpPopup matlab.ui.Figure" style="font-weight:bold">Figure</a> (1) - 属性:
+
+      Number: 1
+        Name: ''
+       Color: [0.9400 0.9400 0.9400]
+    Position: [1256 1206 560 420]
+       Units: 'pixels'
+
+  显示 <a href="matlab:if exist('ans', 'var'), matlab.graphics.internal.getForDisplay('ans', ans, 'matlab.ui.Figure'), else, matlab.graphics.internal.getForDisplay('ans'), end">所有属性</a>
+
+save data.mat
+[警告: 图窗已保存在 data.mat 中。保存图形句柄变量会使创建的文件很大。要保存图形图窗，请使用 <a href="matlab:helpview([docroot,'/techdoc/ref/savefig.html'])">savefig</a>。] 
+[> 位置：<a href="matlab:matlab.internal.language.introspective.errorDocCallback('residual2D_multi', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m', 310)" style="font-weight:bold">residual2D_multi</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\residual\residual2D_multi.m',310,0)">第 310 行</a>)
+位置: <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve/iterfunc', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 73)" style="font-weight:bold">iterfunc_curvepath_multi_solve/iterfunc</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',73,0)">第 73 行</a>)
+位置: <a href="matlab:matlab.internal.language.introspective.errorDocCallback('mysearch', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m', 24)" style="font-weight:bold">mysearch</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\math\optimization\mysearch.m',24,0)">第 24 行</a>)
+位置: <a href="matlab:matlab.internal.language.introspective.errorDocCallback('iterfunc_curvepath_multi_solve', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m', 123)" style="font-weight:bold">iterfunc_curvepath_multi_solve</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\iterfunc_curvepath_multi_solve.m',123,0)">第 123 行</a>)
+位置: <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s4_optim_2D_aspheric_actual_tip_multi_iter', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m', 254)" style="font-weight:bold">s4_optim_2D_aspheric_actual_tip_multi_iter</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s4_optim_2D_aspheric_actual_tip_multi_iter.m',254,0)">第 254 行</a>)] 
+if system_dependent('IsDebugMode')==1, dbquit; end
+clc

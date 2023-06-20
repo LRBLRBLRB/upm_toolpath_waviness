@@ -15,7 +15,7 @@ if isAPP
     fitOpts.lineFitMaxDist = app.lineFitMaxDist;
     fitOpts.lineFitMethod = app.lineFitMethod;
 else
-%     close all;
+    close all;
     clear; clc;
     isAPP = false;
     addpath(genpath('funcs'));
@@ -91,8 +91,8 @@ else
             end
             toolOri1(:,3) = [];
 %             toolOri2 = toolini(toolOri1);
-%             toolOri3 = sortrows(toolOri2,1,'ascend');
-            toolOri = toolOri1';
+            toolOri3 = sortrows(toolOri1,1,'ascend');
+            toolOri = toolOri3';
         case {'.txt'}
             % tool data file that has been processed in mmt software
             toolOri1 = importdata(pathName,' ',0);

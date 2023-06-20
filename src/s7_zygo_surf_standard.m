@@ -434,7 +434,7 @@ figure('Name','4 - 3D surface error');
 tiledlayout(2,1);
 nexttile;
 surf(deltaZ(:,:,1),deltaZ(:,:,2),deltaZ(:,:,3),'EdgeColor','none');
-axis equal;
+% axis equal;
 hold('on');
 colormap(turbo(256));
 colorbar('eastoutside');
@@ -447,13 +447,13 @@ zlabel(['\Deltaz (',unit,')']);
 % cut
 [lineData,lineAng] = viewError(deltaZ,textFontSize + 2,textFontType,unit);
 lineRot = rotz(lineAng);
-linePts = [1.2*minX,1.2*maxX,1.2*maxX,1.2*minX;0,0,0,0; ...
-    1.2*minZ,1.2*minZ,1.2*maxZ,1.2*maxZ];
-linePts = lineRot*linePts;
 minX = min(deltaZ(:,:,1),[],'all');
 maxX = max(deltaZ(:,:,1),[],'all');
 minZ = min(deltaZ(:,:,3),[],'all');
 maxZ = max(deltaZ(:,:,3),[],'all');
+linePts = [1.2*minX,1.2*maxX,1.2*maxX,1.2*minX;0,0,0,0; ...
+    1.2*minZ,1.2*minZ,1.2*maxZ,1.2*maxZ];
+linePts = lineRot*linePts;
 fill3(linePts(1,:),linePts(2,:),linePts(3,:), ...
     [0.6350 0.0780 0.1840],'EdgeColor','none','FaceAlpha',0.3);
 line([1.2*minX;1.2*maxX],[0;0],[1.2*maxZ;1.2*maxZ], ...
@@ -463,6 +463,7 @@ line([1.2*minX;1.2*maxX],[0;0],[1.2*maxZ;1.2*maxZ], ...
 nexttile;
 plot(lineData(:,1),lineData(:,2));
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
+grid on;
 xlabel(['r (',unit,')']);
 ylabel(['\Deltaz (',unit,')']);
 

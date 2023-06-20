@@ -27,6 +27,7 @@ arguments
     options.radiusDisplay {mustBeMember(options.radiusDisplay,{'none','off', ...
         'iter','iter-detailed','final','final-detailed'})} = 'iter'
     options.optimopt
+    options.uDirection {mustBeMember(options.uDirection,{'U Plus','U Minus'})} = 'U Minus'
 end
 
 toolSp = toolData.toolBform; % B-form tool tip arc
@@ -40,7 +41,12 @@ else
 end
 
 % the rest
-curveULim = {[0;1]}; % the interval of each toolpath
+switch options.uDirection % the interval of each toolpath
+    case 'U Plus'
+        curveULim = {[0;1]};
+    case 'U Minus'
+        curveULim = {[1;0]};
+end
 curvePeakPt = zeros(5,1);
 curveInterPt = {zeros(3,1)};
 curveRes = 5*aimRes; % the residual height, initialized with 5 times the standard aimRes
@@ -71,7 +77,8 @@ curveRes = 5*aimRes; % the residual height, initialized with 5 times the standar
     
         [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim1, ...
             curveULim2] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
-            curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1},aimRes);
+            curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1}, ...
+            'uDirection',options.uDirection,'aimRes',aimRes);
         % curvePeakPt(5,ind) = curvePeakPt(5,ind) + ind;
     
         if isinf(curveRes(ind))
