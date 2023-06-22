@@ -492,9 +492,9 @@ end
 %% Feed rate smoothing
 % to smooth the loopR to get the real tool path
 
-% cubic spline approximation
+% approximation
 % the function between the numeric label of tool path and surf radius R
-toolREach = curvePt(1,:);
+toolREach = curvePathPt(1,:);
 diffR = abs(diff(toolREach));
 % Fr = csape(accumPtNum,toolREach,[1,1]);
 % toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
