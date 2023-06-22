@@ -405,6 +405,7 @@ toolPathAngle = [];
 loopPtNum = [];
 accumPtNum = 0;
 toolNAccum = [];
+toolREach = curvePt(1,:);
 toolRAccum = [];
 toolQuat = [];
 toolNormDirect = [];
@@ -494,7 +495,6 @@ end
 
 % approximation
 % the function between the numeric label of tool path and surf radius R
-toolREach = curvePathPt(1,:);
 diffR = abs(diff(toolREach));
 % Fr = csape(accumPtNum,toolREach,[1,1]);
 % toolNoTheta = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
