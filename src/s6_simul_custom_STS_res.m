@@ -115,7 +115,7 @@ frMethodDefault = 'Approximation'; % 'Approximation'
 frParamDefault = 1-1e-5;
 
 % simulation parameters
-isRecal = false; % whether to recalculate the residual error
+isRecal = true; % whether to recalculate the residual error
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 isUIncrease = toolData.toolBform.coefs(end,1) - toolData.toolBform.coefs(1,1);
