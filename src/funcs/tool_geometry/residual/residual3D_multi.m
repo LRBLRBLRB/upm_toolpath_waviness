@@ -126,12 +126,12 @@ if isempty(uLim)
     uLim2 = [0;1];
     % the current point has not been calculated
     [res,peakPt,interPt,uLim,~] = residual2D_multi(toolSp1,toolSpProj, ...
-        1e-5,toolContactPt1,toolContactPtProj,uLim2,aimRes);
+        1e-5,toolContactPt1,toolContactPtProj,uLim2,'aimRes',aimRes,'uDirection','U Minus');
 else
     uLim = [0;1];
     % the current point has been calculated once
     [res,peakPt,interPt,~,uLim] = residual2D_multi(toolSp1,toolSpProj, ...
-        1e-5,toolContactPt1,toolContactPtProj,uLim,aimRes);
+        1e-5,toolContactPt1,toolContactPtProj,uLim,'aimRes',aimRes,'uDirection','U Minus');
 end
 
 %% to update the valid U range of the two toolpath

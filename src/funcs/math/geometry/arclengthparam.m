@@ -1,4 +1,4 @@
-function [tOut,fOut,uOut,varargout] = arclengthparam(arcInv,maxAng,t,f,u,toolData,var1,var2,options)
+function [tOut,fOut,uOut,varargout] = arclengthparam(arcInv,maxAng,t,f,u,toolData,quat,vec,options)
 %ARCLENGTHPARAM Generate the function of arc length 
 %
 %
@@ -12,8 +12,8 @@ arguments
     f 
     u (1,:) = []
     toolData = []
-    var1 = []
-    var2 = []
+    quat = []
+    vec = []
     options.algorithm {mustBeMember(options.algorithm, ...
         {'analytical-function','list-interpolation','lq-fitting'})} ...
         = 'list-interpolation'
@@ -29,8 +29,6 @@ end
     function varOut(n,var1,var2)
         switch n
             case 3
-            case 4
-                varargout{1} = var1;
             case 5
                 varargout{1} = var1;
                 varargout{2} = var2;
@@ -57,12 +55,10 @@ if length(indChange) <= 1
     tOut = t;
     fOut = f;
     uOut = u;
-    if isempty(var1)
+    if isempty(quat)
         varOut(nargout);
-    elseif size(var1,2) == 4
-        varOut(nargout,var1,var2);
     else
-        varOut(nargout,var2,var1);
+        varOut(nargout,quat,vec);
     end
     return;
 end
@@ -124,16 +120,16 @@ end
 % hold on;
 
 vecOut = {};
-if isempty(var1) % input: (arcInv,maxAng,t,f,u,options)
+if isempty(quat) % input: (arcInv,maxAng,t,f,u,options)
     quatOut = [];
-elseif size(var1,2) == 4 % input: (arcInv,maxAng,t,f,u,quat,vec,options)
-    quat = var1; % calculate the orientation based on the quaternions
+elseif size(quat,2) == 4 % input: (arcInv,maxAng,t,f,u,quat,vec,options)
+    quat = quat; % calculate the orientation based on the quaternions
     quatEq = quat(indChange,:); % pick out the quaternions that needed to recalculate
     % quat = quat(indOri,:); % quat that only have constant-angle
-    if isempty(var2) % get the vecEq
+    if isempty(vec) % get the vecEq
         error('Invalid input: when var1 = quat, var2 must be vec.\n');
     else
-        vec = var2;
+        vec = vec;
         vecLen = length(vec);
         for ii = 1:vecLen
             vecEq{ii} = vec{ii}(:,indChange);
@@ -173,13 +169,13 @@ elseif size(var1,2) == 4 % input: (arcInv,maxAng,t,f,u,quat,vec,options)
         vecOut{kk}(:,numOut) = vecEq{kk}(:,end);
     end
 
-elseif iscell(var1) % input: (arcInv,maxAng,t,f,u,vec,quat,toolData,options)
-    vec = var1; % calculate the orientation based on the vectors
+elseif iscell(quat) % input: (arcInv,maxAng,t,f,u,vec,quat,toolData,options)
+    vec = quat; % calculate the orientation based on the vectors
     vecLen = length(vec);
     for ii = 1:vecLen % pick out the vectors that needed to recalculate
         vecEq{ii} = vec{ii}(:,indChange);
     end
-    if isempty(var2) % if quat hasn't been given, then calculate the constant-angle ones
+    if isempty(vec) % if quat hasn't been given, then calculate the constant-angle ones
         quatOut = zeros(numOut,4);
         vecOut = cell(vecLen,1);
         % constant angle ones
@@ -188,7 +184,7 @@ elseif iscell(var1) % input: (arcInv,maxAng,t,f,u,vec,quat,toolData,options)
                 vec{1}(:,ii),vec{2}(:,ii),''));
         end
     else % if given, directly use the input var2 as the constant-angle ones
-        quat = var2;
+        quat = vec;
     end
 
     % constant arc length ones

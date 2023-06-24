@@ -665,13 +665,12 @@ spiralContactU0(1:accumPtNum(1) - 1) = [];
 spiralAngle0 = toolPathAngle + sign(conThetaBound(1) - conThetaBound(2))*2*pi*toolNAccum;
 spiralAngle0(:,1:accumPtNum(1) - 1) = [];
 if strcmp(angularIncrement,'Constant Arc')
-    [spiralAngle,spiralPath,spiralContactU] = arclengthparam(arcLength,maxAngPtDist, ...
-        spiralAngle0,spiralPath0,spiralContactU0,toolData,'interpType','linear'); % {spiralNorm0;spiralCut0},spiralQuat0,
+    [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
+        spiralAngle0,spiralPath0,spiralContactU0,toolData,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
 %     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
 %         spiralAngle0,spiralPath0,spiralContactU0,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
-% ,spiralQuat,spiralVec    
-% spiralNorm = spiralVec{1};
-%     spiralCut = spiralVec{2};
+    spiralNorm = spiralVec{1};
+    spiralCut = spiralVec{2};
 else
     spiralAngle = spiralAngle0;
     spiralPath = spiralPath0;
@@ -721,6 +720,9 @@ spiralFolderName = getlastfoldername(workspaceDir);
     fullfile(workspaceDir,[spiralFolderName,'-spiralPath-',approxMethod, ...
     '-',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
 spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
+if ~spiralPathFileName
+    return;
+end
 save(spiralPathName,"spiralAngle","spiralPath");
 % ,"spiralQuat", ...
 %     "spiralNorm","spiralCut");
@@ -740,7 +742,7 @@ tSpiralRes0 = tic;
 %     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
 % hold on;
 
-for ind1 = 1:spiralPtNum
+parfor ind1 = 1:spiralPtNum
     % inner ulim & residual height
     ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,'first');
     ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,'last');
