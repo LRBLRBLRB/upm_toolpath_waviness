@@ -1,36 +1,44 @@
-function [ang,varargout] = viewError(deltaZ,textFontSize,textFontType,unit)
-%VIEWERROR 此处显示有关此函数的摘要
-%   此处显示详细说明
+function [ang,varargout] = viewError(dataOri,textFontSize,textFontType,unit)
+%VIEWERROR an app to view the error and extract the high-order error
 
-% n = size(deltaZ);
 ang = 0;
 plotNum = 1000;
-lineData = [];
-zernike2 = [];
-zernike3 = [];
 zOrder = 4;
 dataName = [];
+dataLineOri = [];
+dataZernike = dataOri;
+dataLineZernike = [];
+dataError = dataOri;
+dataLineError = [];
 
-maxR = max(sqrt(deltaZ(:,:,1).^2 + deltaZ(:,:,2).^2),[],'all');
-minZ = min(deltaZ(:,:,3),[],'all');
-maxZ = max(deltaZ(:,:,3),[],'all');
+maxR = max(sqrt(dataOri(:,:,1).^2 + dataOri(:,:,2).^2),[],'all');
+minZ = min(dataOri(:,:,3),[],'all');
+maxZ = max(dataOri(:,:,3),[],'all');
 
 fig = uifigure('Name','Check the useless extraction', ...
                 'WindowStyle','alwaysontop','Visible','off');
 fig.CloseRequestFcn = @(app,event)fig_close_req(app);
-fig.Position(1:2) = fig.Position(1:2) - [900 - 560,600 - 420];
-fig.Position(3:4) = [900,600];
-figGridLayout = uigridlayout(fig,[4,6]);
-figGridLayout.RowHeight = {'fit','fit','2x','1x'};
-figGridLayout.ColumnWidth = {'fit','fit','1x','fit','fit','1x'};
+fig.Position(1:2) = fig.Position(1:2) - [1000 - fig.Position(3),900 - fig.Position(4)];
+fig.Position(3:4) = [1000,900];
+figGridLayout = uigridlayout(fig,[1,2]);
+figGridLayout.RowHeight = {'2x','1x','1x','2x'};
+figGridLayout.ColumnWidth = {'1x','1x'};
 
-figNumLabel = uilabel(figGridLayout,'Text','Re-Plot Points No.', ...
+figParamPanel = uipanel(figGridLayout,'Title','Parameters','TitlePosition','lefttop', ...
+    'FontName',textFontType,'FontSize',textFontSize);
+figParamPanel.Layout.Row = 1;
+figParamPanel.Layout.Column = 1;
+figParamPanelGridLayout = uigridlayout(figParamPanel,[4,3]);
+figParamPanelGridLayout.RowHeight = {'fit','fit','fit','1x'};
+figParamPanelGridLayout.ColumnWidth = {'fit','fit','1x'};
+
+figNumLabel = uilabel(figParamPanelGridLayout,'Text','Re-Plot Points No.', ...
     'FontName',textFontType,'FontSize',textFontSize, ...
     'HorizontalAlignment','center');
 figNumLabel.Layout.Row = 1;
 figNumLabel.Layout.Column = 1;
 
-figNumEdit = uieditfield(figGridLayout,'numeric','Limits',[50,2000], ...
+figNumEdit = uieditfield(figParamPanelGridLayout,'numeric','Limits',[50,2000], ...
     'FontName',textFontType,'FontSize',textFontSize, ...
     'RoundFractionalValues','on','ValueDisplayFormat','%i');
 figNumEdit.Value = plotNum;
@@ -38,7 +46,7 @@ figNumEdit.Layout.Row = 1;
 figNumEdit.Layout.Column = 2;
 figNumEdit.ValueChangedFcn = @(sld,event) figNumEditfieldUpdate(sld);
 
-figNumSlider = uislider(figGridLayout,'Limits',[50,2000], ...
+figNumSlider = uislider(figParamPanelGridLayout,'Limits',[50,2000], ...
     'MajorTicks',[50,200,400,500,600,800,1000,1200,1400,1500,1600,1800,2000], ...
     'MajorTickLabels',{'50','','','500','','','1000','','','1500','','','2000'}, ...
     'FontName',textFontType,'FontSize',textFontSize);
@@ -47,13 +55,13 @@ figNumSlider.Layout.Row = 1;
 figNumSlider.Layout.Column = 3;
 figNumSlider.ValueChangedFcn = @(sld,event) figNumSliderUpdate(sld);
 
-figRotLabel = uilabel(figGridLayout,'Text','Cross-Plane Angle', ...
+figRotLabel = uilabel(figParamPanelGridLayout,'Text','Cross-Plane Angle', ...
     'FontName',textFontType,'FontSize',textFontSize, ...
     'HorizontalAlignment','center');
 figRotLabel.Layout.Row = 2;
 figRotLabel.Layout.Column = 1;
 
-figRotEdit = uieditfield(figGridLayout,'numeric','Limits',[0,360], ...
+figRotEdit = uieditfield(figParamPanelGridLayout,'numeric','Limits',[0,360], ...
     'FontName',textFontType,'FontSize',textFontSize, ...
     'ValueDisplayFormat','%.2f °');
 figRotEdit.Value = ang;
@@ -61,7 +69,7 @@ figRotEdit.Layout.Row = 2;
 figRotEdit.Layout.Column = 2;
 figRotEdit.ValueChangedFcn = @(sld,event) figRotEditfieldUpdate(sld);
 
-figRotSlider = uislider(figGridLayout,'Limits',[0,360], ...
+figRotSlider = uislider(figParamPanelGridLayout,'Limits',[0,360], ...
     'MajorTicks',[0,30,60,90,120,150,180,210,240,270,300,330,360], ...
     'MajorTickLabels',{'0','','60','','120','','180','','240','','300','','°'}, ...
     'FontName',textFontType,'FontSize',textFontSize);
@@ -69,87 +77,123 @@ figRotSlider.Value = ang;
 figRotSlider.Layout.Row = 2;
 figRotSlider.Layout.Column = 3;
 figRotSlider.ValueChangedFcn = @(sld,event) figRotSliderUpdate(sld);
+% figRotSlider.ValueChangingFcn = @(sld,event) figRotSliderUpdate(sld);
 
-figOrderLabel = uilabel(figGridLayout,'Text','Zernike Order', ...
+figOrderLabel = uilabel(figParamPanelGridLayout,'Text','Zernike Order', ...
     'FontName',textFontType,'FontSize',textFontSize, ...
     'HorizontalAlignment','center');
-figOrderLabel.Layout.Row = 1;
-figOrderLabel.Layout.Column = 4;
+figOrderLabel.Layout.Row = 3;
+figOrderLabel.Layout.Column = 1;
 
-figOrderEdit = uieditfield(figGridLayout,'numeric','Limits',[4,80], ...
+figOrderEdit = uieditfield(figParamPanelGridLayout,'numeric','Limits',[0,20], ...
     'FontName',textFontType,'FontSize',textFontSize, ...
     'RoundFractionalValues','on','ValueDisplayFormat','%i','Editable','off');
 figOrderEdit.Value = zOrder;
-figOrderEdit.Layout.Row = 1;
-figOrderEdit.Layout.Column = 5;
+figOrderEdit.Layout.Row = 3;
+figOrderEdit.Layout.Column = 2;
 figOrderEdit.ValueChangedFcn = @(sld,event) figOrderEditfieldUpdate(sld);
 
-figOrderSlider = uislider(figGridLayout,'Limits',[4,80], ...
-    'MajorTicks',[4,10,20,30,40,50,60,70,80], ...
-    'MajorTickLabels',{'4','','20','','','50','','','80'}, ...
+figOrderSlider = uislider(figParamPanelGridLayout,'Limits',[0,20], ...
+    'MajorTicks',[0,5,10,15,20], ...
+    'MajorTickLabels',{'0','5','10','15','20'}, ...
     'FontName',textFontType,'FontSize',textFontSize,'Enable','off');
 figOrderSlider.Value = zOrder;
-figOrderSlider.Layout.Row = 1;
-figOrderSlider.Layout.Column = 6;
+figOrderSlider.Layout.Row = 3;
+figOrderSlider.Layout.Column = 3;
 figOrderSlider.ValueChangedFcn = @(sld,event) figOrderSliderUpdate(sld);
 
-figExtractOriButton = uibutton(figGridLayout,'push','Text','Extract Original', ...
-    'FontName',textFontType,'FontSize',textFontSize);
-figExtractOriButton.Layout.Row = 2;
-figExtractOriButton.Layout.Column = 4;
-figExtractOriButton.ButtonPushedFcn = @(sld,event) figExtractOriButtonPushed(fig);
+figExtract2DButton = uibutton(figParamPanelGridLayout,'push','Text','2D Data Extraction', ...
+    'FontName',textFontType,'FontSize',textFontSize,'WordWrap','on');
+figExtract2DButton.Layout.Row = 4;
+figExtract2DButton.Layout.Column = 2;
+figExtract2DButton.ButtonPushedFcn = @(sld,event) figExtract2DButtonPushed(fig);
 
-figExtractZernikeButton = uibutton(figGridLayout,'push','Text','Extract Zernike', ...
-    'FontName',textFontType,'FontSize',textFontSize);
-figExtractZernikeButton.Layout.Row = 2;
-figExtractZernikeButton.Layout.Column = 5;
-figExtractZernikeButton.ButtonPushedFcn = @(sld,event) figExtractZernikeButtonPushed(fig);
+figFitZernikeButton = uibutton(figParamPanelGridLayout,'push','Text','Zernike Fitting', ...
+    'FontName',textFontType,'FontSize',textFontSize,'WordWrap','on');
+figFitZernikeButton.Layout.Row = 4;
+figFitZernikeButton.Layout.Column = 1;
+figFitZernikeButton.ButtonPushedFcn = @(sld,event) figFitZernikeButtonPushed(fig);
 
-figExportButton = uibutton(figGridLayout,'push','Text','Export', ...
+figExportButton = uibutton(figParamPanelGridLayout,'push','Text','Data Exporting', ...
     'FontName',textFontType,'FontSize',textFontSize);
-figExportButton.Layout.Row = 2;
-figExportButton.Layout.Column = 6;
+figExportButton.Layout.Row = 4;
+figExportButton.Layout.Column = 3;
 figExportButton.ButtonPushedFcn = @(sld,event) figExportButtonPushed(fig);
 
-fig3DAxes = uiaxes(figGridLayout, ...
+figOriPanel = uipanel(figGridLayout,'Title','Origin','TitlePosition','lefttop', ...
     'FontName',textFontType,'FontSize',textFontSize);
-title(fig3DAxes,'Surface Error');
-fig3DAxes.Layout.Row = 3;
-fig3DAxes.Layout.Column = [1,3];
-surf(fig3DAxes,deltaZ(:,:,1),deltaZ(:,:,2),deltaZ(:,:,3),'EdgeColor','none');
-hold(fig3DAxes,'on');
-planeFill = [];
-planeLine = [];
-[~,planeFill,planeLine] = surfRot(fig3DAxes,ang,planeFill,planeLine);
-colormap(fig3DAxes,turbo(256));
-colorbar(fig3DAxes,'eastoutside');
-clim(fig3DAxes,[min(deltaZ(:,:,3),[],'all'),max(deltaZ(:,:,3),[],'all')]);
-xlabel(fig3DAxes,['x (',unit,')']);
-ylabel(fig3DAxes,['y (',unit,')']);
-zlabel(fig3DAxes,['\Deltaz (',unit,')']);
-grid(fig3DAxes,'on');
-hold(fig3DAxes,'off');
-% axis(fig3DAxes,'equal');
+figOriPanel.Layout.Row = [2,4];
+figOriPanel.Layout.Column = 1;
+figOriPanelGridLayout = uigridlayout(figOriPanel,[2,1], ...
+    'Padding',[0 0 0 0],'ColumnSpacing',0,'RowSpacing',0);
+figOriPanelGridLayout.RowHeight = {'2x','1x'};
 
-fig2DAxes = uiaxes(figGridLayout, ...
+fig3DAxesOri = uiaxes(figOriPanelGridLayout, ...
     'FontName',textFontType,'FontSize',textFontSize);
-title(fig2DAxes,'Surface Error in a Cross-Plane');
-fig2DAxes.Layout.Row = 4;
-fig2DAxes.Layout.Column = [1,3];
+fig3DAxesOri.Layout.Row = 1;
+fig3DAxesOri.Layout.Column = 1;
+title(fig3DAxesOri,'Surface Error');
+xlim(fig3DAxesOri,[-1.2*maxR,1.2*maxR]);
+ylim(fig3DAxesOri,[-1.2*maxR,1.2*maxR]);
+zlim(fig3DAxesOri,[1.5*minZ,1.5*maxZ]);
+surfPlot(fig3DAxesOri,dataOri);
+hold(fig3DAxesOri,'on');
+[planeFillOri,planeLineOri] = planeRot(fig3DAxesOri,ang,[],[]);
+hold(fig3DAxesOri,'off');
 
-fig3DAxesZernike = uiaxes(figGridLayout, ...
+fig2DAxesOri = uiaxes(figOriPanelGridLayout, ...
     'FontName',textFontType,'FontSize',textFontSize);
-title(fig3DAxesZernike,'Surface Error');
-fig3DAxesZernike.Layout.Row = 3;
-fig3DAxesZernike.Layout.Column = [4,6];
-planeFill2 = [];
-planeLine2 = [];
+title(fig2DAxesOri,'Surface Error in a Cross-Plane');
+fig2DAxesOri.Layout.Row = 2;
+fig2DAxesOri.Layout.Column = 1;
 
-fig2DAxesZernike = uiaxes(figGridLayout, ...
+figZernikePanel = uipanel(figGridLayout,'Title','Zernike', ...
+    'TitlePosition','righttop', ...
     'FontName',textFontType,'FontSize',textFontSize);
-title(fig2DAxesZernike,'Surface Error in a Cross-Plane');
-fig2DAxesZernike.Layout.Row = 4;
-fig2DAxesZernike.Layout.Column = [4,6];
+figZernikePanel.Layout.Row = [1,2];
+figZernikePanel.Layout.Column = 2;
+figZernikePanelGridLayout = uigridlayout(figZernikePanel,[2,1], ...
+    'Padding',[0 0 0 0],'ColumnSpacing',0,'RowSpacing',0);
+figZernikePanelGridLayout.RowHeight = {'2x','1x'};
+
+fig3DAxesZernike = uiaxes(figZernikePanelGridLayout, ...
+    'FontName',textFontType,'FontSize',textFontSize);
+fig3DAxesZernike.Layout.Row = 1;
+fig3DAxesZernike.Layout.Column = 1;
+xlim(fig3DAxesZernike,[-1.2*maxR,1.2*maxR]);
+ylim(fig3DAxesZernike,[-1.2*maxR,1.2*maxR]);
+zlim(fig3DAxesZernike,[1.5*minZ,1.5*maxZ]);
+planeFillZernike = [];
+planeLineZernike = [];
+
+fig2DAxesZernike = uiaxes(figZernikePanelGridLayout, ...
+    'FontName',textFontType,'FontSize',textFontSize);
+fig2DAxesZernike.Layout.Row = 2;
+fig2DAxesZernike.Layout.Column = 1;
+
+figErrorPanel = uipanel(figGridLayout,'Title','Error', ...
+    'TitlePosition','righttop', ...
+    'FontName',textFontType,'FontSize',textFontSize);
+figErrorPanel.Layout.Row = [3,4];
+figErrorPanel.Layout.Column = 2;
+figErrorPanelGridLayout = uigridlayout(figErrorPanel,[2,1], ...
+    'Padding',[0 0 0 0],'ColumnSpacing',0,'RowSpacing',0);
+figErrorPanelGridLayout.RowHeight = {'2x','1x'};
+
+fig3DAxesError = uiaxes(figErrorPanelGridLayout, ...
+    'FontName',textFontType,'FontSize',textFontSize);
+fig3DAxesError.Layout.Row = 1;
+fig3DAxesError.Layout.Column = 1;
+xlim(fig3DAxesError,[-1.2*maxR,1.2*maxR]);
+ylim(fig3DAxesError,[-1.2*maxR,1.2*maxR]);
+zlim(fig3DAxesError,[1.5*minZ,1.5*maxZ]);
+planeFillError = [];
+planeLineError = [];
+
+fig2DAxesError = uiaxes(figErrorPanelGridLayout, ...
+    'FontName',textFontType,'FontSize',textFontSize);
+fig2DAxesError.Layout.Row = 2;
+fig2DAxesError.Layout.Column = 1;
 
 fig.Visible = 'on';
 
@@ -157,20 +201,34 @@ uiwait(fig);
 
 switch nargout
     case 2
-        varargout{1} = lineData;
+        varargout{1} = dataLineOri;
         if strcmp(dataName,filesep)
-            save(dataName,"lineData");
+            save(dataName,"dataLineOri");
         end
     case 4
-        varargout{1} = lineData;
-        varargout{2} = zernike3;
-        varargout{3} = zernike2;
+        varargout{1} = dataLineOri;
+        varargout{2} = dataZernike;
+        varargout{3} = dataLineZernike;
         if strcmp(dataName,filesep)
-            save(dataName,"lineData","zernike2","zernike3");
+            save(dataName,"dataLineOri","dataZernike","dataLineZernike");
         end
 end
 
-    function [rot,planeFill,planeLine] = surfRot(fig,ang,planeFill,planeLine)
+    function surfPlot(fig,data)
+        cla(fig);
+        surf(fig,data(:,:,1),data(:,:,2),data(:,:,3), ...
+            'EdgeColor','none');
+        hold(fig,'on');
+        colormap(fig,turbo(256));
+        colorbar(fig,'eastoutside');
+        clim(fig,[min(data(:,:,3),[],'all'),max(data(:,:,3),[],'all')]);
+        xlabel(fig,['x (',unit,')']);
+        ylabel(fig,['y (',unit,')']);
+        zlabel(fig,['\Deltaz (',unit,')']);
+        grid(fig,'on');
+    end
+
+    function [planeFill,planeLine] = planeRot(fig,ang,planeFill,planeLine)
         % rotation of the plane
         rot = rotz(ang);
         planePt = [-1.2*maxR,1.2*maxR,1.2*maxR,-1.2*maxR; ...
@@ -190,7 +248,7 @@ end
         hold(fig,'off');
     end
 
-    function extractPlot(surfData,fig,figWaitbar)
+    function [lineData,figWaitbar] = extractPlot(surfData,fig,figWaitbar)
         minX = min(surfData(:,1));
         maxX = max(surfData(:,1));
         minY = min(surfData(:,2));
@@ -209,20 +267,19 @@ end
         if figWaitbar.CancelRequested, return; end
 
         % line data
-        clear('lineData');
         [lineData(:,1),Yq(:,1)] = meshgrid((minX:0.1:maxX)',0);
         lineData(:,2) = interp2(deltaZUni(:,:,1),deltaZUni(:,:,2), ...
             deltaZUni(:,:,3),lineData(:,1),Yq);
         %bsplineSurfPts_spapi(surfData,3,3,u,v)
         hold(fig,'off');
-        plot(fig,lineData(:,1),lineData(:,2),'.-');
+        plot(fig,lineData(:,1),lineData(:,2),'-','LineWidth',0.5);
         xlabel(fig,['x (',unit,')']);
         ylabel(fig,['y (',unit,')']);
         grid(fig,'on');
     end
 
-    function fig_close_req(app)
-        delete(app);
+    function fig_close_req(sld)
+        delete(sld);
     end
 
     function figNumSliderUpdate(sld)
@@ -239,13 +296,22 @@ end
     function figRotSliderUpdate(sld)
         ang = sld.Value;
         figRotEdit.Value = sld.Value;
-        [rot,planeFill,planeLine] = surfRot(fig3DAxes,ang,planeFill,planeLine);
+        [planeFillOri,planeLineOri] = planeRot( ...
+            fig3DAxesOri,ang,planeFillOri,planeLineOri);
+        cla(fig2DAxesOri);
+        [planeFillZernike,planeLineZernike] = planeRot( ...
+            fig3DAxesZernike,ang,planeFillZernike,planeLineZernike);
+        cla(fig2DAxesZernike);
+        [planeFillError,planeLineError] = planeRot( ...
+            fig3DAxesError,ang,planeFillError,planeLineError);
+        cla(fig2DAxesError);
     end
 
     function figRotEditfieldUpdate(sld)
         ang = sld.Value;
         figRotSlider.Value = sld.Value;
-        [rot,planeFill,planeLine] = surfRot(fig3DAxes,ang,planeFill,planeLine);
+        [planeFillOri,planeLineOri] = planeRot( ...
+            fig3DAxesOri,ang,planeFillOri,planeLineOri);
     end
 
     function figOrderEditfieldUpdate(sld)
@@ -254,58 +320,68 @@ end
     end
 
     function figOrderSliderUpdate(sld)
-        zOrder = sld.Value;
+        zOrder = round(sld.Value);
         figOrderEdit.Value = sld.Value;
-        close(figWaitbar);
     end
 
-    % Create ValueChangedFcn callback
-    function figExtractOriButtonPushed(app)
-        figWaitbar = uiprogressdlg(app,'Title','Line Data Extraction', ...
-            'Cancelable','on','Icon','success','Indeterminate','on');
-        figWaitbar.Message = 'Data Extracting ... ';
-
-        % rotation transform
-        [rot,planeFill,planeLine] = surfRot(fig3DAxes,ang,planeFill,planeLine);
-        surfData = reshape(deltaZ,[],3);
-        surfData = (rot*surfData')';
-        if figWaitbar.CancelRequested, return; end
-
-        extractPlot(surfData,fig2DAxes,figWaitbar);
-        % if figWaitbar.CancelRequested, return; end
-
-        close(figWaitbar);
-    end
-
-    function figExtractZernikeButtonPushed(app)
+    function figFitZernikeButtonPushed(app)
         figOrderSlider.Enable = 'on';
         figOrderEdit.Editable = 'on';
+        figWaitbar = uiprogressdlg(app,'Title','Zernike Fitting', ...
+            'Cancelable','on','Icon','success','Indeterminate','on');
+        figWaitbar.Message = 'Data Fitting ... ';
+
+        % plot the Zernike result
+        [planeFillOri,planeLineOri] = planeRot( ...
+            fig3DAxesOri,ang,planeFillOri,planeLineOri);
+
+        % plot the Zernike result
+        dataZernike(:,:,3) = zernikeProcess(dataOri(:,:,3),zOrder);
+        surfPlot(fig3DAxesZernike,dataZernike);
+        if figWaitbar.CancelRequested, return; end
+
+        [planeFillZernike,planeLineZernike] = planeRot( ...
+            fig3DAxesZernike,ang,planeFillZernike,planeLineZernike);
+        if figWaitbar.CancelRequested, return; end
+
+        % plot the error result
+        dataError(:,:,3) = dataOri(:,:,3) - dataZernike(:,:,3);
+        surfPlot(fig3DAxesError,dataError);
+        if figWaitbar.CancelRequested, return; end
+
+        [planeFillError,planeLineError] = planeRot( ...
+            fig3DAxesError,ang,planeFillError,planeLineError);
+        if figWaitbar.CancelRequested, return; end
+
+        close(figWaitbar);
+    end
+
+    function figExtract2DButtonPushed(app)
         figWaitbar = uiprogressdlg(app,'Title','Line Data Extraction', ...
             'Cancelable','on','Icon','success','Indeterminate','on');
         figWaitbar.Message = 'Data Extracting ... ';
 
         % rotation transform
-        [rot,planeFill2,planeLine2] = surfRot(fig3DAxesZernike,ang,planeFill2,planeLine2);
-        if figWaitbar.CancelRequested, return; end
-        surfData = reshape(deltaZ,[],3);
-        % surfData = (rot*surfData')';
-
-        zernikeZ = zernikeProcess(deltaZ(:,:,3),zOrder);
-        if figWaitbar.CancelRequested, return; end
-        surf(fig3DAxesZernike,deltaZ(:,:,1),deltaZ(:,:,2),zernikeZ,'EdgeColor','none');
-        hold(fig3DAxesZernike,'on');
-        colormap(fig3DAxesZernike,turbo(256));
-        colorbar(fig3DAxesZernike,'eastoutside');
-        clim(fig3DAxesZernike,[min(deltaZ(:,:,3),[],'all'),max(deltaZ(:,:,3),[],'all')]);
-        xlabel(fig3DAxesZernike,['x (',unit,')']);
-        ylabel(fig3DAxesZernike,['y (',unit,')']);
-        zlabel(fig3DAxesZernike,['\Deltaz (',unit,')']);
-        grid(fig3DAxesZernike,'on');
-
+        rot = rotz(ang);
         if figWaitbar.CancelRequested, return; end
 
-        extractPlot(surfData,fig2DAxesZernike,figWaitbar);
-        % if figWaitbar.CancelRequested, return; end
+        % original data
+        surfData = reshape(dataOri,[],3);
+        surfData = (rot*surfData')';
+        [dataLineOri,figWaitbar] = extractPlot(surfData,fig2DAxesOri,figWaitbar);
+        if figWaitbar.CancelRequested, return; end
+
+        % Zernike data
+        surfData = reshape(dataZernike,[],3);
+        surfData = (rot*surfData')';
+        [dataLineZernike,figWaitbar] = extractPlot(surfData,fig2DAxesZernike,figWaitbar);
+        if figWaitbar.CancelRequested, return; end
+
+        % error data
+        surfData = reshape(dataError,[],3);
+        surfData = (rot*surfData')';
+        [dataLineError,figWaitbar] = extractPlot(surfData,fig2DAxesError,figWaitbar);
+        if figWaitbar.CancelRequested, return; end
 
         close(figWaitbar);
     end

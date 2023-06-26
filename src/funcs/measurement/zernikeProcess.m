@@ -1,4 +1,4 @@
-function reconstructed = zernikeProcess(data,n)
+function [reconstructed,a] = zernikeProcess(data,n)
 %ZERNIKEPROCESS 此处显示有关此函数的摘要
 %   此处显示详细说明
 
