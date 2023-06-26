@@ -1,0 +1,1 @@
+function [lineData,ang] = viewExtraction(data,textFontSize,textFontType,unit)

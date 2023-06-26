@@ -445,7 +445,7 @@ ylabel(['y (',unit,')']);
 zlabel(['\Deltaz (',unit,')']);
 
 % cut
-[lineData,lineAng] = viewError(deltaZ,textFontSize + 2,textFontType,unit);
+[lineAng,lineData] = viewError(deltaZ,textFontSize + 2,textFontType,unit);
 lineRot = rotz(lineAng);
 minX = min(deltaZ(:,:,1),[],'all');
 maxX = max(deltaZ(:,:,1),[],'all');
@@ -466,6 +466,8 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 grid on;
 xlabel(['r (',unit,')']);
 ylabel(['\Deltaz (',unit,')']);
+
+% s7_extract;
 
 %%
 % rmpath(genpath('funcs'));
