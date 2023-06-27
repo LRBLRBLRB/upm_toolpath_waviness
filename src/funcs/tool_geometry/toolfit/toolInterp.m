@@ -28,6 +28,8 @@ elseif  size(var2,2) == 4
     toolQuat = var2;
     method = 1;
 else
+    % method 2 does not provide the quaternion, but the normal and cut
+    % direction vectors instead
     toolCutDir1 = var2(:,ind1);
     % toolCutDir2 = var2(:,ind2);
     % toolCutDir3 = var2(:,ind3);

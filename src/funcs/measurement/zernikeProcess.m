@@ -23,7 +23,8 @@ isInCircle = (r <= 1);
 isNotNan = ~isnan(data(:));
 isFit = isNotNan & isInCircle;
 Z = zernfun(N,M,r(isFit),theta(isFit));
-a = Z\data(isFit); % coeffs of Zernike
+% (here a householder transform can be used to avoid a pathological equation)
+a = Z\data(isFit); % coeffs of Zernike 
 
 reconstructed = NaN(size(data));
 reconstructed(isFit) = Z*a; 

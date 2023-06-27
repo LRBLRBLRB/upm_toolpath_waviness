@@ -212,6 +212,16 @@ switch nargout
         if strcmp(dataName,filesep)
             save(dataName,"dataLineOri","dataZernike","dataLineZernike");
         end
+    case 6
+        varargout{1} = dataLineOri;
+        varargout{2} = dataZernike;
+        varargout{3} = dataLineZernike;
+        varargout{4} = dataError;
+        varargout{5} = dataLineError;
+        if strcmp(dataName,filesep)
+            save(dataName,"dataLineOri","dataZernike","dataLineZernike", ...
+                "dataError","dataLineError");
+        end
 end
 
     function surfPlot(fig,data)
@@ -221,7 +231,11 @@ end
         hold(fig,'on');
         colormap(fig,turbo(256));
         colorbar(fig,'eastoutside');
-        clim(fig,[min(data(:,:,3),[],'all'),max(data(:,:,3),[],'all')]);
+        minData = min(data(:,:,3),[],'all');
+        maxData = max(data(:,:,3),[],'all');
+        if minData ~= maxData
+            clim(fig,[minData,maxData]);
+        end
         xlabel(fig,['x (',unit,')']);
         ylabel(fig,['y (',unit,')']);
         zlabel(fig,['\Deltaz (',unit,')']);

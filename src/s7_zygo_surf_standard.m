@@ -430,6 +430,12 @@ deltaZ(:,:,3) = surfMesh2(:,:,3) - surfTheoMesh(:,:,3);
 % Sz = max(deltaZFit,[],'all') - min(deltaZFit,[],'all');
 % Sq = sqrt(mean(deltaZFit.^2)); % rms
 
+[lineAng,dataLineOri,dataZernike,dataLineZernike, ...
+    dataError,dataLineError] = viewError( ...
+    deltaZ,textFontSize + 2,textFontType,unit);
+
+%%
+% surface error
 figure('Name','4 - 3D surface error');
 tiledlayout(2,1);
 nexttile;
@@ -444,8 +450,6 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['\Deltaz (',unit,')']);
 
-% cut
-[lineAng,lineData] = viewError(deltaZ,textFontSize + 2,textFontType,unit);
 lineRot = rotz(lineAng);
 minX = min(deltaZ(:,:,1),[],'all');
 maxX = max(deltaZ(:,:,1),[],'all');
@@ -461,13 +465,47 @@ line([1.2*minX;1.2*maxX],[0;0],[1.2*maxZ;1.2*maxZ], ...
     'Marker','.','MarkerSize',18);
 
 nexttile;
-plot(lineData(:,1),lineData(:,2));
+plot(dataLineOri(:,1),dataLineOri(:,2));
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 grid on;
 xlabel(['r (',unit,')']);
 ylabel(['\Deltaz (',unit,')']);
 
-% s7_extract;
+% high-order surface error
+figure('Name','4 - High-order surface error');
+tiledlayout(2,1);
+nexttile;
+surf(dataError(:,:,1),dataError(:,:,2),dataError(:,:,3),'EdgeColor','none');
+% axis equal;
+hold('on');
+colormap(turbo(256));
+colorbar('eastoutside');
+clim([min(dataError(:,:,3),[],'all'),max(dataError(:,:,3),[],'all')]);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['Surface Error (',unit,')']);
+
+lineRot = rotz(lineAng);
+minX = min(dataError(:,:,1),[],'all');
+maxX = max(dataError(:,:,1),[],'all');
+minZ = min(dataError(:,:,3),[],'all');
+maxZ = max(dataError(:,:,3),[],'all');
+linePts = [1.2*minX,1.2*maxX,1.2*maxX,1.2*minX;0,0,0,0; ...
+    1.2*minZ,1.2*minZ,1.2*maxZ,1.2*maxZ];
+linePts = lineRot*linePts;
+fill3(linePts(1,:),linePts(2,:),linePts(3,:), ...
+    [0.6350 0.0780 0.1840],'EdgeColor','none','FaceAlpha',0.3);
+line([1.2*minX;1.2*maxX],[0;0],[1.2*maxZ;1.2*maxZ], ...
+    'Color',[0.6350 0.0780 0.1840],'LineWidth',3, ...
+    'Marker','.','MarkerSize',18);
+
+nexttile;
+plot(dataLineError(:,1),dataLineError(:,2));
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+grid on;
+xlabel(['r (',unit,')']);
+ylabel(['High-order Error (',unit,')']);
 
 %%
 % rmpath(genpath('funcs'));
