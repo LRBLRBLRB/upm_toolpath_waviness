@@ -50,7 +50,7 @@ while true
             spiralResLine = [spiralRes(1,:),spiralRes(2,:)];
             spiralPeakPtLine = [spiralPeakPt(1:3,:),spiralPeakPt(6:8,:)];
             spiralResMaxInd = find(spiralResLine == 5*aimRes);
-            spiralResLine(spiralResMaxInd) = [];v,
+            spiralResLine(spiralResMaxInd) = [];
             spiralPeakPtLine(:,spiralResMaxInd) = [];
             xPlot = linspace(min(spiralPeakPtLine(1,:)),max(spiralPeakPtLine(1,:)),plotNum);
             yPlot = linspace(min(spiralPeakPtLine(2,:)),max(spiralPeakPtLine(2,:)),plotNum);
@@ -88,7 +88,7 @@ while true
             tResError = toc(tResError0);
             fprintf('The time spent in the residual map process is %fs.\n',tResError);
         case 'Machining simulation'
-            stepNum = 3;
+            stepNum = log(abs(curvePlotSpar));
             spiralPathList = [];
             tSimul0 = tic;
             toolCoefs = toolData.toolBform.coefs;
@@ -97,7 +97,7 @@ while true
                 toolSp.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
                 for jj = 1:size(spiralULim{ii},2) - 1
                     uLimRound = round(spiralULim{ii},stepNum);
-                    tmp = fnval(toolSp,uLimRound(1,jj):10^(-1*stepNum):uLimRound(2,jj));
+                    tmp = fnval(toolSp,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
                     % Q{jj} = tmp;
                     spiralPathList = [spiralPathList,tmp];
                 end

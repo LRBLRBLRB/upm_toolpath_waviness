@@ -421,8 +421,12 @@ interPt = {zeros(3,0)};
 
 if strcmp(startDirection,'X Plus') % 'X Minus'
     conThetaBound = [0,2*pi];
+    uLimOrder2 = 'first';
+    uLimOrder3 = 'last';
 else
     conThetaBound = [0,-2*pi];
+    uLimOrder2 = 'last';
+    uLimOrder3 = 'first';
 end
 
 for ii = 1:size(curvePathPt,2)
@@ -753,8 +757,8 @@ tSpiralRes0 = tic;
 
 for ind1 = 1:spiralPtNum
     % inner ulim & residual height
-    ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,'first');
-    ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,'last');
+    ind2 = find(spiralAngle >= spiralAngle(ind1) - conThetaBound(end),1,uLimOrder2);
+    ind3 = find(spiralAngle < spiralAngle(ind1) - conThetaBound(end),1,uLimOrder3);
     if isempty(ind2) || isempty(ind3)
 %         ind2 = find(spiralAngle >= spiralAngle(ind1) + pi,1,'first');
 %         ind3 = find(spiralAngle < spiralAngle(ind1) + pi,1,'last');
@@ -771,8 +775,8 @@ for ind1 = 1:spiralPtNum
     end
 
     % outer ulim & residual height
-    ind2 = find(spiralAngle >= spiralAngle(ind1) + 2*pi,1,'first');
-    ind3 = find(spiralAngle < spiralAngle(ind1) + 2*pi,1,'last');
+    ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,uLimOrder2);
+    ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,uLimOrder3);
     if isempty(ind2) || isempty(ind3)
         tmpRes2 = 5*aimRes;
         tmpPeak2 = zeros(5,1);
