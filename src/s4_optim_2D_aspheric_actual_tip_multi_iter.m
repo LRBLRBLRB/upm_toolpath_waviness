@@ -331,8 +331,10 @@ end
 switch uDirection
     case 'U Plus'
         curveULim{ind - 1}(end) = 1;
+        curvePlotSpar = 0.0001;
     case 'U Minus'
         curveULim{ind - 1}(end) = 0;
+        curvePlotSpar = -0.0001;
 end
 [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim{ind}, ...
     curveULim{ind - 1}] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
@@ -371,29 +373,29 @@ for jj = 1:size(curvePathPt,2)
     plot(curveInterPt{jj}(1,:),curveInterPt{jj}(3,:),'.','Color',[0.850,0.3250,0.0980]);
     toolSp1 = toolData.toolBform;
     toolSp1.coefs = quat2rotm(curveQuat(jj,:))*toolSp1.coefs + curvePathPt(:,jj);
-    toolSp1Pt = fnval(toolSp1,0:0.0001:curveULim{jj}(1,1));
-    toolSp1Pt(3,end) = NaN;
-    patch('XData',toolSp1Pt(1,:),'YData',toolSp1Pt(3,:), ...
-        'EdgeColor',[0,0.4470,0.7410],'EdgeAlpha',0.1, ...
-        'LineWidth',0.5,'LineStyle','-');
-    for ii = 1:size(curveULim{jj},2) - 1
-        toolSp1Pt = fnval(toolSp1,curveULim{jj}(1,ii):0.0001:curveULim{jj}(2,ii));
+%     toolSp1Pt = fnval(toolSp1,curveULim{jj}(1):curvePlotSpar:curveULim{jj}(2));
+%     toolSp1Pt(3,end) = NaN;
+%     patch('XData',toolSp1Pt(1,:),'YData',toolSp1Pt(3,:), ...
+%         'EdgeColor',[0,0.4470,0.7410],'EdgeAlpha',0.1, ...
+%         'LineWidth',0.5,'LineStyle','-');
+    for ii = 1:size(curveULim{jj},2)
+        toolSp1Pt = fnval(toolSp1,curveULim{jj}(1,ii):curvePlotSpar:curveULim{jj}(2,ii));
         plot(toolSp1Pt(1,:),toolSp1Pt(3,:),'Color',[0,0.4470,0.7410], ...
             'LineWidth',0.5);
-        toolSp1Pt = fnval(toolSp1,curveULim{jj}(2,ii):0.0001:curveULim{jj}(1,ii + 1));
-        toolSp1Pt(3,end) = NaN;
-        patch('XData',toolSp1Pt(1,:),'YData',toolSp1Pt(3,:), ...
-            'EdgeColor',[0,0.4470,0.7410],'EdgeAlpha',0.1, ...
-            'LineWidth',0.5,'LineStyle','-');
+%         toolSp1Pt = fnval(toolSp1,curveULim{jj}(2,ii):0.0001:curveULim{jj}(1,ii + 1));
+%         toolSp1Pt(3,end) = NaN;
+%         patch('XData',toolSp1Pt(1,:),'YData',toolSp1Pt(3,:), ...
+%             'EdgeColor',[0,0.4470,0.7410],'EdgeAlpha',0.1, ...
+%             'LineWidth',0.5,'LineStyle','-');
     end
-    toolSp1Pt = fnval(toolSp1,curveULim{jj}(1,end):0.0001:curveULim{jj}(2,end));
+    toolSp1Pt = fnval(toolSp1,curveULim{jj}(1,end):curvePlotSpar:curveULim{jj}(2,end));
     plot(toolSp1Pt(1,:),toolSp1Pt(3,:),'Color',[0,0.4470,0.7410], ...
         'LineWidth',0.5);
-    toolSp1Pt = fnval(toolSp1,curveULim{jj}(2,end):0.0001:1);
-    toolSp1Pt(3,end) = NaN;
-    patch('XData',toolSp1Pt(1,:),'YData',toolSp1Pt(3,:), ...
-        'EdgeColor',[0,0.4470,0.7410],'EdgeAlpha',0.1, ...
-        'LineWidth',0.5,'LineStyle','-');
+%     toolSp1Pt = fnval(toolSp1,curveULim{jj}(2,end):0.0001:1);
+%     toolSp1Pt(3,end) = NaN;
+%     patch('XData',toolSp1Pt(1,:),'YData',toolSp1Pt(3,:), ...
+%         'EdgeColor',[0,0.4470,0.7410],'EdgeAlpha',0.1, ...
+%         'LineWidth',0.5,'LineStyle','-');
 end
 legend('tool path point','tool contact point','ideal surface','peak point','','actual surface');
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
@@ -420,7 +422,7 @@ interPt = {zeros(3,0)};
 if strcmp(startDirection,'X Plus') % 'X Minus'
     conThetaBound = [0,2*pi];
 else
-    conThetaBound = [2*pi,0];
+    conThetaBound = [0,-2*pi];
 end
 
 for ii = 1:size(curvePathPt,2)
@@ -430,10 +432,8 @@ for ii = 1:size(curvePathPt,2)
     loopPtNum = [loopPtNum,length(conTheta0)]; % the tool path number of each loop
     accumPtNum = [accumPtNum,accumPtNum(end) + loopPtNum(end)]; % the tool path number of the existing loops
     toolNAccum = [toolNAccum,(ii - 1)*ones(1,loopPtNum(end))]; % the loop No. of each tool path
-    toolPathAngle = [toolPathAngle,conTheta0]; % tool path angle
-%     if toolPathAngle(accumPtNum(end - 1) + 1) > 6
-%         toolPathAngle(accumPtNum(end - 1) + 1) = toolPathAngle(accumPtNum(end - 1) + 1) - 2*pi;
-%     end
+    toolPathAngle = [toolPathAngle,conTheta0 + ...
+        sign(conThetaBound(2) - conThetaBound(1))*2*pi*(ii - 1)]; % tool path angle
     toolRAccum = [toolRAccum,curvePt(1,ii)*ones(1,loopPtNum(end))]; % the loop radius of each tool path
     toolContactU = [toolContactU,curveContactU(ii)*ones(1,loopPtNum(end))]; % the B-spline parameter of the contact point
     res = [res,curveRes(ii)*ones(1,loopPtNum(end))]; % the residual height of each tool point and its closest point on the previous loop 
@@ -479,7 +479,7 @@ axis equal;
 legend('designed surface','tool center point','Location','northeast');
 
 warningTone = load('handel');
-sound(warningTone.y,warningTone.Fs);
+% sound(warningTone.y,warningTone.Fs);
 s6_visualize_concentric_multi;
 
 msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
@@ -502,9 +502,12 @@ diffR = abs(diff(toolREach));
 
 switch spiralMethod
     case 'Radius-Number'
-        SurfEach = accumPtNum;
+        surfEach = accumPtNum;
+        surfAccum = 1:surfEach(end);
     case 'Radius-Angle'
-        SurfEach = linspace(2*pi*1,2*pi*length(accumPtNum),length(accumPtNum));
+        surfEach = sign(conThetaBound(2) - conThetaBound(1))* ...
+            linspace(2*pi,2*pi*(length(accumPtNum)),length(accumPtNum));
+        surfAccum = toolPathAngle;
 end
 
 questOpt1 = questOpt;
@@ -517,21 +520,27 @@ hFeedrate = figure('Name','Feed Rate Smoothing');
 approxMethod = 'pchip';
 switch approxMethod
     case 'csape'
-        Fr = csape(SurfEach,toolREach,[1 1]);
+        Fr = csape(surfEach,toolREach,[1 1]);
     case 'pchip'
-        Fr = pchip(SurfEach,toolREach);
+        Fr = pchip(surfEach,toolREach);
 end
 
     yyaxis left;
-    scatter(SurfEach,toolREach);
+    scatter(surfEach,toolREach);
     hold on;
-    fnplt(Fr,'r',[SurfEach(1) + 1,SurfEach(end)]);
-    plot(1:SurfEach(end),toolRAccum);
+    FrPlot = fnval(Fr,surfAccum);
+    plot(surfAccum,FrPlot,'-','Color',[0.8500 0.3250 0.0980],'LineWidth',1.5);
+    plot(surfAccum,toolRAccum,':','Color',[0.4940 0.1840 0.5560],'LineWidth',0.5);
     ylim1 = [min(toolREach),max(toolREach)];
+    if strcmp(startDirection,'X Minus')
+        set(gca,'YDir','reverse');
+        set(gca,'XDir','reverse');
+        ylim1 = [abs(max(toolREach)),abs(min(toolREach))];
+    end
     set(gca,'YLim',[2*ylim1(1) - ylim1(2),ylim1(2)],'YColor','k','YMinorGrid','on');
     ylabel(['Radius of the Loop (',unit,')']);
     yyaxis right;
-    bar(SurfEach(1:end - 1),diffR,'EdgeColor','none');
+    bar(surfEach(1:end - 1),diffR,'EdgeColor','none');
     ylim2 = [min(diffR),max(diffR)];
     set(gca,'YLim',[ylim2(1),2*ylim2(2) - ylim2(1)],'YColor','k','YMinorGrid','on');
     ylabel(['Cutting width of each Loop (',unit,')']);
@@ -604,8 +613,8 @@ spiralCut0 = zeros(3,accumPtNum(end));
 spiralQuat0 = zeros(accumPtNum(end),4);
 spiralContactU0 = zeros(1,accumPtNum(end));
 
-interpR = fnval(Fr,1:SurfEach(end));
-interpR(1:SurfEach(1)) = 0;
+interpR = fnval(Fr,surfAccum);
+interpR(surfAccum > surfEach(1)) = 0;
 accumPtNumlength = [0,accumPtNum];
 
 numLoop = length(accumPtNum);
@@ -634,8 +643,8 @@ spiralContactU0(1:accumPtNum(1)) = toolContactU(1:accumPtNum(1));
 for kk = 2:numLoop % begin with the 1st loop
     angleN = toolPathAngle(accumPtNumlength(kk - 1) + 1:accumPtNumlength(kk));
     for indInterp = accumPtNum(kk - 1) + 1:accumPtNum(kk)
-        %get the inner closest point and linearly interpolate them
-        angleDel = angleN - toolPathAngle(indInterp);
+        % get the inner closest point and linearly interpolate them
+        angleDel = angleN - (toolPathAngle(indInterp) - sign(conThetaBound(2) - conThetaBound(1))*2*pi);
         [ind1,ind2] = getInnerLoopToolPathIndex(angleN,angleDel); % get the closest tol point in the inner loop
         ind1 = ind1 + accumPtNumlength(kk - 1); % get the index of the closest in the whole list
         ind2 = ind2 + accumPtNumlength(kk - 1);
@@ -655,15 +664,15 @@ for kk = 2:numLoop % begin with the 1st loop
 end
 
 % elliminate the first loop, which focuses on the z=0 point
-spiralPath0(:,1:accumPtNum(1) - 1) = [];
-spiralNorm0(:,1:accumPtNum(1) - 1) = [];
-spiralCut0(:,1:accumPtNum(1) - 1) = [];
-spiralQuat0(1:accumPtNum(1) - 1,:) = [];
-spiralContactU0(1:accumPtNum(1) - 1) = [];
+spiralPath0(:,1:accumPtNum(1)) = [];
+spiralNorm0(:,1:accumPtNum(1)) = [];
+spiralCut0(:,1:accumPtNum(1)) = [];
+spiralQuat0(1:accumPtNum(1),:) = [];
+spiralContactU0(1:accumPtNum(1)) = [];
 
 % change the spiral tool path to constant arc length one
-spiralAngle0 = toolPathAngle + sign(conThetaBound(1) - conThetaBound(2))*2*pi*toolNAccum;
-spiralAngle0(:,1:accumPtNum(1) - 1) = [];
+spiralAngle0 = toolPathAngle; % + sign(conThetaBound(1) - conThetaBound(2))*2*pi*toolNAccum;
+spiralAngle0(:,1:accumPtNum(1)) = [];
 if strcmp(angularIncrement,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
         spiralAngle0,spiralPath0,spiralContactU0,toolData,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
@@ -806,8 +815,8 @@ end
 
 tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
-warningTone = load('handel');
-sound(warningTone.y,warningTone.Fs);
+% warningTone = load('handel');
+% sound(warningTone.y,warningTone.Fs);
 
 %% spiral tool path result
 % plot the result
@@ -847,8 +856,9 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 % sprial tool path error
 s6_visualize_spiral_multi;
 
-msgfig = msgbox(sprintf('\\fontsize{%d}\\fontname{%s}Spiral tool path was generated successfully!', ...
-    textFontSize,textFontType),'Success','help','non-modal');
+msgfig = helpdlg(sprintf(['\\fontsize{%d}\\fontname{%s}' ...
+    'Spiral tool path was generated successfully!'], ...
+    textFontSize,textFontType),'Success');
 
 %% Comparison: directly generate the spiral tool path
 % 实际上，这种显然更好。用上面的那种方法，会导致不是真正的等弧长，而且在交接段会突然减速，动力学应该会影响表面质量

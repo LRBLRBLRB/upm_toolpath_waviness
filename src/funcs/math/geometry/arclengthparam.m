@@ -75,7 +75,8 @@ switch options.algorithm
     case 'analytical-function'
         % f remains the curve parametric function: [x,y,z]=f(t)
     case 'list-interpolation'
-        % or f remains the scatters of the curve: (3,:) or (2,:)
+        % or f remains the scatters of the curve: (3,:) or (2,:) 
+       %  这里有问题：应该是xy两个分量下的弧长而不是总弧长！！！
         f_t = numericdiff(fEq,1,2);
         arcLen = cumtrapz(sqrt(sum(f_t.^2,1)));
         X = arcLen.'; % query arc length
