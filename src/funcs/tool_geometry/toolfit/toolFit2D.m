@@ -173,10 +173,9 @@ switch options.toolFitType
 end
 
 % tool tip arc initial fitting
-param0 = [1;1;1];
+param0 = [0;0;-(options.radius0)^2];
 [circ2D0,RMSE] = arcFit2D(scatterOri,param0, ...
-    'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType, ...
-    'radius0',options.radius0);
+    'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType);
 
 % test whetger the ransac function defined above is true
 function testRansac()
@@ -232,7 +231,7 @@ scatterDst0 = rotMat*(scatterOri - ndgrid(circ2D0.center,1:n));
 scatterDst1 = tooloutlierremove(scatterDst0);
 % figure; plot(scatterDst1(1,:),scatterDst1(2,:),'.-','MarkerSize',2);
 
-[circ2D,RMSE] = arcFit2D(scatterDst1, ...
+[circ2D,RMSE] = arcFit2D(scatterDst1,param0, ...
     'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType);
 
 n = size(scatterDst1,2);

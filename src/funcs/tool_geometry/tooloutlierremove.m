@@ -1,6 +1,6 @@
 function tool = tooloutlierremove(toolOri)
-%TOOLINI 此处显示有关此函数的摘要
-%   此处显示详细说明
+%TOOLOUTLIERREMOVE combine the duplicate points on both of the left part 
+% and the right part of the measured data
 
 % toolOri (2,:)
 

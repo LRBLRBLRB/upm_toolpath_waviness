@@ -141,3 +141,120 @@ s1_toolExtract_2Dline
 出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s1_toolExtract_2Dline', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s1_toolExtract_2Dline.m', 123)" style="font-weight:bold">s1_toolExtract_2Dline</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s1_toolExtract_2Dline.m',123,0)">第 123 行</a>)
 [circ2D,toolFitUnsorted,RMSE,lineFitMaxDist] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
 } 
+s1_toolExtract_2Dline
+Please select the points of the two edges of the tool tip: 
+The first two is the interval of the left one, while the other two is that of the right.
+
+Successfully selected!
+
+Please select the useless area of original data: 
+
+Successfully selected!
+
+<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\toolfit\toolFit2D.m',176,1)">176 </a>param0 = [0;0;-(options.radius0)^2];
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('arcFit2D')" style="font-weight:bold">arcFit2D</a>
+无效的参数名称 'radius0'。 名称必须为 'arcFitMethod' 或 'displayType'。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('toolFit2D', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\toolfit\toolFit2D.m', 177)" style="font-weight:bold">toolFit2D</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\toolfit\toolFit2D.m',177,0)">第 177 行</a>)
+[circ2D0,RMSE] = arcFit2D(scatterOri,param0, ...
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s1_toolExtract_2Dline', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s1_toolExtract_2Dline.m', 123)" style="font-weight:bold">s1_toolExtract_2Dline</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s1_toolExtract_2Dline.m',123,0)">第 123 行</a>)
+[circ2D,toolFitUnsorted,RMSE,lineFitMaxDist] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
+} 
+opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\toolfit\toolFit2D.m',177,0)
+matlab.internal.language.introspective.errorDocCallback('arcFit2D')
+s1_toolExtract_2Dline
+Please select the points of the two edges of the tool tip: 
+The first two is the interval of the left one, while the other two is that of the right.
+
+Successfully selected!
+
+Please select the useless area of original data: 
+
+Successfully selected!
+
+<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\toolfit\toolFit2D.m',176,1)">176 </a>param0 = [0;0;-(options.radius0)^2];
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+The arc is fitted with the method [levenberg-marquardt].
+if system_dependent('IsDebugMode')==1, dbstep; end
+
+                                        First-Order                    Norm of 
+ Iteration  Func-count    Residual       optimality      Lambda           step
+     0           4     1.62892e+18        1.41e+14         0.01
+     1           8      8.1955e+12        9.83e+07        0.001    6.66971e+06
+     2          12     3.44292e+12        6.26e+04       0.0001    4.32319e+07
+     3          16      8.3323e+10        9.23e+04        1e-05    6.72499e+07
+     4          20     3.97423e+07        6.61e+04        1e-06    1.21641e+07
+     5          24     1.24847e+07             589        1e-07         223668
+
+Optimization completed: The relative <a href = "matlab: helpview('optim','firstorder_lsq','CSHelpWindow');">first-order optimality measure</a>, 4.172196e-12,
+is less than <a href = "matlab: helpview('optim','function_tolerance_lsq','CSHelpWindow');">1e-4*options.FunctionTolerance</a> = 1.000000e-10.
+
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbstep; end
+if system_dependent('IsDebugMode')==1, dbcont; end
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('arcFit2D')" style="font-weight:bold">arcFit2D</a>
+     'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType);
+     ↑
+位置 2 处的参数无效。 函数要求名称 'arcFitMethod' 之前恰好有 2 个位置输入。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('toolFit2D', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\toolfit\toolFit2D.m', 234)" style="font-weight:bold">toolFit2D</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\toolfit\toolFit2D.m',234,0)">第 234 行</a>)
+[circ2D,RMSE] = arcFit2D(scatterDst1, ...
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('s1_toolExtract_2Dline', 'D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s1_toolExtract_2Dline.m', 123)" style="font-weight:bold">s1_toolExtract_2Dline</a> (<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\s1_toolExtract_2Dline.m',123,0)">第 123 行</a>)
+[circ2D,toolFitUnsorted,RMSE,lineFitMaxDist] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
+} 
+opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\tool_geometry\toolfit\toolFit2D.m',234,0)
+s1_toolExtract_2Dline
+Please select the points of the two edges of the tool tip: 
+The first two is the interval of the left one, while the other two is that of the right.
+
+Successfully selected!
+
+Please select the useless area of original data: 
+Please select the useless area of original data: 
+
+Successfully selected!
+
+The arc is fitted with the method [levenberg-marquardt].
+<a href="matlab: opentoline('D:\Code\2021-11_ToolWaviness\upm_toolpath\src\funcs\my_curve_fitter\arcFit2D.m',62,1)">62  </a>        param = lsqcurvefit(F,param0,scatterOri',zeros(n,1),lb,ub,optimOpt);
+if system_dependent('IsDebugMode')==1, dbcont; end
+
+                                        First-Order                    Norm of 
+ Iteration  Func-count    Residual       optimality      Lambda           step
+     0           4     1.62892e+18        1.41e+14         0.01
+     1           8      8.1955e+12        9.83e+07        0.001    6.66971e+06
+     2          12     3.44292e+12        6.26e+04       0.0001    4.32319e+07
+     3          16      8.3323e+10        9.23e+04        1e-05    6.72499e+07
+     4          20     3.97423e+07        6.61e+04        1e-06    1.21641e+07
+     5          24     1.24847e+07             589        1e-07         223668
+
+Optimization completed: The relative <a href = "matlab: helpview('optim','firstorder_lsq','CSHelpWindow');">first-order optimality measure</a>, 4.172196e-12,
+is less than <a href = "matlab: helpview('optim','function_tolerance_lsq','CSHelpWindow');">1e-4*options.FunctionTolerance</a> = 1.000000e-10.
+
+The arc is fitted with the method [levenberg-marquardt].
+
+                                        First-Order                    Norm of 
+ Iteration  Func-count    Residual       optimality      Lambda           step
+     0           4     9.07807e+07        1.32e+07         0.01
+     1           8     1.24846e+07            9.25        0.001        924.855
+     2          12     1.24846e+07           0.171       0.0001        3.29516
+     3          16     1.24846e+07           0.755        1e-05      0.0015713
+
+Optimization stopped because the relative <a href = "matlab: helpview('optim','norm_current_step','CSHelpWindow');">norm of the current step</a>, 4.372516e-08,
+is less than <a href = "matlab: helpview('optim','tolx','CSHelpWindow');">options.StepTolerance</a> = 1.000000e-06.
+
+save data.mat
+uiopen('D:\OneDrive - sjtu.edu.cn\Research\Projects\202111-考虑刀具几何的路径规划\paper\figures\fig14 tool measuring results\fig14.mlx',1)
