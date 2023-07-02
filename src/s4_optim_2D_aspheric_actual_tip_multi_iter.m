@@ -524,15 +524,17 @@ hFeedrate = figure('Name','Feed Rate Smoothing');
 approxMethod = 'pchip';
 switch approxMethod
     case 'csape'
-        Fr = csape(surfEach,toolREach,[1 1]);
+        rhoTheta = csape(surfEach,toolREach,[1 1]);
+        thetaRho = csape(toolREach,surfEach,[1 1]);
     case 'pchip'
-        Fr = pchip(surfEach,toolREach);
+        rhoTheta = pchip(surfEach,toolREach);
+        thetaRho = pchip(toolREach,surfEach);
 end
 
     yyaxis left;
     scatter(surfEach,toolREach);
     hold on;
-    FrPlot = fnval(Fr,surfAccum);
+    FrPlot = fnval(rhoTheta,surfAccum);
     plot(surfAccum,FrPlot,'-','Color',[0.8500 0.3250 0.0980],'LineWidth',1.5);
     plot(surfAccum,toolRAccum,':','Color',[0.4940 0.1840 0.5560],'LineWidth',0.5);
     ylim1 = [min(toolREach),max(toolREach)];
@@ -617,7 +619,7 @@ spiralCut0 = zeros(3,accumPtNum(end));
 spiralQuat0 = zeros(accumPtNum(end),4);
 spiralContactU0 = zeros(1,accumPtNum(end));
 
-interpR = fnval(Fr,surfAccum);
+interpR = fnval(rhoTheta,surfAccum);
 interpR(surfAccum > surfEach(1)) = 0;
 accumPtNumlength = [0,accumPtNum];
 

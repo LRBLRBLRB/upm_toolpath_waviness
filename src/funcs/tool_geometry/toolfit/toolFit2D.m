@@ -33,6 +33,7 @@ arguments
         {'polyfit','ransac'})} = 'polyfit'
     options.arcFitdisplayType {mustBeMember(options.arcFitdisplayType, ...
         {'off','none','iter','iter-detailed','final','final-detailed'})} = 'final'
+    options.radius0 {mustBePositive} = 100;
 end
 
 %% tool tip fitting
@@ -172,8 +173,10 @@ switch options.toolFitType
 end
 
 % tool tip arc initial fitting
-[circ2D0,RMSE] = arcFit2D(scatterOri, ...
-    'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType);
+param0 = [1;1;1];
+[circ2D0,RMSE] = arcFit2D(scatterOri,param0, ...
+    'arcFitMethod',options.arcFitMethod,'displayType',options.arcFitdisplayType, ...
+    'radius0',options.radius0);
 
 % test whetger the ransac function defined above is true
 function testRansac()

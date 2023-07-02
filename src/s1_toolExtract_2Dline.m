@@ -15,7 +15,7 @@ if isAPP
     fitOpts.lineFitMaxDist = app.lineFitMaxDist;
     fitOpts.lineFitMethod = app.lineFitMethod;
 else
-    close all;
+%     close all;
     clear; clc;
     isAPP = false;
     addpath(genpath('funcs'));
@@ -32,6 +32,7 @@ else
     unitList = {'m','mm','\mum','nm'};
     aimUnit = find(strcmp(unitList,unit),1);
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % tool process parameters
     fitOpts.toolFitType = 'lineArc';
     fitOpts.arcRansacMaxDist = 1e-2;
@@ -40,21 +41,8 @@ else
     fitOpts.lineFitMethod = 'ransac';
     paramMethod = 'centripetal';
 
-%         % imitation of the tool measurement file
-%         cx0 = 0*1000; % unit: mu m
-%         cy0 = 0*1000; % unit: mu m
-%         r0 = 0.1*1000; % unit: mu m
-%         noise = 0.03;
-%         theta = linspace(0,2*pi/3,200);
-%         r = r0*(1 - noise + 2*noise*rand(1,length(theta)));
-%         toolOri(1,:) = r.*cos(theta) + cx0;
-%         toolOri(2,:) = r.*sin(theta) + cy0;
-%         toolOri(3,:) = zeros(1,length(theta));
-%         rmse0 = sqrt(...
-%                     sum(...
-%                         ((toolOri(1,:) - cx0).^2 + (toolOri(2,:) - cy0).^2 - r0^2).^2) ...
-%                 /length(theta));
-%         clear theta r;
+    radius0 = 192; % unit: um
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % tool measurement file loading
     [fileName,dirName] = uigetfile({ ...
@@ -134,7 +122,7 @@ figure(fig1);
 fitOpts.arcFitdisplayType = 'iter-detailed';
 [circ2D,toolFitUnsorted,RMSE,lineFitMaxDist] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
     'toolFitType',fitOpts.toolFitType,'lineFitMethod',fitOpts.lineFitMethod, ...
-    'arcFitMethod',fitOpts.arcFitMethod, ...
+    'arcFitMethod',fitOpts.arcFitMethod,'radius0',radius0, ...
     'arcFitdisplayType',fitOpts.arcFitdisplayType);
 radius = circ2D.radius;
 openAngle = circ2D.openAng;

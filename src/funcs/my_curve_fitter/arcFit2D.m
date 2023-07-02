@@ -1,4 +1,4 @@
-function [circ2D,RMSE] = arcFit2D(scatterOri,options)
+function [circ2D,RMSE] = arcFit2D(scatterOri,param0,options)
 % usage: [c,r,ang,RMSE,startV,endV] = arcFit2D(scatterOri,options)
 %
 % fit the circle from a cluster of 2D points
@@ -19,6 +19,7 @@ function [circ2D,RMSE] = arcFit2D(scatterOri,options)
 
 arguments
     scatterOri (2,:) {mustBeFinite}
+    param0
     options.arcFitMethod {mustBeMember(options.arcFitMethod, ...
         {'gradient-decent','normal-equation','levenberg-marquardt'})} ...
         = 'levenberg-marquardt'
@@ -51,15 +52,14 @@ switch options.arcFitMethod
             fprintf('The arc is fitted with the method [%s].\n',options.arcFitMethod);
         end
         F = @(p,x) x(:,1).^2 + x(:,2).^2 + p(1)*x(:,1) + p(2)*x(:,2) + p(3);
-        param0 = [1;1;1]; % 初值设置？？？？
-        options = optimoptions(...
+        optimOpt = optimoptions(...
             'lsqcurvefit',...
             'Algorithm',options.arcFitMethod, ...
             'MaxIterations',2000, ...
             'Display',options.displayType);
         lb = [];
         ub = [];
-        param = lsqcurvefit(F,param0,scatterOri',zeros(n,1),lb,ub,options);
+        param = lsqcurvefit(F,param0,scatterOri',zeros(n,1),lb,ub,optimOpt);
         % lsqnonlin lsqcurvefit
 
         %% accuracy

@@ -1,0 +1,39 @@
+Starting parallel pool (parpool) using the 'local' profile ...
+Connected to the parallel pool (number of workers: 6).
+The time spent in the parallel computing activating process is 32.351994s.
+s1_toolExtract_2Dline
+Please select the points of the two edges of the tool tip: 
+The first two is the interval of the left one, while the other two is that of the right.
+
+Successfully selected!
+
+Please select the useless area of original data: 
+
+Successfully selected!
+
+The arc is fitted with the method [levenberg-marquardt].
+
+                                        First-Order                    Norm of 
+ Iteration  Func-count    Residual       optimality      Lambda           step
+     0           4     1.62954e+18        1.41e+14         0.01
+     1           8     8.19106e+12        5.44e+08        0.001    6.66631e+06
+     2          12     3.44104e+12        2.56e+05       0.0001    4.32201e+07
+     3          16     8.32776e+10        1.01e+05        1e-05    6.72316e+07
+     4          20     3.97268e+07        9.54e+03        1e-06    1.21608e+07
+
+Optimization completed: The relative <a href = "matlab: helpview('optim','firstorder_lsq','CSHelpWindow');">first-order optimality measure</a>, 6.757723e-11,
+is less than <a href = "matlab: helpview('optim','function_tolerance_lsq','CSHelpWindow');">1e-4*options.FunctionTolerance</a> = 1.000000e-10.
+
+The arc is fitted with the method [levenberg-marquardt].
+
+                                        First-Order                    Norm of 
+ Iteration  Func-count    Residual       optimality      Lambda           step
+     0           4     1.39699e+11        5.92e+08         0.01
+     1           8     1.25356e+07             357        0.001        35699.2
+     2          12     1.24846e+07           0.674       0.0001        142.792
+     3          16     1.24846e+07            1.34        1e-05      0.0572973
+
+Optimization stopped because the relative sum of squares (r) is changing
+by less than <a href = "matlab: helpview('optim','tolfun_lsq','CSHelpWindow');">options.FunctionTolerance</a> = 1.000000e-06.
+
+s4_optim_2D_aspheric_actual_tip_multi_iter
