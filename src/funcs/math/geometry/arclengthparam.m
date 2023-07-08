@@ -19,7 +19,7 @@ arguments
         = 'list-interpolation'
     options.interpType {mustBeMember(options.interpType, ...
         {'linear','nearest','next','previous','pchip','cubic,' ...
-        'quadratic'})} = 'linear'
+        'quadratic'})} = 'spline'
     options.uQTol {mustBePositive} = 1e-3
     options.cutDirection {mustBeMember(options.cutDirection, ...
         {'Edge to Center','Center to Edge'})} = 'Edge to Center'
@@ -84,7 +84,7 @@ switch options.algorithm
         Xq = linspace(arcLen(1),arcLen(end), ...
             ceil((arcLen(end) - arcLen(1))/arcInv));% equally spaced indices
         switch options.interpType
-            case {'linear','nearest','next','previous','pchip','cubic'}
+            case {'linear','nearest','next','previous','pchip','cubic','spline'}
                 Vq = interp1(X,V,Xq,options.interpType);
             case 'quadratic'
         end

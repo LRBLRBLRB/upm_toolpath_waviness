@@ -1,5 +1,5 @@
-function [res,peakPt,interPt,uLim] = residual3D_multi(toolPt,toolNorm,toolCutDir, ...
-    toolContactU,toolData,toolRadius,uLim,aimRes,varargin)
+function [res,peakPt,interPt,uLim] = residual3D_multi(toolPt,toolNorm, ...
+    toolCutDir,toolContactU,toolData,toolRadius,uLim,aimRes,uLimIni,varargin)
 % to calculate the residual height among the adjacent tool points.
 %
 % Usage:
@@ -50,7 +50,7 @@ function [res,peakPt,interPt,uLim] = residual3D_multi(toolPt,toolNorm,toolCutDir
 % Outputs: same as the above
 
 switch nargin
-    case 11
+    case 12
         toolPt1 = toolPt(:,varargin{1});
         toolPt2 = toolPt(:,varargin{2});
         toolPt3 = toolPt(:,varargin{3});
@@ -62,7 +62,7 @@ switch nargin
         toolContactU1 = toolContactU(varargin{1});
         toolContactUProj = 0.5*( ...
             toolContactU(varargin{2}) + toolContactU(varargin{3}));
-    case 14
+    case 15
         toolPt1 = toolPt;
         toolPt2 = varargin{1};
         toolPt3 = varargin{4};
@@ -123,12 +123,11 @@ toolContactPt1 = fnval(toolSp1,toolContactU1);
 toolContactPtProj = fnval(toolSpProj,toolContactUProj);
 
 if isempty(uLim)
-    uLim2 = [0;1];
+    uLim2 = uLimIni;
     % the current point has not been calculated
     [res,peakPt,interPt,uLim,~] = residual2D_multi(toolSp1,toolSpProj, ...
         1e-5,toolContactPt1,toolContactPtProj,uLim2,'aimRes',aimRes,'uDirection','U Minus');
 else
-    uLim = [0;1];
     % the current point has been calculated once
     [res,peakPt,interPt,~,uLim] = residual2D_multi(toolSp1,toolSpProj, ...
         1e-5,toolContactPt1,toolContactPtProj,uLim,'aimRes',aimRes,'uDirection','U Minus');

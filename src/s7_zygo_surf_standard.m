@@ -346,7 +346,7 @@ while strcmp(msgfig2,'Re-select')
         'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
     colormap(ax32,turbo(256));
     colorbar(ax32,'eastoutside');
-    clim(ax23,[min(surfData0(:,:,3),[],'all'),max(surfData0(:,:,3),[],'all')]);
+    clim(ax32,[min(surfData0(:,:,3),[],'all'),max(surfData0(:,:,3),[],'all')]);
     set(ax32,'FontSize',textFontSize,'FontName',textFontType);
     xlabel(ax32,['x (',unit,')']);
     ylabel(ax32,['y (',unit,')']);
@@ -434,6 +434,9 @@ deltaZ(:,:,3) = surfMesh2(:,:,3) - surfTheoMesh(:,:,3);
     dataError,dataLineError] = viewError( ...
     deltaZ,textFontSize + 2,textFontType,unit);
 
+% residual error calculation 
+
+
 %%
 % surface error
 figure('Name','4 - 3D surface error');
@@ -506,6 +509,21 @@ set(gca,'FontSize',textFontSize,'FontName',textFontType);
 grid on;
 xlabel(['r (',unit,')']);
 ylabel(['High-order Error (',unit,')']);
+
+
+[dataFileName,dataDirName] = uiputfile({ ...
+    '*.mat','MAT-file(*.mat)'; ...
+    '*.*','all file(*.*)';...
+    }, ...
+    'Select a file to save the data processing results');
+dataName = fullfile(dataDirName,dataFileName);
+if strcmp(dataName,filesep)
+    save(dataName,"surfData0", ...
+        "planeMesh2","surfMesh1", ...
+        "surfMesh2","surfTheoMesh", ...
+        "lineAng","dataLineOri","dataZernike","dataLineZernike", ...
+        "dataError","dataLineError","deltaZ");
+end
 
 %%
 % rmpath(genpath('funcs'));

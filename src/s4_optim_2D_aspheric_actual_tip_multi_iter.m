@@ -114,14 +114,14 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % concentric surface generation / import
     % A = tand(20)/(2*2000);
-    c = 0.18/1000/(1000^(aimUnit - presUnit));
+    c = 0.69/1000/(1000^(aimUnit - presUnit));
     syms x y;
     surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
     surfFx = diff(surfFunc,x);
     surfFy = diff(surfFunc,y);
-    surfDomain = [-2000,2000;-2000,2000];
-    surfDomain = 1.1*surfDomain;
+    surfDomain = [-600,600;-600,600];
+    surfDomain = 1.2*surfDomain;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
@@ -681,7 +681,7 @@ spiralAngle0 = toolPathAngle; % + sign(conThetaBound(1) - conThetaBound(2))*2*pi
 spiralAngle0(:,1:accumPtNum(1)) = [];
 if strcmp(angularIncrement,'Constant Arc')
     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
-        spiralAngle0,spiralPath0,spiralContactU0,toolData,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
+        spiralAngle0,spiralPath0,spiralContactU0,toolData,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','spline');
 %     [spiralAngle,spiralPath,spiralContactU,spiralQuat,spiralVec] = arclengthparam(arcLength,maxAngPtDist, ...
 %         spiralAngle0,spiralPath0,spiralContactU0,spiralQuat0,{spiralNorm0;spiralCut0},'interpType','linear');
     spiralNorm = spiralVec{1};
@@ -750,12 +750,20 @@ spiralInterPtIn = cell(1,spiralPtNum);
 spiralInterPtOut = cell(1,spiralPtNum);
 spiralULim = cell(1,spiralPtNum);
 tSpiralRes0 = tic;
+if curvePlotSpar > 0
+    uLimIni = [0;1];
+else
+    uLimIni = [1;0];
+end
 
-% figure;
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
-% hold on;
+figure;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
+hold on;
+waitBar = waitbar(0,'Figure Plotting ...','Name','Residual Results Plot', ...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+setappdata(waitBar,'canceling',0);
 
 for ind1 = 1:spiralPtNum
     % inner ulim & residual height
@@ -767,13 +775,13 @@ for ind1 = 1:spiralPtNum
 %         [tmpres1,ptres1,spiralULim(:,ind1)] = residual3D( ...
 %             spiralPath,spiralNorm,spiralCut,spiralContactU, ...
 %             toolSp,toolRadius,spiralULim(:,ind1),ind1,ind2,ind3);
-        spiralULim{ind1} = [0;1];
+        spiralULim{ind1} = uLimIni;
         tmpRes1 = 5*aimRes;
         tmpPeak1 = zeros(5,1);
     else
         [tmpRes1,tmpPeak1,spiralInterPtIn{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-            toolData,toolRadius,spiralULim{ind1},aimRes,ind1,ind2,ind3);
+            toolData,toolRadius,spiralULim{ind1},aimRes,uLimIni,ind1,ind2,ind3);
     end
 
     % outer ulim & residual height
@@ -783,7 +791,6 @@ for ind1 = 1:spiralPtNum
         tmpRes2 = 5*aimRes;
         tmpPeak2 = zeros(5,1);
     else
-
 %         scatter3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1));
 %         quiver3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1), ...
 %             spiralCut(1,ind1),spiralCut(2,ind1),spiralCut(3,ind1));
@@ -796,29 +803,29 @@ for ind1 = 1:spiralPtNum
 %         scatter3(spiralPath(1,ind3),spiralPath(2,ind3),spiralPath(3,ind3));
 %         quiver3(spiralPath(1,ind3),spiralPath(2,ind3),spiralPath(3,ind3), ...
 %             spiralCut(1,ind3),spiralCut(2,ind3),spiralCut(3,ind3));
-
         [tmpRes2,tmpPeak2,spiralInterPtOut{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-            toolData,toolRadius,spiralULim{ind1},aimRes,ind1,ind2,ind3);
+            toolData,toolRadius,spiralULim{ind1},aimRes,uLimIni,ind1,ind2,ind3);
     end
     
     spiralRes(:,ind1) = [tmpRes1;tmpRes2];
     spiralPeakPt(:,ind1) = [tmpPeak1;tmpPeak2];
 
-%     if spiralRes(:,ind1) > 5
-%         1;
-%     end
-
     % debug
-    % plot3(toolPathPtRes(1,ii),toolPathPtRes(2,ii),toolPathPtRes(3,ii), ...
-    %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-    % toolSp1 = toolSp;
-    % R1 = axesRot([0;0;1],[1;0;0],toolNormDirectRes(:,ii),toolCutDirectRes(:,ii),'zx');
-    % toolSp1.coefs = R1*toolSp.coefs + toolPathPtRes(:,ii);
-    % Q = fnval(toolSp1,uLimTmp(1,ii):0.01:uLimTmp(2,ii));
-    % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1);
+    h = scatter3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1),12); %'MarkerEdgeColor',[0,0.4450,0.7410]);
+    toolSp1 = toolData.toolBform;
+    toolSp1.coefs = quat2rotm(spiralQuat(ind1,:))*toolSp1.coefs + spiralPath(:,ind1);
+    for ii = 1:size(spiralULim{ind1},2)
+        tmp = fnval(toolSp1,spiralULim{ind1}(1,ii):curvePlotSpar*100:spiralULim{ind1}(2,ii));
+        plot3(tmp(1,:),tmp(2,:),tmp(3,:),'.','Color',h.CData);
+    end
+    displayData = ind1/spiralPtNum; % Calculate percentage
+    waitbar(displayData,waitBar,['Figure Plotting ... ', ...
+        num2str(roundn(displayData*100,-2),'%.3f'),'%']); % Progress bar dynamic display
+    if getappdata(waitBar,'canceling'), break; end
 end
 
+delete(waitBar);
 tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
 % warningTone = load('handel');

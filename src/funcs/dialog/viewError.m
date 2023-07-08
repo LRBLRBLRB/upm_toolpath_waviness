@@ -198,6 +198,7 @@ fig2DAxesError.Layout.Column = 1;
 fig.Visible = 'on';
 
 uiwait(fig);
+fig.WindowStyle = 'normal';
 
 switch nargout
     case 2
