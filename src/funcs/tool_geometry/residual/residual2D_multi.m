@@ -121,6 +121,7 @@ while any(istan)
 
         % vec0 = sign(pt2Line(s1(:,index(cmp2(istan0(ii)))),pt1,pt2) ...
         %     - pt2Line(s2(:,cmp2(istan0(ii))),pt1,pt2));
+        % special case for PREVIOUS point
         if ii == 1
             vecIndPrev2 = 1;
             vecIndPrev1 = 1;
@@ -128,7 +129,16 @@ while any(istan)
             vecIndPrev2 = round((cmp3(ii) + cmp3(ii - 1))/2);
             vecIndPrev1 = index(vecIndPrev2);
         end
-        vec1 = pt2Line(s1(:,vecIndPrev1),pt1,pt2) - pt2Line(s2(:,vecIndPrev2),pt1,pt2);
+        [dist1,proj1] = pt2Line(s1(:,vecIndPrev1),pt1,pt2);
+        if s1(3,vecIndPrev1) < proj1(3)
+            dist1 = -1*dist1;
+        end
+        [dist2,proj2] = pt2Line(s2(:,vecIndPrev2),pt1,pt2);
+        if s2(3,vecIndPrev2) < proj2(3)
+            dist2 = -1*dist2;
+        end
+        vec1 = dist1 - dist2;
+        % special case for NEXT point
         if ii == length(cmp3)
             vecIndNext2 = length(s2);
             vecIndNext1 = length(s1);
@@ -136,7 +146,15 @@ while any(istan)
             vecIndNext2 = round((cmp3(ii) + cmp3(ii + 1))/2);
             vecIndNext1 = index(vecIndNext2);
         end
-        vec2 = pt2Line(s1(:,vecIndNext1),pt1,pt2) - pt2Line(s2(:,vecIndNext2),pt1,pt2);
+        [dist1,proj1] = pt2Line(s1(:,vecIndNext1),pt1,pt2);
+        if s1(3,vecIndNext1) < proj1(3)
+            dist1 = -1*dist1;
+        end
+        [dist2,proj2] = pt2Line(s2(:,vecIndNext2),pt1,pt2);
+        if s2(3,vecIndNext2) < proj2(3)
+            dist2 = -1*dist2;
+        end
+        vec2 = dist1 - dist2;
         istan(ii) = vec1*vec2 > 0;
 %         if ii == length(cmp3)
 %             vecInd2 = cmp3tmp(ii + 2);
@@ -155,9 +173,15 @@ while any(istan)
     cmp3(find(istan)) = [];
 end
 
-% if mod(length(cmp3),2)
-%     cmp3 = [cmp3,length(dist)];
-% end
+if ~mod(length(cmp3),2)
+    [min1,ind1] = min(cmp3 - 1);
+    [min2,ind2] = min(abs(cmp3 - length(dist)));
+    if min1 >= min2
+        cmp3(ind2) = [];
+    else
+        cmp3(ind1) = [];
+    end
+end
 
 % calculate the intersection points
 cmp = cmp3;

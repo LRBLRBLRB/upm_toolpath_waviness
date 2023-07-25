@@ -260,7 +260,7 @@ opt.XTol = 1e-3;
 % opt = optimoptions('particleswarm','UseParallel',true,'Display','iter');
 
 [curvePathPt,curveQuat,curveContactU,curvePt,curveRes,curvePeakPt, ...
-    curveInterPt,curveULim] = iterfunc_curvepath_multi_solve(curveFunc,curveFx, ...
+    curveInterPt,curveULim] = iterfunc_surfpath_multi_solve(curveFunc,curveFx, ...
     toolData,curvePathPt,curveQuat,curveContactU,curvePt,rStep,aimRes,rRange, ...
     'uDirection',uDirection, ...
     'algorithm','search-bisection','directionType','norm-cut','optimopt',opt);
@@ -756,14 +756,14 @@ else
     uLimIni = [1;0];
 end
 
-% figure;
-% surf( ...
-%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-%     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
-% hold on;
-% waitBar = waitbar(0,'Figure Plotting ...','Name','Residual Results Plot', ...
-%     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
-% setappdata(waitBar,'canceling',0);
+figure;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
+hold on;
+waitBar = waitbar(0,'Figure Plotting ...','Name','Residual Results Plot', ...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+setappdata(waitBar,'canceling',0);
 
 for ind1 = 1:spiralPtNum
     % inner ulim & residual height
@@ -812,21 +812,20 @@ for ind1 = 1:spiralPtNum
     spiralPeakPt(:,ind1) = [tmpPeak1;tmpPeak2];
 
     % debug
-%     h = scatter3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1),12); %'MarkerEdgeColor',[0,0.4450,0.7410]);
-%     toolSp1 = toolData.toolBform;
-%     toolSp1.coefs = quat2rotm(spiralQuat(ind1,:))*toolSp1.coefs + spiralPath(:,ind1);
-%     for ii = 1:size(spiralULim{ind1},2)
-%         tmp = fnval(toolSp1,spiralULim{ind1}(1,ii):curvePlotSpar*100:spiralULim{ind1}(2,ii));
-%         plot3(tmp(1,:),tmp(2,:),tmp(3,:),'.','Color',h.CData);
-%     end
-%     displayData = ind1/spiralPtNum; % Calculate percentage
-%     waitbar(displayData,waitBar,['Figure Plotting ... ', ...
-%         num2str(roundn(displayData*100,-2),'%.3f'),'%']); % Progress bar dynamic display
-%     if getappdata(waitBar,'canceling'), break; end
-disp(ind1);
+    h = scatter3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1),12); %'MarkerEdgeColor',[0,0.4450,0.7410]);
+    toolSp1 = toolData.toolBform;
+    toolSp1.coefs = quat2rotm(spiralQuat(ind1,:))*toolSp1.coefs + spiralPath(:,ind1);
+    for ii = 1:size(spiralULim{ind1},2)
+        tmp = fnval(toolSp1,spiralULim{ind1}(1,ii):curvePlotSpar*100:spiralULim{ind1}(2,ii));
+        plot3(tmp(1,:),tmp(2,:),tmp(3,:),'.','Color',h.CData);
+    end
+    displayData = ind1/spiralPtNum; % Calculate percentage
+    waitbar(displayData,waitBar,['Figure Plotting ... ', ...
+        num2str(roundn(displayData*100,-2),'%.3f'),'%']); % Progress bar dynamic display
+    if getappdata(waitBar,'canceling'), break; end
 end
 
-% delete(waitBar);
+delete(waitBar);
 tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
 % warningTone = load('handel');

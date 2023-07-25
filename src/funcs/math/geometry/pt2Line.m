@@ -1,4 +1,4 @@
-function dist = pt2Line(pt,varargin)
+function [dist,ptProj] = pt2Line(pt,varargin)
 % to calculate the distance form the point pt to the line line in a 2D
 % space
 
@@ -17,11 +17,14 @@ switch nargin
                 C = line(2);
         end
         dist = abs(A*pt(1,:) + B*pt(2,:) + C)/sqrt(A^2 + B^2);
+        ptProj = [];
     case 3
         pt1 = varargin{1};
         pt2 = varargin{2};
         len = size(pt,2);
         dist = vecnorm(cross(pt - pt1,ndgrid(pt2 - pt1,1:len),1),2,1)./norm(pt2 - pt1);
+        ptProj = pt1 + (pt2 - pt1)*dot(pt - pt1,ndgrid(pt2 - pt1,1:len),1) ...
+            /(vecnorm(pt1 - pt2,2,1)).^2;
 end
 
 end
