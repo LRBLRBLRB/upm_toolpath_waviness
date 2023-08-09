@@ -260,6 +260,7 @@ while strcmp(msgfig2,'Re-select')
         ifFitPlane = false;
         break;
     elseif strcmp(msgfig1,'Re-select')
+        % msgfig1 = 'OK';
         hold(ax21,'off');
         % imshow(surfImg,surfImgColorMap);
         [fitCenter,fitRadius] = drawCircle(ax21,surfData0, ...
