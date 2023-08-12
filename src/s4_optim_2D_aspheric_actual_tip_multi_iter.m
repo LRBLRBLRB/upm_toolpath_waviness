@@ -104,11 +104,24 @@ else
     angularLength = 1*pi/180;
     radialIncrement = 'On-Axis'; % 'Surface'
     aimRes = 0.5; % um
-    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+    rStep = toolData.radius/2; % rStep can also be determined by the axial differentiate of the surface
     maxIter = 100;
     spiralMethod = 'Radius-Number'; % Radius-Angle
     frMethodDefault = 'Approximation'; % 'Approximation'
     frParamDefault = 1-1e-5;
+
+    % Explanation: 
+    % - cutDirection is the direction along which the tool feeds, and it
+    %       affects the order of the r-value of the tool path, i.e., rRange
+    % - startDirection is the direction where the tool startd to feed. It
+    %       determines whether the start point is positive or not. 
+    %   Notice that the tool is fixed in the MCS, the startDirection also 
+    %       determines the spindle rotation direction. E.g., If the r-value
+    %       of the start point is positive, it means that the tool feeds 
+    %       from the X+ direction. Therefore, the spindle should rotate in
+    %       the counterclockwise direction since the tool rake face is
+    %       fixed facing the top. 
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -131,12 +144,13 @@ switch startDirection
     case 'X Plus' % plus in this program, but minus in moore
         rMax = max(surfDomain(1,2),surfDomain(2,2));
         rStep = -1*rStep;
-        cutDirect = [0;1;0];
+        % cutDirect = [0;1;0];
     case 'X Minus' % minus in this program, but plus in moore
         rMax = min(surfDomain(1,1),surfDomain(2,1)); % reverse
         rStep = 1*rStep;
-        cutDirect = [0;-1;0];
+        % cutDirect = [0;-1;0];
 end
+cutDirect = [0;-1;0]; % aimed cut direction
 
 if isUIncrease*rStep < 0
     % ([1,0] & X minus) or ([0,1] & X plus)
@@ -345,15 +359,27 @@ end
 % curvePeakPt(5,ind) = curvePeakPt(5,ind) + length(curveContactU);
 fprintf('-----\nNo.%d\t toolpath point at [r = 0] is calculated within %fs.\n-----\n',length(curveContactU),toc);
 
+% get rid of the redundant part of the uLim of the last point
+tmpU = 0:abs(curvePlotSpar):1;
+toolSp1 = toolSp;
+toolSp1.coefs = quat2rotm(curveQuat(end,:))*toolSp1.coefs;
+toolSp1Pt = fnval(toolSp1,tmpU);
+[~,tmpUInd] = min(abs(toolSp1Pt(2,:)));
+
 if strcmp(startDirection,'X Minus')
     % uLim reverse
     curveULim{1}(1) = 1;
     curveULim{end}(end) = 0;
-    for ii = 1:length(curveULim)
-        tmp = curveULim{ii};
-        tmpSorted = sort(tmp(:),'ascend');
-        curveULim{ii} = reshape(tmpSorted,2,[]);
-    end
+
+%     for ii = 1:length(curveULim)
+%         tmp = curveULim{ii};
+%         tmpSorted = sort(tmp(:),'ascend');
+%         curveULim{ii} = reshape(tmpSorted,2,[]);
+%     end
+
+    curveULim{end}(end) = tmpU(tmpUInd);
+else
+    curveULim{end}(1) = tmpU(tmpUInd);
 end
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
@@ -362,10 +388,10 @@ fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(
 
 %% plot the result above
 figure('Name','tool path optimization');
-tiledlayout(1,2);
+tiledlayout(2,2);
 pos = get(gcf,'position');
 set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
-nexttile;
+nexttile(1,[1,1]);
 plot(curvePathPt(1,:),curvePathPt(3,:),'.','Color',[0.4940,0.1840,0.5560]);
 hold on;
 plot(curvePt(1,:),curvePt(3,:),'.','Color',[0.9290,0.6940,0.1250]);
@@ -403,6 +429,11 @@ legend('tool path point','tool contact point','ideal surface','peak point','','a
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 xlabel(['r (',unit,')']);
 ylabel(['z (',unit,')']);
+
+nexttile(3);
+scatter(curvePeakPt(1,2:end),curveRes(2:end));
+xlabel(['r (',unit,')']);
+ylabel(['residual error (',unit,')']);
 
 %% concentric toolpath generation for each loop
 toolPathAngle = [];
@@ -462,9 +493,10 @@ for ii = 1:length(toolPathAngle)
     surfPt(:,ii) = R*curvePt(:,kk); % the contact point of each tool path point
 end
 
-nexttile;
+
 %% 
-figure;
+nexttile(2,[2,1]);
+% figure;
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
@@ -479,18 +511,28 @@ plot3(toolPathPt(1,1:plotSpar:end), ...
     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 grid on;
 axis equal;
-toolCoefs = toolSp.coefs;
-stepNum = abs(log10(abs(curvePlotSpar)));
-for ii = 1:size(toolPathPt,2)
-    toolSp1 = toolSp;
-    toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolPathPt(:,ii);
-    for jj = 1:size(uLim{ii},2)
-        uLimRound = round(uLim{ii},stepNum);
-        Q = fnval(toolSp1,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
-        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
-        drawnow;
-    end
-end
+% toolCoefs = toolSp.coefs;
+% stepNum = abs(log10(abs(curvePlotSpar)));
+% waitBar = waitbar(0,'Drawing ...','Name','Concentric Results Drawing', ...
+%     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+% for ii = 1:accumPtNum(end)
+%     % Check for clicked Cancel button
+%     if getappdata(waitBar,'canceling')
+%         break;
+%     end
+%     displayData = ii/accumPtNum(end); % Calculate percentage
+%     waitbar(displayData,waitBar,['Figure Plotting ... ', ...
+%         num2str(roundn(displayData*100,-2),'%.2f'),'%']); % Progress bar dynamic display
+%     toolSp1 = toolSp;
+%     toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolPathPt(:,ii);
+%     for jj = 1:size(uLim{ii},2)
+%         uLimRound = round(uLim{ii},stepNum);
+%         Q = fnval(toolSp1,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
+%         plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+%         drawnow;
+%     end
+% end
+% delete(waitBar);
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 % set(gca,'ZDir','reverse');
 xlabel(['x (',unit,')']);
@@ -766,10 +808,12 @@ spiralInterPtIn = cell(1,spiralPtNum);
 spiralInterPtOut = cell(1,spiralPtNum);
 spiralULim = cell(1,spiralPtNum);
 tSpiralRes0 = tic;
-if curvePlotSpar > 0
-    uLimIni = [0;1];
-else
-    uLimIni = [1;0];
+
+switch uDirection
+    case 'U Plus'
+        uLimIni = [0;1];
+    case 'U Minus'
+        uLimIni = [1;0];
 end
 
 % figure;
@@ -841,6 +885,9 @@ for ind1 = 1:spiralPtNum
 %     if getappdata(waitBar,'canceling'), break; end
 disp(ind1);
 end
+
+% get rid of the redundant part of the uLim of the innermost circle
+
 
 % delete(waitBar);
 tSpiralRes = toc(tSpiralRes0);

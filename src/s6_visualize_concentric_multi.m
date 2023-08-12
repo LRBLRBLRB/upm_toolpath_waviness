@@ -87,12 +87,12 @@ while true
             tSimul0 = tic;
             toolCoefs = toolData.toolBform.coefs;
             % figure;
-            for ii = 1:accumPtNum(end) % each tool path point
-                toolSp = toolData.toolBform;
-                toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolPathPt(:,ii);
+            parfor ii = 1:accumPtNum(end) % each tool path point
+                toolSp1 = toolData.toolBform;
+                toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolPathPt(:,ii);
                 uLimRound = round(uLim{ii},stepLength);
                 for jj = 1:size(uLim{ii},2)
-                    tmp = fnval(toolSp,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
+                    tmp = fnval(toolSp1,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
                     % Q{jj} = tmp;
                     toolPathList = [toolPathList,tmp];
                 end
@@ -102,7 +102,7 @@ while true
             yPlot = linspace(min(toolPathList(2,:)),max(toolPathList(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
             % elliminate the smaller residual height at the same peak
-            [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@mean);
+            [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@min);
             zMesh = griddata(toolPathXYUnique{1},toolPathXYUnique{2},toolPathZUnique,xMesh,yMesh);
             % calculate the error based on the designed surface
             z0Mesh = griddata(surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3),xMesh,yMesh);

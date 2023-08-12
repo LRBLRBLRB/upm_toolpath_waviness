@@ -39,6 +39,7 @@ if abs(rRange(2)) > abs(rRange(1)) % to ensure the rake face on top
 else
     cutDirect = [0;-1;0];
 end
+% 好像不对啊，center-to-edge的时候，也是[0;-1;0]呀
 
 % the rest
 switch options.uDirection % the interval of each toolpath
