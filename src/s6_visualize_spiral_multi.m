@@ -3,6 +3,7 @@
 % to plot the simulation or optimization the spiral path results
 
 while true
+
     msgfig = questdlg({'Sprial tool path was calculated successfully!', ...
         'Ready for tool path error visualization & machining simulation?'}, ...
         'Spiral Tool Path Simulation','Spiral path error','Machining simulation', ...
@@ -49,9 +50,19 @@ while true
             plotNum = 1000;
             spiralResLine = [spiralRes(1,:),spiralRes(2,:)];
             spiralPeakPtLine = [spiralPeakPt(1:3,:),spiralPeakPt(6:8,:)];
+            % eliminate the "no intersection" situation
             spiralResMaxInd = find(spiralResLine == 5*aimRes);
             spiralResLine(spiralResMaxInd) = [];
             spiralPeakPtLine(:,spiralResMaxInd) = [];
+        
+            % eliminate the situation that spiralPeakPtUnique == nan
+            spiralResXNanInd = find(isnan(spiralPeakPtLine(1,:)));
+            spiralResLine(spiralResXNanInd) = [];
+            spiralPeakPtLine(:,spiralResXNanInd) = [];
+            spiralResYNanInd = find(isnan(spiralPeakPtLine(2,:)));
+            spiralResLine(spiralResYNanInd) = [];
+            spiralPeakPtLine(:,spiralResYNanInd) = [];
+            
             xPlot = linspace(min(spiralPeakPtLine(1,:)),max(spiralPeakPtLine(1,:)),plotNum);
             yPlot = linspace(min(spiralPeakPtLine(2,:)),max(spiralPeakPtLine(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
@@ -64,7 +75,7 @@ while true
             tiledlayout(1,2);
             nexttile;
             surf(xMesh,yMesh,resMesh,'EdgeColor','interp'); hold on;
-            colormap("parula");
+            colormap("turbo");
             grid on;
             % plot3(spiralPeakPtUnique{1},spiralPeakPtUnique{2},spiralResUnique,'o', ...
             %     'MarkerEdgeColor',[0.8500,0.3250,0.0980]);
@@ -88,15 +99,15 @@ while true
             tResError = toc(tResError0);
             fprintf('The time spent in the residual map process is %fs.\n',tResError);
         case 'Machining simulation'
-            stepNum = log(abs(curvePlotSpar));
+            stepNum = abs(log10(abs(curvePlotSpar)));
             spiralPathList = [];
             tSimul0 = tic;
             toolCoefs = toolData.toolBform.coefs;
             parfor ii = 1:spiralPtNum % each tool path point
                 toolSp = toolData.toolBform;
                 toolSp.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
-                for jj = 1:size(spiralULim{ii},2) - 1
-                    uLimRound = round(spiralULim{ii},stepNum);
+                uLimRound = round(spiralULim{ii},stepNum);
+                for jj = 1:size(spiralULim{ii},2)
                     tmp = fnval(toolSp,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
                     % Q{jj} = tmp;
                     spiralPathList = [spiralPathList,tmp];

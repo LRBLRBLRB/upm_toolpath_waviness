@@ -82,18 +82,20 @@ while true
             tRes = toc(tRes0);
             fprintf('The time spent in the residual map process is %fs.\n',tRes);
         case 'Concentric machining simulation'
-            stepLength = 0.01;
-            uLimRound = round(uLim,2);
+            stepLength = abs(log10(abs(curvePlotSpar)));
             toolPathList = [];
             tSimul0 = tic;
+            toolCoefs = toolData.toolBform.coefs;
             % figure;
-            parfor ii = 1:accumPtNum(end) % each tool path point
+            for ii = 1:accumPtNum(end) % each tool path point
                 toolSp = toolData.toolBform;
-                toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
-                tmp = fnval(toolSp,uLimRound(1,ii):stepLength:uLimRound(2,ii));
-                % Q{jj} = tmp;
-                toolPathList = [toolPathList,tmp];
-                % plot3(tmp(1,:),tmp(2,:),tmp(3,:),'b.'); hold on;
+                toolSp.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolPathPt(:,ii);
+                uLimRound = round(uLim{ii},stepLength);
+                for jj = 1:size(uLim{ii},2)
+                    tmp = fnval(toolSp,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
+                    % Q{jj} = tmp;
+                    toolPathList = [toolPathList,tmp];
+                end
             end
             plotNum = 1000;
             xPlot = linspace(min(toolPathList(1,:)),max(toolPathList(1,:)),plotNum);

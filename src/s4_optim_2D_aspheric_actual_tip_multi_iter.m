@@ -63,7 +63,7 @@ else
     
     diaryFile = fullfile(workspaceDir,['diary',datestr(now,'yyyymmddTHHMMSS'),'.log']);
     diary(diaryFile);
-    diary on;
+%     diary on;
     
     tPar0 = tic;
     parObj = gcp;
@@ -131,9 +131,11 @@ switch startDirection
     case 'X Plus' % plus in this program, but minus in moore
         rMax = max(surfDomain(1,2),surfDomain(2,2));
         rStep = -1*rStep;
+        cutDirect = [0;1;0];
     case 'X Minus' % minus in this program, but plus in moore
         rMax = min(surfDomain(1,1),surfDomain(2,1)); % reverse
         rStep = 1*rStep;
+        cutDirect = [0;-1;0];
 end
 
 if isUIncrease*rStep < 0
@@ -230,7 +232,7 @@ curveNorm = curveNorm./norm(curveNorm);
 % [curvePathPt,curveQuat,curveContactU,curvePt] = ...
 %     curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],[0;-1;0]);
 [curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
-    [0;0;-1],[0;-1;0],'directionType','norm-cut');
+    [0;0;-1],cutDirect,'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
 % rRange(1) = curvePt(1);
 
@@ -461,25 +463,39 @@ for ii = 1:length(toolPathAngle)
 end
 
 nexttile;
+%% 
+figure;
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
 hold on;
-% colormap('summer');
+colormap('summer');
 % cb = colorbar;
 % cb.Label.String = ['Height (',unit,')'];
 plotSpar = 1;
 plot3(toolPathPt(1,1:plotSpar:end), ...
     toolPathPt(2,1:plotSpar:end), ...
     toolPathPt(3,1:plotSpar:end), ...
-    '.','MarkerSize',6,'Color',[0.850,0.3250,0.0980]);
+    '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
 grid on;
+axis equal;
+toolCoefs = toolSp.coefs;
+stepNum = abs(log10(abs(curvePlotSpar)));
+for ii = 1:size(toolPathPt,2)
+    toolSp1 = toolSp;
+    toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolPathPt(:,ii);
+    for jj = 1:size(uLim{ii},2)
+        uLimRound = round(uLim{ii},stepNum);
+        Q = fnval(toolSp1,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
+        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+        drawnow;
+    end
+end
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
 % set(gca,'ZDir','reverse');
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
-axis equal;
 legend('designed surface','tool center point','Location','northeast');
 
 warningTone = load('handel');
@@ -846,16 +862,22 @@ hold on;
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',1,'LineStyle','none');
+axis equal;
 colormap('summer');
 cb = colorbar;
 cb.Label.String = ['Height (',unit,')'];
-% toolCoefs = toolSp.coefs;
-% parfor ii = 1:ptNum
-%     toolSp1 = toolSp;
-%     toolSp1.coefs = quat2rotm(toolQuat(ii,:))*toolCoefs + toolVec(:,ii);
-%     Q = fnval(toolSp1,uLim(1,ii):0.05:uLim(2,ii));
-%     plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
-% end
+toolCoefs = toolSp.coefs;
+stepNum = abs(log10(abs(curvePlotSpar)));
+for ii = 1:size(spiralPath,2)
+    toolSp1 = toolSp;
+    toolSp1.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
+    for jj = 1:size(spiralULim{ii},2)
+        uLimRound = round(spiralULim{ii},stepNum);
+        Q = fnval(toolSp1,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
+        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+        drawnow;
+    end
+end
 % axis equal;
 grid on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);
