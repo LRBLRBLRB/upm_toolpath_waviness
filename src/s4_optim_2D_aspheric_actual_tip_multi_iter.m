@@ -365,6 +365,7 @@ toolSp1 = toolSp;
 toolSp1.coefs = quat2rotm(curveQuat(end,:))*toolSp1.coefs;
 toolSp1Pt = fnval(toolSp1,tmpU);
 [~,tmpUInd] = min(abs(toolSp1Pt(2,:)));
+specU = tmpU(tmpUInd);
 
 if strcmp(startDirection,'X Minus')
     % uLim reverse
@@ -377,10 +378,9 @@ if strcmp(startDirection,'X Minus')
 %         curveULim{ii} = reshape(tmpSorted,2,[]);
 %     end
 
-    curveULim{end}(end) = tmpU(tmpUInd);
-else
-    curveULim{end}(1) = tmpU(tmpUInd);
+    curveULim{end}(end) = specU;
 end
+clear tmpU toolSp1 toolSp2;
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
 
@@ -811,9 +811,9 @@ tSpiralRes0 = tic;
 
 switch uDirection
     case 'U Plus'
-        uLimIni = [0;1];
+        uLimIni = [0;specU];
     case 'U Minus'
-        uLimIni = [1;0];
+        uLimIni = [1;specU];
 end
 
 % figure;
@@ -887,7 +887,13 @@ disp(ind1);
 end
 
 % get rid of the redundant part of the uLim of the innermost circle
-
+if true
+    parfor ii = 1:spiralPtNum
+        if spiralULim{ii}(end) == 0
+            spiralULim{ii}(end) = specU;
+        end
+    end
+end
 
 % delete(waitBar);
 tSpiralRes = toc(tSpiralRes0);
@@ -915,7 +921,16 @@ cb = colorbar;
 cb.Label.String = ['Height (',unit,')'];
 toolCoefs = toolSp.coefs;
 stepNum = abs(log10(abs(curvePlotSpar)));
+waitBar = waitbar(0,'Drawing ...','Name','Concentric Results Drawing', ...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
 for ii = 1:size(spiralPath,2)
+    % Check for clicked Cancel button
+    if getappdata(waitBar,'canceling')
+        break;
+    end
+    displayData = ii/accumPtNum(end); % Calculate percentage
+    waitbar(displayData,waitBar,['Figure Plotting ... ', ...
+        num2str(roundn(displayData*100,-2),'%.2f'),'%']); % Progress bar dynamic display
     toolSp1 = toolSp;
     toolSp1.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
     for jj = 1:size(spiralULim{ii},2)
@@ -925,6 +940,8 @@ for ii = 1:size(spiralPath,2)
         drawnow;
     end
 end
+delete(waitBar);
+
 % axis equal;
 grid on;
 set(gca,'FontSize',textFontSize,'FontName',textFontType);

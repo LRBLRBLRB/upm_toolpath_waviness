@@ -102,7 +102,7 @@ while true
             yPlot = linspace(min(toolPathList(2,:)),max(toolPathList(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
             % elliminate the smaller residual height at the same peak
-            [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@min);
+            [toolPathZUnique,toolPathXYUnique] = groupsummary(toolPathList(3,:)',toolPathList(1:2,:)',@mean);
             zMesh = griddata(toolPathXYUnique{1},toolPathXYUnique{2},toolPathZUnique,xMesh,yMesh);
             % calculate the error based on the designed surface
             z0Mesh = griddata(surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3),xMesh,yMesh);
