@@ -133,8 +133,9 @@ else
     surfFunc = matlabFunction(surfSym);
     surfFx = diff(surfFunc,x);
     surfFy = diff(surfFunc,y);
-    surfDomain = [-600,600;-600,600];
-    surfDomain = 1.2*surfDomain;
+    surfDomain = [-500,500;-500,500];
+    zAllowance = 1.2;
+    surfDomain = zAllowance*surfDomain;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
@@ -365,7 +366,7 @@ toolSp1 = toolSp;
 toolSp1.coefs = quat2rotm(curveQuat(end,:))*toolSp1.coefs;
 toolSp1Pt = fnval(toolSp1,tmpU);
 [~,tmpUInd] = min(abs(toolSp1Pt(2,:)));
-specU = tmpU(tmpUInd);
+innermostU = tmpU(tmpUInd);
 
 if strcmp(startDirection,'X Minus')
     % uLim reverse
@@ -378,7 +379,7 @@ if strcmp(startDirection,'X Minus')
 %         curveULim{ii} = reshape(tmpSorted,2,[]);
 %     end
 
-    curveULim{end}(end) = specU;
+    curveULim{end}(end) = innermostU;
 end
 clear tmpU toolSp1 toolSp2;
 
@@ -678,7 +679,7 @@ spiralQuat0 = zeros(accumPtNum(end),4);
 spiralContactU0 = zeros(1,accumPtNum(end));
 
 interpR = fnval(rhoTheta,surfAccum);
-interpR(surfAccum > surfEach(1)) = 0;
+% interpR(surfAccum > surfEach(1)) = 0;
 accumPtNumlength = [0,accumPtNum];
 
 numLoop = length(accumPtNum);
@@ -793,13 +794,13 @@ spiralFolderName = getlastfoldername(workspaceDir);
     fullfile(workspaceDir,[spiralFolderName,'-spiralPath-',approxMethod, ...
     '-',datestr(now,'yyyymmddTHHMMSS'),'.mat']));
 spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
-if ~spiralPathFileName
-    return;
-end
-save(spiralPathName,"spiralAngle","spiralPath");
-% ,"spiralQuat", ...
-%     "spiralNorm","spiralCut");
-return;
+% if ~spiralPathFileName
+%     return;
+% end
+% save(spiralPathName,"spiralAngle","spiralPath");
+% % ,"spiralQuat", ...
+% %     "spiralNorm","spiralCut");
+% return;
 
 %% Spiral Residual height calculation of the spiral tool path
 spiralRes = 5*aimRes*ones(2,spiralPtNum);
@@ -811,9 +812,9 @@ tSpiralRes0 = tic;
 
 switch uDirection
     case 'U Plus'
-        uLimIni = [0;specU];
+        uLimIni = [0;innermostU];
     case 'U Minus'
-        uLimIni = [1;specU];
+        uLimIni = [1;innermostU];
 end
 
 % figure;
@@ -890,7 +891,7 @@ end
 if true
     parfor ii = 1:spiralPtNum
         if spiralULim{ii}(end) == 0
-            spiralULim{ii}(end) = specU;
+            spiralULim{ii}(end) = innermostU;
         end
     end
 end
@@ -956,9 +957,9 @@ fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot
 % sprial tool path error
 s6_visualize_spiral_multi;
 
-msgfig = helpdlg(sprintf(['\\fontsize{%d}\\fontname{%s}' ...
+msgfig = helpdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     'Spiral tool path was generated successfully!'], ...
-    textFontSize,textFontType),'Success');
+    textFontSize,textFontType)},'Success');
 
 %% Comparison: directly generate the spiral tool path
 % 实际上，这种显然更好。用上面的那种方法，会导致不是真正的等弧长，而且在交接段会突然减速，动力学应该会影响表面质量

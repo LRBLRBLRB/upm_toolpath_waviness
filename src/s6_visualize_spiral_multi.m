@@ -104,18 +104,18 @@ while true
             tSimul0 = tic;
             toolCoefs = toolData.toolBform.coefs;
             parfor ii = 1:spiralPtNum % each tool path point
-                toolSp = toolData.toolBform;
-                toolSp.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
+                toolSp1 = toolData.toolBform;
+                toolSp1.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
                 uLimRound = round(spiralULim{ii},stepNum);
-                for jj = 1:size(spiralULim{ii},2)
-                    tmp = fnval(toolSp,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
+                for jj = 1:size(uLimRound,2)
+                    tmp = fnval(toolSp1,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
                     % Q{jj} = tmp;
                     spiralPathList = [spiralPathList,tmp];
                 end
             end
             % get rid of the begin and the last ones
             spiralR = vecnorm(spiralPathList(1:2,:),2,1);
-            rDomain = abs(surfDomain(1,2));
+            rDomain = abs(surfDomain(1,2)/zAllowance);
             rBeyond = spiralR > rDomain;
             spiralPathList(:,rBeyond) = [];
 
@@ -123,12 +123,15 @@ while true
             xPlot = linspace(min(spiralPathList(1,:)),max(spiralPathList(1,:)),plotNum);
             yPlot = linspace(min(spiralPathList(2,:)),max(spiralPathList(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
-            % elliminate the smaller residual height at the same peak
+            % elliminate the lower contour at the same peak
             [spiralPathZUnique,spiralPathXYUnique] = groupsummary(spiralPathList(3,:)',spiralPathList(1:2,:)',@max);
             zMesh = griddata(spiralPathXYUnique{1},spiralPathXYUnique{2},spiralPathZUnique,xMesh,yMesh);
             % calculate the error based on the designed surface
-            z0Mesh = griddata(surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3),xMesh,yMesh);
+            z0Mesh = surfFunc(xMesh,yMesh);
             % 这里有更好的仿真方式：每个点都计算到设计曲面的距离，而不是沿z方向的距离！！！！
+
+            clear spiralPathList;
+
             figure('Name','Machining surface simulation');
             pos = get(gcf,'position');
             set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
