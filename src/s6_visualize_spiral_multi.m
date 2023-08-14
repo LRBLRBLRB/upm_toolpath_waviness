@@ -116,6 +116,7 @@ while true
             % get rid of the begin and the last ones
             spiralR = vecnorm(spiralPathList(1:2,:),2,1);
             rDomain = abs(surfDomain(1,2)/zAllowance);
+            % rDomain = 350;
             rBeyond = spiralR > rDomain;
             spiralPathList(:,rBeyond) = [];
 
@@ -124,7 +125,7 @@ while true
             yPlot = linspace(min(spiralPathList(2,:)),max(spiralPathList(2,:)),plotNum);
             [xMesh,yMesh] = meshgrid(xPlot,yPlot);
             % elliminate the lower contour at the same peak
-            [spiralPathZUnique,spiralPathXYUnique] = groupsummary(spiralPathList(3,:)',spiralPathList(1:2,:)',@max);
+            [spiralPathZUnique,spiralPathXYUnique] = groupsummary(spiralPathList(3,:)',spiralPathList(1:2,:)',@mean);
             zMesh = griddata(spiralPathXYUnique{1},spiralPathXYUnique{2},spiralPathZUnique,xMesh,yMesh);
             % calculate the error based on the designed surface
             z0Mesh = surfFunc(xMesh,yMesh);

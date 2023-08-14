@@ -15,6 +15,8 @@ function resetToolfitParams(app)
     app.lineFitMaxDist = app.LineFitMaxDistEf.Value;
     app.LineFitMaxDistEf.Enable = "off";
     app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+    app.Radius0Ef.Value = app.radius0Default;
+    app.radius0 = app.Radius0Ef.Value;
 
     app.S1ToolExtract2DLineBtn.Enable = 'on';
     app.S1ToolExtract3DLineBtn.Enable = 'on';

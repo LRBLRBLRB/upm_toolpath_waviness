@@ -12,14 +12,18 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         arcFitMethodDefault     = 'levenberg-marquardt'
         arcRansacMaxDistDefault = 1e-2
         lineFitMethodDefault    = 'polyfit'
-        lineFitMaxDistDefault   = 1e-3
+        lineFitMaxDistDefault   = 1
         paramMethodDefault      = 'centripetal'
+        radius0Default          = 192
         ImportCell              = {'Point Cloud','Mesh'}
         Geometry2DCell          = {'Rotating Paraboloid','Aspheric'}
         Geometry3DCell          = {'Ellipsoid','Function-Based'}
         cutDirectionDefault     = 'Edge to Center'
         spindleDirectionDefault = 'Counterclockwise'
         angularDiscreteDefault  = 'Constant Arc'
+        radialIncrementDefault  = 'On-Axis'
+        spiralMethodDefault     = 'Radius-Number'
+        zAllowanceDefault        = 1.2
         aimResDefault           = 0.0005
         rStepDefault            = 0.2
         maxIterDefault          = 50
@@ -27,6 +31,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         maxAngPtDistDefault     = 6*pi/180
         angularLengthDefault    = 6*pi/180
         surfPlotSparDefault     = 501
+        
     end
 
     % Properties that correspond to app components
@@ -59,6 +64,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         LineFitMaxDistEf        matlab.ui.control.NumericEditField
         ArcFitMethodDd          matlab.ui.control.DropDown
         ArcRansacMaxDistEf      matlab.ui.control.NumericEditField
+        Radius0Ef               matlab.ui.control.NumericEditField
         S1ToolExtract2DLineBtn  matlab.ui.control.Button
         S1ToolExtract3DLineBtn  matlab.ui.control.Button
         S1ToolExtractSurfBtn    matlab.ui.control.Button
@@ -93,6 +99,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         OptimParamPathTab       matlab.ui.container.Tab
         CutDirectionDd          matlab.ui.control.DropDown
         SpindleDirectionDd      matlab.ui.control.DropDown
+        RadialIncrementDd       matlab.ui.control.DropDown
         AngularDiscreteDd       matlab.ui.control.DropDown
         AimResEf                matlab.ui.control.NumericEditField
         MaxIterSpin             matlab.ui.control.Spinner
@@ -106,6 +113,8 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         AngularLengthLb         matlab.ui.control.Label
         AngularLengthEf         matlab.ui.control.NumericEditField
         AngularLengthUnitLb     matlab.ui.control.Label
+        ZAllowanceEf            matlab.ui.control.NumericEditField
+        SpiralMethodDd          matlab.ui.control.DropDown
         OptimParamFeedTab       matlab.ui.container.Tab
         OptimUpdateBtn          matlab.ui.control.Button
         OptimResetBtn           matlab.ui.control.Button
@@ -140,6 +149,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         lineFitMethod       (1,1)   string
         lineFitMaxDist      (1,1)   double
         paramMethod                 string
+        radius0             (1,1)   double
         toolOri
         % post process between tool fit and interpolation
         toolFit
@@ -162,13 +172,16 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         cutDirection                string
         spindleDirection            string
         angularDiscrete             string
+        arcLength           (1,1)   double
+        maxAngPtDist        (1,1)   double
+        angularLength       (1,1)   double
+        radialIncrement             string
         aimRes              (1,1)   double
         rStep               (1,1)   double
         maxIter             (1,1)   double
         rMax                (1,1)   double
-        arcLength           (1,1)   double
-        maxAngPtDist        (1,1)   double
-        angularLength       (1,1)   double
+        spiralMethod                string
+        zAllowance           (1,1)   double
     end
 
     % Functions that update the properties when multi-apps are used
@@ -375,7 +388,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         % Button Value changed function: tool import reset
         function ToolImportResetBtnPushed(app,event)
             app.ToolUnitDd.Value = app.toolUnitDefault;
-            app.toolUnit = app.ToolUnitDd.Value;
+            app.toolUnit = [];
             app.ToolFileEf.Value = '';
             app.toolPathName = app.ToolFileEf.Value;
             app.toolData = [];
@@ -390,13 +403,15 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
 
         % Button value changed function: tool import update
         function ToolImportUpdateBtnPushed(app,event)
-            app.toolUnit = app.ToolUnitDd.Value;
-
-            % unit conversion (now: app.toolUnit, aim: app.unit)
-            unitList = {'m','mm','\mum','nm'};
-            presUnit = find(strcmp(unitList,app.toolUnit),1);
-            aimUnit = find(strcmp(unitList,app.unit),1);
-            app.toolOri = 1000^(aimUnit - presUnit)*app.toolOri;
+            if ~strcmp(app.toolUnit,app.ToolUnitDd.Value)
+                app.toolUnit = app.ToolUnitDd.Value;
+    
+                % unit conversion (now: app.toolUnit, aim: app.unit)
+                unitList = {'m','mm','\mum','nm'};
+                presUnit = find(strcmp(unitList,app.toolUnit),1);
+                aimUnit = find(strcmp(unitList,app.unit),1);
+                app.toolOri = 1000^(aimUnit - presUnit)*app.toolOri;
+            end
         end
 
         % Button value changed function: tool import plot
@@ -490,6 +505,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             app.arcRansacMaxDist = app.ArcRansacMaxDistEf.Value;
             app.lineFitMethod = app.LineFitMethodDd.Value;
             app.lineFitMaxDist = app.LineFitMaxDistEf.Value;
+            app.radius0 = app.Radius0Ef.Value;
 
             app.Msg = 'All the parameters are set. Click ''Plot'' to plot the data.';
             InfoTaValueChanged(app,true);
@@ -761,12 +777,15 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             app.cutDirection = app.CutDirectionDd.Value;
             app.spindleDirection = app.SpindleDirectionDd.Value;
             app.angularDiscrete = app.AngularDiscreteDd.Value;
+            app.radialIncrement = app.RadialIncrementDd.Value;
             app.aimRes = app.AimResEf.Value;
             app.maxIter = app.MaxIterSpin.Value;
             app.rStep = app.RStepEf.Value;
             app.arcLength = app.ArcLengthEf.Value;
             app.maxAngPtDist = app.MaxAngPtDistEf.Value;
             app.angularLength = app.AngularLengthEf.Value;
+            app.spiralMethod = app.SpiralMethodDd.Value;
+            app.zAllowance = app.ZAllowanceEf.Value;
 
             app.Msg = 'All the parameters are set.';
             InfoTaValueChanged(app,true);
@@ -1030,9 +1049,9 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             ParamTabToolfitGl.RowHeight = {'1x','fit','fit'};
             ParamTabToolfitGl.ColumnWidth = {'1x'};
 
-            ParamTabToolfitParamGl = uigridlayout(ParamTabToolfitGl,[6,2]);
+            ParamTabToolfitParamGl = uigridlayout(ParamTabToolfitGl,[7,2]);
             ParamTabToolfitParamGl.Layout.Row = 1;
-            ParamTabToolfitParamGl.RowHeight = {'fit','fit','fit','fit','fit','fit'};
+            ParamTabToolfitParamGl.RowHeight = {'fit','fit','fit','fit','fit','fit','fit'};
             ParamTabToolfitParamGl.ColumnWidth = {'fit','1x'};
             ParamTabToolfitParamGl.Scrollable = 'on';
 
@@ -1092,16 +1111,24 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             app.LineFitMaxDistEf.Layout.Column = 2;
             app.LineFitMaxDistEf.Enable = "off";
             app.LineFitMaxDistEf.BackgroundColor = [0.96 0.96 0.96];
+            
+            Radius0Lb = uilabel(ParamTabToolfitParamGl,'Text',{'Theo Radius'});
+            Radius0Lb.Layout.Row = 6;
+            Radius0Lb.Layout.Column = 1;
+            app.Radius0Ef = uieditfield(ParamTabToolfitParamGl,'numeric','Limits',[0 inf], ...
+                'HorizontalAlignment','center','Value',app.radius0Default);
+            app.Radius0Ef.Layout.Row = 6;
+            app.Radius0Ef.Layout.Column = 2;
 
             %%%%%%%%% Create the reset button for tool fitting process
             app.ToolfitResetBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Reset','Visible','on');
-            app.ToolfitResetBtn.Layout.Row = 6;
+            app.ToolfitResetBtn.Layout.Row = 7;
             app.ToolfitResetBtn.Layout.Column = 1;
             app.ToolfitResetBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFitResetBtnPushed,true);
 
             %%%%%%%%% Create the update button for tool fitting process
             app.ToolfitUpdateBtn = uibutton(ParamTabToolfitParamGl,'push','Text','Update','Visible','on');
-            app.ToolfitUpdateBtn.Layout.Row = 6;
+            app.ToolfitUpdateBtn.Layout.Row = 7;
             app.ToolfitUpdateBtn.Layout.Column = 2;
             app.ToolfitUpdateBtn.ButtonPushedFcn = createCallbackFcn(app,@ToolFitUpdateBtnPushed,true);
 
@@ -1355,9 +1382,9 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
 
             app.OptimParamPathTab = uitab(OptimParamTabgroup,'Title','Tool Path');
             app.OptimParamPathTab.Scrollable = 'on';
-            OptimParamPathTabGl = uigridlayout(app.OptimParamPathTab,[8,3]);
+            OptimParamPathTabGl = uigridlayout(app.OptimParamPathTab,[9,3]);
             OptimParamPathTabGl.Scrollable = 'on';
-            OptimParamPathTabGl.RowHeight = {'fit','fit','fit','fit','fit','fit','fit','fit'};
+            OptimParamPathTabGl.RowHeight = {'fit','fit','fit','fit','fit','fit','fit','fit','fit'};
             OptimParamPathTabGl.ColumnWidth = {'fit','1x','fit'};
 
             CutDirectionLb = uilabel(OptimParamPathTabGl,'Text','Cut Direction');
@@ -1378,15 +1405,15 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             app.SpindleDirectionDd.Layout.Row = 2;
             app.SpindleDirectionDd.Layout.Column = 2;
 
-            AngularDiscreteLb = uilabel(OptimParamPathTabGl,'Text','Angular Output Type');
-            AngularDiscreteLb.Layout.Row = 3;
-            AngularDiscreteLb.Layout.Column = 1;
-            app.AngularDiscreteDd = uidropdown(OptimParamPathTabGl, ...
-                'Items',{'Constant Arc','Constant Angle'}, ...
-                'Value',app.angularDiscreteDefault);
-            app.AngularDiscreteDd.Layout.Row = 3;
-            app.AngularDiscreteDd.Layout.Column = 2;
-            app.AngularDiscreteDd.ValueChangedFcn = createCallbackFcn(app,@AngularDiscreteDdValueChanged,true);
+            RadialIncrementLb = uilabel(OptimParamPathTabGl,'Text','Radial Increment Type');
+            RadialIncrementLb.Layout.Row = 3;
+            RadialIncrementLb.Layout.Column = 1;
+            app.RadialIncrementDd = uidropdown(OptimParamPathTabGl, ...
+                'Items',{'On-Axis','Surface'}, ...
+                'Value',app.radialIncrementDefault);
+            app.RadialIncrementDd.Layout.Row = 3;
+            app.RadialIncrementDd.Layout.Column = 2;
+            app.RadialIncrementDd.Enable = 'off';
 
             AimResLb = uilabel(OptimParamPathTabGl,'Text','Aimed Residual Height');
             AimResLb.Layout.Row = 4;
@@ -1400,68 +1427,100 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             AimResUnitLb.Layout.Column = 3;
             AimResUnitLb.Text = app.unit;
 
-            MaxIterLb = uilabel(OptimParamPathTabGl,'Text','Max No. of Iteration');
-            MaxIterLb.Layout.Row = 5;
-            MaxIterLb.Layout.Column = 1;
-            app.MaxIterSpin = uispinner(OptimParamPathTabGl,'Value',app.maxIterDefault, ...
-                'Limits',[1,inf],'ValueDisplayFormat','%d','RoundFractionalValues','on');
-            app.MaxIterSpin.Layout.Row = 5;
-            app.MaxIterSpin.Layout.Column = 2;
-
-            % initial annulus width when calculating concentric tool path
-            RStepLb = uilabel(OptimParamPathTabGl,'Text','Initial Annulus Width (rStep)');
-            RStepLb.Layout.Row = 6;
-            RStepLb.Layout.Column = 1;
-            app.RStepEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
-                'HorizontalAlignment','center');
-            app.RStepEf.Layout.Row = 6;
-            app.RStepEf.Layout.Column = 2;
-            RStepUnitLb = uilabel(OptimParamPathTabGl,'Interpreter','latex');
-            RStepUnitLb.Layout.Row = 6;
-            RStepUnitLb.Layout.Column = 3;
-            RStepUnitLb.Text = app.unit;
+            AngularDiscreteLb = uilabel(OptimParamPathTabGl,'Text','Angular Increment Type');
+            AngularDiscreteLb.Layout.Row = 5;
+            AngularDiscreteLb.Layout.Column = 1;
+            app.AngularDiscreteDd = uidropdown(OptimParamPathTabGl, ...
+                'Items',{'Constant Arc','Constant Angle'}, ...
+                'Value',app.angularDiscreteDefault);
+            app.AngularDiscreteDd.Layout.Row = 5;
+            app.AngularDiscreteDd.Layout.Column = 2;
+            app.AngularDiscreteDd.ValueChangedFcn = createCallbackFcn(app,@AngularDiscreteDdValueChanged,true);
 
             app.ArcLengthLb = uilabel(OptimParamPathTabGl,'Text','Arc Length');
-            app.ArcLengthLb.Layout.Row = 7;
+            app.ArcLengthLb.Layout.Row = 6;
             app.ArcLengthLb.Layout.Column = 1;
             app.ArcLengthEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
                 'HorizontalAlignment','center','Value',app.arcLengthDefault);
-            app.ArcLengthEf.Layout.Row = 7;
+            app.ArcLengthEf.Layout.Row = 6;
             app.ArcLengthEf.Layout.Column = 2;
             app.ArcLengthUnitLb = uilabel(OptimParamPathTabGl,'Interpreter','latex');
-            app.ArcLengthUnitLb.Layout.Row = 7;
+            app.ArcLengthUnitLb.Layout.Row = 6;
             app.ArcLengthUnitLb.Layout.Column = 3;
             app.ArcLengthUnitLb.Text = app.unit;
 
             app.MaxAngPtDistLb = uilabel(OptimParamPathTabGl,'Text','Max Angular Point Distance');
-            app.MaxAngPtDistLb.Layout.Row = 8;
+            app.MaxAngPtDistLb.Layout.Row = 7;
             app.MaxAngPtDistLb.Layout.Column = 1;
             app.MaxAngPtDistEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
                 'HorizontalAlignment','center','Value',app.maxAngPtDistDefault);
-            app.MaxAngPtDistEf.Layout.Row = 8;
+            app.MaxAngPtDistEf.Layout.Row = 7;
             app.MaxAngPtDistEf.Layout.Column = 2;
             app.MaxAngPtDistUnitLb = uilabel(OptimParamPathTabGl,'Interpreter','latex');
-            app.MaxAngPtDistUnitLb.Layout.Row = 8;
+            app.MaxAngPtDistUnitLb.Layout.Row = 7;
             app.MaxAngPtDistUnitLb.Layout.Column = 3;
             app.MaxAngPtDistUnitLb.Text = 'rad';
 
             app.AngularLengthLb = uilabel(OptimParamPathTabGl,'Text','Angular Length');
-            app.AngularLengthLb.Layout.Row = 7;
+            app.AngularLengthLb.Layout.Row = 6;
             app.AngularLengthLb.Layout.Column = 1;
             app.AngularLengthLb.Visible = 'off';
             app.AngularLengthEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
                 'HorizontalAlignment','center','Value',app.angularLengthDefault);
-            app.AngularLengthEf.Layout.Row = 7;
+            app.AngularLengthEf.Layout.Row = 6;
             app.AngularLengthEf.Layout.Column = 2;
             app.AngularLengthEf.Visible = 'off';
             app.AngularLengthUnitLb = uilabel(OptimParamPathTabGl,'Text','rad');
-            app.AngularLengthUnitLb.Layout.Row = 7;
+            app.AngularLengthUnitLb.Layout.Row = 6;
             app.AngularLengthUnitLb.Layout.Column = 3;
             app.AngularLengthUnitLb.Visible = 'off';
+
+            MaxIterLb = uilabel(OptimParamPathTabGl,'Text','Max No. of Iteration');
+            MaxIterLb.Layout.Row = 8;
+            MaxIterLb.Layout.Column = 1;
+            app.MaxIterSpin = uispinner(OptimParamPathTabGl,'Value',app.maxIterDefault, ...
+                'Limits',[1,inf],'ValueDisplayFormat','%d','RoundFractionalValues','on');
+            app.MaxIterSpin.Layout.Row = 8;
+            app.MaxIterSpin.Layout.Column = 2;
+            app.MaxIterSpin.Enable = 'off';
+
+            % initial annulus width when calculating concentric tool path
+            RStepLb = uilabel(OptimParamPathTabGl,'Text','Initial Annulus Width (rStep)');
+            RStepLb.Layout.Row = 9;
+            RStepLb.Layout.Column = 1;
+            app.RStepEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
+                'HorizontalAlignment','center');
+            app.RStepEf.Layout.Row = 9;
+            app.RStepEf.Layout.Column = 2;
+            RStepUnitLb = uilabel(OptimParamPathTabGl,'Interpreter','latex');
+            RStepUnitLb.Layout.Row = 9;
+            RStepUnitLb.Layout.Column = 3;
+            RStepUnitLb.Text = app.unit;
+
+            ZAllowanceLb = uilabel(OptimParamPathTabGl,'Text','Surface Domain Allowance');
+            ZAllowanceLb.Layout.Row = 10;
+            ZAllowanceLb.Layout.Column = 1;
+            app.ZAllowanceEf = uieditfield(OptimParamPathTabGl,'numeric','Limits',[0,inf], ...
+                'HorizontalAlignment','center','Value',app.zAllowanceDefault);
+            app.ZAllowanceEf.Layout.Row = 10;
+            app.ZAllowanceEf.Layout.Column = 2;
 
             % feed tab
             app.OptimParamFeedTab = uitab(OptimParamTabgroup,'Title','Feed');
             app.OptimParamFeedTab.Scrollable = 'on';
+            OptimParamFeedTabGl = uigridlayout(app.OptimParamFeedTab,[1,3]);
+            OptimParamFeedTabGl.Scrollable = 'on';
+            OptimParamFeedTabGl.RowHeight = {'fit'};
+            OptimParamFeedTabGl.ColumnWidth = {'fit','1x','fit'};
+
+            SpiralMethodLb = uilabel(OptimParamFeedTabGl,'Text','Spiral Method');
+            SpiralMethodLb.Layout.Row = 1;
+            SpiralMethodLb.Layout.Column = 1;
+            app.SpiralMethodDd = uidropdown(OptimParamFeedTabGl, ...
+                'Items',{'Radius-Number','Radius-Angle'}, ...
+                'Value',app.spiralMethodDefault);
+            app.SpiralMethodDd.Layout.Row = 1;
+            app.SpiralMethodDd.Layout.Column = 2;
 
             % ---Create the reset button---
             app.OptimResetBtn = uibutton(OptimParamPnGl,'push','Text','Reset','Visible','on');

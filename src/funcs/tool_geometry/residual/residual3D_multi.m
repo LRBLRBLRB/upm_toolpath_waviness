@@ -94,6 +94,7 @@ if all(abs(toolPt2(1:2) - toolPt3(1:2)) < 1e-4*toolRadius) % toolPt2 and toolPt3
     end
     toolCutDirProj = toolCutDir1;
 else
+%     toolPtProj = curveIntersectLineOnPlane(toolPt2,toolPt3,toolPt1);
     toolPtProj = lineIntersectPlane(toolPt2,toolPt3,toolPt1,toolCutDir1);
     t = norm(toolPtProj - toolPt2)/norm(toolPt3 - toolPt2);
     % theta = t*vecAng(toolNorm2,toolNorm3,1);
@@ -129,8 +130,8 @@ if isempty(uLim)
         1e-5,toolContactPt1,toolContactPtProj,uLim2,'aimRes',aimRes,'uDirection','U Minus');
 else
     % the current point has been calculated once
-    [res,peakPt,interPt,~,uLim] = residual2D_multi(toolSp1,toolSpProj, ...
-        1e-5,toolContactPt1,toolContactPtProj,uLim,'aimRes',aimRes,'uDirection','U Minus');
+    [res,peakPt,interPt,~,uLim] = residual2D_multi(toolSpProj,toolSp1, ...
+        1e-5,toolContactPtProj,toolContactPt1,uLim,'aimRes',aimRes,'uDirection','U Minus');
 end
 
 %% to update the valid U range of the two toolpath

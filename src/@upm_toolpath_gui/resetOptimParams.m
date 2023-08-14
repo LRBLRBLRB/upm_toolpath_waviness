@@ -18,4 +18,10 @@ function resetOptimParams(app)
     app.maxAngPtDist = app.MaxAngPtDistEf.Value;
     app.AngularLengthEf.Value = app.angularLengthDefault;
     app.angularLength = app.AngularLengthEf.Value;
+    app.RadialIncrementDd.Value = app.radialIncrementDefault;
+    app.radialIncrement = app.RadialIncrementDd.Value;
+    app.SpiralMethodDd.Value = app.spiralMethodDefault;
+    app.spiralMethod = app.SpiralMethodDd.Value;
+    app.ZAllowanceEf.Value = app.zAllowanceDefault;
+    app.zAllowance = app.ZAllowanceEf.Value;
 end

@@ -18,7 +18,7 @@ else
     
     % global variables
     % global textFontSize textFontType unit fitMethod paramMethod;
-    workspaceDir = fullfile('..','workspace','/20220925-contrast/nagayama_concentric';
+    workspaceDir = fullfile('..','workspace','/20220925-contrast/nagayama_concentric');
     fitOpts.arcFitMethod = 'levenberg-marquardt';
     paramMethod = 'centripetal';
     unit = '\mum';

@@ -5,7 +5,7 @@
 % Step four: simulation of the machining surface
 % Step Five: generate the actual toolpath
 
-isAPP = false;
+isAPP = true;
 if isAPP
     %% app-used
     workspaceDir = app.workspaceDir;
@@ -33,12 +33,15 @@ if isAPP
     cutDirection = app.cutDirection;
     startDirection = app.spindleDirection;
     angularIncrement = app.angularDiscrete;
-    aimRes = app.aimRes;
-    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
-    maxIter = app.maxIter;
     arcLength = app.arcLength;
     maxAngPtDist = app.maxAngPtDist;
     angularLength = app.angularLength;
+    radialIncrement = app.radialIncrement; % 'Surface'
+    aimRes = app.aimRes;
+    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+    maxIter = app.maxIter;
+    spiralMethod = app.spiralMethod;
+    zAllowance = app.allowance;
 else
     %% function-used
     close all;
@@ -103,7 +106,7 @@ else
     maxAngPtDist = 1*pi/180;
     angularLength = 1*pi/180;
     radialIncrement = 'On-Axis'; % 'Surface'
-    aimRes = 0.5; % um
+    aimRes = 1; % um
     rStep = toolData.radius/2; % rStep can also be determined by the axial differentiate of the surface
     maxIter = 100;
     spiralMethod = 'Radius-Number'; % Radius-Angle
@@ -135,7 +138,6 @@ else
     surfFy = diff(surfFunc,y);
     surfDomain = [-500,500;-500,500];
     zAllowance = 1.2;
-    surfDomain = zAllowance*surfDomain;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
@@ -143,11 +145,11 @@ end
 isUIncrease = toolData.toolBform.coefs(end,1) - toolData.toolBform.coefs(1,1);
 switch startDirection
     case 'X Plus' % plus in this program, but minus in moore
-        rMax = max(surfDomain(1,2),surfDomain(2,2));
+        rMax = max(zAllowance*surfDomain(1,2),zAllowance*surfDomain(2,2));
         rStep = -1*rStep;
         % cutDirect = [0;1;0];
     case 'X Minus' % minus in this program, but plus in moore
-        rMax = min(surfDomain(1,1),surfDomain(2,1)); % reverse
+        rMax = min(zAllowance*surfDomain(1,1),zAllowance*surfDomain(2,1)); % reverse
         rStep = 1*rStep;
         % cutDirect = [0;-1;0];
 end
@@ -441,7 +443,7 @@ toolPathAngle = [];
 loopPtNum = [];
 accumPtNum = 0;
 toolNAccum = [];
-toolREach = curvePt(1,:);
+toolREach = curvePathPt(1,:);
 toolRAccum = [];
 toolQuat = [];
 toolNormDirect = [];
@@ -812,9 +814,9 @@ tSpiralRes0 = tic;
 
 switch uDirection
     case 'U Plus'
-        uLimIni = [0;innermostU];
+        uLimIni = [0;1];
     case 'U Minus'
-        uLimIni = [1;innermostU];
+        uLimIni = [1;0];
 end
 
 % figure;
@@ -827,7 +829,7 @@ end
 % setappdata(waitBar,'canceling',0);
 
 for ind1 = 1:spiralPtNum
-    % inner ulim & residual height
+    % find the outer side of ulim & residual height
     ind2 = find(spiralAngle >= spiralAngle(ind1) - conThetaBound(end),1,uLimOrder2);
     ind3 = find(spiralAngle < spiralAngle(ind1) - conThetaBound(end),1,uLimOrder3);
     if isempty(ind2) || isempty(ind3)
@@ -845,7 +847,7 @@ for ind1 = 1:spiralPtNum
             toolData,toolRadius,spiralULim{ind1},aimRes,uLimIni,ind1,ind2,ind3);
     end
 
-    % outer ulim & residual height
+    % find the inner side of ulim & residual height
     ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,uLimOrder2);
     ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,uLimOrder3);
     if isempty(ind2) || isempty(ind3)
@@ -888,14 +890,23 @@ disp(ind1);
 end
 
 % get rid of the redundant part of the uLim of the innermost circle
+rdomain = abs(surfDomain(1,2)/zAllowance);
 if true
     parfor ii = 1:spiralPtNum
         if spiralULim{ii}(end) == 0
             spiralULim{ii}(end) = innermostU;
         end
+        if spiralULim{ii}(1) == 1
+            tmpU = spiralULim{ii}(2):abs(curvePlotSpar):1;
+            toolSp1 = toolSp;
+            toolSp1.coefs = quat2rotm(spiralQuat(ii,:))*toolSp1.coefs + spiralPath(:,ii);
+            toolSp1Pt = fnval(toolSp1,tmpU);
+            tmpPt = vecnorm(toolSp1Pt(1:2,:),2,1);
+            [~,tmpUInd] = find(tmpPt == min(tmpPt(tmpPt > rdomain)));
+            spiralULim{ii}(1) = tmpU(tmpUInd);
+        end
     end
 end
-
 % delete(waitBar);
 tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
@@ -999,6 +1010,7 @@ msgfig = helpdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
 
 %%
 % delete(parObj);
+diary off;
 profile off
 tTol = toc(t0);
 fprintf("The time spent in the whole process is %fs.\n",tTol);

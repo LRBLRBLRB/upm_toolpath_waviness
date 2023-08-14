@@ -56,8 +56,7 @@ ylabel({'polar diameter error',['(',unit,')']});
 xlabel('central angle \theta(°)');
 grid on;
 
-title(t,'Tool Geometric Error');
-
+title(t,'Tool Geometric Error','FontName',textFontType,'FontSize',textFontSize);
 % fft to filter different geometric error 
 
 

@@ -34,6 +34,8 @@ arguments
     options.arcFitdisplayType {mustBeMember(options.arcFitdisplayType, ...
         {'off','none','iter','iter-detailed','final','final-detailed'})} = 'final'
     options.radius0 {mustBePositive} = 100;
+    options.textFontType = 'Times New Roman'
+    options.textFontSize = 16
 end
 
 %% tool tip fitting
@@ -77,7 +79,7 @@ switch options.toolFitType
                 % maxDist = 0.00001; % max allowable distance for inliers
                 fitLineFcn = @(pts) polyfit(pts(:,1),pts(:,2),1); % fit function using polyfit
                 evalLineFcn = ...   % distance evaluation function
-                  @(mdl, pts) sum((pts(:, 2) - polyval(mdl, pts(:,1))).^2,2);
+                  @(mdl, pts) sum((pts(:,2) - polyval(mdl, pts(:,1))).^2,2);
     
                 [leftPoly,~] = ransac(leftPts',fitLineFcn,evalLineFcn, ...
                   sampleSz,lineFitMaxDist);
@@ -102,6 +104,7 @@ switch options.toolFitType
                 line([lineMid(3,1),lineMid(3,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
                 line([lineMid(4,1),lineMid(4,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
                 grid on; axis equal;
+                set(gca,'FontName',options.textFontType,'FontSize',options.textFontSize);
 
                 % Least Square Fitting Based on the Inliers
                 circIdx(1) = find(leftInlierIdx,1,"last");
@@ -132,6 +135,7 @@ switch options.toolFitType
                 line([lineMid(3,1),lineMid(3,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
                 line([lineMid(4,1),lineMid(4,1)],[yLim(1),yLim(2)],'Color',[0.4940    0.1840    0.5560]);
                 grid on; axis equal;
+                set(gca,'FontName',options.textFontType,'FontSize',options.textFontSize);
 
                 % Least Square Fitting Based on the Inliers
                 circIdx(1) = find(leftInlierIdx,1,"last");

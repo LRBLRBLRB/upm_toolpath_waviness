@@ -2,7 +2,7 @@
 % and to get the 3D point cloud of the tool tip
 
 %% 2D curve results
-isAPP = false;
+isAPP = true;
 if isAPP
     workspaceDir = app.workspaceDir;
     toolOri = app.toolOri;
@@ -14,6 +14,7 @@ if isAPP
     fitOpts.arcFitMethod = app.arcFitMethod;
     fitOpts.lineFitMaxDist = app.lineFitMaxDist;
     fitOpts.lineFitMethod = app.lineFitMethod;
+    radius0 = app.radius0;
 else
 %     close all;
     clear; clc;
@@ -101,6 +102,7 @@ hold on;
 grid on;
 xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
+set(gca,'FontName',textFontType,'FontSize',textFontSize);
 
 %% outliners removed
 % rmoutliers(toolOri,2,"median");
@@ -120,10 +122,12 @@ ylabel(['y (',unit,')']);
 % line fitting based on ransac
 figure(fig1);
 fitOpts.arcFitdisplayType = 'iter-detailed';
-[circ2D,toolFitUnsorted,RMSE,lineFitMaxDist] = toolFit2D(toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
+[circ2D,toolFitUnsorted,RMSE,lineFitMaxDist] = toolFit2D( ...
+    toolOri,fitOpts.arcRansacMaxDist,fitOpts.lineFitMaxDist, ...
     'toolFitType',fitOpts.toolFitType,'lineFitMethod',fitOpts.lineFitMethod, ...
     'arcFitMethod',fitOpts.arcFitMethod,'radius0',radius0, ...
-    'arcFitdisplayType',fitOpts.arcFitdisplayType);
+    'arcFitdisplayType',fitOpts.arcFitdisplayType, ...
+    'textFontSize',textFontSize,'textFontType',textFontType);
 radius = circ2D.radius;
 openAngle = circ2D.openAng;
 

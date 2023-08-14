@@ -260,7 +260,6 @@ while strcmp(msgfig2,'Re-select')
         ifFitPlane = false;
         break;
     elseif strcmp(msgfig1,'Re-select')
-        msgfig1 = 'OK';
         hold(ax21,'off');
         % imshow(surfImg,surfImgColorMap);
         [fitCenter,fitRadius] = drawCircle(ax21,surfData0, ...
@@ -434,8 +433,48 @@ deltaZ(:,:,3) = surfMesh2(:,:,3) - surfTheoMesh(:,:,3);
     dataError,dataLineError] = viewError( ...
     deltaZ,textFontSize + 2,textFontType,unit);
 
-% residual error calculation 
+%% outlier removal
+fig4 = figure('WindowState','maximized');
+tiled4 = tiledlayout(1,2,'TileSpacing','compact');
+ax41 = nexttile(tiled4,1);
+ax42 = nexttile(tiled4,2);
+msgfig2 = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
+    'Surface outlier section successfully!'],textFontSize,textFontType), ...
+    'Re-selet or not?'}, ...
+    'Concentric tool path Generation','Re-select','OK',questOpt);
+while strcmp(msgfig2,'Re-select')
+    % imshow(surfImg,surfImgColorMap);
+    cla(ax42);
+    [fitCenter1,fitRadius1] = drawCircle(ax41,deltaZ, ...
+        'textFontSize',textFontSize,'textFontType',textFontType, ...
+        'xlim',[-50,50],'ylim',[-50,50],'level',64);
 
+    % to get the indices of the plane
+    % isSurf = inROI(roi,surfData0(:,:,1),surfData0(:,:,2));
+    isOutlier = (deltaZ(:,:,1) - fitCenter1(1)).^2 + (deltaZ(:,:,2) - fitCenter1(2)).^2 < fitRadius1.^2;
+%     isOutlier = (deltaZ(:,:,1) - 7).^2 + (deltaZ(:,:,2) - 4).^2 < 4.^2;
+    surfMeshZ = deltaZ;
+    surfMeshZ((repmat(isOutlier,[1,1,3]))) = nan;
+
+    surf(ax42,surfMeshZ(:,:,1),surfMeshZ(:,:,2),surfMeshZ(:,:,3), ...
+        'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
+    colormap(ax42,turbo(256));
+    colorbar(ax42,'eastoutside');
+    clim(ax42,[min(surfMeshZ(:,:,3),[],'all'),max(surfMeshZ(:,:,3),[],'all')]);
+    set(ax42,'FontSize',textFontSize,'FontName',textFontType);
+    xlabel(ax42,['x (',unit,')']);
+    ylabel(ax42,['y (',unit,')']);
+    zlabel(ax42,['z (',unit,')']);
+    % plot3(planeData(:,1),planeData(:,2),planeData(:,3),'.','Color',[0,0.4450,0.7410]);
+    % pause();
+    msgfig2 = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
+        'Surface selection finished successfully!'],textFontSize,textFontType), ...
+        'Re-selet or not?'}, ...
+        'Concentric tool path Generation','Re-select','OK',questOpt);
+    hold(ax41,'off');
+    hold(ax42,'off');
+end
+clear surfMeshZ deltaZ1 fitCenter1 fitRadius1
 
 %%
 % surface error

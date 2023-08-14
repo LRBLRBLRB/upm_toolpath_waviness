@@ -36,12 +36,27 @@ if isAPP
     cutDirection = app.cutDirection;
     startDirection = app.spindleDirection;
     angularIncrement = app.angularDiscrete;
-    aimRes = app.aimRes;
-    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
-    maxIter = app.maxIter;
     arcLength = app.arcLength;
     maxAngPtDist = app.maxAngPtDist;
     angularLength = app.angularLength;
+    radialIncrement = app.radialIncrement;
+
+    aimRes = app.aimRes;
+    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+    maxIter = app.maxIter;
+
+    cutDirection = 'Edge to Center'; % 'Center to Edge'
+    startDirection = 'X Minus'; % 'X Plus'
+    angularIncrement = 'Constant Arc'; % 'Constant Angle'
+    arcLength = 20; % um
+    maxAngPtDist = 1*pi/180;
+    angularLength = 1*pi/180;
+    radialIncrement = 'On-Axis'; % 'Surface'
+    aimRes = 0.3; % um
+    rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
+    maxIter = 100;
+    spiralMethod = 'Radius-Number'; % Radius-Angle
+    frMethod = 'Interpolation'; % 'Approximation'
 else
     %% function-used
     close all;

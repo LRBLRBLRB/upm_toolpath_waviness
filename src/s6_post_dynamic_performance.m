@@ -1,6 +1,6 @@
 % test whether the dynamic performances is good or not
 
-isAPP = false;
+isAPP = true;
 if isAPP
 else
     workspaceDir = uigetdir(fullfile('..','workspace','20230504 D906'), ...
@@ -44,7 +44,7 @@ plot(spiralAngle(1:end),spiralZ,'.-','Color',[0,0.4470,0.7410]);
 hold on;
 ylabel('z');
 yyaxis right;
-bar(spiralAngle(2:end),dz,'grouped','EdgeColor','none','FaceColor',"flat",'FaceAlpha',0.3);
+bar(spiralAngle(2:end),dz,1,'grouped','EdgeColor','none','FaceColor',"flat",'FaceAlpha',0.3);
 nexttile;
 yyaxis left;
 plot(spiralAngle(1:end),spiralR,'.-');
@@ -59,9 +59,9 @@ ddr = diff(diff(spiralR));
 figure;
 tiledlayout(2,1);
 nexttile;
-plot(ddz);
+plot(spiralAngle(2:end - 1),ddz);
 hold on;
 ylabel(['a_{z} (',unit,'/s^2)']);
 nexttile;
-plot(ddr);
+plot(spiralAngle(2:end - 1),ddr);
 ylabel(['a_{r} (',unit,'/s^2)']);

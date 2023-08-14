@@ -8,17 +8,23 @@ arguments
     options.textFontSize uint8 = 14
     options.textFontType char = 'Times New Roman'
     options.unit char = '\mum'
+    options.xlim = []
+    options.ylim = []
+    options.level = 16
 end
 
 % imshow(surfImg,surfImgColorMap);
-contourf(ax,surfData(:,:,1),surfData(:,:,2),surfData(:,:,3),16,'--','LineWidth',0.1); hold on;
-colormap(ax,parula(256));
+contourf(ax,surfData(:,:,1),surfData(:,:,2),surfData(:,:,3),options.level, ...
+    '--','LineWidth',0.1); hold on;
+colormap(ax,jet(256));
 colorbar(ax,'southoutside');
 axis(ax,'equal');
 set(ax,'FontSize',options.textFontSize,'FontName',options.textFontType);
-xLim = get(ax,'XLim');
-yLim = get(ax,'YLim');
-set(ax,'XLim',sqrt(2)*xLim,'YLim',sqrt(2)*yLim);
+if isempty(options.xlim)
+    options.xlim = sqrt(2)*get(ax,'XLim');
+    options.ylim = sqrt(2)*get(ax,'YLim');
+end
+set(ax,'XLim',options.xlim,'YLim',options.ylim);
 xlabel(ax,['x (',options.unit,')']);
 ylabel(ax,['y (',options.unit,')']);
 fprintf(['Please draw a circle to include all the surface: \n' ...
