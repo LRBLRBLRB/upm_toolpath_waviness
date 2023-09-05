@@ -38,6 +38,8 @@ classdef add_surface < matlab.apps.AppBase
         AsphericBtnGl           matlab.ui.container.GridLayout
         AsphericFuncLb          matlab.ui.control.Label
         AsphericActivateBtn     matlab.ui.control.Button
+        AsphericCurvatureLb     matlab.ui.control.Label
+        AsphericCurvatureSpin   matlab.ui.control.Spinner
         AsphericRadiusLb        matlab.ui.control.Label
         AsphericRadiusSpin      matlab.ui.control.Spinner
         AsphericRadiusUnitLb    matlab.ui.control.Label
@@ -235,10 +237,18 @@ classdef add_surface < matlab.apps.AppBase
             app.SurfaceFuncsEf.Value = char(app.surfFuncs);
         end
 
+        function AsphericCurvatureSpinValueChanged(app,event)
+            app.AsphericRadiusSpin.Value = 1/app.AsphericCurvatureSpin.Value;
+        end
+
+        function AsphericRadiusSpinValueChanged(app,event)
+            app.AsphericCurvatureSpin.Value = 1/app.AsphericRadiusSpin.Value;
+        end
+
         % Value changed function: change the spinner of the aspheric surface
         function AsphericActivateBtnButtonPushed(app,event)
             syms x y;
-            c = 1/app.AsphericRadiusSpin.Value;
+            c = app.AsphericCurvatureSpin.Value;
             k = app.AsphericConicSpin.Value;
             x0 = app.AsphericOffsetSpin.Value;
             app.surfFuncs = (c*((x - x0)^2 + (y - x0)^2))/(1 + sqrt(1 - (1 + k)*c^2*((x - x0)^2 + (y - x0)^2)));
@@ -307,10 +317,10 @@ classdef add_surface < matlab.apps.AppBase
         end
 
         % Value changed function: ensure R1 and R2 to be opposite numbers
-        function SurfaceR1SpinValueChanged(app,true);
+        function SurfaceR1SpinValueChanged(app,true)
             app.SurfaceR2Spin.Value = -app.SurfaceR1Spin.Value;
         end
-        function SurfaceR2SpinValueChanged(app,true);
+        function SurfaceR2SpinValueChanged(app,true)
             app.SurfaceR1Spin.Value = -app.SurfaceR2Spin.Value;
         end
 
@@ -466,31 +476,40 @@ classdef add_surface < matlab.apps.AppBase
             app.AsphericActivateBtn.Layout.Column = 3;
             app.AsphericActivateBtn.ButtonPushedFcn = createCallbackFcn(app,@AsphericActivateBtnButtonPushed,true);
 
+            app.AsphericCurvatureLb = uilabel(app.AsphericBtnGl,'Text','Curvature (c)');
+            app.AsphericCurvatureLb.Layout.Row = 2;
+            app.AsphericCurvatureLb.Layout.Column = 1;
+            app.AsphericCurvatureSpin = uispinner(app.AsphericBtnGl,'Value',0.69/1000,'Limits',[0,inf]);
+            app.AsphericCurvatureSpin.Layout.Row = 2;
+            app.AsphericCurvatureSpin.Layout.Column = 2;
+            app.AsphericCurvatureSpin.ValueChangedFcn = createCallbackFcn(app,@AsphericCurvatureSpinValueChanged,true);
+
             app.AsphericRadiusLb = uilabel(app.AsphericBtnGl,'Text','Radius (1/c)');
-            app.AsphericRadiusLb.Layout.Row = 2;
+            app.AsphericRadiusLb.Layout.Row = 3;
             app.AsphericRadiusLb.Layout.Column = 1;
-            app.AsphericRadiusSpin = uispinner(app.AsphericBtnGl,'Value',200,'Limits',[0,inf]);
-            app.AsphericRadiusSpin.Layout.Row = 2;
+            app.AsphericRadiusSpin = uispinner(app.AsphericBtnGl,'Value',1000/0.69,'Limits',[0,inf]);
+            app.AsphericRadiusSpin.Layout.Row = 3;
             app.AsphericRadiusSpin.Layout.Column = 2;
+            app.AsphericRadiusSpin.ValueChangedFcn = createCallbackFcn(app,@AsphericRadiusSpinValueChanged,true);
             app.AsphericRadiusUnitLb = uilabel(app.AsphericBtnGl,'Interpreter','latex');
-            app.AsphericRadiusUnitLb.Layout.Row = 2;
+            app.AsphericRadiusUnitLb.Layout.Row = 3;
             app.AsphericRadiusUnitLb.Layout.Column = 3;
 
             app.AsphericConicLb = uilabel(app.AsphericBtnGl,'Text','Conic (k)');
-            app.AsphericConicLb.Layout.Row = 3;
+            app.AsphericConicLb.Layout.Row = 4;
             app.AsphericConicLb.Layout.Column = 1;
-            app.AsphericConicSpin = uispinner(app.AsphericBtnGl,'Value',200,'Limits',[0,inf]);
-            app.AsphericConicSpin.Layout.Row = 3;
+            app.AsphericConicSpin = uispinner(app.AsphericBtnGl,'Value',0,'Limits',[0,inf]);
+            app.AsphericConicSpin.Layout.Row = 4;
             app.AsphericConicSpin.Layout.Column = 2;
 
             app.AsphericOffsetLb = uilabel(app.AsphericBtnGl,'Text','X Offset (x_0)');
-            app.AsphericOffsetLb.Layout.Row = 4;
+            app.AsphericOffsetLb.Layout.Row = 5;
             app.AsphericOffsetLb.Layout.Column = 1;
-            app.AsphericOffsetSpin = uispinner(app.AsphericBtnGl,'Value',200,'Limits',[-inf,inf]);
-            app.AsphericOffsetSpin.Layout.Row = 4;
+            app.AsphericOffsetSpin = uispinner(app.AsphericBtnGl,'Value',0,'Limits',[-inf,inf]);
+            app.AsphericOffsetSpin.Layout.Row = 5;
             app.AsphericOffsetSpin.Layout.Column = 2;
             app.AsphericOffsetUnitLb = uilabel(app.AsphericBtnGl,'Interpreter','latex');
-            app.AsphericOffsetUnitLb.Layout.Row = 4;
+            app.AsphericOffsetUnitLb.Layout.Row = 5;
             app.AsphericOffsetUnitLb.Layout.Column = 3;
 
             % -------------------------------------------------------------------

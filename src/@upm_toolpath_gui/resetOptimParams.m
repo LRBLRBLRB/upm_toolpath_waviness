@@ -2,8 +2,8 @@
 function resetOptimParams(app)
     app.CutDirectionDd.Value = app.cutDirectionDefault;
     app.cutDirection = app.CutDirectionDd.Value;
-    app.SpindleDirectionDd.Value = app.spindleDirectionDefault;
-    app.spindleDirection = app.SpindleDirectionDd.Value;
+    app.StartDirectionDd.Value = app.startDirectionDefault;
+    app.startDirection = app.StartDirectionDd.Value;
     app.AngularDiscreteDd.Value = app.angularDiscreteDefault;
     app.angularDiscrete = app.AngularDiscreteDd.Value;
     app.AimResEf.Value = app.aimResDefault;

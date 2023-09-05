@@ -6,6 +6,10 @@
 % Step Five: generate the actual toolpath
 
 isAPP = true;
+syms x y;
+questOpt.Interpreter = 'tex';
+questOpt.Default = 'OK & Continue';
+
 if isAPP
     %% app-used
     workspaceDir = app.workspaceDir;
@@ -23,15 +27,20 @@ if isAPP
 
     % surface import
     surfFunc = app.surfFuncs;
+    surfSym = sym(surfFunc);
     surfFx = app.surfFx;
     surfFy = app.surfFy;
-    surfDomain = app.surfDomain;
+    if size(app.surfDomain,1) == 1
+        surfDomain = [app.surfDomain;app.surfDomain];
+    else
+        surfDomain = app.surfDomain;
+    end
     surfMesh = app.surfMesh;
     rMax = app.rMax;
 
     % machining paramters
     cutDirection = app.cutDirection;
-    startDirection = app.spindleDirection;
+    startDirection = app.startDirection;
     angularIncrement = app.angularDiscrete;
     arcLength = app.arcLength;
     maxAngPtDist = app.maxAngPtDist;
@@ -41,7 +50,8 @@ if isAPP
     rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
     maxIter = app.maxIter;
     spiralMethod = app.spiralMethod;
-    zAllowance = app.allowance;
+    zAllowance = app.zAllowance;
+    [~,toolFileName,~] = fileparts(app.toolDataFile);
 else
     %% function-used
     close all;
@@ -60,9 +70,6 @@ else
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
-
-    questOpt.Interpreter = 'tex';
-    questOpt.Default = 'OK & Continue';
     
     diaryFile = fullfile(workspaceDir,['diary',datestr(now,'yyyymmddTHHMMSS'),'.log']);
     diary(diaryFile);
@@ -131,7 +138,6 @@ else
     % concentric surface generation / import
     % A = tand(20)/(2*2000);
     c = 0.69/1000/(1000^(aimUnit - presUnit));
-    syms x y;
     surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
     surfFunc = matlabFunction(surfSym);
     surfFx = diff(surfFunc,x);
@@ -214,7 +220,7 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     sprintf('%s\n',getlastfoldername(workspaceDir)), ...
     sprintf('The parameters are listed below:'), ...
     sprintf('1. Surface radius: %f%s',abs(rMax),unit), ...
-    sprintf('2. Surface curvature: %f%s^{-1}',c,unit), ...
+    sprintf('2. Surface function: %s',surfSym), ...
     sprintf('3. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,unit), ...
     '4. X increment: ', ...
     sprintf('\tX direction (in program): %s',startDirection), ...

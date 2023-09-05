@@ -19,7 +19,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         Geometry2DCell          = {'Rotating Paraboloid','Aspheric'}
         Geometry3DCell          = {'Ellipsoid','Function-Based'}
         cutDirectionDefault     = 'Edge to Center'
-        spindleDirectionDefault = 'Counterclockwise'
+        startDirectionDefault   = 'X Minus'
         angularDiscreteDefault  = 'Constant Arc'
         radialIncrementDefault  = 'On-Axis'
         spiralMethodDefault     = 'Radius-Number'
@@ -98,7 +98,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         CheckSurfLamp           matlab.ui.control.Lamp
         OptimParamPathTab       matlab.ui.container.Tab
         CutDirectionDd          matlab.ui.control.DropDown
-        SpindleDirectionDd      matlab.ui.control.DropDown
+        StartDirectionDd        matlab.ui.control.DropDown
         RadialIncrementDd       matlab.ui.control.DropDown
         AngularDiscreteDd       matlab.ui.control.DropDown
         AimResEf                matlab.ui.control.NumericEditField
@@ -170,7 +170,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         surfMesh            (:,:,3) double
 
         cutDirection                string
-        spindleDirection            string
+        startDirection              string
         angularDiscrete             string
         arcLength           (1,1)   double
         maxAngPtDist        (1,1)   double
@@ -775,7 +775,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         % Value changed function: update the selection selection
         function OptimUpdateBtnPushed(app,event)
             app.cutDirection = app.CutDirectionDd.Value;
-            app.spindleDirection = app.SpindleDirectionDd.Value;
+            app.startDirection = app.StartDirectionDd.Value;
             app.angularDiscrete = app.AngularDiscreteDd.Value;
             app.radialIncrement = app.RadialIncrementDd.Value;
             app.aimRes = app.AimResEf.Value;
@@ -1399,11 +1399,11 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             SpindleDirectionLb = uilabel(OptimParamPathTabGl,'Text','Spindle Direction');
             SpindleDirectionLb.Layout.Row = 2;
             SpindleDirectionLb.Layout.Column = 1;
-            app.SpindleDirectionDd = uidropdown(OptimParamPathTabGl, ...
-                'Items',{'Counterclockwise','Clockwise'}, ...
-                'Value',app.spindleDirectionDefault);
-            app.SpindleDirectionDd.Layout.Row = 2;
-            app.SpindleDirectionDd.Layout.Column = 2;
+            app.StartDirectionDd = uidropdown(OptimParamPathTabGl, ...
+                'Items',{'X Plus','X Minus'}, ...
+                'Value',app.startDirectionDefault);
+            app.StartDirectionDd.Layout.Row = 2;
+            app.StartDirectionDd.Layout.Column = 2;
 
             RadialIncrementLb = uilabel(OptimParamPathTabGl,'Text','Radial Increment Type');
             RadialIncrementLb.Layout.Row = 3;
