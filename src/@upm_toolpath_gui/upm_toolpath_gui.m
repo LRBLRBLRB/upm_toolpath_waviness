@@ -37,12 +37,18 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                matlab.ui.Figure
+        FigureMenuFiles         matlab.ui.container.Menu
+        FigureMenuFilesNew      matlab.ui.container.Menu
+        FigureMenuFilesPrint     matlab.ui.container.Menu
+        FigureMenuHelp          matlab.ui.container.Menu
+        FigureMenuHelpDoc       matlab.ui.container.Menu
         FigureMenu              matlab.ui.container.Menu
         FigureToolbar           matlab.ui.container.Toolbar
         AxisEqualPushtool       matlab.ui.container.toolbar.PushTool
         CloseAllFigurePushtool  matlab.ui.container.toolbar.PushTool
         BoldInfoToggletool      matlab.ui.container.toolbar.ToggleTool
         TopToggletool           matlab.ui.container.toolbar.ToggleTool
+        FigureGl                matlab.ui.container.GridLayout
         FigureTbGp              matlab.ui.container.TabGroup
         ToolTb                  matlab.ui.container.Tab
         WorkspaceDirEf          matlab.ui.control.EditField
@@ -137,6 +143,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
     
     % properties that should be used in the .m program
     properties (Access = public)
+        saveFig
         workspaceDir                string
         toolPathName                string
         unit                        char
@@ -240,6 +247,39 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
         surfaceMeshGen(app);
 
         surfacePlot(app,method);
+
+        function [figName,figFormat] = saveAxes2Fig(app)
+            [figFileName,figDirName,figIndex] = uiputfile({ ...
+                '*.fig','MATLAB Figure(*.fig)'; ...
+                '*.png','Portable Network Graphics file(*.png)';...
+                '*.jpg','JPEG image(*.jpg)';...
+                '*.bmp','Bitmap file(*.bmp)';...
+                '*.tif','TIFF image(*.tif)';...
+                '*.tif','TIFF no compression image(*.tif)';...
+                '*.svg','Scalable Vector Graphics fig(*.svg)';...
+                '*.pdf','Full page Portable Document Format(*.pdf)'...
+                }, ...
+                'Select a file to save the figure');
+            switch figIndex
+                case 1
+                    figFormat = 'fig';
+                case 2
+                    figFormat = 'png';
+                case 3
+                    figFormat = 'jpeg';
+                case 4
+                    figFormat = 'bmp';
+                case 5
+                    figFormat = 'tif';
+                case 6
+                    figFormat = 'tiffn';
+                case 7
+                    figFormat = 'svg';
+                case 8
+                    figFormat = 'pdf';
+            end
+            figName = fullfile(figDirName,figFileName);
+        end
     end
 
     % Callbacks that handle component events
@@ -260,6 +300,30 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             InfoTaValueChanged(app,true);
             app.Msg = 'Please choose a directory for the workspace.';
             InfoTaValueChanged(app,true);
+        end
+
+        % Menu selection function: new file
+        function FigureMenuFilesNewMenuSelect(app,event)
+            ToolDataAxesClearBtnPushed(app,event);
+            SurfaceCancelBtnPushed(app,event);
+            startupFcn(app);
+            close all;
+        end
+
+        % Menu selection function: save figures
+        function FigureMenuFilesPrintMenuSelect(app,event)
+            [figFileName,figDirName] = uiputfile({ ...
+                '*.png','Portable Network Graphics file(*.png)';...
+                '*.jpg','JPEG image(*.jpg)';...
+                '*.tif','TIFF image(*.tif)';...
+                '*.pdf','Full page Portable Document Format(*.pdf)'...
+                }, ...
+                'Select a file to save the figure');
+            exportapp(app.UIFigure,fullfile(figFileName,figDirName));
+        end
+
+        function FigureMenuHelpFileMenuSelect(app,event)
+            winopen('@upm_toolpath_gui\Documentation\index.html');
         end
 
         % Clicked function: set the current figure equal
@@ -635,10 +699,17 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             InfoTaValueChanged(app,true);
         end
 
+        function ToolDataAxesSaveMenuSelected(app,event)
+            app.saveFig = app.ToolDataAxes;
+            [figName,figFormat] = saveAxes2Fig(app);
+            saveas(app.saveFig,figName,figFormat);
+        end
+
         % Value changed function: cancel the process with nothing to be saved
         function ToolDataAxesClearBtnPushed(app,event)
             cla(app.ToolDataAxes,'reset');
             title(app.ToolDataAxes,'');
+            app.CheckToolLamp.Color = 'r';
         end
 
         % Button down function: shift to the surface tab, and refresh the message
@@ -691,6 +762,12 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             surfacePlot(app,'3D');
             app.Msg = 'Surface 3D image is successfully shown.';
             InfoTaValueChanged(app,true);
+        end
+
+        function SurfaceDataAxesSaveMenuSelected(app,event)
+            app.saveFig = app.SurfaceDataAxes;
+            [figName,figFormat] = saveAxes2Fig(app);
+            saveas(app.saveFig,figName,figFormat);
         end
 
         % Value changed function: save the surface data
@@ -857,20 +934,31 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
 
     % Component initialization
     methods (Access = private)
-
         % Create UI figure and all the components
         function createComponents(app)
             % Create the figure panel and hide until all components are created
             app.UIFigure = uifigure('Name','Tool Data & Parameters Input', ...
-                'WindowStyle','alwaysontop','WindowState','normal','Visible','off');
+                'WindowStyle','alwaysontop','WindowState','normal','Visible','off','SelectionType','extend');
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app,@UIFigureCloseReq,true);
             app.UIFigure.Resize = "on";
             app.UIFigure.Position = [500,500,800,700];
             app.UIFigure.Scrollable = "on";
-            % app.UIFigure.
 
             % Manage menu
-            app.FigureMenu = uimenu(app.UIFigure,'Text','Options');
+            app.FigureMenuFiles = uimenu(app.UIFigure,'Text','Files', ...
+                'Accelerator','F','Tooltip','File Operation');
+            app.FigureMenuFilesNew = uimenu(app.FigureMenuFiles,'Text','New Window', ...
+                'Accelerator','N','Tooltip','New File', ...
+                'MenuSelectedFcn',createCallbackFcn(app,@FigureMenuFilesNewMenuSelect,true));
+            app.FigureMenuFilesPrint = uimenu(app.FigureMenuFiles,'Text','Print', ...
+                'Accelerator','S','Tooltip','Save Plot', ...
+                'MenuSelectedFcn',createCallbackFcn(app,@FigureMenuFilesPrintMenuSelect,true));
+
+            app.FigureMenuHelp = uimenu(app.UIFigure,'Text','Help', ...
+                'Accelerator','H','Tooltip','Help for Software');
+            app.FigureMenuHelpDoc = uimenu(app.FigureMenuHelp,'Text','Documentation', ...
+                'Accelerator','F','Tooltip','Help Documentation', ...
+                'MenuSelectedFcn',createCallbackFcn(app,@FigureMenuHelpFileMenuSelect,true));
 
             % Manage toolbar
             app.FigureToolbar = uitoolbar(app.UIFigure);
@@ -900,12 +988,13 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             app.CloseAllFigurePushtool.Tooltip = 'Put the APP on top';
 
             % Manage tab groups
-            FigureGl = uigridlayout(app.UIFigure,[3,1],'Padding',[5,5,5,5]);
-            FigureGl.RowHeight = {'fit','1x','fit'};
-            FigureGl.ColumnWidth = {'1x'};
+            app.FigureGl = uigridlayout(app.UIFigure,[3,1],'Padding',[5,5,5,5]);
+            app.FigureGl.RowHeight = {'fit','1x','fit'};
+            app.FigureGl.ColumnWidth = {'1x'};
+
 
             % ------------------------Workspace directory------------------------
-            WorkspaceDirGl = uigridlayout(FigureGl,[2,7]);
+            WorkspaceDirGl = uigridlayout(app.FigureGl,[2,7]);
             WorkspaceDirGl.Layout.Row = 1;
             WorkspaceDirGl.RowHeight = {'fit','fit'};
             WorkspaceDirGl.ColumnWidth = {'fit','2x','fit','fit','1x','fit','1x'};
@@ -962,7 +1051,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             app.CommonResetBtn.ButtonPushedFcn = createCallbackFcn(app,@CommonResetButtonPushed,true);
 
             % figure tab group
-            app.FigureTbGp = uitabgroup(FigureGl,'SelectedTab',app.ToolTb);
+            app.FigureTbGp = uitabgroup(app.FigureGl,'SelectedTab',app.ToolTb);
             app.FigureTbGp.Layout.Row = 2;
             app.FigureTbGp.Layout.Column = 1;
             app.FigureTbGp.ContextMenu
@@ -1244,6 +1333,9 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             % zlabel(app.UIAxes, 'Z');
             app.ToolDataAxes.Layout.Row = 1;
             app.ToolDataAxes.Layout.Column = [2,4];
+            app.ToolDataAxes.ContextMenu = uicontextmenu(app.UIFigure);
+            ToolDataAxesMenu1 = uimenu(app.ToolDataAxes.ContextMenu,'Text','Save', ...
+                'MenuSelectedFcn',createCallbackFcn(app,@ToolDataAxesSaveMenuSelected,true));
 
             app.ToolDataAxesClearBtn = uibutton(ToolTbGl,'push','WordWrap','on','Text','Cancel');
             app.ToolDataAxesClearBtn.Layout.Row = 2;
@@ -1296,6 +1388,9 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             title(app.SurfaceDataAxes,'Surface Original Data','FontSize',14);
             app.SurfaceDataAxes.Layout.Row = [1,4];
             app.SurfaceDataAxes.Layout.Column = [3,4];
+            app.SurfaceDataAxes.ContextMenu = uicontextmenu(app.UIFigure);
+            SurfaceDataAxesMenu1 = uimenu(app.SurfaceDataAxes.ContextMenu,'Text','Save', ...
+                'MenuSelectedFcn',createCallbackFcn(app,@SurfaceDataAxesSaveMenuSelected,true));
 
             app.Surface2DPlotBtn = uibutton(SurfaceTbGl,'push','WordWrap','on','Text','2D Image');
             app.Surface2DPlotBtn.Layout.Row = 5;
@@ -1585,7 +1680,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
 
             app.ProgramTb = uitab(app.FigureTbGp,'Title','Program','Scrollable','on');
             app.ProgramTb.ButtonDownFcn = createCallbackFcn(app,@ProgramTbButtonDown,true);
-
+            app.ProgramTb.HandleVisibility = 'off';
             ProgramGl = uigridlayout(app.ProgramTb,[4,2]);
             ProgramGl.RowHeight = {'1x','1x','1x','fit'};
             ProgramGl.ColumnWidth = {'1x','1x'};
@@ -1640,11 +1735,11 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
                 'ScaleMethod','stretch');
             OptimArrow2.Layout.Row = 1;
             OptimArrow2.Layout.Column = 4;
-            
+
             % ------------------------------------------------------------------------
             % -------------------------Info displaying window-------------------------
             % ------------------------------------------------------------------------
-            app.InfoTa = uitextarea(FigureGl,'WordWrap','on', ...
+            app.InfoTa = uitextarea(app.FigureGl,'WordWrap','on', ...
                 'Editable','off','BackgroundColor',[0.96 0.96 0.96]);
             app.InfoTa.Layout.Row = 3;
             app.InfoTa.Layout.Column = 1;
