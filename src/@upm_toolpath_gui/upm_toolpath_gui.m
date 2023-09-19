@@ -1371,7 +1371,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             SurfaceUnitLb = uilabel(SurfaceTbGl,'Text','Surface Unit');
             SurfaceUnitLb.Layout.Row = 3;
             SurfaceUnitLb.Layout.Column = 1;
-            app.SurfaceUnitDd = uidropdown(SurfaceTbGl);
+            app.SurfaceUnitDd = uidropdown(SurfaceTbGl,'Value','\mum','Items',{'\mum','mm','m'});
             app.SurfaceUnitDd.ValueChangedFcn = createCallbackFcn(app,@SurfaceUnitDdValueChanged,true);
             app.SurfaceUnitDd.Layout.Row = 3;
             app.SurfaceUnitDd.Layout.Column = 2;
@@ -1678,7 +1678,7 @@ classdef upm_toolpath_gui < matlab.apps.AppBase
             % ---------------------------Program Processing---------------------------
             % ------------------------------------------------------------------------
 
-            app.ProgramTb = uitab(app.FigureTbGp,'Title','Program','Scrollable','on');
+            app.ProgramTb = uitab(app.FigureTbGp,'Title','Fabrication','Scrollable','on');
             app.ProgramTb.ButtonDownFcn = createCallbackFcn(app,@ProgramTbButtonDown,true);
             app.ProgramTb.HandleVisibility = 'off';
             ProgramGl = uigridlayout(app.ProgramTb,[4,2]);
