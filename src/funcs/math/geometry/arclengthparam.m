@@ -148,7 +148,7 @@ elseif size(quat,2) == 4 % input: (arcInv,maxAng,t,f,u,quat,vec,options)
     for ii = 1:numOut - 1
 
 %         plot3(fOut(1,ii),fOut(2,ii),fOut(3,ii),'b.');
-
+% 这里还有问题，每次等弧长的部分运行到这里都报错
         ind1 = find(tOut(ii) >= tEq,1,'last'); % the closest parameter smaller than tEq
         ind2 = find(tOut(ii) < tEq,1,'first'); % the closest parameter larger than tEq
         quat_t = (tOut(ii) - tEq(ind1))/(tEq(ind2) - tEq(ind1));
