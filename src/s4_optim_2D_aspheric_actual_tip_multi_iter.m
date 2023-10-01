@@ -492,6 +492,14 @@ for ii = 1:size(curvePathPt,2)
     peakPlace = [peakPlace,curvePeakPt(5,ii)*ones(1,loopPtNum(end))];
 end
 accumPtNum(1) = [];
+figure;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.5,'LineStyle','none');
+hold on;
+colormap('summer');
+xlabel('x'); ylabel('y'); zlabel('z');
+axis equal;
 for ii = 1:length(toolPathAngle)
     R = rotz(toolPathAngle(ii)/pi*180);
     kk = find(ii <= accumPtNum,1);
@@ -506,6 +514,16 @@ for ii = 1:length(toolPathAngle)
     uLim{ii} = curveULim{kk}; % the u limitation of the tool tip of each tool path point
     interPt{ii} = R*curveInterPt{kk}; % the intersection point of each tool path point
     surfPt(:,ii) = R*curvePt(:,kk); % the contact point of each tool path point
+    plot3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii), ...
+        '.','MarkerSize',6,'Color',[0.8500 0.3250 0.0980]);
+    q1 = quiver3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii), ...
+        toolCutDirect(1,ii),toolCutDirect(2,ii),toolCutDirect(3,ii),100, ...
+        'filled','AutoScale','on','Color',[0.9290 0.6940 0.1250]);
+    q2 = quiver3(toolPathPt(1,ii),toolPathPt(2,ii),toolPathPt(3,ii), ...
+        toolNormDirect(1,ii),toolNormDirect(2,ii),toolNormDirect(3,ii),100, ...
+        'filled','AutoScale','on','Color',[0.6350 0.0780 0.1840]);
+    drawnow;
+    clear q1 q2;
 end
 
 
@@ -737,16 +755,17 @@ for kk = 2:numLoop % begin with the 1st loop
         plot3(spiralPath0(1,indInterp),spiralPath0(2,indInterp),spiralPath0(3,indInterp), ...
             '.','MarkerSize',6,'Color',[0.8500 0.3250 0.0980]);
         q1 = quiver3(spiralPath0(1,indInterp),spiralPath0(2,indInterp),spiralPath0(3,indInterp), ...
-            spiralCut0(1,indInterp),spiralCut0(2,indInterp),spiralCut0(3,indInterp), ...
-            "filled","AutoScale","on");
+            spiralCut0(1,indInterp),spiralCut0(2,indInterp),spiralCut0(3,indInterp),100, ...
+            'filled','AutoScale','on','Color',[0.9290 0.6940 0.1250]);
         q2 = quiver3(spiralPath0(1,indInterp),spiralPath0(2,indInterp),spiralPath0(3,indInterp), ...
-            spiralNorm0(1,indInterp),spiralNorm0(2,indInterp),spiralNorm0(3,indInterp), ...
-            "filled","AutoScale","on");
+            spiralNorm0(1,indInterp),spiralNorm0(2,indInterp),spiralNorm0(3,indInterp),100, ...
+            'filled','AutoScale','on','Color',[0.6350 0.0780 0.1840]);
         drawnow;
         % toolSp1 = toolSp;
         % toolSp1.coefs = quat2rotm(spiralQuat0(indInterp,:))*toolSp.coefs + toolVec0(:,indInterp);
         % Q = fnval(toolSp1,uLim(1,indInterp):0.01:uLim(2,indInterp));
         % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+        clear q1 q2;
     end
 end
 

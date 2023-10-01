@@ -79,7 +79,31 @@ Lastly, codes beginning with `s6_visualize` are sub-function of the tool path op
 - `s6_visualize_spiral.m`: code for spiral path
 - `s6_visualize_spiral_multi.m`: code for multi-intersection spiral path
 
+### Fabrication
 
+In fabrication, the functions mentioned above will be utilized to generate the optimal tool path. 
+
+#### Direction
+
+Since the coordinate of the Moore Nanotech 650 FG V2 remains left-handed, the direction of the tool path should be considered and examined carefully before exporting.
+
+The setup of the machine tool remains the below figure, and there are three parameters in the project that determine the spindle and feed direction:
+
+- `cutDirection`: the feed direction of the cutter, which can be selected as 'Edge to Center' or 'Center to Edge'
+- `startDirection`: the start place of the cutter, which can be selected as 'X Minus' or 'X Plus'. 'X Minus' means that the CL points start at the minus side of the X-axis.
+
+Without loss of generality, suppose that 
+
+```
+cutDirection = 'Edge to Center'
+startDirection = 'X Minus'
+```
+
+Then the cutter start at the minus edge of the surface. Since the rake face should be faced to the cutting direction, the spindle must be rotated 'Counter Clockwise'. 
+
+
+
+![Setup of the Moore Nanotech 650 FG V2](doc/fig15 machine tool setup.svg)
 
 ## Workspace
 
