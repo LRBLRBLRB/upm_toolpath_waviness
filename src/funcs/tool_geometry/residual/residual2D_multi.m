@@ -24,6 +24,7 @@ arguments
     uLim2 (2,:) double
     options.uDirection {mustBeMember(options.uDirection,{'U Plus','U Minus'})} = 'U Minus'
     options.aimRes (1,1) double = 1
+    options.curveFunc = []
 end
 
 %% solve the intersection point of the two spline curve
@@ -285,6 +286,9 @@ end
 peakPt = peakPtTmp(:,resInd);
 peakPt(4) = peakUTmp(resInd);
 peakPt(5) = -1*(resInd > kk);
+if ~isempty(options.curveFunc)
+    res = dist2curve([peakPt(1);peakPt(3)],options.curveFunc);
+end
 
 %% another method to get the residual height
 

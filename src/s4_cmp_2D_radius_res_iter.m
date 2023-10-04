@@ -62,12 +62,13 @@ arcLength = 20; % um
 maxAngPtDist = 1*pi/180;
 angularLength = 1*pi/180;
 radialIncrement = 'On-Axis'; % 'Surface'
-aimRes = 1; % um
+aimRes = 0.5; % um
 rStep = toolData.toolRadius/2; % 每步步长可通过曲面轴向偏导数确定
 maxIter = 100;
 spiralMethod = 'Radius-Number'; % Radius-Angle
 frMethodDefault = 'Approximation'; % 'Approximation'
 frParamDefault = 1-1e-5;
+dist2Surf = false;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

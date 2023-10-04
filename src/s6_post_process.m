@@ -9,7 +9,7 @@ textFontType = 'Times New Roman';
 
 addpath(genpath('funcs'));
 if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
-    workspaceDir = uigetdir(fullfile('..','workspace','20230504 D906'),'select the workspace directory:');
+    workspaceDir = uigetdir(fullfile('..','workspace'),'select the workspace directory:');
     % the spiral path does not exist in the workspace
     [fileName,dirName] = uigetfile({ ...
         '*.mat','MAT-files(*.mat)'; ...
@@ -18,13 +18,15 @@ if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
         fullfile(workspaceDir,'spiralpath.mat'), ...
         'MultiSelect','off');
     toolPathPath = fullfile(dirName,fileName);
-    processData = load(toolPathPath);
-    % toolName = 'output_data\tool\toolTheo_3D.mat';
-    spiralAngle = processData.spiralAngle;
-    spiralPath = processData.spiralPath;
-    spiralNorm = processData.spiralNorm;
-    spiralCut = processData.spiralCut;
-    spiralQuat = processData.spiralQuat;
+    load(toolPathPath);
+%     processData = load(toolPathPath);
+%     spiralAngle = processData.spiralAngle;
+%     spiralPath = processData.spiralPath;
+%     spiralNorm = processData.spiralNorm;
+%     spiralCut = processData.spiralCut;
+%     spiralQuat = processData.spiralQuat;
+%     surfMesh = processData.surfMesh;
+%     approxMethod = processData.approxMethod;
 end
 
 %% generate the 5-axis tool path from original data
@@ -60,8 +62,8 @@ end
 
 % direction correction
 %         if strcmp(startDirection,'X Plus')
-axisX = -1.*axisX;
-axisC = wrapTo360(-1.*axisC);
+% axisX = -1.*axisX;
+% axisC = wrapTo360(-1.*axisC);
 axisC(find(abs(axisC - 360) < 1e-3)) = 0;
 %         end
 
@@ -73,26 +75,68 @@ waitBar2 = waitbar(0,'Figure Plotting ...','Name','CNC Data Plot', ...
     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
 setappdata(waitBar2,'canceling',0);
 
-figure;
-% rSpar = linspace(0,surfRange,cncNum/10);
-% plot(rSpar,surfFunc(rSpar),'Color',[0.8500 0.3250 0.0980],'LineWidth',2);
-% hold on;
+figure; 
+tiledlayout(1,2);
+pos = get(gcf,'position');
+set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
+
+ax1 = nexttile;
+surf(ax1, ...
+    surfMesh(:,:,1)*0.001,surfMesh(:,:,3)*0.001,-1*surfMesh(:,:,2)*0.001, ...
+    'FaceColor','flat','FaceAlpha',0.3,'LineStyle','none');
+hold(ax1,'on');
+colormap(ax1,'summer');
+xlabel(ax1,'x'); ylabel(ax1,'z'); zlabel(ax1,'y');
+view(ax1,-255,15);
+
+ax2 = nexttile;
+surf(ax2, ...
+    surfMesh(:,:,1)*0.001,surfMesh(:,:,3)*0.001,surfMesh(:,:,2)*0.001, ...
+    'FaceColor','flat','FaceAlpha',0.3,'LineStyle','none');
+hold(ax2,'on');
+colormap(ax2,'summer');
+xlabel(ax2,'x'); ylabel(ax2,'z'); zlabel(ax2,'y');
+view(ax2,-255,15);
+
+% tool
+toolSp = toolData.toolBform;
+if strcmp(startDirection,'X Plus')
+    toolSp.coefs = toolSp.coefs*0.001 + [0.3;0;0.5];
+else
+    toolSp.coefs = toolSp.coefs*0.001 + [-0.3;0;0.5];
+end
+toolSpPt = fnval(toolSp,0:0.01:1);
+TEdge = plot3(ax2,toolSpPt(2,:),toolSpPt(3,:),toolSpPt(1,:),'Color',[0,0.4470,0.7410]);
+TFill = patch(ax2,'XData',toolSpPt(2,:),'YData',toolSpPt(3,:),'ZData',toolSpPt(1,:),...
+    'EdgeColor','none','FaceColor',[0.9290 0.6940 0.1250],'FaceAlpha',0.3);
+
 cncNum = length(axisC);
-x = axisX.*cosd(axisC);
-y = axisX.*sind(axisC);
-Pt = scatter3(x(1),y(1),axisZ(1),6, ...
-    'MarkerEdgeColor','flat','MarkerFaceColor',[0.8500 0.3250 0.0980]); hold on;
+X = axisX.*cosd(axisC);
+Y = axisX.*sind(axisC);
+Z = axisZ;
+
+Pt1 = scatter3(ax1,spiralPath1(1,1),spiralPath1(3,1),-1*spiralPath1(2,1),12, ...
+    'MarkerEdgeColor','flat','MarkerFaceColor',[0.8500 0.3250 0.0980]);
+Pt2 = scatter3(ax2,X(1),Z(1),Y(1),12, ...
+    'MarkerEdgeColor','flat','MarkerFaceColor',[0.8500 0.3250 0.0980]);
 for ii = 2:cncNum
     % Check for clicked Cancel button
     if getappdata(waitBar2,'canceling')
         break;
     end
 
-    delete(Pt);
-    Pt = scatter3(x(ii),y(ii),axisZ(ii),6, ...
+    delete(Pt1);
+    delete(Pt2);
+    Pt1 = scatter3(ax1,spiralPath1(1,ii),spiralPath1(3,ii),-1*spiralPath1(2,ii),12, ...
         'MarkerEdgeColor','flat','MarkerFaceColor',[0.8500 0.3250 0.0980]);
-    line([x(ii - 1),x(ii)],[y(ii - 1),y(ii)],[axisZ(ii - 1),axisZ(ii)], ...
-        'Color',[0,0.4470,0.7410],'LineWidth',0.1); hold on;
+    line(ax1,[spiralPath1(1,ii - 1),spiralPath1(1,ii)], ...
+        [spiralPath1(3,ii - 1),spiralPath1(3,ii)], ...
+        [-1*spiralPath1(2,ii - 1),-1*spiralPath1(2,ii)], ...
+        'Color',[0,0.4470,0.7410],'LineWidth',0.1);
+    Pt2 = scatter3(ax2,X(ii),Z(ii),Y(ii),6, ...
+        'MarkerEdgeColor','flat','MarkerFaceColor',[0.8500 0.3250 0.0980]);
+    line(ax2,[X(ii - 1),X(ii)],[Z(ii - 1),Z(ii)],[Y(ii - 1),Y(ii)], ...
+        'Color',[0,0.4470,0.7410],'LineWidth',0.1);
 
     displayData = num2str(roundn(ii/cncNum*100,-2)); % Calculate percentage
     displayStr = ['Figure Plotting ... (',num2str(ii),'/', ...
@@ -110,8 +154,8 @@ spiralncFolderName = getlastfoldername(workspaceDir);
     'Enter the file to save the CNC code',fullfile( ...
     workspaceDir,[spiralncFolderName,'-spiralPath-',approxMethod,datestr(now,'yyyymmddTHHMMSS'),'.nc']));
 if ~ncFname
-    msgbox(sprintf('\\fontname{%s}\\fontsize{%d} No CNC file saved.', ...
-        textFontType,textFontSize),'Message','warn',msgMode);
+    msgbox('No CNC file saved.','Message','warn','non-modal');
+    return;
 end
 ncFile = fullfile(ncPath,ncFname);
 loop.num = 1;

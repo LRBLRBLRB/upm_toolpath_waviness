@@ -27,7 +27,8 @@ arguments
     options.radiusDisplay {mustBeMember(options.radiusDisplay,{'none','off', ...
         'iter','iter-detailed','final','final-detailed'})} = 'iter'
     options.optimopt
-    options.uDirection {mustBeMember(options.uDirection,{'U Plus','U Minus'})} = 'U Minus'
+    options.uDirection {mustBeMember(options.uDirection,{'U Plus','U Minus'})} = 'U Plus'
+    options.curveFunc logical = false
 end
 
 toolSp = toolData.toolBform; % B-form tool tip arc
@@ -52,6 +53,11 @@ curvePeakPt = zeros(5,1);
 curveInterPt = {zeros(3,1)};
 curveRes = 5*aimRes; % the residual height, initialized with 5 times the standard aimRes
 
+if options.curveFunc
+    curveFunc = surfFunc;
+else
+    curveFunc = [];
+end
 
     function diffRes = iterfunc(r)
         curveULim{ind} = [0;1];
@@ -79,7 +85,7 @@ curveRes = 5*aimRes; % the residual height, initialized with 5 times the standar
         [curveRes(ind),curvePeakPt(:,ind),curveInterPt{ind},curveULim1, ...
             curveULim2] = residual2D_multi(toolSp1,toolSp2,1e-5, ...
             curvePt(:,ind),curvePt(:,ind - 1),curveULim{ind - 1}, ...
-            'uDirection',options.uDirection,'aimRes',aimRes);
+            'uDirection',options.uDirection,'aimRes',aimRes,'curveFunc',curveFunc);
         % curvePeakPt(5,ind) = curvePeakPt(5,ind) + ind;
     
         if isinf(curveRes(ind))
@@ -159,6 +165,7 @@ while (r - rRange(2))*delta0 < 0
 %         scatter(toolContactPt10(1),toolContactPt10(3),18,[0.929,0.694,0.1250],"filled");
 %         scatter(toolContactPt20(1),toolContactPt20(3),18,[0.929,0.694,0.1250],"filled");
 %         scatter(curveInterPt{ind}(1,:),curveInterPt{ind}(3,:),18,[0.850,0.325,0.0980],"filled");
+%         drawnow;
 
     fprintf('No.%d\t toolpath %f\t[r = %f] is calculated within %fs.\n-----\n',ind,curvePathPt(1,ind),r,toc);
 end

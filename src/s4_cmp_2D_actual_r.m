@@ -104,7 +104,7 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
-    startDirection = 'X Minus'; % 'X Minus'
+    startDirection = 'X Minus'; % 'X Minus' 
     angularIncrement = 'Constant Arc'; % 'Constant Angle'
     arcLength = 20; % um
     maxAngPtDist = 1*pi/180;
@@ -115,6 +115,7 @@ else
     spiralMethod = 'Radius-Number'; % Radius-Angle
     frMethodDefault = 'Approximation'; % 'Approximation'
     frParamDefault = 1-1e-5;
+    dist2Surf = false;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
