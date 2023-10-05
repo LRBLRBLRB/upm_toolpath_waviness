@@ -99,17 +99,38 @@ xlabel(ax2,'x'); ylabel(ax2,'z'); zlabel(ax2,'y');
 view(ax2,-255,15);
 
 % tool
-toolSp = toolData.toolBform;
 if strcmp(startDirection,'X Plus')
-    toolSp.coefs = toolSp.coefs*0.001 + [0.3;0;0.5];
+    simulCenter = [0.3;0;0.5];
+    if strcmp(cutDirection,'Edge to Center')
+        simulDir = [0;-1;0];
+    else
+        simulDir = [0;1;0];
+    end
 else
-    toolSp.coefs = toolSp.coefs*0.001 + [-0.3;0;0.5];
+    if strcmp(cutDirection,'Edge to Center')
+        simulDir = [0;1;0];
+    else
+        simulDir = [0;-1;0];
+    end
+    simulCenter = [-0.3;0;0.5];
 end
-toolSpPt = fnval(toolSp,0:0.01:1);
+if isfield(toolData,"toolBform")
+    toolSp = toolData.toolBform;
+    toolSp.coefs = toolSp.coefs*0.001 + simulCenter;
+    toolSpPt = fnval(toolSp,0:0.01:1);
+else
+    theta = 0:0.01:2*pi;
+    toolSpPt(1,:) = zeros(1,length(theta)) + simulCenter(1);
+    toolSpPt(2,:) = 0.001*toolData.toolRadius*cos(theta) + simulCenter(2);
+    toolSpPt(3,:) = 0.001*toolData.toolRadius*sin(theta) + simulCenter(3);
+end
 TEdge = plot3(ax2,toolSpPt(2,:),toolSpPt(3,:),toolSpPt(1,:),'Color',[0,0.4470,0.7410]);
 TFill = patch(ax2,'XData',toolSpPt(2,:),'YData',toolSpPt(3,:),'ZData',toolSpPt(1,:),...
     'EdgeColor','none','FaceColor',[0.9290 0.6940 0.1250],'FaceAlpha',0.3);
 
+% draw the cut direction
+quiver3(simulCenter(2),simulCenter(3),simulCenter(1), ...
+    simulDir(2),simulDir(3),simulDir(1),'AutoScale','on','LineWidth',1,'Color',[0.8500 0.3250 0.0980]);
 cncNum = length(axisC);
 X = axisX.*cosd(axisC);
 Y = axisX.*sind(axisC);
@@ -162,6 +183,9 @@ loop.num = 1;
 loop.offset = 0;
 loop.step = 0;
 writecnc_STS(ncFile,'G55','T0303',axisC,axisX,axisZ,loop);
+
+% testify whether the cnc file is correct or not
+checkCNC(axisC,axisX,axisZ,textFontSize,textFontType);
 
 %%
 % rmpath(genpath('funcs'));

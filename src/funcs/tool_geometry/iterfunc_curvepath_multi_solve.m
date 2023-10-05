@@ -40,15 +40,15 @@ if abs(rRange(2)) > abs(rRange(1)) % to ensure the rake face on top
 else
     cutDirect = [0;-1;0];
 end
-% 好像不对啊，center-to-edge的时候，也是[0;-1;0]呀
 
 % the rest
 switch options.uDirection % the interval of each toolpath
     case 'U Plus'
-        curveULim = {[0;1]};
+        curveULimIni = [0;1];
     case 'U Minus'
-        curveULim = {[1;0]};
+        curveULimIni = [1;0];
 end
+curveULim = {curveULimIni};
 curvePeakPt = zeros(5,1);
 curveInterPt = {zeros(3,1)};
 curveRes = 5*aimRes; % the residual height, initialized with 5 times the standard aimRes
@@ -60,7 +60,7 @@ else
 end
 
     function diffRes = iterfunc(r)
-        curveULim{ind} = [0;1];
+        curveULim{ind} = curveULimIni;
         curvePt(:,ind) = [r;0;surfFunc(r)];
         if abs(curvePt(1,ind) -  curvePt(1,ind - 1)) < 1e-3
             diffRes = - aimRes;
@@ -71,7 +71,7 @@ end
         % calculate the surfPt and toolpathPt from center to edge
         [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind)] = ...
             curvetippos(toolData,curvePt(:,ind),surfNorm,[0;0;-1],cutDirect, ...
-            "directionType",'norm-cut');
+            'directionType',options.directionType);
         % toolNormDirect(:,ind) = quat2rotm(toolQuat(ind,:))*toolData.toolEdgeNorm;
     
         % calculate the residual height of the loop and the inner nearest loop

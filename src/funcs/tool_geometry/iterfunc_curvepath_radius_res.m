@@ -1,6 +1,7 @@
-function [toolPathPt,toolQuat,toolContactU,surfPt,res,peakPt,uLim] = ...
-    iterfunc_curvepath_radius_res(surfFuncr,surfFxr,toolData,toolPathPt, ...
-    toolQuat,toolContactU,surfPt,delta0,aimRes,rRange,options)
+function [curvePathPt,curveQuat,curveContactU,curvePt,curveRes, ...
+    curvePeakPt,curveULim] = iterfunc_curvepath_radius_res( ...
+    surfFunc,surfFx,toolData,curvePathPt,curveQuat,curveContactU,curvePt, ...
+    delta0,aimRes,rRange,options)
 %ITERFUNC_CURVEPATH the objective function of the iterative process to
 %calculate the concentric toolpath of the aspheric surface, i.e., the
 %toolpath of the curve, which is the generatrix of the surface.
@@ -8,23 +9,23 @@ function [toolPathPt,toolQuat,toolContactU,surfPt,res,peakPt,uLim] = ...
 % no need to use the global variables
 
 arguments
-    surfFuncr function_handle
-    surfFxr function_handle
+    surfFunc function_handle
+    surfFx function_handle
     toolData struct
-    toolPathPt (3,1) double
-    toolQuat (1,4) double
-    toolContactU (1,1) double
-    surfPt (3,1) double
+    curvePathPt (3,1) double
+    curveQuat (1,4) double
+    curveContactU (1,1) double
+    curvePt (3,1) double
     delta0 (1,1) double
     aimRes (1,1) double
     rRange (1,2) double
     options.algorithm {mustBeMember(options.algorithm, ...
         {'trust-region-dogleg','trust-region','levenberg-marquardt', ...
         'fzero','search-bisection','genetic','particle-swarm'})} = 'search-bisection'
-    options.radiusDisplay {mustBeMember(options.radiusDisplay,{'none','off', ...
-        'iter','iter-detailed','final','final-detailed'})} = 'iter'
     options.directionType {mustBeMember(options.directionType, ...
         {'quaternion','norm-cut','norm-feed'})} = 'norm-cut'
+    options.radiusDisplay {mustBeMember(options.radiusDisplay,{'none','off', ...
+        'iter','iter-detailed','final','final-detailed'})} = 'iter'
     options.optimopt
 end
 
@@ -36,29 +37,29 @@ else
     cutDirect = [0;-1;0];
 end
 
-res = 5*aimRes; % the residual height, initialized with 5 times the standard aimRes
-peakPt = zeros(3,1); % peak point coordinates
-uLim = [0;0];
+curveRes = 5*aimRes; % the residual height, initialized with 5 times the standard aimRes
+curvePeakPt = zeros(3,1); % peak point coordinates
+curveULim = [0;2*pi];
 
     function diffRes = iterfunc(r)
+        curveULim(:,ind) = [0;2*pi];
+        curvePathPt(:,ind) = [r;0;surfFunc(r)];
+        if abs(curvePathPt(1,ind) -  curvePathPt(1,ind - 1)) < 1e-3
+            diffRes = - aimRes;
+            return;
+        end
         % calculate the surfPt and toolpathPt from center to edge
-        toolPathPt(:,ind) = [r;0;surfFuncr(r)];
-        [toolPathPt(:,ind),toolQuat(ind,:),toolContactU(ind),surfPt(:,ind)] = ...
-            radiuspos(surfFuncr,surfFxr,toolData,toolPathPt(:,ind),[0;0;-1],cutDirect, ...
-            'directionType','norm-cut');
-%         surfPt(:,ind) = [r;0;surfFuncr(r)];
-%         surfNorm = [surfFxr(r);0;-1];
-%         surfNorm = surfNorm./norm(surfNorm);
-%         [toolPathPt(:,ind),toolQuat(ind,:),toolContactU(ind)] = radiustippos( ...
-%             toolData.toolRadius,surfPt(:,ind),surfNorm,[0;0;-1],cutDirect, ...
-%             'directionType',options.directionType);
+        [curvePathPt(:,ind),curveQuat(ind,:),curveContactU(ind),curvePt(:,ind)] = ...
+            radiuspos(surfFunc,surfFx,toolData,curvePathPt(:,ind),[0;0;-1],cutDirect, ...
+            'directionType',options.directionType);
+        % toolNormDirect(:,ind) = quat2rotm(toolQuat(ind,:))*toolData.toolEdgeNorm;
 
         % calculate the residual height of the loop and the inner nearest loop
-        a = norm(toolPathPt(:,ind) - toolPathPt(:,ind - 1));
-        res(ind) = toolData.toolRadius - sqrt(toolData.toolRadius^2 - a^2/4);
-        diffRes = res(ind) - aimRes;
+        a = norm(curvePathPt(:,ind) - curvePathPt(:,ind - 1));
+        curveRes(ind) = toolData.toolRadius - sqrt(toolData.toolRadius^2 - a^2/4);
+        diffRes = curveRes(ind) - aimRes;
 
-%         figure; 
+%         figure;
 %         scatter(toolPathPt(1,ind),toolPathPt(3,ind));
 %         rectangle('Position',[toolPathPt(1,ind)-toolData.toolRadius,toolPathPt(3,ind)-toolData.toolRadius, ...
 %             2*toolData.toolRadius,2*toolData.toolRadius],'Curvature',[1,1]);
@@ -78,13 +79,13 @@ uLim = [0;0];
 %         plot(toolPt2(1,:),toolPt2(3,:),'Color',[0.7,.7,.7]);
     end
 
-r = rRange(1);
+r = curvePathPt(1,1);
 ind = 1;
 while (r - rRange(2))*delta0 < 0
     ind = ind + 1;
     tic
     % initial value
-    delta = 2*sqrt((2*toolData.toolRadius*aimRes - aimRes^2))*cos(atan(surfFxr(r)));
+    delta = 2*sqrt((2*toolData.toolRadius*aimRes - aimRes^2))*cos(atan(surfFx(r)));
     % direction to iterate
     delta = sign(delta0)*delta;
     r0 = r + delta;
@@ -142,13 +143,13 @@ while (r - rRange(2))*delta0 < 0
     % [r,diffRes2] = fminsearch(@iterfunc,r0,opt1);
 
     % 
-    Norm = norm(toolPathPt(:,ind) - toolPathPt(:,ind - 1));
-    peakPt(:,ind) = 1/2*(toolPathPt(:,ind) + toolPathPt(:,ind - 1)) + sqrt(toolData.toolRadius^2 - Norm^2/4) ...
-        *roty(-90)*(toolPathPt(:,ind) - toolPathPt(:,ind - 1))/Norm;    
-    vec1 = toolPathPt(:,ind) - peakPt;
-    uLim(1,ind) = atan2(vec1(end),vec1(1));
-    vec2 = toolPathPt(:,ind - 1) - peakPt;
-    uLim(2,ind - 1) = atan2(vec2(end),vec2(1));
+    Norm = norm(curvePathPt(:,ind) - curvePathPt(:,ind - 1));
+    curvePeakPt(:,ind) = 1/2*(curvePathPt(:,ind) + curvePathPt(:,ind - 1)) + sqrt(toolData.toolRadius^2 - Norm^2/4) ...
+        *roty(-90)*(curvePathPt(:,ind) - curvePathPt(:,ind - 1))/Norm;    
+    vec1 = curvePathPt(:,ind) - curvePeakPt;
+    curveULim(1,ind) = atan2(vec1(end),vec1(1));
+    vec2 = curvePathPt(:,ind - 1) - curvePeakPt;
+    curveULim(2,ind - 1) = atan2(vec2(end),vec2(1));
 
 %     if isempty(r) || isnan(r)
 %         r = r0;
@@ -171,6 +172,11 @@ while (r - rRange(2))*delta0 < 0
     % pause(0.5);
 end
 
-% u-limit modification
-
+% center point correction
+curvePathPt(1,end) = 0;
+[curvePathPt(:,end),curveQuat(end,:),curveContactU(end),curvePt(:,end)] = ...
+    radiuspos(surfFunc,surfFx,toolData,curvePathPt(:,end),[0;0;-1],cutDirect, ...
+    'directionType',options.directionType);
+a = norm(curvePathPt(:,end) - curvePathPt(:,end - 1));
+curveRes(end) = toolData.toolRadius - sqrt(toolData.toolRadius^2 - a^2/4);
 end

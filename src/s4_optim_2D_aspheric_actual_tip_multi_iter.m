@@ -72,6 +72,7 @@ else
     unit = '\mum';
     textFontSize = 12;
     textFontType = 'Times New Roman';
+    unitList = {'m','mm','\mum','nm'};
     
     tPar0 = tic;
     parObj = gcp;
@@ -92,7 +93,6 @@ else
     toolName = fullfile(toolDirName,toolFileName);
     % tool data unit convertion
     toolData = load(toolName);
-    unitList = {'m','mm','\mum','nm'};
     presUnit = find(strcmp(unitList,toolData.unit),1);
     aimUnit = find(strcmp(unitList,unit),1);
     toolData.center = 1000^(aimUnit - presUnit)*toolData.center;
@@ -262,8 +262,8 @@ curveNorm = curveNorm./norm(curveNorm);
 % the first toolpath pt
 % [curvePathPt,curveQuat,curveContactU,curvePt] = ...
 %     curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],[0;-1;0]);
-[curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt,curveNorm, ...
-    [0;0;-1],cutDirect,'directionType','norm-cut');
+[curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt, ...
+    curveNorm,[0;0;-1],cutDirect,'directionType','norm-cut');
 curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
 % rRange(1) = curvePt(1);
 
@@ -458,6 +458,7 @@ nexttile(3);
 scatter(curvePeakPt(1,2:end),curveRes(2:end));
 xlabel(['r (',unit,')']);
 ylabel(['residual error (',unit,')']);
+drawnow;
 
 %% concentric toolpath generation for each loop
 toolPathAngle = []; % tool path angle
@@ -496,7 +497,7 @@ for ii = 1:size(curvePathPt,2)
     toolPathAngle = [toolPathAngle,conTheta0 + ...
         sign(conThetaBound(2) - conThetaBound(1))*2*pi*(ii - 1)];
     toolRAccum = [toolRAccum,curvePathPt(1,ii)*ones(1,loopPtNum(end))];
-    toolContactU = [toolContactU,curveContactU(ii)*ones(1,loopPtNum(end))]; 
+    toolContactU = [toolContactU,curveContactU(ii)*ones(1,loopPtNum(end))];
     res = [res,curveRes(ii)*ones(1,loopPtNum(end))];
     peakPlace = [peakPlace,curvePeakPt(5,ii)*ones(1,loopPtNum(end))];
 end
@@ -581,6 +582,7 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 zlabel(['z (',unit,')']);
 legend('designed surface','tool center point','Location','northeast');
+drawnow;
 
 warningTone = load('handel');
 % sound(warningTone.y,warningTone.Fs);
@@ -763,20 +765,20 @@ for kk = 2:numLoop % begin with the 1st loop
         spiralNorm0(:,indInterp) = quat2rotm(spiralQuat0(indInterp,:))*toolData.toolEdgeNorm;
         spiralCut0(:,indInterp) = quat2rotm(spiralQuat0(indInterp,:))*toolData.cutDirect;
         % test & debug & video
-%         plot3(spiralPath0(1,indInterp),spiralPath0(2,indInterp),spiralPath0(3,indInterp), ...
-%             '.','MarkerSize',6,'Color',[0.8500 0.3250 0.0980]);
-%         q1 = quiver3(spiralPath0(1,indInterp),spiralPath0(2,indInterp),spiralPath0(3,indInterp), ...
-%             spiralCut0(1,indInterp),spiralCut0(2,indInterp),spiralCut0(3,indInterp),100, ...
-%             'filled','AutoScale','on','Color',[0.9290 0.6940 0.1250]);
-%         q2 = quiver3(spiralPath0(1,indInterp),spiralPath0(2,indInterp),spiralPath0(3,indInterp), ...
-%             spiralNorm0(1,indInterp),spiralNorm0(2,indInterp),spiralNorm0(3,indInterp),100, ...
-%             'filled','AutoScale','on','Color',[0.6350 0.0780 0.1840]);
-%         drawnow;
-%         % toolSp1 = toolSp;
-%         % toolSp1.coefs = quat2rotm(spiralQuat0(indInterp,:))*toolSp.coefs + toolVec0(:,indInterp);
-%         % Q = fnval(toolSp1,uLim(1,indInterp):0.01:uLim(2,indInterp));
-%         % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
-%         clear q1 q2;
+        % plot3(spiralPath0(1,indInterp),spiralPath0(2,indInterp),spiralPath0(3,indInterp), ...
+        %     '.','MarkerSize',6,'Color',[0.8500 0.3250 0.0980]);
+        % q1 = quiver3(spiralPath0(1,indInterp),spiralPath0(2,indInterp),spiralPath0(3,indInterp), ...
+        %     spiralCut0(1,indInterp),spiralCut0(2,indInterp),spiralCut0(3,indInterp),100, ...
+        %     'filled','AutoScale','on','Color',[0.9290 0.6940 0.1250]);
+        % q2 = quiver3(spiralPath0(1,indInterp),spiralPath0(2,indInterp),spiralPath0(3,indInterp), ...
+        %     spiralNorm0(1,indInterp),spiralNorm0(2,indInterp),spiralNorm0(3,indInterp),100, ...
+        %     'filled','AutoScale','on','Color',[0.6350 0.0780 0.1840]);
+        % drawnow;
+        % % toolSp1 = toolSp;
+        % % toolSp1.coefs = quat2rotm(spiralQuat0(indInterp,:))*toolSp.coefs + toolVec0(:,indInterp);
+        % % Q = fnval(toolSp1,uLim(1,indInterp):0.01:uLim(2,indInterp));
+        % % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5);
+        % clear q1 q2;
     end
 end
 
@@ -851,14 +853,10 @@ spiralFolderName = getlastfoldername(workspaceDir);
     fullfile(workspaceDir,append(spiralFolderName(1),'-spiralPath-',approxMethod, ...
     '-',datestr(now,'yyyymmddTHHMMSS'),'.mat')));
 spiralPathName = fullfile(spiralPathDirName,spiralPathFileName);
-
-% if ~spiralPathFileName
-%     return;
-% end
-% save(spiralPathName,"spiralAngle","spiralPath");
-% % ,"spiralQuat", ...
-% %     "spiralNorm","spiralCut");
-% return;
+if spiralPathFileName
+    save(spiralPathName,"spiralAngle","spiralPath","spiralQuat", ...
+        "spiralNorm","spiralCut");
+end
 
 msgfig = questdlg({'Spiral tool path was generated successfully!', ...
     'Ready to continue to simulate?'}, ...
