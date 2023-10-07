@@ -165,10 +165,10 @@ switch startDirection
         rStep = 1*rStep;
         % cutDirect = [0;-1;0];
 end
+
 cutDirect = [0;-1;0]; % aimed cut direction
 
-% uDirection represents the direction of the parameter u which increase
-if isUIncrease*rStep > 0
+if isUIncrease*rStep > 0 % the direction of the parameter u while feeding
     % ([1,0] & X Plus) or ([0,1] & X Minus)
     uDirection = 'U Plus';
 else
@@ -259,13 +259,13 @@ toolRadius = toolData.radius; % fitted tool radius
 curvePt = [rRange(1);0;curveFunc(rRange(1))];
 curveNorm = [curveFx(rRange(1));0;-1];
 curveNorm = curveNorm./norm(curveNorm);
-% the first toolpath pt
-% [curvePathPt,curveQuat,curveContactU,curvePt] = ...
-%     curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],[0;-1;0]);
 [curvePathPt,curveQuat,curveContactU] = curvetippos(toolData,curvePt, ...
     curveNorm,[0;0;-1],cutDirect,'directionType','norm-cut');
-curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
+% curvePathPt = [rRange(1);0;curveFunc(rRange(1))];
+% [curvePathPt,curveQuat,curveContactU,curvePt] = ...
+%     curvepos(curveFunc,curveFx,toolData,curvePathPt,[0;0;-1],cutDirect);
 % rRange(1) = curvePt(1);
+curveNorm = quat2rotm(curveQuat)*toolData.toolEdgeNorm;
 
 %     scatter(curvePathPt(1,1),curvePathPt(3,1),36,[0.4940,0.1840,0.5560]);
 %     toolSp0 = toolData.toolBform;
@@ -401,9 +401,8 @@ if strcmp(startDirection,'X Minus')
 %         tmpSorted = sort(tmp(:),'ascend');
 %         curveULim{ii} = reshape(tmpSorted,2,[]);
 %     end
-
-    curveULim{end}(end) = innermostU;
 end
+curveULim{end}(end) = innermostU;
 clear tmpU toolSp1 toolSp2;
 
 fprintf('The toolpath concentric optimization process causes %f seconds.\n',toc(tRes0));
@@ -536,10 +535,7 @@ for ii = 1:length(toolPathAngle)
 %     clear q1 q2;
 end
 
-
-%% 
 nexttile(2,[2,1]);
-% figure;
 surf( ...
     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
     'FaceColor','flat','FaceAlpha',0.8,'LineStyle','none');
@@ -586,7 +582,7 @@ drawnow;
 
 warningTone = load('handel');
 % sound(warningTone.y,warningTone.Fs);
-s6_visualize_concentric_multi;
+% s6_visualize_concentric_multi;
 
 msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
     'Concentric tool path was generated successfully!'],textFontSize,textFontType), ...
@@ -657,8 +653,10 @@ end
     ylabel(['Cutting width of each Loop (',unit,')']);
     % line([0,loopRcsape(end)/(2*pi/maxAngPtDist/rStep)],[0,loopRcsape(end)], ...
     %     'Color',[0.929,0.694,0.1250]);
-    set(gca,'FontSize',textFontSize,'FontName',textFontType);
+    set(gca,'FontSize',textFontSize,'FontName',textFontType, ...
+        'XColor','k','XMinorGrid','on');
     grid on;
+    box on;
     xlabel('Concentric Angle');
     legend('No.-R scatters','Approx result','Concentric result','Pitch');
 
@@ -714,6 +712,25 @@ end
 %             string(datestr(now))));
 %         save(smoothName,"Comments","Fr","rTheta");
 % end
+
+%%
+curveFxSym = subs(surfFx,y,0);
+curveArc = matlabFunction(int((1 + curveFxSym.^2).^0.5,'x',rRange(1),x),'Vars',x);
+curveREach = zeros(1,size(curvePt,2));
+for ii = 1:size(curvePt,2)
+    curveREach(ii) = curveArc(curvePt(1,ii));
+end
+diffCurveR = diff(curveREach);
+
+warnOpt.Interpreter = 'tex';
+warnOpt.WindowStyle = 'non-modal';
+warndlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
+    'Tool Path Smoothing Successfully!\n'],textFontSize,textFontType), ...
+    sprintf('Average toolpath width (On-Axis) is %f',mean(abs(diff(curvePathPt(1,:))))), ...
+    sprintf('Average cutting width (On-Axis) is %f',mean(abs(diff(curvePt(1,:))))), ...
+    sprintf('Average cutting width (Surface) is %f',mean(diffCurveR)), ...
+    },'Tool Path Smoothing',warnOpt);
+
 
 %% spiral tool path generation with the smoothing result
 % initialize the spiral path

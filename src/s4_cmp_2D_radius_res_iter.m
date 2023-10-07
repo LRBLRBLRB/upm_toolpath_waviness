@@ -42,7 +42,7 @@ fprintf('The time spent in the parallel computing activating process is %fs.\n',
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % tool parameters
-toolData.toolRadius = 189.3576;
+toolData.toolRadius = 192; % 189.3576;
 toolData.toolEdgeNorm = [0;0;-1];
 toolData.cutDirect = [1;0;0];
 presUnit = find(strcmp(unitList,'\mum'),1);
@@ -95,6 +95,7 @@ switch startDirection
         rMax = min(zAllowance*surfDomain(1,1),zAllowance*surfDomain(2,1)); % reverse
         rStep = 1*rStep;
 end
+
 cutDirect = [0;-1;0]; % aimed cut direction
 
 switch cutDirection
