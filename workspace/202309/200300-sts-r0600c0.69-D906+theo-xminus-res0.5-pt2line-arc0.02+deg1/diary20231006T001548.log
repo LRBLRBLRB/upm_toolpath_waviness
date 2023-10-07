@@ -1,0 +1,165 @@
+-----
+No.1	 toolpath -520.512000	[r = -600.000000] is calculated within 0.150165s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-494.665069	0.020351
+1	-495.182008	-0.000183
+bisection interval found by 1-dim search: [-495.182008,-494.665069]
+-----
+No.2	 toolpath point at [r = -495.177464] is calculated within 1.151826s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-469.149395	0.017796
+1	-469.669957	-0.002644
+bisection interval found by 1-dim search: [-469.669957,-469.149395]
+-----
+No.3	 toolpath point at [r = -469.602345] is calculated within 0.034397s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-443.401759	0.015469
+1	-443.925771	-0.004885
+bisection interval found by 1-dim search: [-443.925771,-443.401759]
+-----
+No.4	 toolpath point at [r = -443.799374] is calculated within 0.032653s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-417.435058	0.013378
+1	-417.962344	-0.006898
+bisection interval found by 1-dim search: [-417.962344,-417.435058]
+-----
+No.5	 toolpath point at [r = -417.781604] is calculated within 0.029691s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-391.262500	0.011432
+1	-391.792882	-0.008772
+bisection interval found by 1-dim search: [-391.792882,-391.262500]
+-----
+No.6	 toolpath point at [r = -391.561358] is calculated within 0.034155s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-364.896545	0.009662
+1	-365.429841	-0.010477
+bisection interval found by 1-dim search: [-365.429841,-364.896545]
+-----
+No.7	 toolpath point at [r = -365.151215] is calculated within 0.032563s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-338.349907	0.008060
+1	-338.885934	-0.012022
+bisection interval found by 1-dim search: [-338.885934,-338.349907]
+-----
+No.8	 toolpath point at [r = -338.564004] is calculated within 0.029625s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-311.635537	0.006617
+1	-312.174106	-0.013412
+bisection interval found by 1-dim search: [-312.174106,-311.635537]
+-----
+No.9	 toolpath point at [r = -311.812781] is calculated within 0.032546s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-284.766604	0.005328
+1	-285.307528	-0.014656
+bisection interval found by 1-dim search: [-285.307528,-284.766604]
+-----
+No.10	 toolpath point at [r = -284.909759] is calculated within 0.028350s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-257.755423	0.004146
+1	-258.298510	-0.015796
+bisection interval found by 1-dim search: [-258.298510,-257.755423]
+-----
+No.11	 toolpath point at [r = -257.867329] is calculated within 0.028506s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-230.614477	0.003146
+1	-231.159534	-0.016762
+bisection interval found by 1-dim search: [-231.159534,-230.614477]
+-----
+No.12	 toolpath point at [r = -230.700175] is calculated within 0.027944s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-203.358544	0.002322
+1	-203.905377	-0.017557
+bisection interval found by 1-dim search: [-203.905377,-203.358544]
+-----
+No.13	 toolpath point at [r = -203.422092] is calculated within 0.029347s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-176.001495	0.001553
+1	-176.549907	-0.018301
+bisection interval found by 1-dim search: [-176.549907,-176.001495]
+-----
+No.14	 toolpath point at [r = -176.043804] is calculated within 0.025880s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-148.554117	0.000953
+1	-149.103911	-0.018882
+bisection interval found by 1-dim search: [-149.103911,-148.554117]
+-----
+No.15	 toolpath point at [r = -148.580426] is calculated within 0.026519s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-121.031587	0.000520
+1	-121.582564	-0.019303
+bisection interval found by 1-dim search: [-121.582564,-121.031587]
+-----
+No.16	 toolpath point at [r = -121.046115] is calculated within 0.028652s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-93.448117	0.000132
+1	-94.000077	-0.019680
+bisection interval found by 1-dim search: [-94.000077,-93.448117]
+-----
+No.17	 toolpath point at [r = -93.451890] is calculated within 0.025720s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-65.814762	-0.000093
+1	-65.262019	0.020117
+bisection interval found by 1-dim search: [-65.814762,-65.262019]
+-----
+No.18	 toolpath point at [r = -65.812063] is calculated within 0.026194s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-38.145867	-0.000196
+1	-37.592543	0.020014
+bisection interval found by 1-dim search: [-38.145867,-37.592543]
+-----
+No.19	 toolpath point at [r = -38.139923] is calculated within 0.030581s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	-10.454750	-0.000140
+1	-9.901047	0.020077
+bisection interval found by 1-dim search: [-10.454750,-9.901047]
+-----
+No.20	 toolpath point at [r = -10.450965] is calculated within 0.035143s.
+-----
+initial linear search begins: 
+No.	x	f(x)
+0	17.243080	-0.000003
+1	17.796960	0.020225
+bisection interval found by 1-dim search: [17.243080,17.796960]
+-----
+No.21	 toolpath point at [r = 17.243620] is calculated within 0.030972s.
+-----
+The toolpath concentric optimization process causes 1.891240 seconds.
+The time spent in the spiral toolpath generation process is 0.476575s.

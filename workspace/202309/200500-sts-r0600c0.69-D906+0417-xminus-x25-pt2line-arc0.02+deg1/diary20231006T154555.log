@@ -1,0 +1,56 @@
+-----
+No.1	 toolpath -517.894901	[r = -600.000000] is calculated within 12136.931491s.
+-----
+No.2	 toolpath -493.237076	[r = -575.000000] is calculated within 12137.242510s.
+-----
+No.3	 toolpath -481.512122	[r = -550.000000] is calculated within 12137.678627s.
+-----
+No.4	 toolpath -456.869176	[r = -525.000000] is calculated within 12138.137619s.
+-----
+No.5	 toolpath -432.228997	[r = -500.000000] is calculated within 12138.613076s.
+-----
+No.6	 toolpath -418.083936	[r = -475.000000] is calculated within 12139.037947s.
+-----
+No.7	 toolpath -393.499249	[r = -450.000000] is calculated within 12139.483632s.
+-----
+No.8	 toolpath -369.315677	[r = -425.000000] is calculated within 12139.887120s.
+-----
+No.9	 toolpath -344.717680	[r = -400.000000] is calculated within 12140.353408s.
+-----
+No.10	 toolpath -320.511489	[r = -375.000000] is calculated within 12140.784889s.
+-----
+No.11	 toolpath -307.727844	[r = -350.000000] is calculated within 12141.206062s.
+-----
+No.12	 toolpath -283.191705	[r = -325.000000] is calculated within 12141.616277s.
+-----
+No.13	 toolpath -259.128314	[r = -300.000000] is calculated within 12142.052802s.
+-----
+No.14	 toolpath -241.531395	[r = -275.000000] is calculated within 12142.462360s.
+-----
+No.15	 toolpath -217.336173	[r = -250.000000] is calculated within 12142.898955s.
+-----
+No.16	 toolpath -192.742563	[r = -225.000000] is calculated within 12143.331020s.
+-----
+No.17	 toolpath -176.341652	[r = -200.000000] is calculated within 12143.786517s.
+-----
+No.18	 toolpath -152.175924	[r = -175.000000] is calculated within 12144.229644s.
+-----
+No.19	 toolpath -127.606925	[r = -150.000000] is calculated within 12144.651238s.
+-----
+No.20	 toolpath -103.048344	[r = -125.000000] is calculated within 12145.048494s.
+-----
+No.21	 toolpath -88.506283	[r = -100.000000] is calculated within 12145.453235s.
+-----
+No.22	 toolpath -66.796651	[r = -75.000000] is calculated within 12145.864087s.
+-----
+No.23	 toolpath -43.687496	[r = -50.000000] is calculated within 12146.252042s.
+-----
+No.24	 toolpath -20.504984	[r = -25.000000] is calculated within 12146.653633s.
+-----
+No.25	 toolpath 3.631993	[r = 0.000000] is calculated within 12147.084064s.
+-----
+-----
+No.25	 toolpath point at [r = 0] is calculated within 12149.279714s.
+-----
+The toolpath concentric optimization process causes 12.383549 seconds.
+The time spent in the spiral toolpath generation process is 0.494973s.
