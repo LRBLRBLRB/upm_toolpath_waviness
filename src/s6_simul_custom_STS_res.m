@@ -1,141 +1,190 @@
-close all;
-clear;
-clc;
-addpath(genpath('funcs'));
-% global variables
-% global textFontSize textFontType;
-unit = '\mum';
-textFontSize = 12;
-textFontType = 'Times New Roman';
+% simulation process for the (3-axes) STS diamond turning spiral tool path
+%
+% A cnc file is expected to load, and the machining results as well as the
+% residual error distribution map will be generated.
+% Notice that the post process is suitable for the Nanotech 650FG V2 only.
 
-msgOpts.Default = 'Cancel and quit';
-msgOpts.Interpreter = 'tex';
-
-% workspaceDir = fullfile('..','workspace','\20220925-contrast\nagayama_concentric';
-% workspaceDir = fullfile('..','workspace','\20221020-tooltip\tooltip fitting result';
-workspaceDir = fullfile('..','workspace','20230510');
-diaryFile = fullfile('..','workspace','\diary',['diary',datestr(now,'yyyymmddTHHMMSS')]);
-% diary diaryFile;
-% diary on;
-
-%% load tool file
-[fileName,dirName] = uigetfile({ ...
-    '*.mat','MAT-files(*.mat)'; ...
-    '*,*','all files(*.*)'}, ...
-    'Select one tool edge data file', ...
-    fullfile(workspaceDir,'tooltheo.mat'), ...
-    'MultiSelect','off');
-toolName = fullfile(dirName,fileName);
-% toolName = 'output_data\tool\toolTheo_3D.mat';
-% tool data unit convertion
-toolData = load(toolName);
-unitList = {'m','mm','\mum','nm'};
-presUnit = find(strcmp(unitList,toolData.unit),1);
-aimUnit = find(strcmp(unitList,unit),1);
-toolData.center = 1000^(aimUnit - presUnit)*toolData.center;
-toolData.radius = 1000^(aimUnit - presUnit)*toolData.radius;
-toolData.toolBform.coefs = 1000^(aimUnit - presUnit)*toolData.toolBform.coefs;
-toolData.toolCpts = 1000^(aimUnit - presUnit)*toolData.toolCpts;
-toolData.toolEdgePt = 1000^(aimUnit - presUnit)*toolData.toolEdgePt;
-toolData.toolFit = 1000^(aimUnit - presUnit)*toolData.toolFit;
-
-%% load tool data file
-[fileName,dirName,fileInd] = uigetfile({ ...
-    '*.mat','text-files(*.mat)'; ...
-    '*.nc;.pgm','CNC-files(*.nc,*pgm)'; ...
-    '*.*','all files(*.*)'}, ...
-    'Select one cnc file', ...
-    fullfile(workspaceDir,'tooltheo.mat'), ...
-    'MultiSelect','off');
-
-switch fileInd
-    case 1
-        cncName = fullfile(dirName,fileName);
-        load(cncName);
-    case 2
-        cncName = fullfile(dirName,fileName);
-        cncData = load(cncName,'-ascii');
-        cncData = cncData.';
-        % cncFid = fopen(cncName,'r');
-        % % load the X Z C data
-        % cncData = zeros(2,0);
-        % while ~feof(cncFid)
-        %     tmpLine = fgetl(cncFid);
-        %     % if the line begins with %d%d or -%d, then break
-        %     if strcmp(tmpLine,'(linking block)')
-        %         break;
-        %     end
-        %     cncData = [cncData,sscanf(tmpLine,'C%fX%fZ%f')];
-        % end
-        % [ncData,nData] = fscanf(cncFid,'C%fX%fZ%f\n');
-        % fclose(cncFid);
-    otherwise
+isAPP = false;
+if isAPP
+    return;
+else
+    %% function-used
+%     close all;
+    clear;
+    clc;
+    syms x y;
+    questOpt.Interpreter = 'tex';
+    questOpt.Default = 'OK & Continue';
+    addpath(genpath('funcs'));
+    % global variables
+    % workspaceDir = fullfile('..','workspace','\20220925-contrast\nagayama_concentric';
+    % workspaceDir = fullfile('..','workspace','\20221020-tooltip\tooltip fitting result';
+    workspaceDir = uigetdir( ...
+        fullfile('..','workspace'), ...
+        'select the workspace directory');
+    if ~workspaceDir
+        workspaceDir = fullfile('..','workspace');
+    end
+    unit = '\mum';
+    textFontSize = 12;
+    textFontType = 'Times New Roman';
+    unitList = {'m','mm','\mum','nm'};
+    
+    tPar0 = tic;
+    parObj = gcp;
+    tPar = toc(tPar0);
+    fprintf('The time spent in the parallel computing activating process is %fs.\n',tPar);
+    
+    % tool data import
+    [toolFileName,toolDirName] = uigetfile({ ...
+        '*.mat','MAT-files(*.mat)'; ...
+        '*,*','all files(*.*)'}, ...
+        'Select one tool edge data file', ...
+        fullfile(workspaceDir,'tooltheo.mat'), ...
+        'MultiSelect','off');
+    if ~toolFileName
+        fprintf('No tool data file loaded.\n');
         return;
+    end
+    toolName = fullfile(toolDirName,toolFileName);
+    % tool data unit convertion
+    toolData = load(toolName);
+    presUnit = find(strcmp(unitList,toolData.unit),1);
+    aimUnit = find(strcmp(unitList,unit),1);
+    toolData.center = 1000^(aimUnit - presUnit)*toolData.center;
+    toolData.radius = 1000^(aimUnit - presUnit)*toolData.radius;
+    toolData.toolBform.coefs = 1000^(aimUnit - presUnit)*toolData.toolBform.coefs;
+    toolData.toolCpts = 1000^(aimUnit - presUnit)*toolData.toolCpts;
+    toolData.toolEdgePt = 1000^(aimUnit - presUnit)*toolData.toolEdgePt;
+    toolData.toolFit = 1000^(aimUnit - presUnit)*toolData.toolFit;
+    
+    diaryFile = fullfile(workspaceDir,['diary',datestr(now,'yyyymmddTHHMMSS'),'.log']);
+    diary(diaryFile);
+    diary on;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % load nc file
+    [fileName,dirName] = uigetfile({ ...
+        '*.nc;.pgm','CNC-files(*.nc,*pgm)'; ...
+        '*,*','all files(*.*)'}, ...
+        'Select one cnc file', ...
+        fullfile(['D:\OneDrive - sjtu.edu.cn\Research\Projects' ...
+        '\202111-考虑刀具几何的路径规划\experiment\非球面加工'],'tooltheo.mat'), ...
+        'MultiSelect','off');
+    
+    cncName = fullfile(dirName,fileName);
+    cncFid = fopen(cncName,'r');
+    
+    % get rid of the header of the nc file
+    numHeader = 1;
+    while ~feof(cncFid)
+        tmpLine = fgetl(cncFid);
+        if strncmp(tmpLine,'#105',4)
+            feedVel = sscanf(tmpLine,'#105=%d%.s');
+            continue;
+        end
+        if strncmp(tmpLine,'#201',4)
+            spindleVel = sscanf(tmpLine,'#201=%d%.s');
+            continue;
+        end
+        % if the line begins with %d%d or -%d, then break
+        if strcmp(tmpLine,'( CUTTING BLOCK )')
+            break;
+        end
+        numHeader = numHeader + 1;
+    end
+    
+    % load the X Z data
+    cncData = zeros(3,0);
+    tmpLine = fgetl(cncFid);
+    while ~feof(cncFid)
+        tmpLine = fgetl(cncFid);
+        % if the line begins with %d%d or -%d, then break
+        if strcmp(tmpLine,'(linking block)') || strcmp(tmpLine,'(LINKING BLOCK)')
+            break;
+        end
+        cncData = [cncData,sscanf(tmpLine,'C%f X%f Z%f')];
+    end
+    % ncData = fscanf(fid,'X%fZ%f');
+    fclose(cncFid);
+    
+    % diffsys - nanocam convertion
+    cncData(3,:) = cncData(3,:) - cncData(3,end);
+    cncData(2,:) = -1.*cncData(2,:);
+    cncData(1,:) = wrapTo360(-1.*cncData(1,:));
+    cncData(1,find(abs(cncData(1,:) - 360) < 1e-3)) = 0;
+    cncData(2:3,:) = 1000*cncData(2:3,:);
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % machining paramters
+    cutDirection = 'Edge to Center'; % 'Center to Edge'
+    startDirection = 'X Minus'; % 'X Minus'
+    angularIncrement = 'Constant Arc'; % 'Constant Angle'
+    arcLength = 20; % um
+    maxAngPtDist = 1*pi/180;
+    angularLength = 1*pi/180;
+    radialIncrement = 'On-Axis'; % 'Surface'
+    aimRes = 0.5; % um
+    rStep = toolData.radius/2; % rStep can also be determined by the axial differentiate of the surface
+    maxIter = 100;
+    spiralMethod = 'Radius-Number'; % Radius-Angle
+    frMethodDefault = 'Approximation'; % 'Approximation'
+    frParamDefault = 1-1e-5;
+    dist2Surf = false;
+
+    % Explanation: 
+    % - cutDirection is the direction along which the tool feeds, and it
+    %       affects the order of the r-value of the tool path, i.e., rRange
+    % - startDirection is the direction where the tool startd to feed. It
+    %       determines whether the start point is positive or not. 
+    %   Notice that the tool is fixed in the MCS, the startDirection also 
+    %       determines the spindle rotation direction. E.g., If the r-value
+    %       of the start point is positive, it means that the tool feeds 
+    %       from the X+ direction. Therefore, the spindle should rotate in
+    %       the counterclockwise direction since the tool rake face is
+    %       fixed facing the top. 
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % concentric surface generation / import
+    % A = tand(20)/(2*2000);
+    c = 0.69/1000/(1000^(aimUnit - presUnit));
+    param = sprintf('c = %f',c);
+    syms C;
+    surfSymDisp = C.*(x.^2 + y.^2)./(1 + sqrt(1 - C.^2.*(x.^2 + y.^2)));
+    surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
+    surfFunc = matlabFunction(surfSym);
+    surfFx = diff(surfFunc,x);
+    surfFy = diff(surfFunc,y);
+    surfNormFunc = matlabFunction([surfFx;surfFy;-1],'Vars',{'x','y'});
+    surfDomain = [-500,500;-500,500];
+    zAllowance = 1.2;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
-%% surface import
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-c = 0.69/1000/(1000^(aimUnit - presUnit));
-syms x y;
-surfSym = c.*(x.^2 + y.^2)./(1 + sqrt(1 - c.^2.*(x.^2 + y.^2)));
-surfFunc = matlabFunction(surfSym);
-surfFx = diff(surfFunc,x);
-surfFy = diff(surfFunc,y);
-surfDomain = [-500,500;-500,500];
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-surfDomain = 1.1*surfDomain;
-rMax = max(surfDomain(1,2),surfDomain(2,2));
-% sampling density
-spar = 501;
-conR = linspace(0,rMax,spar); % concentric radius vector
-conTheta = linspace(0,2*pi,spar);
-[rMesh,thetaMesh] = meshgrid(conR,conTheta);
-surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
-surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
-surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
-
-%% parameter settings
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% machining paramters
-cutDirection = 'Edge to Center'; % 'Center to Edge'
-startDirection = 'X Minus'; % 'X Minus'
-angularIncrement = 'Constant Arc'; % 'Constant Angle'
-arcLength = 20; % um
-maxAngPtDist = 1*pi/180;
-angularLength = 1*pi/180;
-radialIncrement = 'On-Axis'; % 'Surface'
-aimRes = 1; % um
-rStep = toolData.radius/2; % 每步步长可通过曲面轴向偏导数确定
-maxIter = 100;
-spiralMethod = 'Radius-Number'; % Radius-Angle
-frMethodDefault = 'Approximation'; % 'Approximation'
-frParamDefault = 1-1e-5;
-
-% simulation parameters
-isRecal = true; % whether to recalculate the residual error
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% related parameters
 isUIncrease = toolData.toolBform.coefs(end,1) - toolData.toolBform.coefs(1,1);
 switch startDirection
-    case 'X Plus' % plus in this program, but minus in moore
-        rMax = max(surfDomain(1,2),surfDomain(2,2));
+    case 'X Plus' % plus both in this program and in moore
+        rMax = max(zAllowance*surfDomain(1,2),zAllowance*surfDomain(2,2));
         rStep = -1*rStep;
-    case 'X Minus' % minus in this program, but plus in moore
-        rMax = min(surfDomain(1,1),surfDomain(2,1)); % reverse
+        % cutDirect = [0;1;0];
+    case 'X Minus' % minus both in this program and in moore
+        rMax = min(zAllowance*surfDomain(1,1),zAllowance*surfDomain(2,1)); % reverse
         rStep = 1*rStep;
+        % cutDirect = [0;-1;0];
 end
+rMax = max(abs(cncData(2,:)));
+cutDirect = [0;-1;0]; % aimed cut direction
 
-if isUIncrease*rStep < 0
-    % ([1,0] & X minus) or ([0,1] & X plus)
-    uDirection = 'U Minus';
-    curvePlotSpar = -0.0001;
-else
-    % ([1,0] & X plus) or ([0,1] & X minus)
+if isUIncrease*rStep > 0 % the direction of the parameter u while feeding
+    % ([1,0] & X Plus) or ([0,1] & X Minus)
     uDirection = 'U Plus';
-    curvePlotSpar = 0.0001;
+else
+    % ([1,0] & X Minus) or ([0,1] & X Plus)
+    uDirection = 'U Minus';
 end
 
 switch cutDirection
@@ -145,6 +194,65 @@ switch cutDirection
 %             rRange = [0,rMax];
 end
 
+
+% sampling density
+spar = 501;
+conR = linspace(0,rMax,spar); % concentric radius vector
+conTheta = linspace(0,2*pi,spar);
+[rMesh,thetaMesh] = meshgrid(conR,conTheta);
+surfMesh(:,:,1) = rMesh.*cos(thetaMesh);
+surfMesh(:,:,2) = rMesh.*sin(thetaMesh);
+surfMesh(:,:,3) = surfFunc(surfMesh(:,:,1),surfMesh(:,:,2));
+% save('input_data/surface/ellipsoidAray.mat', ...
+%    "surfMesh","surfNorm","surfCenter");
+
+% plot the importing result
+[surfNormIni(:,:,1),surfNormIni(:,:,2),surfNormIni(:,:,3)] = surfnorm( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3));
+
+fig1 = figure('Name','original xyz scatters of the surface (sparsely)');
+tiledlayout(1,2);
+pos = get(gcf,'position');
+set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
+nexttile;
+plot(toolData.toolFit(2,:),toolData.toolFit(3,:),'Color',[0,0.4470,0.7410]);
+hold on;
+patch('XData',toolData.toolFit(2,:),'YData',toolData.toolFit(3,:),...
+    'EdgeColor','none','FaceColor',[0.9290 0.6940 0.1250],'FaceAlpha',0.3);
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+title('Tooltip Geometry');
+nexttile;
+rSpar = linspace(0,rMax,spar);
+plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))));
+hold on;
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+xlabel(['r (',unit,')']);
+ylabel(['z (',unit,')']);
+title('2D-Surface Geometry');
+
+symdisp(surfSymDisp);
+msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
+    'Surface was generated successfully!\n'],textFontSize,textFontType), ...
+    'The workspace directory name is: ', ...
+    sprintf('%s\n',getlastfoldername(workspaceDir)), ...
+    sprintf('The parameters are listed below:'), ...
+    sprintf('1. Surface radius: %f%s',abs(rMax),unit), ...
+    sprintf('2. Surface parameters: %s',param), ...
+    sprintf('3. Tool file: %s (radius: %f%s)',toolFileName,toolData.radius,unit), ...
+    '4. X increment: ', ...
+    sprintf('\tX direction (in program): %s',startDirection), ...
+    sprintf('\tAimed residual error: %f%s',aimRes,unit), ...
+    '5. C increment: ', ...
+    sprintf('\tIncrement type: %s',angularIncrement), ...
+    sprintf('\tArc length: %f%s',arcLength,unit), ...
+    sprintf(['\tMax angle: %f',char(176),')\n'],maxAngPtDist*180/pi), ...
+    'Ready to continue?'}, ...
+    'Surface Generation','OK & Continue','Cancel & quit',questOpt);
+if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    return;
+end
 %% 2D simulation
 if exist('curvePathPt','var')
     % 2D simulation
