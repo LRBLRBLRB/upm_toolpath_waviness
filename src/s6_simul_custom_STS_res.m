@@ -61,63 +61,17 @@ else
     diaryFile = fullfile(workspaceDir,['diary',datestr(now,'yyyymmddTHHMMSS'),'.log']);
     diary(diaryFile);
     diary on;
+    % profile on;
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % load nc file
-    [fileName,dirName] = uigetfile({ ...
-        '*.nc;.pgm','CNC-files(*.nc,*pgm)'; ...
-        '*,*','all files(*.*)'}, ...
-        'Select one cnc file', ...
-        fullfile(['D:\OneDrive - sjtu.edu.cn\Research\Projects' ...
-        '\202111-考虑刀具几何的路径规划\experiment\非球面加工'],'tooltheo.mat'), ...
-        'MultiSelect','off');
-    
-    cncName = fullfile(dirName,fileName);
-    cncFid = fopen(cncName,'r');
-    
-    % get rid of the header of the nc file
-    numHeader = 1;
-    while ~feof(cncFid)
-        tmpLine = fgetl(cncFid);
-        if strncmp(tmpLine,'#105',4)
-            feedVel = sscanf(tmpLine,'#105=%d%.s');
-            continue;
-        end
-        if strncmp(tmpLine,'#201',4)
-            spindleVel = sscanf(tmpLine,'#201=%d%.s');
-            continue;
-        end
-        % if the line begins with %d%d or -%d, then break
-        if strcmp(tmpLine,'( CUTTING BLOCK )')
-            break;
-        end
-        numHeader = numHeader + 1;
-    end
-    
-    % load the X Z data
-    cncData = zeros(3,0);
-    tmpLine = fgetl(cncFid);
-    while ~feof(cncFid)
-        tmpLine = fgetl(cncFid);
-        % if the line begins with %d%d or -%d, then break
-        if strcmp(tmpLine,'(linking block)') || strcmp(tmpLine,'(LINKING BLOCK)')
-            break;
-        end
-        cncData = [cncData,sscanf(tmpLine,'C%f X%f Z%f')];
-    end
-    % ncData = fscanf(fid,'X%fZ%f');
-    fclose(cncFid);
-    
-    % diffsys - nanocam convertion
-    cncData(3,:) = cncData(3,:) - cncData(3,end);
-    cncData(2,:) = -1.*cncData(2,:);
-    cncData(1,:) = wrapTo360(-1.*cncData(1,:));
-    cncData(1,find(abs(cncData(1,:) - 360) < 1e-3)) = 0;
-    cncData(2:3,:) = 1000*cncData(2:3,:);
+    cncData = read_my_STS(workspaceDir,'C%f X%f Z%f');
+    [cncData(1,:),cncData(2,:),cncData(3,:)] = moore650ikine( ...
+        cncData(1,:),cncData(2,:),cncData(3,:),'mm','\mum');
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % machining paramters
+    % design machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     startDirection = 'X Minus'; % 'X Minus'
     angularIncrement = 'Constant Arc'; % 'Constant Angle'
@@ -148,7 +102,7 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % concentric surface generation / import
+    % design concentric surface generation / import
     % A = tand(20)/(2*2000);
     c = 0.69/1000/(1000^(aimUnit - presUnit));
     param = sprintf('c = %f',c);
@@ -176,7 +130,6 @@ switch startDirection
         rStep = 1*rStep;
         % cutDirect = [0;-1;0];
 end
-rMax = max(abs(cncData(2,:)));
 cutDirect = [0;-1;0]; % aimed cut direction
 
 if isUIncrease*rStep > 0 % the direction of the parameter u while feeding
@@ -194,6 +147,15 @@ switch cutDirection
 %             rRange = [0,rMax];
 end
 
+if strcmp(startDirection,'X Plus') % 'X Minus'
+    conThetaBound = [0,-2*pi];
+    uLimOrder2 = 'last';
+    uLimOrder3 = 'first';
+else
+    conThetaBound = [0,2*pi];
+    uLimOrder2 = 'first';
+    uLimOrder3 = 'last';
+end
 
 % sampling density
 spar = 501;
@@ -224,13 +186,43 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 title('Tooltip Geometry');
 nexttile;
-rSpar = linspace(0,rMax,spar);
-plot(rSpar,surfFunc(rSpar,zeros(1,length(rSpar))));
+
+spiralPtNum = size(cncData,2);
+spiralPath = zeros(3,spiralPtNum);
+spiralAngle = zeros(1,spiralPtNum);
+spiralQuat = zeros(spiralPtNum,4);
+spiralNorm = zeros(3,spiralPtNum);
+spiralCut = zeros(3,spiralPtNum);
+spiralPath(:,1) = [cncData(2,1);0;cncData(3,1)];
+spiralQuat(1,:) = [1,0,0,0];
+for ii = 1:spiralPtNum
+    spiralAngle(ii) = cncData(1,ii);
+    spiralQuat(ii,:) = rotm2quat(rotz(180/pi*spiralAngle(ii)));
+    spiralNorm(:,ii) = quat2rotm(spiralQuat(ii,:))*toolData.toolEdgeNorm;
+    spiralCut(:,ii) = quat2rotm(spiralQuat(ii,:))*toolData.cutDirect;
+    spiralPath(1,ii) = cncData(2,ii)*cos(spiralAngle(ii));
+    spiralPath(2,ii) = cncData(2,ii)*sin(spiralAngle(ii));
+    spiralPath(3,ii) = cncData(3,ii);
+end
+for ii = 2:spiralPtNum % this part only satisfies "X Minus"
+    if (spiralAngle(ii) - spiralAngle(ii - 1))*(conThetaBound(2) - conThetaBound(1)) < 0
+        spiralAngle(ii:end) = spiralAngle(ii:end) + conThetaBound(2) - conThetaBound(1);
+    end
+end
+
+% shift
+toolSp = toolData.toolBform;
+toolSp.coefs = quat2rotm(spiralQuat(end,:))*toolSp.coefs + spiralPath(:,end);
+toolSpPt = fnval(toolSp,0:0.0001:1);
+spiralPath(3,:) = spiralPath(3,:) - min(toolSpPt(3,:));
+
+plot3(spiralPath(1,:),spiralPath(2,:),spiralPath(3,:), ...
+    'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
+    'Marker','.','MarkerSize',6);
 hold on;
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-xlabel(['r (',unit,')']);
-ylabel(['z (',unit,')']);
-title('2D-Surface Geometry');
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
 
 symdisp(surfSymDisp);
 msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
@@ -253,7 +245,9 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
     return;
 end
+
 %% 2D simulation
+t0 = tic;
 if exist('curvePathPt','var')
     % 2D simulation
     if isRecal
@@ -328,8 +322,6 @@ if exist('curvePathPt','var')
     grid on;
 end
 
-
-
 %% 2-axes convertion to cartesian
 % spiralPtNum = size(cncData,2);
 % spiralPath = zeros(3,spiralPtNum);
@@ -375,75 +367,217 @@ end
 % % end
 
 %% spiral tool path simulation and residual height calculation
-% spiralRes = nan(2,spiralPtNum);
-% spiralPeakPt = zeros(10,spiralPtNum);
-% spiralInterPtIn = cell(1,spiralPtNum);
-% spiralInterPtOut = cell(1,spiralPtNum);
-% spiralULim = cell(1,spiralPtNum);
-% tSpiralRes0 = tic;
-% 
-% parfor ind1 = 1:spiralPtNum
-%     % inner ulim & residual height
-%     ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,'first');
-%     ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,'last');
-%     if isempty(ind2) || isempty(ind3)
-% %         ind2 = find(spiralAngle >= spiralAngle(ind1) + pi,1,'first');
-% %         ind3 = find(spiralAngle < spiralAngle(ind1) + pi,1,'last');
-% %         [tmpres1,ptres1,spiralULim(:,ind1)] = residual3D( ...
-% %             spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-% %             toolSp,toolRadius,spiralULim(:,ind1),ind1,ind2,ind3);
-%         spiralULim{ind1} = [0;1];
-%         tmpRes1 = nan;
-%         tmpPeak1 = zeros(5,1);
-%     else
-%         [tmpRes1,tmpPeak1,spiralInterPtIn{ind1},spiralULim{ind1}] = ...
-%             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-%             toolData,toolRadius,spiralULim{ind1},ind1,ind2,ind3);
-%     end
-% 
-%     % outer ulim & residual height
-%     ind2 = find(spiralAngle >= spiralAngle(ind1) + 2*pi,1,'first');
-%     ind3 = find(spiralAngle < spiralAngle(ind1) + 2*pi,1,'last');
-%     if isempty(ind2) || isempty(ind3)
-%         tmpRes2 = nan;
-%         tmpPeak2 = zeros(5,1);
-%     else
-% 
-% %         scatter3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1));
-% %         quiver3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1), ...
-% %             spiralCut(1,ind1),spiralCut(2,ind1),spiralCut(3,ind1));
-% %         toolSp1 = toolData.toolBform;
-% %         toolSp1.coefs = quat2rotm(spiralQuat(ind1,:))*toolSp1.coefs + spiralPath(:,ind1);
-% %         fnplt(toolSp1);
-% %         scatter3(spiralPath(1,ind2),spiralPath(2,ind2),spiralPath(3,ind2));
-% %         quiver3(spiralPath(1,ind2),spiralPath(2,ind2),spiralPath(3,ind2), ...
-% %             spiralCut(1,ind2),spiralCut(2,ind2),spiralCut(3,ind2),'AutoScale','on');
-% %         scatter3(spiralPath(1,ind3),spiralPath(2,ind3),spiralPath(3,ind3));
-% %         quiver3(spiralPath(1,ind3),spiralPath(2,ind3),spiralPath(3,ind3), ...
-% %             spiralCut(1,ind3),spiralCut(2,ind3),spiralCut(3,ind3));
-% 
-%         [tmpRes2,tmpPeak2,spiralInterPtOut{ind1},spiralULim{ind1}] = ...
-%             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-%             toolData,toolRadius,spiralULim{ind1},ind1,ind2,ind3);
-%     end
-%     spiralRes(:,ind1) = [tmpRes1;tmpRes2];
-%     spiralPeakPt(:,ind1) = [tmpPeak1;tmpPeak2];
-% 
-% %     if spiralRes(:,ind1) > 5
-% %         1;
-% %     end
-% 
-%     % debug
-%     % plot3(toolPathPtRes(1,ii),toolPathPtRes(2,ii),toolPathPtRes(3,ii), ...
-%     %     '.','MarkerSize',6,'Color',[0,0.4470,0.7410]);
-%     % toolSp1 = toolSp;
-%     % R1 = axesRot([0;0;1],[1;0;0],toolNormDirectRes(:,ii),toolCutDirectRes(:,ii),'zx');
-%     % toolSp1.coefs = R1*toolSp.coefs + toolPathPtRes(:,ii);
-%     % Q = fnval(toolSp1,uLimTmp(1,ii):0.01:uLimTmp(2,ii));
-%     % plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',1);
+spiralPathZ = zeros(3,spiralPtNum);
+spiralContactU = zeros(1,spiralPtNum);
+surfPt = zeros(3,spiralPtNum);
+for ind1 = 1:spiralPtNum
+    [spiralPathZ(:,ind1),~,spiralContactU(ind1),surfPt(:,ind1)] = toolpathpos( ...
+        surfFunc,surfNormFunc,toolData,spiralPath(:,ind1),spiralNorm(:,ind1), ...
+        spiralCut(:,ind1),'directionType','norm-cut');
+    if abs(spiralPathZ(3,ind1) - spiralPath(3,ind1)) > 1
+        fprintf("spiralPathZ = %f, spiralPath = %f\n",spiralPathZ(3,ind1),spiralPath(3,ind1));
+        pause;
+    end
+end
+figure;
+plot3(spiralPath(1,:),spiralPath(2,:),spiralPathZ(:), ...
+    'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
+    'Marker','.','MarkerSize',6);
+hold on;
+plot3(surfPt(1,:),surfPt(2,:),surfPt(:), ...
+    'Color',[0.8500 0.3250 0.0980],'LineStyle',':','LineWidth',0.1, ...
+    'Marker','.','MarkerSize',6);
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
+colormap('summer');
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% set(gca,'ZDir','reverse');
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
+legend('designed surface','tool center point','Location','northeast');
+drawnow;
+
+
+spiralRes = 5*aimRes*ones(2,spiralPtNum);
+spiralPeakPt = zeros(10,spiralPtNum);
+spiralInterPtIn = cell(1,spiralPtNum);
+spiralInterPtOut = cell(1,spiralPtNum);
+spiralULim = cell(1,spiralPtNum);
+tSpiralRes0 = tic;
+
+switch uDirection
+    case 'U Plus'
+        uLimIni = [0;1];
+    case 'U Minus'
+        uLimIni = [1;0];
+end
+
+% figure;
+% surf( ...
+%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+%     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
+% hold on;
+% waitBar = waitbar(0,'Figure Plotting ...','Name','Residual Results Plot', ...
+%     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+% setappdata(waitBar,'canceling',0);
+% if dist2Surf
+%     curveFunc3D = curveFunc;
+% else
+%     curveFunc3D = [];
 % end
-% 
-% tSpiralRes = toc(tSpiralRes0);
-% fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
+curveFunc3D = [];
+for ind1 = 1:spiralPtNum
+    % find the outer side of ulim & residual height
+    ind2 = find(spiralAngle >= spiralAngle(ind1) - conThetaBound(end),1,uLimOrder2);
+    ind3 = find(spiralAngle < spiralAngle(ind1) - conThetaBound(end),1,uLimOrder3);
+    if isempty(ind2) || isempty(ind3)
+%         ind2 = find(spiralAngle >= spiralAngle(ind1) + pi,1,'first');
+%         ind3 = find(spiralAngle < spiralAngle(ind1) + pi,1,'last');
+%         [tmpres1,ptres1,spiralULim(:,ind1)] = residual3D( ...
+%             spiralPath,spiralNorm,spiralCut,spiralContactU, ...
+%             toolSp,toolRadius,spiralULim(:,ind1),ind1,ind2,ind3);
+        spiralULim{ind1} = uLimIni;
+        tmpRes1 = 5*aimRes;
+        tmpPeak1 = zeros(5,1);
+    else
+        [tmpRes1,tmpPeak1,spiralInterPtIn{ind1},spiralULim{ind1}] = ...
+            residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
+            toolData,toolRadius,spiralULim{ind1},aimRes,uLimIni,curveFunc3D,ind1,ind2,ind3);
+    end
 
+    % find the inner side of ulim & residual height
+    ind2 = find(spiralAngle >= spiralAngle(ind1) + conThetaBound(end),1,uLimOrder2);
+    ind3 = find(spiralAngle < spiralAngle(ind1) + conThetaBound(end),1,uLimOrder3);
+    if isempty(ind2) || isempty(ind3)
+        tmpRes2 = 5*aimRes;
+        tmpPeak2 = zeros(5,1);
+    else
+%         scatter3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1));
+%         quiver3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1), ...
+%             spiralCut(1,ind1),spiralCut(2,ind1),spiralCut(3,ind1));
+%         toolSp1 = toolData.toolBform;
+%         toolSp1.coefs = quat2rotm(spiralQuat(ind1,:))*toolSp1.coefs + spiralPath(:,ind1);
+%         fnplt(toolSp1);
+%         scatter3(spiralPath(1,ind2),spiralPath(2,ind2),spiralPath(3,ind2));
+%         quiver3(spiralPath(1,ind2),spiralPath(2,ind2),spiralPath(3,ind2), ...
+%             spiralCut(1,ind2),spiralCut(2,ind2),spiralCut(3,ind2),'AutoScale','on');
+%         scatter3(spiralPath(1,ind3),spiralPath(2,ind3),spiralPath(3,ind3));
+%         quiver3(spiralPath(1,ind3),spiralPath(2,ind3),spiralPath(3,ind3), ...
+%             spiralCut(1,ind3),spiralCut(2,ind3),spiralCut(3,ind3));
+        [tmpRes2,tmpPeak2,spiralInterPtOut{ind1},spiralULim{ind1}] = ...
+            residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
+            toolData,toolRadius,spiralULim{ind1},aimRes,uLimIni,curveFunc3D,ind1,ind2,ind3);
+    end
+    
+    spiralRes(:,ind1) = [tmpRes1;tmpRes2];
+    spiralPeakPt(:,ind1) = [tmpPeak1;tmpPeak2];
 
+    % debug
+%     h = scatter3(spiralPath(1,ind1),spiralPath(2,ind1),spiralPath(3,ind1),12); %'MarkerEdgeColor',[0,0.4450,0.7410]);
+%     toolSp1 = toolData.toolBform;
+%     toolSp1.coefs = quat2rotm(spiralQuat(ind1,:))*toolSp1.coefs + spiralPath(:,ind1);
+%     for ii = 1:size(spiralULim{ind1},2)
+%         tmp = fnval(toolSp1,spiralULim{ind1}(1,ii):curvePlotSpar*100:spiralULim{ind1}(2,ii));
+%         plot3(tmp(1,:),tmp(2,:),tmp(3,:),'.','Color',h.CData);
+%     end
+%     displayData = ind1/spiralPtNum; % Calculate percentage
+%     waitbar(displayData,waitBar,['Figure Plotting ... ', ...
+%         num2str(roundn(displayData*100,-2),'%.3f'),'%']); % Progress bar dynamic display
+%     if getappdata(waitBar,'canceling'), break; end
+disp(ind1);
+end
+
+% get rid of the redundant part of the uLim of the innermost circle
+rdomain = abs(surfDomain(1,2)/zAllowance);
+if true
+    parfor ii = 1:spiralPtNum
+        if spiralULim{ii}(end) == 0
+            spiralULim{ii}(end) = innermostU;
+        end
+        if spiralULim{ii}(1) == 1
+            tmpU = spiralULim{ii}(2):abs(curvePlotSpar):1;
+            toolSp1 = toolSp;
+            toolSp1.coefs = quat2rotm(spiralQuat(ii,:))*toolSp1.coefs + spiralPath(:,ii);
+            toolSp1Pt = fnval(toolSp1,tmpU);
+            tmpPt = vecnorm(toolSp1Pt(1:2,:),2,1);
+            [~,tmpUInd] = find(tmpPt == min(tmpPt(tmpPt > rdomain)));
+            spiralULim{ii}(1) = tmpU(tmpUInd);
+        end
+    end
+end
+% delete(waitBar);
+tSpiralRes = toc(tSpiralRes0);
+fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
+% warningTone = load('handel');
+% sound(warningTone.y,warningTone.Fs);
+
+%% spiral tool path result
+% plot the result
+figure('Name','Spiral tool path result');
+tPlot0 = tic;
+plotSpar = 1;
+plot3(spiralPath(1,1:plotSpar:end), ...
+    spiralPath(2,1:plotSpar:end), ...
+    spiralPath(3,1:plotSpar:end), ...
+    'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
+    'Marker','.','MarkerSize',6);
+hold on;
+surf( ...
+    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+    'FaceColor','flat','FaceAlpha',1,'LineStyle','none');
+axis equal;
+colormap('summer');
+cb = colorbar;
+cb.Label.String = ['Height (',unit,')'];
+toolCoefs = toolSp.coefs;
+stepNum = abs(log10(abs(curvePlotSpar)));
+waitBar = waitbar(0,'Drawing ...','Name','Concentric Results Drawing', ...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+for ii = 1:size(spiralPath,2)
+    % Check for clicked Cancel button
+    if getappdata(waitBar,'canceling')
+        break;
+    end
+    displayData = ii/accumPtNum(end); % Calculate percentage
+    waitbar(displayData,waitBar,['Figure Plotting ... ', ...
+        num2str(roundn(displayData*100,-2),'%.2f'),'%']); % Progress bar dynamic display
+    toolSp1 = toolSp;
+    toolSp1.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
+    for jj = 1:size(spiralULim{ii},2)
+        uLimRound = round(spiralULim{ii},stepNum);
+        Q = fnval(toolSp1,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));
+        plot3(Q(1,:),Q(2,:),Q(3,:),'Color',[0.8500,0.3250,0.0980],'LineWidth',0.5); hold on;
+        drawnow;
+    end
+end
+delete(waitBar);
+
+% axis equal;
+grid on;
+set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% set(gca,'ZDir','reverse');
+xlabel(['x (',unit,')']);
+ylabel(['y (',unit,')']);
+zlabel(['z (',unit,')']);
+legend('tool center point','','Location','northeast'); % 'tool edge',
+tPlot = toc(tPlot0);
+fprintf('The time spent in the residual height plotting process is %fs.\n',tPlot);
+
+% sprial tool path error
+s6_visualize_spiral_multi;
+
+msgfig = helpdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
+    'Spiral tool path was generated successfully!'], ...
+    textFontSize,textFontType)},'Success');
+
+%%
+% delete(parObj);
+diary off;
+profile off
+tTol = toc(t0);
+fprintf("The time spent in the whole process is %fs.\n",tTol);
+% profile viewer
+% profsave(profile("info"),"profile_data");
+% rmpath(genpath('funcs'));

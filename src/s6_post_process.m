@@ -31,40 +31,41 @@ end
 
 %% generate the 5-axis tool path from original data
 % toolpath should be saved in "x y z i j k" format
-
-spiralAngle1 = 180/pi*spiralAngle; % rad -> deg
-spiralPath1 = 0.001*spiralPath; % um -> mm
-postType = 2;
-
-%% post-processing to export the axial position
-%         axisC = atan2(2*(spiralQuat(:,2).*spiralQuat(:,3) - spiralQuat(:,1).*spiralQuat(:,4)), ...
-%             2*(spiralQuat(:,1).^2 + spiralQuat(:,3).^2) - 1);
-%         axisB = atan2(-2*(spiralQuat(:,2).*spiralQuat(:,4) + spiralQuat(:,1).*spiralQuat(:,3)), ...
-%             2*(spiralQuat(:,1).^2 + spiralQuat(:,4).^2) - 1);
-%         axisZ = (spiralPath1(3,:).')./cos(axisB);
-%         axisX = axisZ.*sin(axisB).*cos(axisC) - spiralPath1(1,:).';
-%         axisY = axisZ.*sin(axisB).*sin(axisC) - spiralPath1(2,:).';
-
-axisC = (wrapTo360(spiralAngle1));
-axisZ = spiralPath1(3,:);
-axisX = sign(spiralPath1(1,1))*vecnorm(spiralPath1(1:2,:),2,1);
-
-% zero point of the C axis
-if axisC(1) ~= 0
-    axisC = axisC - axisC(1);
-    axisC = wrapTo360(axisC);
-end
-
-% zero point of z axis
-if axisZ(end) ~= 0
-    axisZ = axisZ - axisZ(end);
-end
-
-% direction correction
-%         if strcmp(startDirection,'X Plus')
-% axisX = -1.*axisX;
-% axisC = wrapTo360(-1.*axisC);
-axisC(find(abs(axisC - 360) < 1e-3)) = 0;
+[axisC,axisX,axisZ,spiralAngle1,spiralPath1] = moore650ikine(spiralAngle,spiralPath,'\mum','mm');
+%%% the code below are combined into the function above %%%
+% spiralAngle1 = 180/pi*spiralAngle; % rad -> deg
+% spiralPath1 = 0.001*spiralPath; % um -> mm
+% postType = 2;
+% 
+% %% post-processing to export the axial position
+% %         axisC = atan2(2*(spiralQuat(:,2).*spiralQuat(:,3) - spiralQuat(:,1).*spiralQuat(:,4)), ...
+% %             2*(spiralQuat(:,1).^2 + spiralQuat(:,3).^2) - 1);
+% %         axisB = atan2(-2*(spiralQuat(:,2).*spiralQuat(:,4) + spiralQuat(:,1).*spiralQuat(:,3)), ...
+% %             2*(spiralQuat(:,1).^2 + spiralQuat(:,4).^2) - 1);
+% %         axisZ = (spiralPath1(3,:).')./cos(axisB);
+% %         axisX = axisZ.*sin(axisB).*cos(axisC) - spiralPath1(1,:).';
+% %         axisY = axisZ.*sin(axisB).*sin(axisC) - spiralPath1(2,:).';
+% 
+% axisC = (wrapTo360(spiralAngle1));
+% axisZ = spiralPath1(3,:);
+% axisX = sign(spiralPath1(1,1))*vecnorm(spiralPath1(1:2,:),2,1);
+% 
+% % zero point of the C axis
+% if axisC(1) ~= 0
+%     axisC = axisC - axisC(1);
+%     axisC = wrapTo360(axisC);
+% end
+% 
+% % zero point of z axis
+% if axisZ(end) ~= 0
+%     axisZ = axisZ - axisZ(end);
+% end
+% 
+% % direction correction
+% %         if strcmp(startDirection,'X Plus')
+% % axisX = -1.*axisX;
+% % axisC = wrapTo360(-1.*axisC);
+% axisC(find(abs(axisC - 360) < 1e-3)) = 0;
 %         end
 
 % cnc header parameter

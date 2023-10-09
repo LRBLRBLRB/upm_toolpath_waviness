@@ -43,84 +43,11 @@ loop.step = 0;
 workspaceDir = uigetdir(fullfile(['D:\OneDrive - sjtu.edu.cn\Research\Projects' ...
     '\202111-考虑刀具几何的路径规划\experiment\非球面加工']), ...
     'Select the workspace directory:');
-[jobFileName,jobDirName] = uigetfile({ ...
-    '*.pgm','DIFFSYS Jobfile(*.pgm)'; ...
-    '*.nc','CNC-files(*.nc)'; ...
-    '*.*','All Files(*.*)'}, ...
-    'Select one CNC data file', ...
-    fullfile(workspaceDir,'spiralpath.nc'), ...
-    'MultiSelect','off');
-if ~jobFileName
-    msgbox(sprintf('\\fontname{%s}\\fontsize{%d} No CNC file saved.', ...
-        textFontType,textFontSize),'Message','warn',msgMode);
-end
-jobPath = fullfile(jobDirName,jobFileName);
-
-fprintf('Importing data...\r\n');
-jobID = fopen(jobPath,'r');
-
-tic
-maxCounter = 0;
-while ~feof(jobID)
-    % read 10000 str, calculate the number of \n (char(10)=\n)
-    % '*char' indicates 1 str per read, *indicates output str
-    maxCounter = maxCounter + sum(fread(jobID,10000,'*char') == newline);
-end
-fclose(jobID);
-fprintf('File row number is %d.\r\n',maxCounter);
-toc
-
-tic
-jobID = fopen(jobPath,'r');
-waitBar1 = waitbar(0,'Data Importing ...','Name','CNC Data Load', ...
-    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
-setappdata(waitBar1,'canceling',0);
-cncLine = zeros(maxCounter,1);
-cncLine = string(cncLine);
-for ii = 1 : maxCounter
-    % Check for clicked Cancel button
-    if getappdata(waitBar1,'canceling')
-        break;
-    end
-    if mod(ii,fix(maxCounter/100)) == 0
-        displayData = num2str(roundn(ii/maxCounter*100,-2));
-        % Calculate percentage
-        displayStr = ['Import Progress: ',displayData,'%'];
-        % Show Calculate State
-        waitbar(ii/maxCounter,waitBar1,displayStr);
-        % Progress bar dynamic display
-    end
-    str = fgetl(jobID);
-    cncLine(ii) = string(str);
-end
-
-waitbar(1,waitBar1,'Data Imported ! ');
-pause(1);
-delete(waitBar1);   % Close Progress bar window
-fclose(jobID);
-fprintf('Data imported.\r\n')
-toc
-
-%% delete the original header & read the main part
-semicolonInd = startsWith(cncLine,';');
-cncLine(semicolonInd) = [];
-cncNum = length(cncLine);
-
-axisC = zeros(cncNum,1);
-axisX = zeros(cncNum,1);
-axisZ = zeros(cncNum,1);
-for ii = 1:cncNum
-    data = sscanf(cncLine(ii),'C%fX%fZ%f');
-    axisC(ii) = data(1);
-    axisX(ii) = data(2);
-    axisZ(ii) = data(3);
-end
-
-% diffsys - nanocam convertion
-axisZ = axisZ - axisZ(end);
-axisX = -1.*axisX;
-axisC = wrapTo360(-1.*axisC);
-axisC(find(abs(axisC - 360) < 1e-3)) = 0;
+[cncData,jobFileName,jobDirName] = read_my_STS(workspaceDir,'C%f X%f Z%f');
+axisC = cncData(1,:);
+axisX = cncData(2,:);
+axisZ = cncData(3,:);
+[axisC,axisX,axisZ] = moore650ikine(axisC,axisX,axisZ,'mm','mm');
 
 %% simulate the actual surface
 % waitBar2 = waitbar(0,'Figure Plotting ...','Name','CNC Data Plot', ...
