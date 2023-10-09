@@ -68,6 +68,9 @@ else
     cncData = read_my_STS(workspaceDir,'C%f X%f Z%f');
     [cncData(1,:),cncData(2,:),cncData(3,:)] = moore650ikine( ...
         cncData(1,:),cncData(2,:),cncData(3,:),'mm','\mum');
+
+    [spiralAngle,spiralPath,spiralQuat,spiralNorm,spiralCut] = moore650kine( ...
+        'CXZ',cncData,'mm','\mum','deg','rad','shift',true,'toolData',toolData);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -186,36 +189,6 @@ xlabel(['x (',unit,')']);
 ylabel(['y (',unit,')']);
 title('Tooltip Geometry');
 nexttile;
-
-spiralPtNum = size(cncData,2);
-spiralPath = zeros(3,spiralPtNum);
-spiralAngle = zeros(1,spiralPtNum);
-spiralQuat = zeros(spiralPtNum,4);
-spiralNorm = zeros(3,spiralPtNum);
-spiralCut = zeros(3,spiralPtNum);
-spiralPath(:,1) = [cncData(2,1);0;cncData(3,1)];
-spiralQuat(1,:) = [1,0,0,0];
-for ii = 1:spiralPtNum
-    spiralAngle(ii) = cncData(1,ii);
-    spiralQuat(ii,:) = rotm2quat(rotz(180/pi*spiralAngle(ii)));
-    spiralNorm(:,ii) = quat2rotm(spiralQuat(ii,:))*toolData.toolEdgeNorm;
-    spiralCut(:,ii) = quat2rotm(spiralQuat(ii,:))*toolData.cutDirect;
-    spiralPath(1,ii) = cncData(2,ii)*cos(spiralAngle(ii));
-    spiralPath(2,ii) = cncData(2,ii)*sin(spiralAngle(ii));
-    spiralPath(3,ii) = cncData(3,ii);
-end
-for ii = 2:spiralPtNum % this part only satisfies "X Minus"
-    if (spiralAngle(ii) - spiralAngle(ii - 1))*(conThetaBound(2) - conThetaBound(1)) < 0
-        spiralAngle(ii:end) = spiralAngle(ii:end) + conThetaBound(2) - conThetaBound(1);
-    end
-end
-
-% shift
-toolSp = toolData.toolBform;
-toolSp.coefs = quat2rotm(spiralQuat(end,:))*toolSp.coefs + spiralPath(:,end);
-toolSpPt = fnval(toolSp,0:0.0001:1);
-spiralPath(3,:) = spiralPath(3,:) - min(toolSpPt(3,:));
-
 plot3(spiralPath(1,:),spiralPath(2,:),spiralPath(3,:), ...
     'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
     'Marker','.','MarkerSize',6);
