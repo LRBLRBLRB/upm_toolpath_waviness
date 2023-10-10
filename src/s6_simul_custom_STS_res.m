@@ -138,6 +138,13 @@ else
     uDirection = 'U Minus';
 end
 
+switch uDirection
+    case 'U Plus'
+        curvePlotSpar = 0.0001;
+    case 'U Minus'
+        curvePlotSpar = -0.0001;
+end
+
 switch cutDirection
     case 'Edge to Center'
         rRange = [rMax,0];
@@ -249,12 +256,6 @@ if exist('curvePathPt','var')
         curveInterPt = cell(1,34);
         curveInterPt{1} = [0;0;0];
         curveULim = cell(1,34);
-        switch uDirection % the interval of each toolpath
-            case 'U Plus'
-                curveULim{1} = [0;1];
-            case 'U Minus'
-                curveULim{1} = [1;0];
-        end
         toolSp = toolData.toolBform;
         for ind = 2:curveNum
             tic
@@ -360,43 +361,72 @@ end
 
 %% spiral tool path simulation and residual height calculation
 spiralPtNum = size(cncData,2);
-spiralPathZ = zeros(3,spiralPtNum);
 spiralContactU = zeros(1,spiralPtNum);
 surfPt = zeros(3,spiralPtNum);
 
 % method 1: directly solve the z-coordinate of CL points before residual calculation
-for ind1 = 1:spiralPtNum
-    [spiralPathZ(:,ind1),~,spiralContactU(ind1),surfPt(:,ind1)] = toolpathpos( ...
-        surfFunc,surfNormFunc,toolData,spiralPath(:,ind1),spiralNorm(:,ind1), ...
-        spiralCut(:,ind1),'directionType','norm-cut');
-    if abs(spiralPathZ(3,ind1) - spiralPath(3,ind1)) > 1
-        fprintf("spiralPathZ = %f, spiralPath = %f\n",spiralPathZ(3,ind1),spiralPath(3,ind1));
+% spiralPathZ = zeros(3,spiralPtNum);
+% for ind1 = 1:spiralPtNum
+%     [spiralPathZ(:,ind1),~,spiralContactU(ind1),surfPt(:,ind1)] = toolpathpos( ...
+%         surfFunc,surfNormFunc,toolData,spiralPath(:,ind1),spiralNorm(:,ind1), ...
+%         spiralCut(:,ind1),'directionType','norm-cut');
+%     if abs(spiralPathZ(3,ind1) - spiralPath(3,ind1)) > 1
+%         fprintf("spiralPathZ = %f, spiralPath = %f\n",spiralPathZ(3,ind1),spiralPath(3,ind1));
+%         pause;
+%     else
+%         disp(ind1);
+%     end
+% end
+% figure;
+% plot3(spiralPath(1,:),spiralPath(2,:),spiralPathZ(:), ...
+%     'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
+%     'Marker','.','MarkerSize',6);
+% hold on;
+% plot3(surfPt(1,:),surfPt(2,:),surfPt(:), ...
+%     'Color',[0.8500 0.3250 0.0980],'LineStyle',':','LineWidth',0.1, ...
+%     'Marker','.','MarkerSize',6);
+% surf( ...
+%     surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
+%     'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
+% colormap('summer');
+% set(gca,'FontSize',textFontSize,'FontName',textFontType);
+% % set(gca,'ZDir','reverse');
+% xlabel(['x (',unit,')']);
+% ylabel(['y (',unit,')']);
+% zlabel(['z (',unit,')']);
+% legend('designed surface','tool center point','Location','northeast');
+% drawnow;
+
+
+% method 2:
+tic;
+toolU = 0.4:abs(curvePlotSpar):0.6; % initialize the discretization u vector
+for ind1 = spiralPtNum:-1:1 % work out the u parameter of the contact point
+    toolSp = toolData.toolBform;
+    toolSp.coefs = quat2rotm(spiralQuat(ind1,:))*toolSp.coefs + spiralPath(:,ind1);
+    toolPt = fnval(toolSp,toolU);
+    % traverse the distance from tooltip contour to surface
+    [surfPtDistList,surfPtList] = dist2surf(toolPt,surfFunc, ...
+        matlabFunction(surfFx),matlabFunction(surfFy), ...
+        'CalculateType','Lagrange-Multiplier', ...
+        'DisplayType','none','useParallel',false);
+    % calculate the u parameter
+    [surfDist,Ind] = min(surfPtDistList);
+    surfPt(:,ind1) = surfPtList(:,Ind);
+    surfNorm0 = surfNormFunc(spiralPath(1,ind1),spiralPath(2,ind1));
+    [spiralContactU(ind1),~,~] = toolPtInv(toolSp,surfNorm0,1e-3, ...
+        "Type",'TangentPlane',"Radius",toolData.radius);
+    if abs(surfDist) > 1
+        fprintf("%d\tThe distance from tooltip to surface is %f\n",ind1,surfDist);
         pause;
     else
         disp(ind1);
     end
+    toolU = (spiralContactU(ind1) - 0.05):abs(curvePlotSpar):(spiralContactU(ind1) + 0.05);
 end
-figure;
-plot3(spiralPath(1,:),spiralPath(2,:),spiralPathZ(:), ...
-    'Color',[0,0.4470,0.7410],'LineStyle',':','LineWidth',0.1, ...
-    'Marker','.','MarkerSize',6);
-hold on;
-plot3(surfPt(1,:),surfPt(2,:),surfPt(:), ...
-    'Color',[0.8500 0.3250 0.0980],'LineStyle',':','LineWidth',0.1, ...
-    'Marker','.','MarkerSize',6);
-surf( ...
-    surfMesh(:,:,1),surfMesh(:,:,2),surfMesh(:,:,3), ...
-    'FaceColor','flat','FaceAlpha',0.2,'LineStyle','none');
-colormap('summer');
-set(gca,'FontSize',textFontSize,'FontName',textFontType);
-% set(gca,'ZDir','reverse');
-xlabel(['x (',unit,')']);
-ylabel(['y (',unit,')']);
-zlabel(['z (',unit,')']);
-legend('designed surface','tool center point','Location','northeast');
-drawnow;
+fprintf("Contact point calculation cost %fs.\n",toc);
 
-
+% residual error calculation
 spiralRes = 5*aimRes*ones(2,spiralPtNum);
 spiralPeakPt = zeros(10,spiralPtNum);
 spiralInterPtIn = cell(1,spiralPtNum);
@@ -465,7 +495,7 @@ for ind1 = 1:spiralPtNum
 %             spiralCut(1,ind3),spiralCut(2,ind3),spiralCut(3,ind3));
         [tmpRes2,tmpPeak2,spiralInterPtOut{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-            toolData,toolRadius,spiralULim{ind1},aimRes,uLimIni,curveFunc3D,ind1,ind2,ind3);
+            toolData,toolData.radius,spiralULim{ind1},aimRes,uLimIni,curveFunc3D,ind1,ind2,ind3);
     end
     
     spiralRes(:,ind1) = [tmpRes1;tmpRes2];
