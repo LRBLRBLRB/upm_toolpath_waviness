@@ -64,16 +64,6 @@ else
     % profile on;
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % load nc file
-    cncData = read_my_STS(workspaceDir,'C%f X%f Z%f');
-    [cncData(1,:),cncData(2,:),cncData(3,:)] = moore650ikine( ...
-        cncData(1,:),cncData(2,:),cncData(3,:),'mm','\mum');
-
-    [spiralAngle,spiralPath,spiralQuat,spiralNorm,spiralCut] = moore650kine( ...
-        'CXZ',cncData,'mm','\mum','deg','rad','shift',true,'toolData',toolData);
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % design machining paramters
     cutDirection = 'Edge to Center'; % 'Center to Edge'
     startDirection = 'X Minus'; % 'X Minus'
@@ -102,6 +92,11 @@ else
     %       the counterclockwise direction since the tool rake face is
     %       fixed facing the top. 
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % load cnc file
+    cncMode = 'C%f X%f Z%f';
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,19 +141,43 @@ end
 switch cutDirection
     case 'Edge to Center'
         rRange = [rMax,0];
+        if strcmp(startDirection,'X Plus') % 'X Minus'
+            conThetaBound = [0,-2*pi];
+            uLimOrder2 = 'last';
+            uLimOrder3 = 'first';
+        else
+            conThetaBound = [0,2*pi];
+            uLimOrder2 = 'first';
+            uLimOrder3 = 'last';
+        end
     case 'Center to Edge'
-%             rRange = [0,rMax];
+        rRange = [0,rMax];
+        if strcmp(startDirection,'X Plus') % 'X Minus'
+            conThetaBound = [0,2*pi];
+            uLimOrder2 = 'first';
+            uLimOrder3 = 'last';
+        else
+            conThetaBound = [0,-2*pi];
+            uLimOrder2 = 'last';
+            uLimOrder3 = 'first';
+        end
 end
 
-if strcmp(startDirection,'X Plus') % 'X Minus'
-    conThetaBound = [0,-2*pi];
-    uLimOrder2 = 'last';
-    uLimOrder3 = 'first';
-else
-    conThetaBound = [0,2*pi];
-    uLimOrder2 = 'first';
-    uLimOrder3 = 'last';
-end
+% load nc file
+cncData = read_my_STS(workspaceDir,cncMode);
+% convert the unit
+cncData = unitconversion({'angle','length','length'},cncData, ...
+    'mm','\mum','deg','rad');
+% work out the curveQuat (rotate the tool from standard position to that
+% perpenticular to the Z-axis
+% Def: toolNorm = [0;0;1]; cutDirect = [1;0;0];
+curveRot = axesRot(toolData.toolEdgeNorm,toolData.cutDirect, ...
+    [0;0;-1],cutDirect,'zx');
+curveQuat = rotm2quat(curveRot);
+% forward kinematics
+[spiralAngle,spiralPath,spiralQuat,spiralNorm,spiralCut] = ...
+    moore650kine('CXZ',cncData,curveQuat,conThetaBound, ...
+    'shift',true,'toolData',toolData);
 
 % sampling density
 spar = 501;
@@ -294,7 +313,7 @@ if exist('curvePathPt','var')
     ylabel(['Residual error (',unit,')']);
     grid on;
 end
-
+return;
 %% 2-axes convertion to cartesian
 % spiralPtNum = size(cncData,2);
 % spiralPath = zeros(3,spiralPtNum);
