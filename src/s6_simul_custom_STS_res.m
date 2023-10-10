@@ -313,7 +313,7 @@ if exist('curvePathPt','var')
     ylabel(['Residual error (',unit,')']);
     grid on;
 end
-return;
+
 %% 2-axes convertion to cartesian
 % spiralPtNum = size(cncData,2);
 % spiralPath = zeros(3,spiralPtNum);
@@ -359,9 +359,12 @@ return;
 % % end
 
 %% spiral tool path simulation and residual height calculation
+spiralPtNum = size(cncData,2);
 spiralPathZ = zeros(3,spiralPtNum);
 spiralContactU = zeros(1,spiralPtNum);
 surfPt = zeros(3,spiralPtNum);
+
+% method 1: directly solve the z-coordinate of CL points before residual calculation
 for ind1 = 1:spiralPtNum
     [spiralPathZ(:,ind1),~,spiralContactU(ind1),surfPt(:,ind1)] = toolpathpos( ...
         surfFunc,surfNormFunc,toolData,spiralPath(:,ind1),spiralNorm(:,ind1), ...
@@ -369,6 +372,8 @@ for ind1 = 1:spiralPtNum
     if abs(spiralPathZ(3,ind1) - spiralPath(3,ind1)) > 1
         fprintf("spiralPathZ = %f, spiralPath = %f\n",spiralPathZ(3,ind1),spiralPath(3,ind1));
         pause;
+    else
+        disp(ind1);
     end
 end
 figure;
