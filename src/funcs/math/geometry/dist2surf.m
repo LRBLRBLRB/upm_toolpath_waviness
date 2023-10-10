@@ -21,10 +21,16 @@ arguments
         {'Taylor-Expand','Lagrange-Multiplier'})} = 'Lagrange-Multiplier'
     options.DisplayType {mustBeMember(options.DisplayType,{'none','off', ...
         'iter','iter-detailed','final','final-detailed'})} = 'none'
+    options.optimOpt struct = []
+    options.useParallel logical = false
 end
 
-optimOpt = optimoptions('fsolve','Display',options.DisplayType, ...
-    'FunctionTolerance',1e-6,'MaxIterations',500,'UseParallel',false);
+if isempty(options.optimOpt)
+    options.optimOpt = optimoptions('fsolve','Display',options.DisplayType, ...
+        'FunctionTolerance',1e-6,'MaxIterations',500);
+end
+
+options.optimOpt = optimoptions(options.optimOpt,'UseParallel',options.useParallel);
 
 switch options.CalculateType
     case 'Taylor-Expand'
@@ -41,12 +47,12 @@ switch options.CalculateType
             surfFunc_x = matlabFunction(diff(surfFunc,x),'Vars',{x,y});
             surfFunc_y = matlabFunction(diff(surfFunc,y),'Vars',{x,y});
         end
-        ptProj = fsolve(@(Q) eqs2solve(Q,pt,surfFunc,surfFunc_x,surfFunc_y),pt(1:2,:),optimOpt);
+        ptProj = fsolve(@(Q) eqs2solve(Q,pt,surfFunc,surfFunc_x,surfFunc_y),pt(1:2,:),options.optimOpt);
         ptProj(3,:) = surfFunc(ptProj(1,:),ptProj(2,:));
         dist = vecnorm(pt - ptProj,2,1);
 
         % calculate the direction
-        ifSame = pt(3,:) - ptProj(3,:) < 0; % QP & norm are opposite
+        ifSame = pt(end,:) - ptProj(end,:) < 0; % QP & norm are opposite
         dist(ifSame) = -dist(ifSame);
 end
 

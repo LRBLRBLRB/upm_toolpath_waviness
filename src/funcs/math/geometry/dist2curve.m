@@ -19,10 +19,16 @@ arguments
         {'Taylor-Expand','Lagrange-Multiplier'})} = 'Lagrange-Multiplier'
     options.DisplayType {mustBeMember(options.DisplayType,{'none','off', ...
         'iter','iter-detailed','final','final-detailed'})} = 'none'
+    options.optimOpt struct = []
+    options.useParallel logical = false
 end
 
-optimOpt = optimoptions('fsolve','Display',options.DisplayType, ...
-    'FunctionTolerance',1e-6,'MaxIterations',500,'UseParallel',false);
+if isempty(options.optimOpt)
+    options.optimOpt = optimoptions('fsolve','Display',options.DisplayType, ...
+        'FunctionTolerance',1e-6,'MaxIterations',500);
+end
+
+options.optimOpt = optimoptions(options.optimOpt,'UseParallel',options.useParallel);
 
 switch options.CalculateType
     case 'Taylor-Expand'
@@ -37,7 +43,7 @@ switch options.CalculateType
             syms x;
             curveFunc_x = matlabFunction(diff(curveFunc,x),'Vars',x);
         end
-        ptProj = fsolve(@(Q) eqs2solve(Q,pt,curveFunc,curveFunc_x),pt(1,:),optimOpt);
+        ptProj = fsolve(@(Q) eqs2solve(Q,pt,curveFunc,curveFunc_x),pt(1,:),options.optimOpt);
         ptProj(2,:) = curveFunc(ptProj(1,:));
         dist = vecnorm(pt - ptProj,2,1);
 
@@ -49,5 +55,5 @@ end
 end
 
 function F = eqs2solve(Q,P,func,func_x)
-    F = func_x(Q(1,:)).*(P(2,:) - func(Q(1,:))) + (P(1,:) - Q(1,:));
+    F = (P(1,:) - Q(1,:)) + func_x(Q(1,:)).*(P(2,:) - func(Q(1,:)));
 end
