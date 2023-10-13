@@ -359,7 +359,7 @@ end
 % %     plot3(toolPt1(1,:),toolPt1(2,:),toolPt1(3,:),'Color',[0,0.4450,0.7410]);
 % % end
 
-%% spiral tool path simulation and residual height calculation
+%% spiral tool path simulation
 spiralPtNum = size(cncData,2);
 spiralContactU = zeros(1,spiralPtNum);
 surfPt = zeros(3,spiralPtNum);
@@ -426,7 +426,7 @@ for ind1 = spiralPtNum:-1:1 % work out the u parameter of the contact point
 end
 fprintf("Contact point calculation cost %fs.\n",toc);
 
-% residual error calculation
+%% residual error calculation
 spiralRes = 5*aimRes*ones(2,spiralPtNum);
 spiralPeakPt = zeros(10,spiralPtNum);
 spiralInterPtIn = cell(1,spiralPtNum);
@@ -471,7 +471,7 @@ for ind1 = 1:spiralPtNum
     else
         [tmpRes1,tmpPeak1,spiralInterPtIn{ind1},spiralULim{ind1}] = ...
             residual3D_multi(spiralPath,spiralNorm,spiralCut,spiralContactU, ...
-            toolData,toolRadius,spiralULim{ind1},aimRes,uLimIni,curveFunc3D,ind1,ind2,ind3);
+            toolData,toolData.radius,spiralULim{ind1},aimRes,uLimIni,curveFunc3D,ind1,ind2,ind3);
     end
 
     % find the inner side of ulim & residual height
@@ -516,24 +516,59 @@ for ind1 = 1:spiralPtNum
 disp(ind1);
 end
 
-% get rid of the redundant part of the uLim of the innermost circle
+%% get rid of the redundant part of the uLim of the innermost circle
 rdomain = abs(surfDomain(1,2)/zAllowance);
-if true
-    parfor ii = 1:spiralPtNum
-        if spiralULim{ii}(end) == 0
-            spiralULim{ii}(end) = innermostU;
+% get rid of the edge part
+
+switch cutDirection
+    case 'Edge to Center'
+        edgeTravList = 1:spiralPtNum;
+    case 'Center to Edge'
+        edgeTravList = spiralPtNum:-1:1;
+end
+centerTravList = fliplr(edgeTravList);
+for ii = edgeTravList
+    if spiralULim{ii}(1) ~= uLimIni(1)
+        switch cutDirection
+            case 'Edge to Center'
+                edgeList = 1:(ii - 1);
+            case 'Center to Edge'
+                edgeList = (ii + 1):spiralPtNum;
         end
-        if spiralULim{ii}(1) == 1
-            tmpU = spiralULim{ii}(2):abs(curvePlotSpar):1;
+        for jj = edgeList
+            tmpU = spiralULim{jj}(2):abs(curvePlotSpar):1;
             toolSp1 = toolSp;
-            toolSp1.coefs = quat2rotm(spiralQuat(ii,:))*toolSp1.coefs + spiralPath(:,ii);
+            toolSp1.coefs = quat2rotm(spiralQuat(jj,:))*toolSp1.coefs + spiralPath(:,jj);
             toolSp1Pt = fnval(toolSp1,tmpU);
             tmpPt = vecnorm(toolSp1Pt(1:2,:),2,1);
             [~,tmpUInd] = find(tmpPt == min(tmpPt(tmpPt > rdomain)));
-            spiralULim{ii}(1) = tmpU(tmpUInd);
+            spiralULim{jj}(1) = tmpU(tmpUInd);
         end
+        break;
     end
 end
+%% get rid of the center part
+tmpU = 0:abs(curvePlotSpar):1;
+toolSp1 = toolSp;
+toolSp1.coefs = quat2rotm(curveQuat)*toolSp1.coefs;
+toolSp1Pt = fnval(toolSp1,tmpU);
+[~,tmpUInd] = min(abs(toolSp1Pt(3,:)));
+innermostU = tmpU(tmpUInd);
+for ii = centerTravList
+    if spiralULim{ii}(end) ~= uLimIni(2)
+        switch cutDirection
+            case 'Edge to Center'
+                centerList = (ii + 1):spiralPtNum;
+            case 'Center to Edge'
+                centerList = 1:(ii - 1);
+        end
+        for jj = centerList
+            spiralULim{jj}(end) = innermostU;
+        end
+        break;
+    end
+end
+
 % delete(waitBar);
 tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
@@ -558,7 +593,6 @@ axis equal;
 colormap('summer');
 cb = colorbar;
 cb.Label.String = ['Height (',unit,')'];
-toolCoefs = toolSp.coefs;
 stepNum = abs(log10(abs(curvePlotSpar)));
 waitBar = waitbar(0,'Drawing ...','Name','Concentric Results Drawing', ...
     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
@@ -567,11 +601,11 @@ for ii = 1:size(spiralPath,2)
     if getappdata(waitBar,'canceling')
         break;
     end
-    displayData = ii/accumPtNum(end); % Calculate percentage
+    displayData = ii/spiralPtNum; % Calculate percentage
     waitbar(displayData,waitBar,['Figure Plotting ... ', ...
         num2str(roundn(displayData*100,-2),'%.2f'),'%']); % Progress bar dynamic display
-    toolSp1 = toolSp;
-    toolSp1.coefs = quat2rotm(spiralQuat(ii,:))*toolCoefs + spiralPath(:,ii);
+    toolSp1 = toolData.toolBform;
+    toolSp1.coefs = quat2rotm(spiralQuat(ii,:))*toolSp1.coefs + spiralPath(:,ii);
     for jj = 1:size(spiralULim{ii},2)
         uLimRound = round(spiralULim{ii},stepNum);
         Q = fnval(toolSp1,uLimRound(1,jj):curvePlotSpar:uLimRound(2,jj));

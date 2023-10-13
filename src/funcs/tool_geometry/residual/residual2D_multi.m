@@ -54,8 +54,15 @@ s2 = s2(:,isRange2);
 
 % same as the above dsearchn function
 [index,dist] = dsearchn(s1',s2');
-% get the indices of the local minimum points
+% get the indices of the local minimum points, i.e., points with positive
+% 2nd-derivative
 cmp1 = find(diff(sign(diff(dist))) > 0) + 1; % length = size(s2,2)
+% if ~ismember(1,cmp1)
+%     cmp1 = [1,cmp1];
+% end
+% if ~ismember(length(dist),cmp1)
+%     cmp1 = [cmp1,length(dist)];
+% end
 
 range = mean(vecnorm(diff(s1,1,2),2,1))*2;
 % cmp2: the indices of the intersection points, 
@@ -185,7 +192,11 @@ if ~mod(length(cmp3),2)
 end
 
 % calculate the intersection points
-cmp = cmp3;
+if isempty(cmp3)
+    [~,cmp] = min(dist);
+else
+    cmp = cmp3;
+end
 uInter2 = u2(cmp);
 uInter1 = u1(index(cmp));
 interPt = 0.5*(s1(:,index(cmp)) + s2(:,cmp));
