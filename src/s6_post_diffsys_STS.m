@@ -18,9 +18,6 @@ unit = '\mum';
 textFontSize = 12;
 textFontType = 'Times New Roman';
 
-msgMode.WindowStyle = 'non-modal';
-msgMode.Interpreter = 'tex';
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % tool
 toolRadius = 0.1893576;

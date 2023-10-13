@@ -11,7 +11,7 @@ function [cncData,jobFileName,jobDirName] = read_my_STS(workspaceDir,cncFormat)
     fullfile(workspaceDir,'spiralpath.nc'), ...
     'MultiSelect','off');
 if ~jobFileName
-    msgbox('No CNC file saved.','Message','warn',msgMode);
+    msgbox('No CNC file saved.','Message','warn','non-modal');
 end
 jobPath = fullfile(jobDirName,jobFileName);
 

@@ -11,7 +11,7 @@ function [cncData,jobFileName,jobDirName] = read_STS(workspaceDir,cncFormat)
     fullfile(workspaceDir,'spiralpath.nc'), ...
     'MultiSelect','off');
 if ~jobFileName
-    msgbox('No CNC file saved.','Message','warn',msgMode);
+    msgbox('No CNC file saved.','Message','warn','non-modal');
 end
 jobPath = fullfile(jobDirName,jobFileName);
 
@@ -63,7 +63,8 @@ semicolonInd = startsWith(cncLine,';');
 cncLine(semicolonInd) = [];
 cncNum = length(cncLine);
 
-cncData = zeros(3,cncNum);
+cncAxesNum = count(cncFormat,"%");
+cncData = zeros(cncAxesNum,cncNum);
 for ii = 1:cncNum
     cncData(:,ii) = sscanf(cncLine(ii),cncFormat);
 end
