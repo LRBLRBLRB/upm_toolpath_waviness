@@ -14,20 +14,20 @@ clc
 addpath(genpath('funcs'));
 
 %% modification of process data
-unit = '\mum';
+unit = 'mm';
 textFontSize = 12;
 textFontType = 'Times New Roman';
-
-msgMode.WindowStyle = 'non-modal';
-msgMode.Interpreter = 'tex';
+unitList = {'m','mm','\mum','nm'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % tool
-toolRadius = 0.18746;
+toolRadius = 0.1893576;
 
 % surface
-c = 0.18;
-surfRange = 2;
+presUnit = find(strcmp(unitList,'mm'),1);
+aimUnit = find(strcmp(unitList,unit),1);
+c = 0.69/(1000^(aimUnit - presUnit));
+surfRange = 0.6;
 z0 = 0;
 syms x;
 surfSym = c.*x.^2./(1 + sqrt(1 - c.^2.*x.^2)) + z0;
@@ -41,78 +41,12 @@ loop.step = -0.005;
 
 %% load the CNC file
 workspaceDir = uigetdir(fullfile(['D:\OneDrive - sjtu.edu.cn\Research\Projects' ...
-    '\202111-考虑刀具几何的路径规划\experiment\非球面加工\20230510\cnc']), ...
+    '\202111-考虑刀具几何的路径规划\experiment\非球面加工']), ...
     'Select the workspace directory:');
-[jobFileName,jobDirName] = uigetfile({ ...
-    '*.pgm','DIFFSYS Jobfile(*.pgm)'; ...
-    '*.nc','CNC-files(*.nc)'; ...
-    '*.*','All Files(*.*)'}, ...
-    'Select one CNC data file', ...
-    fullfile(workspaceDir,'spiralpath.nc'), ...
-    'MultiSelect','off');
-if ~jobFileName
-    msgbox(sprintf('\\fontname{%s}\\fontsize{%d} No CNC file saved.', ...
-        textFontType,textFontSize),'Message','warn',msgMode);
-end
-jobPath = fullfile(jobDirName,jobFileName);
-
-fprintf('Importing data...\r\n');
-jobID = fopen(jobPath,'r');
-
-tic
-maxCounter = 0;
-while ~feof(jobID)
-    % read 10000 str, calculate the number of \n (char(10)=\n)
-    % '*char' indicates 1 str per read, *indicates output str
-    maxCounter = maxCounter + sum(fread(jobID,10000,'*char') == newline);
-end
-fclose(jobID);
-fprintf('File row number is %d.\r\n',maxCounter);
-toc
-
-tic
-jobID = fopen(jobPath,'r');
-waitBar1 = waitbar(0,'Data Importing ...','Name','CNC Data Load', ...
-    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
-setappdata(waitBar1,'canceling',0);
-cncLine = zeros(maxCounter,1);
-cncLine = string(cncLine);
-for ii = 1 : maxCounter
-    % Check for clicked Cancel button
-    if getappdata(waitBar1,'canceling')
-        break;
-    end
-    if mod(ii,fix(maxCounter/100)) == 0
-        displayData = num2str(roundn(ii/maxCounter*100,-2));
-        % Calculate percentage
-        displayStr = ['Import Progress: ',displayData,'%'];
-        % Show Calculate State
-        waitbar(ii/maxCounter,waitBar1,displayStr);
-        % Progress bar dynamic display
-    end
-    str = fgetl(jobID);
-    cncLine(ii) = string(str);
-end
-
-waitbar(1,waitBar1,'Data Imported ! ');
-pause(1);
-delete(waitBar1);   % Close Progress bar window
-fclose(jobID);
-fprintf('Data imported.\r\n')
-toc
-
-%% delete the original header & read the main part
-semicolonInd = startsWith(cncLine,';');
-cncLine(semicolonInd) = [];
-cncNum = length(cncLine);
-
-axisX = zeros(cncNum,1);
-axisZ = zeros(cncNum,1);
-for ii = 1:cncNum
-    data = sscanf(cncLine(ii),'X%fZ%f');
-    axisX(ii) = data(1);
-    axisZ(ii) = data(2);
-end
+[cncData,jobFileName,jobDirName] = read_STS(workspaceDir,'X%fZ%f');
+axisX = cncData(1,:);
+axisZ = cncData(2,:);
+cncNum = length(axisX);
 
 %% simulate the actual surface
 waitBar2 = waitbar(0,'Figure Plotting ...','Name','CNC Data Plot', ...
@@ -120,7 +54,7 @@ waitBar2 = waitbar(0,'Figure Plotting ...','Name','CNC Data Plot', ...
 setappdata(waitBar2,'canceling',0);
 
 figure;
-rSpar = linspace(0,surfRange,cncNum/10);
+rSpar = linspace(min(axisX),max(axisX),cncNum/10);
 plot(rSpar,surfFunc(rSpar),'Color',[0.8500 0.3250 0.0980],'LineWidth',2);
 hold on;
 plotNum = 200;
