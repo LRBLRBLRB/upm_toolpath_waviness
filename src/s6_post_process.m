@@ -1,13 +1,16 @@
 % This programme aims to export the toolpath file, for the continuing post
 % processing procedure in the IMSpost software to get the nc file.
 close all;
-%     clear;
+addpath(genpath('funcs'));
 
+%% modification of process data
 unit = '\mum';
 textFontSize = 12;
 textFontType = 'Times New Roman';
 
-addpath(genpath('funcs'));
+msgMode.WindowStyle = 'non-modal';
+msgMode.Interpreter = 'tex';
+
 if ~(exist('spiralPath','var') && exist('spiralNorm','var'))
     workspaceDir = uigetdir(fullfile('..','workspace'),'select the workspace directory:');
     % the spiral path does not exist in the workspace
@@ -31,7 +34,15 @@ end
 
 %% generate the 5-axis tool path from original data
 % toolpath should be saved in "x y z i j k" format
-[axisC,axisX,axisZ,spiralAngle1,spiralPath1] = moore650ikine(spiralAngle,spiralPath,'\mum','mm');
+% convert the unit
+tmp = unitconversion({'angle','length'},{spiralAngle,spiralPath}, ...
+    '\mum','mm','rad','deg');
+spiralAngle1 = tmp{1};
+spiralPath1 = tmp{2};
+cncData = moore650ikine('CXZ',spiralAngle1,spiralPath1,'cStart',true);
+axisC = cncData(1,:);
+axisX = cncData(2,:);
+axisZ = cncData(3,:);
 %%% the code below are combined into the function above %%%
 % spiralAngle1 = 180/pi*spiralAngle; % rad -> deg
 % spiralPath1 = 0.001*spiralPath; % um -> mm

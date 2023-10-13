@@ -1,4 +1,4 @@
-function [axisC,axisX,axisZ] = read_STS(workspaceDir,cncFormat,unit)
+function [cncData,jobFileName,jobDirName] = read_STS(workspaceDir,cncFormat)
 %IMPORTNC read the 3-axes CL points from cnc file, and only support the
 %nanotech 650FG V2
 
@@ -11,8 +11,7 @@ function [axisC,axisX,axisZ] = read_STS(workspaceDir,cncFormat,unit)
     fullfile(workspaceDir,'spiralpath.nc'), ...
     'MultiSelect','off');
 if ~jobFileName
-    msgbox(sprintf('\\fontname{%s}\\fontsize{%d} No CNC file saved.', ...
-        textFontType,textFontSize),'Message','warn',msgMode);
+    msgbox('No CNC file saved.','Message','warn',msgMode);
 end
 jobPath = fullfile(jobDirName,jobFileName);
 
@@ -64,26 +63,14 @@ semicolonInd = startsWith(cncLine,';');
 cncLine(semicolonInd) = [];
 cncNum = length(cncLine);
 
-data = zeros(cncNum,3);
+cncData = zeros(3,cncNum);
 for ii = 1:cncNum
-    data(ii,:) = sscanf(cncLine(ii),cncFormat);
+    cncData(:,ii) = sscanf(cncLine(ii),cncFormat);
 end
 
-%% diffsys - nanocam convertion
-
-unitList = {'m','mm','\mum','nm'};
-presUnit = find(strcmp(unitList,'mm'),1);
-aimUnit = find(strcmp(unitList,unit),1);
-1000^(aimUnit - presUnit)*data;
-
-
-axisC = data(:,1);
-axisX = data(:,2);
-axisZ = data(:,3);
-
-axisZ = axisZ - axisZ(end);
-axisX = -1.*axisX;
-axisC = wrapTo360(-1.*axisC);
-axisC(find(abs(axisC - 360) < 1e-3)) = 0;
+% axisZ = axisZ - axisZ(end);
+% axisX = -1.*axisX;
+% axisC = wrapTo360(-1.*axisC);
+% axisC(find(abs(axisC - 360) < 1e-3)) = 0;
 
 end

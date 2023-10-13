@@ -1,4 +1,4 @@
-function [cncData,spiralAngle,spiralPath] = moore650ikine( ...
+function cncData = moore650ikine( ...
     cncMode,spiralAngle,spiralPath,options)
 %IKINE inverse kinematics for moore 650 FG V2
 %
@@ -6,10 +6,9 @@ function [cncData,spiralAngle,spiralPath] = moore650ikine( ...
 
 arguments
     cncMode {mustBeMember(cncMode,{'CXZ'})}
-    spiralAngle (3,:)
+    spiralAngle (1,:)
     spiralPath (3,:)
-    options.cStart double = []
-    options.shift logical = false
+    options.cStart logical = false
 end
 
 axNum = strlength(cncMode);
@@ -31,23 +30,6 @@ switch cncMode
         cncData(2,:) = sign(spiralPath(1,1))*vecnorm(spiralPath(1:2,:),2,1);
 end
 
-% zero point of the C axis
-if ~isempty(options.cStart)
-    cInd = strfind(cncMode,'C');
-    cncData(cInd,:) = cncData(cInd,:) - cncData(cInd,1);
-    cncData(cInd,:) = wrapTo360(cncData(cInd,:));
-end
-
-% zero point of z axis
-zInd = strfind(cncMode,'C');
-if cncData(zInd,end) ~= 0
-    cncData(zInd,:) = cncData(zInd,:) - cncData(zInd,end);
-end
-
-% direction correction
-%         if strcmp(startDirection,'X Plus')
-% axisX = -1.*axisX;
-% axisC = wrapTo360(-1.*axisC);
-cncData(cInd,abs(cncData(cInd,:) - 360) < 1e-3) = 0;
+cncData = cncpreprocess(cncMode,cncData,'cStart',options.cStart);
 
 end

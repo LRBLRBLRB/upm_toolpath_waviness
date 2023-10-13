@@ -23,7 +23,7 @@ msgMode.Interpreter = 'tex';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % tool
-toolRadius = 0.18746;
+toolRadius = 0.1893576;
 
 % surface
 c = 0.69;
@@ -43,11 +43,13 @@ loop.step = 0;
 workspaceDir = uigetdir(fullfile(['D:\OneDrive - sjtu.edu.cn\Research\Projects' ...
     '\202111-考虑刀具几何的路径规划\experiment\非球面加工']), ...
     'Select the workspace directory:');
-[cncData,jobFileName,jobDirName] = read_my_STS(workspaceDir,'C%f X%f Z%f');
+[cncData,jobFileName,jobDirName] = read_STS(workspaceDir,'C%fX%fZ%f');
+% cncData = unitconversion({'angle','length','length'},cncData, ...
+%     '\mum','mm','rad','deg');
+cncData = cncpreprocess('CXZ',cncData,'cStart',true);
 axisC = cncData(1,:);
 axisX = cncData(2,:);
 axisZ = cncData(3,:);
-[axisC,axisX,axisZ] = moore650ikine(axisC,axisX,axisZ,'mm','mm');
 
 %% simulate the actual surface
 % waitBar2 = waitbar(0,'Figure Plotting ...','Name','CNC Data Plot', ...
