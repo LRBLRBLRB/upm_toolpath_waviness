@@ -240,6 +240,7 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s}', ...
     'Ready to continue?'}, ...
     'Surface Generation','OK & Continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    diary off;
     return;
 end
 
@@ -589,6 +590,7 @@ msgfig = questdlg({sprintf(['\\fontsize{%d}\\fontname{%s} ', ...
     'Ready to continue?'}, ...
     'Concentric tool path Generation','OK & Continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    diary off;
     return;
 end
 
@@ -879,6 +881,7 @@ msgfig = questdlg({'Spiral tool path was generated successfully!', ...
     'Ready to continue to simulate?'}, ...
     'Spiral tool path Generation','OK & Continue','Cancel & quit',questOpt);
 if strcmp(msgfig,'Cancel & quit') || isempty(msgfig)
+    diary off;
     return;
 end
 
