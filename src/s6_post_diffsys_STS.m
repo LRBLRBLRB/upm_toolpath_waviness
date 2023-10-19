@@ -44,6 +44,7 @@ workspaceDir = uigetdir(fullfile(['D:\OneDrive - sjtu.edu.cn\Research\Projects' 
 % cncData = unitconversion({'angle','length','length'},cncData, ...
 %     '\mum','mm','rad','deg');
 cncData = cncpreprocess('CXZ',cncData,'cStart',true);
+cncData(1,:) = wrapTo360(-1*cncData(1,:)); % diffsys -> moore
 axisC = cncData(1,:);
 axisX = cncData(2,:);
 axisZ = cncData(3,:);

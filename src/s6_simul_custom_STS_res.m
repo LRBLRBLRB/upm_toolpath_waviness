@@ -173,6 +173,10 @@ end
 % load nc file
 cncData = read_my_STS(workspaceDir,cncMode);
 % convert the unit
+cncData(1,:) = wrapTo360(-1*cncData(1,:));
+if conThetaBound(2) < conThetaBound(1)
+    cncData(1,:) = cncData(1,:) - 360;
+end
 cncData = unitconversion({'angle','length','length'},cncData, ...
     'mm','\mum','deg','rad');
 % work out the curveQuat (rotate the tool from standard position to that
@@ -418,7 +422,7 @@ for ind1 = spiralPtNum:-1:1 % work out the u parameter of the contact point
         "Type",'TangentPlane',"Radius",toolData.radius);
     if abs(surfDist) > 1
         fprintf("%d\tThe distance from tooltip to surface is %f\n",ind1,surfDist);
-        pause;
+        % pause;
     else
         disp(ind1);
     end
@@ -517,9 +521,9 @@ disp(ind1);
 end
 
 %% get rid of the redundant part of the uLim of the innermost circle
-rdomain = abs(surfDomain(1,2)/zAllowance);
+% Notice: only satisfy the U Minus situation!!!
+rdomain = abs(surfDomain(1,2)*zAllowance);
 % get rid of the edge part
-
 switch cutDirection
     case 'Edge to Center'
         edgeTravList = 1:spiralPtNum;
@@ -528,7 +532,7 @@ switch cutDirection
 end
 centerTravList = fliplr(edgeTravList);
 for ii = edgeTravList
-    if spiralULim{ii}(1) ~= uLimIni(1)
+    if abs(spiralULim{ii}(1) - uLimIni(1)) > 10*1e-5
         switch cutDirection
             case 'Edge to Center'
                 edgeList = 1:(ii - 1);
@@ -537,7 +541,7 @@ for ii = edgeTravList
         end
         for jj = edgeList
             tmpU = spiralULim{jj}(2):abs(curvePlotSpar):1;
-            toolSp1 = toolSp;
+            toolSp1 = toolData.toolBform;
             toolSp1.coefs = quat2rotm(spiralQuat(jj,:))*toolSp1.coefs + spiralPath(:,jj);
             toolSp1Pt = fnval(toolSp1,tmpU);
             tmpPt = vecnorm(toolSp1Pt(1:2,:),2,1);
@@ -547,7 +551,7 @@ for ii = edgeTravList
         break;
     end
 end
-%% get rid of the center part
+% get rid of the center part
 tmpU = 0:abs(curvePlotSpar):1;
 toolSp1 = toolSp;
 toolSp1.coefs = quat2rotm(curveQuat)*toolSp1.coefs;
@@ -563,7 +567,14 @@ for ii = centerTravList
                 centerList = 1:(ii - 1);
         end
         for jj = centerList
-            spiralULim{jj}(end) = innermostU;
+            tmpU = 0:abs(curvePlotSpar):spiralULim{jj}(1);
+            toolSp1 = toolData.toolBform;
+            toolSp1.coefs = quat2rotm(spiralQuat(jj,:))*toolSp1.coefs + spiralPath(:,jj);
+            toolSp1Pt = fnval(toolSp1,tmpU);
+            tmpPt = vecnorm(toolSp1Pt(1:2,:),2,1);
+            [~,tmpUInd] = min(tmpPt);
+            % [~,tmpUInd] = find((tmpPt(2:end) - tmpPt(1:end - 1)) >= 0,1,'first');
+            spiralULim{jj}(end) = tmpU(tmpUInd);
         end
         break;
     end
@@ -574,6 +585,18 @@ tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
 % warningTone = load('handel');
 % sound(warningTone.y,warningTone.Fs);
+
+%%
+%         for jj = centerList
+%             tmpU = 0:abs(curvePlotSpar):spiralULim{jj}(1);
+%             toolSp1 = toolData.toolBform;
+%             toolSp1.coefs = quat2rotm(spiralQuat(jj,:))*toolSp1.coefs + spiralPath(:,jj);
+%             toolSp1Pt = fnval(toolSp1,tmpU);
+%             tmpPt = vecnorm(toolSp1Pt(1:2,:),2,1);
+%             [~,tmpUInd] = min(tmpPt);
+%             % [~,tmpUInd] = find((tmpPt(2:end) - tmpPt(1:end - 1)) >= 0,1,'first');
+%             spiralULim{jj}(end) = tmpU(tmpUInd);
+%         end
 
 %% spiral tool path result
 % plot the result
