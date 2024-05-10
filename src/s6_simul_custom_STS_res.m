@@ -579,14 +579,24 @@ for ii = centerTravList
         break;
     end
 end
-
 % delete(waitBar);
 tSpiralRes = toc(tSpiralRes0);
 fprintf('The time spent in the residual height calculation for spiral toolpath process is %fs.\n',tSpiralRes);
 % warningTone = load('handel');
 % sound(warningTone.y,warningTone.Fs);
+clear tmpPt tmpUInd innermostU;
 
 %%
+        for jj = edgeList
+            tmpU = spiralULim{jj}(2):abs(curvePlotSpar):1;
+            toolSp1 = toolData.toolBform;
+            toolSp1.coefs = quat2rotm(spiralQuat(jj,:))*toolSp1.coefs + spiralPath(:,jj);
+            toolSp1Pt = fnval(toolSp1,tmpU);
+            tmpPt = vecnorm(toolSp1Pt(1:2,:),2,1);
+            [~,tmpUInd] = find(tmpPt == min(tmpPt(tmpPt > rdomain)));
+            spiralULim{jj}(1) = tmpU(tmpUInd);
+        end
+        
 %         for jj = centerList
 %             tmpU = 0:abs(curvePlotSpar):spiralULim{jj}(1);
 %             toolSp1 = toolData.toolBform;

@@ -1,9 +1,9 @@
 % test whether the dynamic performances is good or not
 
-isAPP = true;
+isAPP = false;
 if isAPP
 else
-    workspaceDir = uigetdir(fullfile('..','workspace','20230504 D906'), ...
+    workspaceDir = uigetdir(fullfile('..','workspace'), ...
         'Select the Workspace Directory');
     if workspaceDir
         msgfig = msgbox('New tool path will be selected!','Exit','help','non-modal');

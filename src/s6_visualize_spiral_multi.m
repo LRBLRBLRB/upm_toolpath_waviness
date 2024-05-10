@@ -10,6 +10,7 @@ while true
         'Save and quit','Save and quit');
     switch msgfig
         case 'Save and quit'
+            clear xPlot yPlot
             if exist('spiralPathFileName','var')
                 Comments = cell2mat(inputdlg( ...
                     'Enter Comment of the spiral tool path:', ...
@@ -65,16 +66,16 @@ while true
             
             xPlot = linspace(min(spiralPeakPtLine(1,:)),max(spiralPeakPtLine(1,:)),plotNum);
             yPlot = linspace(min(spiralPeakPtLine(2,:)),max(spiralPeakPtLine(2,:)),plotNum);
-            [xMesh,yMesh] = meshgrid(xPlot,yPlot);
+            [resMeshx,resMeshy] = meshgrid(xPlot,yPlot);
             % elliminate the smaller residual height at the same peak
             [spiralResUnique,spiralPeakPtUnique] = groupsummary(spiralResLine',spiralPeakPtLine(1:2,:)',@max);
-            resMesh = griddata(spiralPeakPtUnique{1},spiralPeakPtUnique{2},spiralResUnique,xMesh,yMesh);
+            resMesh = griddata(spiralPeakPtUnique{1},spiralPeakPtUnique{2},spiralResUnique,resMeshx,resMeshy);
             figure('Name','Residual height map');
             pos = get(gcf,'position');
             set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
             tiledlayout(1,2);
             nexttile;
-            surf(xMesh,yMesh,resMesh,'EdgeColor','interp'); hold on;
+            surf(resMeshx,resMeshy,resMesh,'EdgeColor','interp'); hold on;
             colormap("turbo");
             grid on;
             % plot3(spiralPeakPtUnique{1},spiralPeakPtUnique{2},spiralResUnique,'o', ...
@@ -87,7 +88,7 @@ while true
             % legend('residual height in each peakPt','residual height map', ...
             %     'Location','best');
             nexttile;
-            contourf(xMesh,yMesh,resMesh,'LineStyle',':'); hold on;
+            contourf(resMeshx,resMeshy,resMesh,'LineStyle',':'); hold on;
             colormap("turbo");
             axis equal; grid on;
             cb2 = colorbar;
@@ -115,7 +116,7 @@ while true
             end
             % get rid of the begin and the last ones
             spiralR = vecnorm(spiralPathList(1:2,:),2,1);
-            rDomain = abs(surfDomain(1,2)/zAllowance);
+            rDomain = abs(surfDomain(1,2)*zAllowance);
             % rDomain = 350;
             rBeyond = spiralR > rDomain;
             spiralPathList(:,rBeyond) = [];
@@ -123,12 +124,12 @@ while true
             plotNum = 1000;
             xPlot = linspace(min(spiralPathList(1,:)),max(spiralPathList(1,:)),plotNum);
             yPlot = linspace(min(spiralPathList(2,:)),max(spiralPathList(2,:)),plotNum);
-            [xMesh,yMesh] = meshgrid(xPlot,yPlot);
+            [simulMeshx,simulMeshy] = meshgrid(xPlot,yPlot);
             % elliminate the lower contour at the same peak
             [spiralPathZUnique,spiralPathXYUnique] = groupsummary(spiralPathList(3,:)',spiralPathList(1:2,:)',@mean);
-            zMesh = griddata(spiralPathXYUnique{1},spiralPathXYUnique{2},spiralPathZUnique,xMesh,yMesh);
+            simulMeshz = griddata(spiralPathXYUnique{1},spiralPathXYUnique{2},spiralPathZUnique,simulMeshx,simulMeshy);
             % calculate the error based on the designed surface
-            z0Mesh = surfFunc(xMesh,yMesh);
+            simulMeshz0 = surfFunc(simulMeshx,simulMeshy);
             % 这里有更好的仿真方式：每个点都计算到设计曲面的距离，而不是沿z方向的距离！！！！
 
             clear spiralPathList;
@@ -138,7 +139,7 @@ while true
             set(gcf,'position',[pos(1)+pos(4)/2-pos(4),pos(2),2*pos(3),pos(4)]);
             tiledlayout(1,2);
             nexttile;
-            mesh(xMesh,yMesh,zMesh,'EdgeColor','interp'); hold on;
+            mesh(simulMeshx,simulMeshy,simulMeshz,'EdgeColor','interp'); hold on;
             colormap("jet");
             set(gca,'FontSize',textFontSize,'FontName',textFontType);
             xlabel(['x (',unit,')']);
@@ -146,7 +147,7 @@ while true
             zlabel(['z (',unit,')']);
             grid on;
             nexttile;
-            mesh(xMesh,yMesh,zMesh - z0Mesh,'EdgeColor','interp'); hold on;
+            mesh(simulMeshx,simulMeshy,simulMeshz - simulMeshz0,'EdgeColor','interp'); hold on;
             colormap("jet");
             set(gca,'FontSize',textFontSize,'FontName',textFontType);
             xlabel(['x (',unit,')']);
@@ -156,6 +157,7 @@ while true
             tSimul = toc(tSimul0);
             fprintf('The time spent in the simulation calculation process is %fs.\n',tSimul);
         otherwise
+            clear xPlot yPlot
             msgfig = msgbox("No tool path saved","Warning","warn","non-modal");
             uiwait(msgfig);
             return;
